@@ -20,6 +20,7 @@ import {
 
 export function PortalSwitcher({
   portals,
+  activePortalName,
 }: {
   portals: {
     name: string
@@ -27,10 +28,13 @@ export function PortalSwitcher({
     plan: string
     url: string
   }[]
+  activePortalName?: string
 }) {
   const { isMobile } = useSidebar()
   const router = useRouter()
-  const [activePortal, setActivePortal] = React.useState(portals[0])
+  const [activePortal, setActivePortal] = React.useState(
+    portals.find((p) => p.name === activePortalName) ?? portals[0],
+  )
 
   if (!activePortal) {
     return null
