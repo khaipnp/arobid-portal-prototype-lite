@@ -1,6 +1,6 @@
-import Link from "next/link"
+import Link from "next/link";
 
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 
 export default function Page() {
   return (
@@ -11,7 +11,13 @@ export default function Page() {
           <p>You may now add components and start building.</p>
           <p>We&apos;ve already added the button component for you.</p>
           <Button asChild className="mt-2">
-            <Link href="/dashboard">Go to Dashboard</Link>
+            <Link href="/admin">Admin View</Link>
+          </Button>
+          <Button asChild className="mt-2">
+            <Link href="/partner">Partner View</Link>
+          </Button>
+          <Button asChild className="mt-2">
+            <Link href="/seller">Seller View</Link>
           </Button>
         </div>
         <div className="font-mono text-muted-foreground text-xs">
@@ -19,5 +25,5 @@ export default function Page() {
         </div>
       </div>
     </div>
-  )
+  );
 }

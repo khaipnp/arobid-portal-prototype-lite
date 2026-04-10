@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   AudioLinesIcon,
@@ -10,19 +10,19 @@ import {
   Settings2Icon,
   TerminalIcon,
   TerminalSquareIcon,
-} from "lucide-react"
-import type * as React from "react"
-import { NavMain } from "@/components/nav-main"
-import { NavUser } from "@/components/nav-user"
-import { PortalSwitcher } from "@/components/portal-switcher"
+} from "lucide-react";
+import type * as React from "react";
+import { NavMain } from "@/components/nav-main";
+import { NavUser } from "@/components/nav-user";
+import { PortalSwitcher } from "@/components/portal-switcher";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
-} from "@/components/ui/sidebar"
-import { NavTradeXpo } from "./nav-tradexpo"
+} from "@/components/ui/sidebar";
+import { NavTradeXpo } from "./nav-tradexpo";
 
 // This is sample data.
 const data = {
@@ -138,16 +138,16 @@ const data = {
   tradexpo: [
     {
       name: "Hall Templates",
-      url: "/dashboard/tradexpo/hall-templates",
+      url: "/admin/tradexpo/hall-templates",
       icon: <PieChartIcon />,
     },
     {
       name: "Booth Templates",
-      url: "/dashboard/tradexpo/booth-templates",
+      url: "/admin/tradexpo/booth-templates",
       icon: <LayoutPanelTopIcon />,
     },
   ],
-}
+};
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
@@ -164,5 +164,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }
