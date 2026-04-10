@@ -3,7 +3,7 @@ import Link from "next/link"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import { Button } from "@/components/ui/button"
 
-export default function Page() {
+export default function AdminDashboardPage() {
   return (
     <DashboardShell
       title="Admin Dashboard"

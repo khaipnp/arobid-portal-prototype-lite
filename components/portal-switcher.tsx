@@ -1,6 +1,7 @@
 "use client"
 
 import { ChevronsUpDownIcon } from "lucide-react"
+import { useRouter } from "next/navigation"
 import * as React from "react"
 import {
   DropdownMenu,
@@ -24,9 +25,11 @@ export function PortalSwitcher({
     name: string
     logo: React.ReactNode
     plan: string
+    url: string
   }[]
 }) {
   const { isMobile } = useSidebar()
+  const router = useRouter()
   const [activePortal, setActivePortal] = React.useState(portals[0])
 
   if (!activePortal) {
@@ -66,7 +69,10 @@ export function PortalSwitcher({
             {portals.map((portal, index) => (
               <DropdownMenuItem
                 key={portal.name}
-                onClick={() => setActivePortal(portal)}
+                onClick={() => {
+                  setActivePortal(portal)
+                  router.push(portal.url)
+                }}
                 className="gap-2 p-2"
               >
                 <div className="flex size-6 items-center justify-center rounded-md border">
