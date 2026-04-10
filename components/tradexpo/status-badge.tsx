@@ -1,6 +1,6 @@
-import { cn } from "@/lib/utils"
 import { Badge } from "@/components/ui/badge"
-import { type TemplateDerivedStatus } from "@/lib/tradexpo/types"
+import type { TemplateDerivedStatus } from "@/lib/tradexpo/types"
+import { cn } from "@/lib/utils"
 
 const statusStyles: Record<TemplateDerivedStatus, string> = {
   Inactive: "border-zinc-300 bg-zinc-100 text-zinc-700",

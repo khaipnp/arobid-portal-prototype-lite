@@ -1,7 +1,7 @@
 "use client"
 
+import { ChevronsUpDownIcon } from "lucide-react"
 import * as React from "react"
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,13 +36,12 @@ import {
   mockHallTemplateSlots,
   mockHallTemplates,
 } from "@/lib/tradexpo/mock-data"
-import { type HallSlotUsage, type HallTemplateSlot } from "@/lib/tradexpo/types"
+import type { HallSlotUsage, HallTemplateSlot } from "@/lib/tradexpo/types"
 import {
   createMockId,
   parseMetadataInput,
   serializeMetadata,
 } from "@/lib/tradexpo/utils"
-import { ChevronsUpDownIcon } from "lucide-react"
 
 interface SlotFormState {
   slotCode: string
@@ -105,7 +104,7 @@ export function HallSlotManager({
 }) {
   const hallTemplate = React.useMemo(
     () => mockHallTemplates.find((template) => template.id === templateId),
-    [templateId]
+    [templateId],
   )
 
   const [slots, setSlots] = React.useState<HallTemplateSlot[]>(cloneSlots)
@@ -180,7 +179,7 @@ export function HallSlotManager({
         resetForm()
       }
     },
-    [resetForm]
+    [resetForm],
   )
 
   function validateForm() {
@@ -189,7 +188,7 @@ export function HallSlotManager({
     const duplicate = templateSlots.some(
       (slot) =>
         slot.slotCode.toLowerCase() ===
-          formState.slotCode.trim().toLowerCase() && slot.id !== editingSlotId
+          formState.slotCode.trim().toLowerCase() && slot.id !== editingSlotId,
     )
 
     if (!formState.slotCode.trim()) {
@@ -259,8 +258,8 @@ export function HallSlotManager({
     if (editingSlotId) {
       setSlots((currentSlots) =>
         currentSlots.map((slot) =>
-          slot.id === editingSlotId ? nextSlot : slot
-        )
+          slot.id === editingSlotId ? nextSlot : slot,
+        ),
       )
 
       if (liveUsage > 0) {
@@ -298,10 +297,10 @@ export function HallSlotManager({
     }
 
     setSlots((currentSlots) =>
-      currentSlots.filter((item) => item.id !== slot.id)
+      currentSlots.filter((item) => item.id !== slot.id),
     )
     setSlotUsage((currentUsage) =>
-      currentUsage.filter((item) => item.slotId !== slot.id)
+      currentUsage.filter((item) => item.slotId !== slot.id),
     )
 
     setNotice({ type: "success", text: "Slot removed." })
@@ -310,7 +309,7 @@ export function HallSlotManager({
   if (!hallTemplate) {
     return (
       <section className="rounded-xl border bg-card p-4">
-        <p className="text-sm text-rose-600">Hall template not found.</p>
+        <p className="text-rose-600 text-sm">Hall template not found.</p>
       </section>
     )
   }
@@ -320,10 +319,10 @@ export function HallSlotManager({
       <section className="rounded-xl border bg-card p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="text-base font-semibold">
+            <h2 className="font-semibold text-base">
               {embedded ? "Slot Configuration" : hallTemplate.name}
             </h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               {embedded
                 ? "Manage booth slot coordinates, transform, and metadata for this hall template."
                 : "Configure booth slot coordinates and dimensions for this hall."}
@@ -336,10 +335,10 @@ export function HallSlotManager({
           <p
             className={
               notice.type === "error"
-                ? "mt-3 rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-700"
+                ? "mt-3 rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-rose-700 text-sm"
                 : notice.type === "info"
-                  ? "mt-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-700"
-                  : "mt-3 rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-700"
+                  ? "mt-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-amber-700 text-sm"
+                  : "mt-3 rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-emerald-700 text-sm"
             }
           >
             {notice.text}
@@ -451,7 +450,7 @@ export function HallSlotManager({
           <form className="grid gap-3" onSubmit={handleSave}>
             <div className="grid gap-3 md:grid-cols-2">
               <div className="grid gap-1">
-                <label className="text-sm font-medium">Slot Code</label>
+                <label className="font-medium text-sm">Slot Code</label>
                 <Input
                   value={formState.slotCode}
                   onChange={(event) =>
@@ -463,12 +462,12 @@ export function HallSlotManager({
                   placeholder="A01"
                 />
                 {formErrors.slotCode ? (
-                  <p className="text-xs text-rose-600">{formErrors.slotCode}</p>
+                  <p className="text-rose-600 text-xs">{formErrors.slotCode}</p>
                 ) : null}
               </div>
 
               <div className="grid gap-1">
-                <label className="text-sm font-medium">Name</label>
+                <label className="font-medium text-sm">Name</label>
                 <Input
                   value={formState.name}
                   onChange={(event) =>
@@ -480,7 +479,7 @@ export function HallSlotManager({
                   placeholder="Booth A01"
                 />
                 {formErrors.name ? (
-                  <p className="text-xs text-rose-600">{formErrors.name}</p>
+                  <p className="text-rose-600 text-xs">{formErrors.name}</p>
                 ) : null}
               </div>
             </div>
@@ -594,7 +593,7 @@ export function HallSlotManager({
             </div>
 
             <div className="grid gap-1">
-              <label className="text-sm font-medium">
+              <label className="font-medium text-sm">
                 Metadata (key: value per line)
               </label>
               <Textarea
@@ -642,12 +641,12 @@ function NumericField({
 }) {
   return (
     <div className="grid gap-1">
-      <label className="text-sm font-medium">{label}</label>
+      <label className="font-medium text-sm">{label}</label>
       <Input value={value} onChange={(event) => onChange(event.target.value)} />
       {error ? (
-        <p className="text-xs text-rose-600">{error}</p>
+        <p className="text-rose-600 text-xs">{error}</p>
       ) : defaultHint ? (
-        <p className="text-xs text-muted-foreground">{defaultHint}</p>
+        <p className="text-muted-foreground text-xs">{defaultHint}</p>
       ) : null}
     </div>
   )

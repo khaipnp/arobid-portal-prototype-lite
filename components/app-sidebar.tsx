@@ -1,9 +1,18 @@
 "use client"
 
-import * as React from "react"
-
+import {
+  AudioLinesIcon,
+  BookOpenIcon,
+  BotIcon,
+  GalleryVerticalEndIcon,
+  LayoutPanelTopIcon,
+  PieChartIcon,
+  Settings2Icon,
+  TerminalIcon,
+  TerminalSquareIcon,
+} from "lucide-react"
+import type * as React from "react"
 import { NavMain } from "@/components/nav-main"
-import { NavTradeXpo } from "./nav-tradexpo"
 import { NavUser } from "@/components/nav-user"
 import { PortalSwitcher } from "@/components/portal-switcher"
 import {
@@ -13,8 +22,7 @@ import {
   SidebarHeader,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { GalleryVerticalEndIcon, AudioLinesIcon, TerminalIcon, TerminalSquareIcon, BotIcon, BookOpenIcon, Settings2Icon, FrameIcon, PieChartIcon, LayoutPanelTopIcon } from "lucide-react"
-
+import { NavTradeXpo } from "./nav-tradexpo"
 
 // This is sample data.
 const data = {
@@ -26,26 +34,17 @@ const data = {
   portals: [
     {
       name: "Admin Portal",
-      logo: (
-        <GalleryVerticalEndIcon
-        />
-      ),
+      logo: <GalleryVerticalEndIcon />,
       plan: "Admin View",
     },
     {
       name: "Partner Portal",
-      logo: (
-        <AudioLinesIcon
-        />
-      ),
+      logo: <AudioLinesIcon />,
       plan: "Expo Owner View",
     },
     {
       name: "Supplier Portal",
-      logo: (
-        <TerminalIcon
-        />
-      ),
+      logo: <TerminalIcon />,
       plan: "Supplier View",
     },
   ],
@@ -53,10 +52,7 @@ const data = {
     {
       title: "Playground",
       url: "#",
-      icon: (
-        <TerminalSquareIcon
-        />
-      ),
+      icon: <TerminalSquareIcon />,
       isActive: true,
       items: [
         {
@@ -76,10 +72,7 @@ const data = {
     {
       title: "Models",
       url: "#",
-      icon: (
-        <BotIcon
-        />
-      ),
+      icon: <BotIcon />,
       items: [
         {
           title: "Genesis",
@@ -98,10 +91,7 @@ const data = {
     {
       title: "Documentation",
       url: "#",
-      icon: (
-        <BookOpenIcon
-        />
-      ),
+      icon: <BookOpenIcon />,
       items: [
         {
           title: "Introduction",
@@ -124,10 +114,7 @@ const data = {
     {
       title: "Settings",
       url: "#",
-      icon: (
-        <Settings2Icon
-        />
-      ),
+      icon: <Settings2Icon />,
       items: [
         {
           title: "General",
@@ -152,18 +139,12 @@ const data = {
     {
       name: "Hall Templates",
       url: "/dashboard/tradexpo/hall-templates",
-      icon: (
-        <PieChartIcon
-        />
-      ),
+      icon: <PieChartIcon />,
     },
     {
       name: "Booth Templates",
       url: "/dashboard/tradexpo/booth-templates",
-      icon: (
-        <LayoutPanelTopIcon
-        />
-      ),
+      icon: <LayoutPanelTopIcon />,
     },
   ],
 }

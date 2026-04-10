@@ -15,8 +15,8 @@ import {
 import {
   mockAssets,
   mockHallTemplateSlots,
-  mockHallTemplateUsage,
   mockHallTemplates,
+  mockHallTemplateUsage,
 } from "@/lib/tradexpo/mock-data"
 import {
   formatDateTime,
@@ -37,17 +37,17 @@ export default async function HallTemplateDetailPage({
     notFound()
   }
 
-  const usage =
-    mockHallTemplateUsage.find((item) => item.hallTemplateId === template.id) ||
-    {
-      hallTemplateId: template.id,
-      upcomingExpoCount: 0,
-      liveExpoCount: 0,
-      archivedExpoCount: 0,
-    }
+  const usage = mockHallTemplateUsage.find(
+    (item) => item.hallTemplateId === template.id,
+  ) || {
+    hallTemplateId: template.id,
+    upcomingExpoCount: 0,
+    liveExpoCount: 0,
+    archivedExpoCount: 0,
+  }
 
   const slotCount = mockHallTemplateSlots.filter(
-    (slot) => slot.hallTemplateId === template.id
+    (slot) => slot.hallTemplateId === template.id,
   ).length
 
   const assetMap = getAssetMap(mockAssets)
@@ -75,13 +75,14 @@ export default async function HallTemplateDetailPage({
               <StatusBadge status={status} />
             </CardTitle>
             <CardDescription>
-              Unified detail page for template context, status tracking, and slot
-              management.
+              Unified detail page for template context, status tracking, and
+              slot management.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-2 text-sm md:grid-cols-2">
             <p>
-              <span className="font-medium">Updated by:</span> {template.updatedBy}
+              <span className="font-medium">Updated by:</span>{" "}
+              {template.updatedBy}
             </p>
             <p>
               <span className="font-medium">Updated at:</span>{" "}
@@ -114,7 +115,8 @@ export default async function HallTemplateDetailPage({
               {usage.upcomingExpoCount}
             </p>
             <p>
-              <span className="font-medium">Live expos:</span> {usage.liveExpoCount}
+              <span className="font-medium">Live expos:</span>{" "}
+              {usage.liveExpoCount}
             </p>
             <p>
               <span className="font-medium">Archived expos:</span>{" "}

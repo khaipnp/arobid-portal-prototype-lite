@@ -1,13 +1,12 @@
 "use client"
 
+import { ChevronsUpDownIcon } from "lucide-react"
 import * as React from "react"
-
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -17,7 +16,6 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { ChevronsUpDownIcon, PlusIcon } from "lucide-react"
 
 export function PortalSwitcher({
   portals,
@@ -48,7 +46,9 @@ export function PortalSwitcher({
                 {activePortal.logo}
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{activePortal.name}</span>
+                <span className="truncate font-medium">
+                  {activePortal.name}
+                </span>
                 <span className="truncate text-xs">{activePortal.plan}</span>
               </div>
               <ChevronsUpDownIcon className="ml-auto" />
@@ -60,7 +60,7 @@ export function PortalSwitcher({
             side={isMobile ? "bottom" : "right"}
             sideOffset={4}
           >
-            <DropdownMenuLabel className="text-xs text-muted-foreground">
+            <DropdownMenuLabel className="text-muted-foreground text-xs">
               Portals
             </DropdownMenuLabel>
             {portals.map((portal, index) => (

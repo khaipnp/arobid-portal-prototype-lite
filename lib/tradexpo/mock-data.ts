@@ -1,12 +1,12 @@
-import {
-  type BoothTemplate,
-  type BoothTemplateUsage,
-  type BoothType,
-  type HallSlotUsage,
-  type HallTemplate,
-  type HallTemplateSlot,
-  type HallTemplateUsage,
-  type ModelAsset,
+import type {
+  BoothTemplate,
+  BoothTemplateUsage,
+  BoothType,
+  HallSlotUsage,
+  HallTemplate,
+  HallTemplateSlot,
+  HallTemplateUsage,
+  ModelAsset,
 } from "@/lib/tradexpo/types"
 
 const now = new Date()
@@ -286,7 +286,9 @@ export const mockBoothTemplates: BoothTemplate[] = [
   {
     id: "booth-template-3",
     name: "Premium Suite Executive",
-    translations: [{ languageCode: "ja", name: "プレミアムスイートエグゼクティブ" }],
+    translations: [
+      { languageCode: "ja", name: "プレミアムスイートエグゼクティブ" },
+    ],
     boothTypeId: "booth-type-premium",
     renderGlbAssetId: "asset-glb-booth-3",
     thumbnailAssetId: "asset-thumb-booth-3",

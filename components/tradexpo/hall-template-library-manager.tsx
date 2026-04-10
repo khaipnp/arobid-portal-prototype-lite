@@ -2,9 +2,11 @@
 
 /* eslint-disable @next/next/no-img-element */
 
+import { MoreHorizontalIcon, PlusIcon } from "lucide-react"
+import Image from "next/image"
 import Link from "next/link"
 import * as React from "react"
-
+import { StatusBadge } from "@/components/tradexpo/status-badge"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,16 +44,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { StatusBadge } from "@/components/tradexpo/status-badge"
 import {
   mockAssets,
-  mockHallTemplateUsage,
   mockHallTemplates,
+  mockHallTemplateUsage,
 } from "@/lib/tradexpo/mock-data"
-import {
-  type HallTemplate,
-  type HallTemplateUsage,
-  type ModelAsset,
+import type {
+  HallTemplate,
+  HallTemplateUsage,
+  ModelAsset,
 } from "@/lib/tradexpo/types"
 import {
   canPublish,
@@ -62,8 +63,6 @@ import {
   getTranslationName,
   isValidFileName,
 } from "@/lib/tradexpo/utils"
-import { MoreHorizontalIcon, PlusIcon } from "lucide-react"
-import Image from "next/image"
 
 interface HallTemplateFormState {
   name: string
@@ -131,7 +130,7 @@ export function HallTemplateLibraryManager() {
   const [translationName, setTranslationName] = React.useState("")
   const [previewLocale, setPreviewLocale] = React.useState("en")
   const [deleteTemplateId, setDeleteTemplateId] = React.useState<string | null>(
-    null
+    null,
   )
 
   const assetMap = React.useMemo(() => getAssetMap(assets), [assets])
@@ -144,7 +143,7 @@ export function HallTemplateLibraryManager() {
     }
 
     return templates.filter((template) =>
-      template.name.toLowerCase().includes(keyword)
+      template.name.toLowerCase().includes(keyword),
     )
   }, [templates, search])
 
@@ -164,12 +163,12 @@ export function HallTemplateLibraryManager() {
 
   const translationTarget = React.useMemo(
     () => templates.find((template) => template.id === translationTemplateId),
-    [templates, translationTemplateId]
+    [templates, translationTemplateId],
   )
 
   const deleteTarget = React.useMemo(
     () => templates.find((template) => template.id === deleteTemplateId),
-    [templates, deleteTemplateId]
+    [templates, deleteTemplateId],
   )
 
   const resetForm = React.useCallback(() => {
@@ -207,15 +206,15 @@ export function HallTemplateLibraryManager() {
         resetForm()
       }
     },
-    [resetForm]
+    [resetForm],
   )
 
   const scheduleAssetProcessing = React.useCallback((asset: ModelAsset) => {
     window.setTimeout(() => {
       setAssets((currentAssets) =>
         currentAssets.map((item) =>
-          item.id === asset.id ? { ...item, status: "processing" } : item
-        )
+          item.id === asset.id ? { ...item, status: "processing" } : item,
+        ),
       )
     }, 600)
 
@@ -226,8 +225,8 @@ export function HallTemplateLibraryManager() {
 
       setAssets((currentAssets) =>
         currentAssets.map((item) =>
-          item.id === asset.id ? { ...item, status: nextStatus } : item
-        )
+          item.id === asset.id ? { ...item, status: nextStatus } : item,
+        ),
       )
     }, 2100)
   }, [])
@@ -235,13 +234,13 @@ export function HallTemplateLibraryManager() {
   function validateForm() {
     const nextErrors: Record<string, string> = {}
     const currentTemplate = templates.find(
-      (template) => template.id === editingTemplateId
+      (template) => template.id === editingTemplateId,
     )
 
     const duplicateName = templates.some(
       (template) =>
         template.name.toLowerCase() === formState.name.trim().toLowerCase() &&
-        template.id !== editingTemplateId
+        template.id !== editingTemplateId,
     )
 
     if (!formState.name.trim()) {
@@ -326,7 +325,7 @@ export function HallTemplateLibraryManager() {
     }
 
     const currentTemplate = templates.find(
-      (template) => template.id === editingTemplateId
+      (template) => template.id === editingTemplateId,
     )
 
     const newAssets: ModelAsset[] = []
@@ -337,7 +336,7 @@ export function HallTemplateLibraryManager() {
 
     if (formState.thumbnailFileName.trim()) {
       newAssets.push(
-        buildAsset(formState.thumbnailFileName.trim(), "thumbnail")
+        buildAsset(formState.thumbnailFileName.trim(), "thumbnail"),
       )
     }
 
@@ -411,7 +410,7 @@ export function HallTemplateLibraryManager() {
             updatedBy: "Khai Pham",
             updatedAt: new Date().toISOString(),
           }
-        })
+        }),
       )
 
       setNotice({
@@ -450,13 +449,13 @@ export function HallTemplateLibraryManager() {
       currentTemplates.map((item) =>
         item.id === template.id
           ? {
-            ...item,
-            isPublic: nextPublic,
-            updatedAt: new Date().toISOString(),
-            updatedBy: "Khai Pham",
-          }
-          : item
-      )
+              ...item,
+              isPublic: nextPublic,
+              updatedAt: new Date().toISOString(),
+              updatedBy: "Khai Pham",
+            }
+          : item,
+      ),
     )
 
     setNotice({
@@ -475,13 +474,13 @@ export function HallTemplateLibraryManager() {
       currentTemplates.map((item) =>
         item.id === template.id
           ? {
-            ...item,
-            isActive: nextActive,
-            updatedAt: new Date().toISOString(),
-            updatedBy: "Khai Pham",
-          }
-          : item
-      )
+              ...item,
+              isActive: nextActive,
+              updatedAt: new Date().toISOString(),
+              updatedBy: "Khai Pham",
+            }
+          : item,
+      ),
     )
 
     if (!nextActive && (usage?.upcomingExpoCount || 0) > 0) {
@@ -522,7 +521,7 @@ export function HallTemplateLibraryManager() {
 
     setTemplates(nextTemplates)
     setUsages((currentUsage) =>
-      currentUsage.filter((item) => item.hallTemplateId !== template.id)
+      currentUsage.filter((item) => item.hallTemplateId !== template.id),
     )
 
     setAssets((currentAssets) =>
@@ -536,9 +535,9 @@ export function HallTemplateLibraryManager() {
             candidate.sourceBlendAssetId,
             candidate.renderGlbAssetId,
             candidate.thumbnailAssetId,
-          ].includes(asset.id)
+          ].includes(asset.id),
         )
-      })
+      }),
     )
 
     if (translationTemplateId === template.id) {
@@ -576,7 +575,7 @@ export function HallTemplateLibraryManager() {
 
         const existing = template.translations.find(
           (translation) =>
-            translation.languageCode.toLowerCase() === normalizedCode
+            translation.languageCode.toLowerCase() === normalizedCode,
         )
 
         if (existing) {
@@ -585,7 +584,7 @@ export function HallTemplateLibraryManager() {
             translations: template.translations.map((translation) =>
               translation.languageCode.toLowerCase() === normalizedCode
                 ? { ...translation, name: translationName.trim() }
-                : translation
+                : translation,
             ),
             updatedAt: new Date().toISOString(),
             updatedBy: "Khai Pham",
@@ -601,7 +600,7 @@ export function HallTemplateLibraryManager() {
           updatedAt: new Date().toISOString(),
           updatedBy: "Khai Pham",
         }
-      })
+      }),
     )
 
     setTranslationName("")
@@ -622,12 +621,12 @@ export function HallTemplateLibraryManager() {
         return {
           ...template,
           translations: template.translations.filter(
-            (translation) => translation.languageCode !== languageCode
+            (translation) => translation.languageCode !== languageCode,
           ),
           updatedAt: new Date().toISOString(),
           updatedBy: "Khai Pham",
         }
-      })
+      }),
     )
 
     setNotice({ type: "success", text: "Translation removed." })
@@ -663,10 +662,10 @@ export function HallTemplateLibraryManager() {
           <p
             className={
               notice.type === "error"
-                ? "mt-3 rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-700"
+                ? "mt-3 rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-rose-700 text-sm"
                 : notice.type === "info"
-                  ? "mt-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-700"
-                  : "mt-3 rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-700"
+                  ? "mt-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-amber-700 text-sm"
+                  : "mt-3 rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-emerald-700 text-sm"
             }
           >
             {notice.text}
@@ -699,13 +698,15 @@ export function HallTemplateLibraryManager() {
                   const translatedName = getTranslationName(
                     template.name,
                     template.translations,
-                    previewLocale
+                    previewLocale,
                   )
 
                   return (
                     <TableRow key={template.id}>
                       <TableCell>
-                        <Link href={`/dashboard/tradexpo/hall-templates/${template.id}`}>
+                        <Link
+                          href={`/dashboard/tradexpo/hall-templates/${template.id}`}
+                        >
                           <Image
                             width={120}
                             height={120}
@@ -716,7 +717,12 @@ export function HallTemplateLibraryManager() {
                         </Link>
                       </TableCell>
                       <TableCell>
-                        <Link href={`/dashboard/tradexpo/hall-templates/${template.id}`} className="font-medium">{translatedName}</Link>
+                        <Link
+                          href={`/dashboard/tradexpo/hall-templates/${template.id}`}
+                          className="font-medium"
+                        >
+                          {translatedName}
+                        </Link>
                       </TableCell>
                       <TableCell>{template.updatedBy}</TableCell>
                       <TableCell>
@@ -759,7 +765,9 @@ export function HallTemplateLibraryManager() {
                             <DropdownMenuItem
                               onSelect={() =>
                                 setTranslationTemplateId((currentId) =>
-                                  currentId === template.id ? null : template.id
+                                  currentId === template.id
+                                    ? null
+                                    : template.id,
                                 )
                               }
                             >
@@ -829,8 +837,8 @@ export function HallTemplateLibraryManager() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete template?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action will remove hall template {deleteTarget?.name} and
-              its linked unused assets.
+              This action will remove hall template {deleteTarget?.name} and its
+              linked unused assets.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -867,7 +875,7 @@ export function HallTemplateLibraryManager() {
 
           <form className="grid gap-3" onSubmit={handleSave}>
             <div className="grid gap-1">
-              <Label className="text-sm font-medium">Name</Label>
+              <Label className="font-medium text-sm">Name</Label>
               <Input
                 value={formState.name}
                 onChange={(event) =>
@@ -879,13 +887,13 @@ export function HallTemplateLibraryManager() {
                 placeholder="Modern Convention Hall"
               />
               {formErrors.name ? (
-                <p className="text-xs text-rose-600">{formErrors.name}</p>
+                <p className="text-rose-600 text-xs">{formErrors.name}</p>
               ) : null}
             </div>
 
             <div className="grid gap-1 md:grid-cols-2 md:gap-3">
               <div className="grid gap-1">
-                <Label className="text-sm font-medium">GLB Render File</Label>
+                <Label className="font-medium text-sm">GLB Render File</Label>
                 <Input
                   value={formState.glbFileName}
                   onChange={(event) =>
@@ -897,18 +905,18 @@ export function HallTemplateLibraryManager() {
                   placeholder="example.glb"
                 />
                 {formErrors.glbFileName ? (
-                  <p className="text-xs text-rose-600">
+                  <p className="text-rose-600 text-xs">
                     {formErrors.glbFileName}
                   </p>
                 ) : (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     Accepts .glb only
                   </p>
                 )}
               </div>
 
               <div className="grid gap-1">
-                <Label className="text-sm font-medium">Thumbnail File</Label>
+                <Label className="font-medium text-sm">Thumbnail File</Label>
                 <Input
                   value={formState.thumbnailFileName}
                   onChange={(event) =>
@@ -920,11 +928,11 @@ export function HallTemplateLibraryManager() {
                   placeholder="example.png"
                 />
                 {formErrors.thumbnailFileName ? (
-                  <p className="text-xs text-rose-600">
+                  <p className="text-rose-600 text-xs">
                     {formErrors.thumbnailFileName}
                   </p>
                 ) : (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     Accepts JPG, PNG, WEBP
                   </p>
                 )}
@@ -932,7 +940,7 @@ export function HallTemplateLibraryManager() {
             </div>
 
             <div className="grid gap-1">
-              <Label className="text-sm font-medium">
+              <Label className="font-medium text-sm">
                 Source Blender File (Optional)
               </Label>
               <Input
@@ -946,11 +954,11 @@ export function HallTemplateLibraryManager() {
                 placeholder="source.blend"
               />
               {formErrors.blendFileName ? (
-                <p className="text-xs text-rose-600">
+                <p className="text-rose-600 text-xs">
                   {formErrors.blendFileName}
                 </p>
               ) : (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   Accepts .blend only
                 </p>
               )}
@@ -984,7 +992,7 @@ export function HallTemplateLibraryManager() {
             </div>
 
             {formErrors.isPublic ? (
-              <p className="text-xs text-rose-600">{formErrors.isPublic}</p>
+              <p className="text-rose-600 text-xs">{formErrors.isPublic}</p>
             ) : null}
 
             <div className="flex flex-wrap justify-end gap-2">
@@ -1003,10 +1011,10 @@ export function HallTemplateLibraryManager() {
 
       {translationTarget ? (
         <section className="rounded-xl border bg-card p-4">
-          <h2 className="text-base font-semibold">
+          <h2 className="font-semibold text-base">
             Translation Panel: {translationTarget.name}
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-muted-foreground text-sm">
             Add or update localized template names.
           </p>
 
@@ -1076,7 +1084,7 @@ export function HallTemplateLibraryManager() {
                                 variant="destructive"
                                 onClick={() =>
                                   handleDeleteTranslation(
-                                    translation.languageCode
+                                    translation.languageCode,
                                   )
                                 }
                               >

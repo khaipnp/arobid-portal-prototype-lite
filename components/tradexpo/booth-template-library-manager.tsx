@@ -2,8 +2,9 @@
 
 /* eslint-disable @next/next/no-img-element */
 
+import { MoreHorizontalIcon, PlusIcon } from "lucide-react"
 import * as React from "react"
-
+import { StatusBadge } from "@/components/tradexpo/status-badge"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -49,17 +50,16 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
-import { StatusBadge } from "@/components/tradexpo/status-badge"
 import {
   mockAssets,
-  mockBoothTemplateUsage,
   mockBoothTemplates,
+  mockBoothTemplateUsage,
   mockBoothTypes,
 } from "@/lib/tradexpo/mock-data"
-import {
-  type BoothTemplate,
-  type BoothTemplateUsage,
-  type ModelAsset,
+import type {
+  BoothTemplate,
+  BoothTemplateUsage,
+  ModelAsset,
 } from "@/lib/tradexpo/types"
 import {
   canPublish,
@@ -70,7 +70,6 @@ import {
   getTranslationName,
   isValidFileName,
 } from "@/lib/tradexpo/utils"
-import { MoreHorizontalIcon, PlusIcon } from "lucide-react"
 
 interface BoothTemplateFormState {
   name: string
@@ -142,7 +141,7 @@ export function BoothTemplateLibraryManager() {
   const [translationName, setTranslationName] = React.useState("")
   const [previewLocale, setPreviewLocale] = React.useState("en")
   const [deleteTemplateId, setDeleteTemplateId] = React.useState<string | null>(
-    null
+    null,
   )
 
   const assetMap = React.useMemo(() => getAssetMap(assets), [assets])
@@ -155,7 +154,7 @@ export function BoothTemplateLibraryManager() {
     }
 
     return templates.filter((template) =>
-      template.name.toLowerCase().includes(keyword)
+      template.name.toLowerCase().includes(keyword),
     )
   }, [templates, search])
 
@@ -175,12 +174,12 @@ export function BoothTemplateLibraryManager() {
 
   const translationTarget = React.useMemo(
     () => templates.find((template) => template.id === translationTemplateId),
-    [templates, translationTemplateId]
+    [templates, translationTemplateId],
   )
 
   const deleteTarget = React.useMemo(
     () => templates.find((template) => template.id === deleteTemplateId),
-    [templates, deleteTemplateId]
+    [templates, deleteTemplateId],
   )
 
   const resetForm = React.useCallback(() => {
@@ -220,15 +219,15 @@ export function BoothTemplateLibraryManager() {
         resetForm()
       }
     },
-    [resetForm]
+    [resetForm],
   )
 
   const scheduleAssetProcessing = React.useCallback((asset: ModelAsset) => {
     window.setTimeout(() => {
       setAssets((currentAssets) =>
         currentAssets.map((item) =>
-          item.id === asset.id ? { ...item, status: "processing" } : item
-        )
+          item.id === asset.id ? { ...item, status: "processing" } : item,
+        ),
       )
     }, 600)
 
@@ -239,8 +238,8 @@ export function BoothTemplateLibraryManager() {
 
       setAssets((currentAssets) =>
         currentAssets.map((item) =>
-          item.id === asset.id ? { ...item, status: nextStatus } : item
-        )
+          item.id === asset.id ? { ...item, status: nextStatus } : item,
+        ),
       )
     }, 2100)
   }, [])
@@ -248,13 +247,13 @@ export function BoothTemplateLibraryManager() {
   function validateForm() {
     const nextErrors: Record<string, string> = {}
     const currentTemplate = templates.find(
-      (template) => template.id === editingTemplateId
+      (template) => template.id === editingTemplateId,
     )
 
     const duplicateName = templates.some(
       (template) =>
         template.name.toLowerCase() === formState.name.trim().toLowerCase() &&
-        template.id !== editingTemplateId
+        template.id !== editingTemplateId,
     )
 
     if (!formState.name.trim()) {
@@ -343,7 +342,7 @@ export function BoothTemplateLibraryManager() {
     }
 
     const currentTemplate = templates.find(
-      (template) => template.id === editingTemplateId
+      (template) => template.id === editingTemplateId,
     )
 
     const newAssets: ModelAsset[] = []
@@ -354,7 +353,7 @@ export function BoothTemplateLibraryManager() {
 
     if (formState.thumbnailFileName.trim()) {
       newAssets.push(
-        buildAsset(formState.thumbnailFileName.trim(), "thumbnail")
+        buildAsset(formState.thumbnailFileName.trim(), "thumbnail"),
       )
     }
 
@@ -431,7 +430,7 @@ export function BoothTemplateLibraryManager() {
             updatedBy: "Khai Pham",
             updatedAt: new Date().toISOString(),
           }
-        })
+        }),
       )
 
       setNotice({
@@ -442,7 +441,9 @@ export function BoothTemplateLibraryManager() {
 
     if (newAssets.length > 0) {
       setAssets((currentAssets) => [...newAssets, ...currentAssets])
-      newAssets.forEach((asset) => scheduleAssetProcessing(asset))
+      newAssets.forEach((asset) => {
+        scheduleAssetProcessing(asset)
+      })
     }
 
     setFormOpen(false)
@@ -473,8 +474,8 @@ export function BoothTemplateLibraryManager() {
               updatedAt: new Date().toISOString(),
               updatedBy: "Khai Pham",
             }
-          : item
-      )
+          : item,
+      ),
     )
 
     setNotice({
@@ -498,8 +499,8 @@ export function BoothTemplateLibraryManager() {
               updatedAt: new Date().toISOString(),
               updatedBy: "Khai Pham",
             }
-          : item
-      )
+          : item,
+      ),
     )
 
     if (!nextActive && (usage?.upcomingExpoBoothCount || 0) > 0) {
@@ -540,7 +541,7 @@ export function BoothTemplateLibraryManager() {
 
     setTemplates(nextTemplates)
     setUsages((currentUsage) =>
-      currentUsage.filter((item) => item.boothTemplateId !== template.id)
+      currentUsage.filter((item) => item.boothTemplateId !== template.id),
     )
 
     setAssets((currentAssets) =>
@@ -554,9 +555,9 @@ export function BoothTemplateLibraryManager() {
             candidate.sourceBlendAssetId,
             candidate.renderGlbAssetId,
             candidate.thumbnailAssetId,
-          ].includes(asset.id)
+          ].includes(asset.id),
         )
-      })
+      }),
     )
 
     if (translationTemplateId === template.id) {
@@ -594,7 +595,7 @@ export function BoothTemplateLibraryManager() {
 
         const existing = template.translations.find(
           (translation) =>
-            translation.languageCode.toLowerCase() === normalizedCode
+            translation.languageCode.toLowerCase() === normalizedCode,
         )
 
         if (existing) {
@@ -603,7 +604,7 @@ export function BoothTemplateLibraryManager() {
             translations: template.translations.map((translation) =>
               translation.languageCode.toLowerCase() === normalizedCode
                 ? { ...translation, name: translationName.trim() }
-                : translation
+                : translation,
             ),
             updatedAt: new Date().toISOString(),
             updatedBy: "Khai Pham",
@@ -619,7 +620,7 @@ export function BoothTemplateLibraryManager() {
           updatedAt: new Date().toISOString(),
           updatedBy: "Khai Pham",
         }
-      })
+      }),
     )
 
     setTranslationName("")
@@ -640,12 +641,12 @@ export function BoothTemplateLibraryManager() {
         return {
           ...template,
           translations: template.translations.filter(
-            (translation) => translation.languageCode !== languageCode
+            (translation) => translation.languageCode !== languageCode,
           ),
           updatedAt: new Date().toISOString(),
           updatedBy: "Khai Pham",
         }
-      })
+      }),
     )
 
     setNotice({ type: "success", text: "Translation removed." })
@@ -681,10 +682,10 @@ export function BoothTemplateLibraryManager() {
           <p
             className={
               notice.type === "error"
-                ? "mt-3 rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-sm text-rose-700"
+                ? "mt-3 rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-rose-700 text-sm"
                 : notice.type === "info"
-                  ? "mt-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-700"
-                  : "mt-3 rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-sm text-emerald-700"
+                  ? "mt-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-amber-700 text-sm"
+                  : "mt-3 rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-emerald-700 text-sm"
             }
           >
             {notice.text}
@@ -718,16 +719,17 @@ export function BoothTemplateLibraryManager() {
                   const translatedName = getTranslationName(
                     template.name,
                     template.translations,
-                    previewLocale
+                    previewLocale,
                   )
                   const boothTypeName =
                     mockBoothTypes.find(
-                      (type) => type.id === template.boothTypeId
+                      (type) => type.id === template.boothTypeId,
                     )?.name || "Unknown"
 
                   return (
                     <TableRow key={template.id}>
                       <TableCell>
+                        {/* biome-ignore lint/performance/noImgElement: thumbnail src is dynamic, next/image requires known dimensions */}
                         <img
                           src={thumbnail?.fileUrl}
                           alt={template.name}
@@ -736,7 +738,7 @@ export function BoothTemplateLibraryManager() {
                       </TableCell>
                       <TableCell>
                         <p className="font-medium">{translatedName}</p>
-                        <p className="text-xs text-muted-foreground">
+                        <p className="text-muted-foreground text-xs">
                           {template.description || "No description"}
                         </p>
                       </TableCell>
@@ -775,7 +777,9 @@ export function BoothTemplateLibraryManager() {
                             <DropdownMenuItem
                               onSelect={() =>
                                 setTranslationTemplateId((currentId) =>
-                                  currentId === template.id ? null : template.id
+                                  currentId === template.id
+                                    ? null
+                                    : template.id,
                                 )
                               }
                             >
@@ -884,7 +888,7 @@ export function BoothTemplateLibraryManager() {
 
           <form className="grid gap-3" onSubmit={handleSave}>
             <div className="grid gap-1">
-              <label className="text-sm font-medium">Name</label>
+              <label className="font-medium text-sm">Name</label>
               <Input
                 value={formState.name}
                 onChange={(event) =>
@@ -896,12 +900,12 @@ export function BoothTemplateLibraryManager() {
                 placeholder="Minimal Basic Booth"
               />
               {formErrors.name ? (
-                <p className="text-xs text-rose-600">{formErrors.name}</p>
+                <p className="text-rose-600 text-xs">{formErrors.name}</p>
               ) : null}
             </div>
 
             <div className="grid gap-1">
-              <label className="text-sm font-medium">Booth Type</label>
+              <label className="font-medium text-sm">Booth Type</label>
               <Select
                 value={formState.boothTypeId}
                 onValueChange={(value) =>
@@ -923,14 +927,14 @@ export function BoothTemplateLibraryManager() {
                 </SelectContent>
               </Select>
               {formErrors.boothTypeId ? (
-                <p className="text-xs text-rose-600">
+                <p className="text-rose-600 text-xs">
                   {formErrors.boothTypeId}
                 </p>
               ) : null}
             </div>
 
             <div className="grid gap-1">
-              <label className="text-sm font-medium">Description</label>
+              <label className="font-medium text-sm">Description</label>
               <Textarea
                 value={formState.description}
                 onChange={(event) =>
@@ -946,7 +950,7 @@ export function BoothTemplateLibraryManager() {
 
             <div className="grid gap-1 md:grid-cols-2 md:gap-3">
               <div className="grid gap-1">
-                <label className="text-sm font-medium">GLB Render File</label>
+                <label className="font-medium text-sm">GLB Render File</label>
                 <Input
                   value={formState.glbFileName}
                   onChange={(event) =>
@@ -958,18 +962,18 @@ export function BoothTemplateLibraryManager() {
                   placeholder="example.glb"
                 />
                 {formErrors.glbFileName ? (
-                  <p className="text-xs text-rose-600">
+                  <p className="text-rose-600 text-xs">
                     {formErrors.glbFileName}
                   </p>
                 ) : (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     Accepts .glb only
                   </p>
                 )}
               </div>
 
               <div className="grid gap-1">
-                <label className="text-sm font-medium">Thumbnail File</label>
+                <label className="font-medium text-sm">Thumbnail File</label>
                 <Input
                   value={formState.thumbnailFileName}
                   onChange={(event) =>
@@ -981,11 +985,11 @@ export function BoothTemplateLibraryManager() {
                   placeholder="example.png"
                 />
                 {formErrors.thumbnailFileName ? (
-                  <p className="text-xs text-rose-600">
+                  <p className="text-rose-600 text-xs">
                     {formErrors.thumbnailFileName}
                   </p>
                 ) : (
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-muted-foreground text-xs">
                     Accepts JPG, PNG, WEBP
                   </p>
                 )}
@@ -993,7 +997,7 @@ export function BoothTemplateLibraryManager() {
             </div>
 
             <div className="grid gap-1">
-              <label className="text-sm font-medium">
+              <label className="font-medium text-sm">
                 Source Blender File (Optional)
               </label>
               <Input
@@ -1007,11 +1011,11 @@ export function BoothTemplateLibraryManager() {
                 placeholder="source.blend"
               />
               {formErrors.blendFileName ? (
-                <p className="text-xs text-rose-600">
+                <p className="text-rose-600 text-xs">
                   {formErrors.blendFileName}
                 </p>
               ) : (
-                <p className="text-xs text-muted-foreground">
+                <p className="text-muted-foreground text-xs">
                   Accepts .blend only
                 </p>
               )}
@@ -1045,7 +1049,7 @@ export function BoothTemplateLibraryManager() {
             </div>
 
             {formErrors.isPublic ? (
-              <p className="text-xs text-rose-600">{formErrors.isPublic}</p>
+              <p className="text-rose-600 text-xs">{formErrors.isPublic}</p>
             ) : null}
 
             <div className="flex flex-wrap justify-end gap-2">
@@ -1064,10 +1068,10 @@ export function BoothTemplateLibraryManager() {
 
       {translationTarget ? (
         <section className="rounded-xl border bg-card p-4">
-          <h2 className="text-base font-semibold">
+          <h2 className="font-semibold text-base">
             Translation Panel: {translationTarget.name}
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-muted-foreground text-sm">
             Add or update localized booth template names.
           </p>
 
@@ -1137,7 +1141,7 @@ export function BoothTemplateLibraryManager() {
                                 variant="destructive"
                                 onClick={() =>
                                   handleDeleteTranslation(
-                                    translation.languageCode
+                                    translation.languageCode,
                                   )
                                 }
                               >

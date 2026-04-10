@@ -15,22 +15,27 @@ export default function TradeXpoDashboardPage() {
     >
       <div className="grid gap-4 md:grid-cols-2">
         <section className="rounded-xl border bg-card p-4">
-          <h2 className="text-base font-semibold">Hall Template Library</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Create, publish, deactivate, and localize hall templates for organizers.
+          <h2 className="font-semibold text-base">Hall Template Library</h2>
+          <p className="mt-1 text-muted-foreground text-sm">
+            Create, publish, deactivate, and localize hall templates for
+            organizers.
           </p>
           <Button className="mt-4" asChild>
-            <Link href="/dashboard/tradexpo/hall-templates">Open Hall Library</Link>
+            <Link href="/dashboard/tradexpo/hall-templates">
+              Open Hall Library
+            </Link>
           </Button>
         </section>
 
         <section>
-          <h2 className="text-base font-semibold">Booth Template Library</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <h2 className="font-semibold text-base">Booth Template Library</h2>
+          <p className="mt-1 text-muted-foreground text-sm">
             Manage booth templates by booth type for exhibitor-facing selection.
           </p>
           <Button className="mt-4" asChild>
-            <Link href="/dashboard/tradexpo/booth-templates">Open Booth Library</Link>
+            <Link href="/dashboard/tradexpo/booth-templates">
+              Open Booth Library
+            </Link>
           </Button>
         </section>
       </div>
