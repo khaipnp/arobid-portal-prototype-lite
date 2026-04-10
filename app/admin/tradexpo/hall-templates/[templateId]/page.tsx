@@ -58,11 +58,11 @@ export default async function HallTemplateDetailPage({
       title="Hall Template Detail"
       description="US-02 UX: Keep hall context and slot configuration together in one page."
       breadcrumbs={[
-        { label: "Dashboard", href: "/dashboard" },
-        { label: "TradeXpo", href: "/dashboard/tradexpo" },
+        { label: "Dashboard", href: "/admin" },
+        { label: "TradeXpo", href: "/admin/tradexpo" },
         {
           label: "Hall Templates",
-          href: "/dashboard/tradexpo/hall-templates",
+          href: "/admin/tradexpo/hall-templates",
         },
         { label: template.name },
       ]}
@@ -123,7 +123,7 @@ export default async function HallTemplateDetailPage({
               {usage.archivedExpoCount}
             </p>
             <Button variant="outline" asChild className="mt-2">
-              <Link href="/dashboard/tradexpo/hall-templates">
+              <Link href="/admin/tradexpo/hall-templates">
                 Back to Hall Templates
               </Link>
             </Button>
