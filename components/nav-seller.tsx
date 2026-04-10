@@ -1,6 +1,11 @@
 "use client"
 
-import { ChevronRightIcon } from "lucide-react"
+import {
+  BoxIcon,
+  CalendarIcon,
+  ChevronRightIcon,
+  Settings2Icon,
+} from "lucide-react"
 import {
   Collapsible,
   CollapsibleContent,
@@ -17,25 +22,43 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
 
-export function NavMain({
-  items,
-}: {
-  items: {
-    title: string
-    url: string
-    icon?: React.ReactNode
-    isActive?: boolean
-    items?: {
-      title: string
-      url: string
-    }[]
-  }[]
-}) {
+const nav = [
+  {
+    title: "My Booths",
+    url: "#",
+    icon: <BoxIcon />,
+    isActive: true,
+    items: [
+      { title: "Active", url: "#" },
+      { title: "Archived", url: "#" },
+    ],
+  },
+  {
+    title: "Events",
+    url: "#",
+    icon: <CalendarIcon />,
+    items: [
+      { title: "Browse", url: "#" },
+      { title: "Registered", url: "#" },
+    ],
+  },
+  {
+    title: "Settings",
+    url: "#",
+    icon: <Settings2Icon />,
+    items: [
+      { title: "Profile", url: "#" },
+      { title: "Billing", url: "#" },
+    ],
+  },
+]
+
+export function NavSeller() {
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>B2B Marketplace</SidebarGroupLabel>
+      <SidebarGroupLabel>Supplier</SidebarGroupLabel>
       <SidebarMenu>
-        {items.map((item) => (
+        {nav.map((item) => (
           <Collapsible
             key={item.title}
             asChild
@@ -52,12 +75,10 @@ export function NavMain({
               </CollapsibleTrigger>
               <CollapsibleContent>
                 <SidebarMenuSub>
-                  {item.items?.map((subItem) => (
-                    <SidebarMenuSubItem key={subItem.title}>
+                  {item.items?.map((sub) => (
+                    <SidebarMenuSubItem key={sub.title}>
                       <SidebarMenuSubButton asChild>
-                        <a href={subItem.url}>
-                          <span>{subItem.title}</span>
-                        </a>
+                        <a href={sub.url}>{sub.title}</a>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                   ))}
