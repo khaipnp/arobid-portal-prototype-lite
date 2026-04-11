@@ -95,3 +95,30 @@ export type TemplateDerivedStatus =
   | "Published"
   | "Processing"
   | "Failed"
+
+export type ExpoStatus =
+  | "Draft"
+  | "Pending Review"
+  | "Live"
+  | "Ended"
+  | "Archived"
+  | "Canceled"
+
+export interface ExpoCategory {
+  id: string
+  name: string
+  level: 1 | 2 | 3 | 4
+  parentId?: string
+}
+
+export interface Expo {
+  id: string
+  name: string
+  thumbnailUrl: string
+  ownerEmail: string
+  startDate: string
+  endDate: string
+  status: ExpoStatus
+  categoryIds: string[]
+  createdAt: string
+}

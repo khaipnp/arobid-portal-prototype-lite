@@ -1,10 +1,6 @@
 "use client"
 
-import {
-  HandshakeIcon,
-  ShieldUserIcon,
-  UsersRoundIcon,
-} from "lucide-react"
+import { HandshakeIcon, ShieldUserIcon, UsersRoundIcon } from "lucide-react"
 import type * as React from "react"
 import { NavAdmin } from "@/components/nav-admin"
 import { NavPartner } from "@/components/nav-partner"
