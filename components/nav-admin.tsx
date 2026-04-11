@@ -35,7 +35,7 @@ const b2bMarketplaceLinks = [
 const tradexpoLinks = [
   {
     name: "Overview",
-    url: "/admin/tradexpo/overview",
+    url: "/admin/tradexpo",
     icon: <LayoutDashboardIcon />,
   },
   {

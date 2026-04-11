@@ -1,7 +1,8 @@
-import Link from "next/link"
+import Link from "next/link";
 
-import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
-import { Button } from "@/components/ui/button"
+import { DashboardShell } from "@/components/tradexpo/dashboard-shell";
+import { Button } from "@/components/ui/button";
+import { TradeXpoOverview } from "@/components/tradexpo/tradexpo-overview";
 
 export default function TradeXpoDashboardPage() {
   return (
@@ -39,6 +40,7 @@ export default function TradeXpoDashboardPage() {
           </Button>
         </section>
       </div>
+      <TradeXpoOverview />
     </DashboardShell>
-  )
+  );
 }
