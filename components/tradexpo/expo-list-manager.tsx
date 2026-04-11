@@ -1,16 +1,15 @@
-"use client";
+"use client"
 
 import {
   CheckIcon,
   ChevronDownIcon,
   EyeIcon,
   MoreHorizontalIcon,
-  Search,
   SearchIcon,
-} from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-import * as React from "react";
+} from "lucide-react"
+import Image from "next/image"
+import Link from "next/link"
+import * as React from "react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,24 +19,24 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/alert-dialog"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
+} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/select"
 import {
   Table,
   TableBody,
@@ -45,15 +44,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { mockExpoCategories, mockExpos } from "@/lib/tradexpo/mock-data";
-import type { Expo, ExpoCategory, ExpoStatus } from "@/lib/tradexpo/types";
-import { cn } from "@/lib/utils";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "../ui/input-group";
+} from "@/components/ui/table"
+import { mockExpoCategories, mockExpos } from "@/lib/tradexpo/mock-data"
+import type { Expo, ExpoCategory, ExpoStatus } from "@/lib/tradexpo/types"
+import { cn } from "@/lib/utils"
+import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group"
 
 const ALL_STATUSES: ExpoStatus[] = [
   "Draft",
@@ -62,7 +57,7 @@ const ALL_STATUSES: ExpoStatus[] = [
   "Ended",
   "Archived",
   "Canceled",
-];
+]
 
 const statusStyles: Record<ExpoStatus, string> = {
   Draft: "border-slate-300 bg-slate-100 text-slate-700",
@@ -71,12 +66,12 @@ const statusStyles: Record<ExpoStatus, string> = {
   Ended: "border-zinc-300 bg-zinc-100 text-zinc-700",
   Archived: "border-purple-300 bg-purple-100 text-purple-700",
   Canceled: "border-rose-300 bg-rose-100 text-rose-700",
-};
+}
 
 function formatDate(iso: string) {
   return new Intl.DateTimeFormat("en-GB", { dateStyle: "short" }).format(
     new Date(iso),
-  );
+  )
 }
 
 function cloneExpos() {
@@ -85,74 +80,74 @@ function cloneExpos() {
     .sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    );
+    )
 }
 
 type ConfirmAction =
   | { type: "archive"; expo: Expo }
   | { type: "delete"; expo: Expo }
-  | { type: "approve"; expo: Expo };
+  | { type: "approve"; expo: Expo }
 
 export function ExpoListManager() {
-  const [expos, setExpos] = React.useState<Expo[]>(cloneExpos);
-  const [searchInput, setSearchInput] = React.useState("");
-  const [debouncedSearch, setDebouncedSearch] = React.useState("");
+  const [expos, setExpos] = React.useState<Expo[]>(cloneExpos)
+  const [searchInput, setSearchInput] = React.useState("")
+  const [debouncedSearch, setDebouncedSearch] = React.useState("")
   const [statusFilter, setStatusFilter] = React.useState<ExpoStatus | "All">(
     "All",
-  );
-  const [categoryFilter, setCategoryFilter] = React.useState<string[]>([]);
-  const [startDateFilter, setStartDateFilter] = React.useState("");
-  const [endDateFilter, setEndDateFilter] = React.useState("");
-  const [page, setPage] = React.useState(1);
+  )
+  const [categoryFilter, setCategoryFilter] = React.useState<string[]>([])
+  const [startDateFilter, setStartDateFilter] = React.useState("")
+  const [endDateFilter, setEndDateFilter] = React.useState("")
+  const [page, setPage] = React.useState(1)
   const [confirmAction, setConfirmAction] =
-    React.useState<ConfirmAction | null>(null);
+    React.useState<ConfirmAction | null>(null)
   const [notice, setNotice] = React.useState<{
-    type: "success" | "error" | "info";
-    text: string;
-  } | null>(null);
+    type: "success" | "error" | "info"
+    text: string
+  } | null>(null)
 
-  const categories: ExpoCategory[] = mockExpoCategories;
+  const categories: ExpoCategory[] = mockExpoCategories
 
   React.useEffect(() => {
     const timer = window.setTimeout(() => {
-      setDebouncedSearch(searchInput);
-      setPage(1);
-    }, 500);
+      setDebouncedSearch(searchInput)
+      setPage(1)
+    }, 500)
 
-    return () => window.clearTimeout(timer);
-  }, [searchInput]);
+    return () => window.clearTimeout(timer)
+  }, [searchInput])
 
   const filteredExpos = React.useMemo(() => {
-    let result = expos;
+    let result = expos
 
     if (debouncedSearch.trim()) {
-      const keyword = debouncedSearch.trim().toLowerCase();
+      const keyword = debouncedSearch.trim().toLowerCase()
       result = result.filter(
         (expo) =>
           expo.name.toLowerCase().includes(keyword) ||
           expo.ownerEmail.toLowerCase().includes(keyword),
-      );
+      )
     }
 
     if (statusFilter !== "All") {
-      result = result.filter((expo) => expo.status === statusFilter);
+      result = result.filter((expo) => expo.status === statusFilter)
     }
 
     if (categoryFilter.length > 0) {
       result = result.filter((expo) =>
         categoryFilter.every((catId) => expo.categoryIds.includes(catId)),
-      );
+      )
     }
 
     if (startDateFilter) {
-      result = result.filter((expo) => expo.startDate >= startDateFilter);
+      result = result.filter((expo) => expo.startDate >= startDateFilter)
     }
 
     if (endDateFilter) {
-      result = result.filter((expo) => expo.endDate <= endDateFilter);
+      result = result.filter((expo) => expo.endDate <= endDateFilter)
     }
 
-    return result;
+    return result
   }, [
     expos,
     debouncedSearch,
@@ -160,61 +155,61 @@ export function ExpoListManager() {
     categoryFilter,
     startDateFilter,
     endDateFilter,
-  ]);
+  ])
 
-  const pageSize = 20;
-  const totalPages = Math.max(1, Math.ceil(filteredExpos.length / pageSize));
+  const pageSize = 20
+  const totalPages = Math.max(1, Math.ceil(filteredExpos.length / pageSize))
 
   React.useEffect(() => {
-    if (page > totalPages) setPage(totalPages);
-  }, [page, totalPages]);
+    if (page > totalPages) setPage(totalPages)
+  }, [page, totalPages])
 
   const pagedExpos = React.useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return filteredExpos.slice(start, start + pageSize);
-  }, [filteredExpos, page]);
+    const start = (page - 1) * pageSize
+    return filteredExpos.slice(start, start + pageSize)
+  }, [filteredExpos, page])
 
   function toggleCategory(catId: string) {
     setCategoryFilter((prev) =>
       prev.includes(catId)
         ? prev.filter((id) => id !== catId)
         : [...prev, catId],
-    );
-    setPage(1);
+    )
+    setPage(1)
   }
 
   function handleConfirm() {
-    if (!confirmAction) return;
+    if (!confirmAction) return
 
-    const { type, expo } = confirmAction;
+    const { type, expo } = confirmAction
 
     if (type === "archive") {
       setExpos((prev) =>
         prev.map((e) =>
           e.id === expo.id ? { ...e, status: "Archived" as ExpoStatus } : e,
         ),
-      );
-      setNotice({ type: "success", text: `"${expo.name}" has been archived.` });
+      )
+      setNotice({ type: "success", text: `"${expo.name}" has been archived.` })
     } else if (type === "delete") {
-      setExpos((prev) => prev.filter((e) => e.id !== expo.id));
-      setNotice({ type: "success", text: `"${expo.name}" has been deleted.` });
+      setExpos((prev) => prev.filter((e) => e.id !== expo.id))
+      setNotice({ type: "success", text: `"${expo.name}" has been deleted.` })
     } else if (type === "approve") {
       setExpos((prev) =>
         prev.map((e) =>
           e.id === expo.id ? { ...e, status: "Live" as ExpoStatus } : e,
         ),
-      );
+      )
       setNotice({
         type: "success",
         text: `"${expo.name}" is now Live. Approval notification sent to ${expo.ownerEmail}.`,
-      });
+      })
     }
 
-    setConfirmAction(null);
+    setConfirmAction(null)
   }
 
   const confirmMeta = React.useMemo(() => {
-    if (!confirmAction) return null;
+    if (!confirmAction) return null
 
     if (confirmAction.type === "approve") {
       return {
@@ -222,7 +217,7 @@ export function ExpoListManager() {
         description: `This will set "${confirmAction.expo.name}" to Live and notify the owner at ${confirmAction.expo.ownerEmail}.`,
         actionLabel: "Approve",
         variant: "default" as const,
-      };
+      }
     }
 
     if (confirmAction.type === "archive") {
@@ -231,7 +226,7 @@ export function ExpoListManager() {
         description: `"${confirmAction.expo.name}" will be archived and removed from the public listing.`,
         actionLabel: "Archive",
         variant: "default" as const,
-      };
+      }
     }
 
     return {
@@ -239,8 +234,8 @@ export function ExpoListManager() {
       description: `This will permanently delete "${confirmAction.expo.name}". This action cannot be undone.`,
       actionLabel: "Delete",
       variant: "destructive" as const,
-    };
-  }, [confirmAction]);
+    }
+  }, [confirmAction])
 
   return (
     <div className="grid gap-4">
@@ -260,8 +255,8 @@ export function ExpoListManager() {
             <Select
               value={statusFilter}
               onValueChange={(value) => {
-                setStatusFilter(value as ExpoStatus | "All");
-                setPage(1);
+                setStatusFilter(value as ExpoStatus | "All")
+                setPage(1)
               }}
             >
               <SelectTrigger className="w-44">
@@ -294,8 +289,8 @@ export function ExpoListManager() {
                   <DropdownMenuItem
                     key={cat.id}
                     onSelect={(e) => {
-                      e.preventDefault();
-                      toggleCategory(cat.id);
+                      e.preventDefault()
+                      toggleCategory(cat.id)
                     }}
                     className={cn(cat.level > 1 && "pl-6")}
                   >
@@ -312,9 +307,9 @@ export function ExpoListManager() {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onSelect={(e) => {
-                        e.preventDefault();
-                        setCategoryFilter([]);
-                        setPage(1);
+                        e.preventDefault()
+                        setCategoryFilter([])
+                        setPage(1)
                       }}
                       className="text-muted-foreground"
                     >
@@ -331,8 +326,8 @@ export function ExpoListManager() {
                   className="w-40"
                   value={startDateFilter}
                   onChange={(e) => {
-                    setStartDateFilter(e.target.value);
-                    setPage(1);
+                    setStartDateFilter(e.target.value)
+                    setPage(1)
                   }}
                 />
                 <span className="text-muted-foreground">–</span>
@@ -341,8 +336,8 @@ export function ExpoListManager() {
                   className="w-40"
                   value={endDateFilter}
                   onChange={(e) => {
-                    setEndDateFilter(e.target.value);
-                    setPage(1);
+                    setEndDateFilter(e.target.value)
+                    setPage(1)
                   }}
                 />
                 {(startDateFilter || endDateFilter) && (
@@ -350,9 +345,9 @@ export function ExpoListManager() {
                     variant="ghost"
                     size="xs"
                     onClick={() => {
-                      setStartDateFilter("");
-                      setEndDateFilter("");
-                      setPage(1);
+                      setStartDateFilter("")
+                      setEndDateFilter("")
+                      setPage(1)
                     }}
                   >
                     Clear
@@ -520,7 +515,7 @@ export function ExpoListManager() {
       <AlertDialog
         open={Boolean(confirmAction)}
         onOpenChange={(open) => {
-          if (!open) setConfirmAction(null);
+          if (!open) setConfirmAction(null)
         }}
       >
         <AlertDialogContent size="sm">
@@ -542,5 +537,5 @@ export function ExpoListManager() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  );
+  )
 }

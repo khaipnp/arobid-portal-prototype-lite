@@ -2,6 +2,7 @@
 
 import {
   Grid3x2Icon,
+  LayoutDashboardIcon,
   LayoutPanelTopIcon,
   LayoutTemplateIcon,
   PieChartIcon,
@@ -32,6 +33,11 @@ const b2bMarketplaceLinks = [
 ]
 
 const tradexpoLinks = [
+  {
+    name: "Overview",
+    url: "/admin/tradexpo/overview",
+    icon: <LayoutDashboardIcon />,
+  },
   {
     name: "Expo List",
     url: "/admin/tradexpo/expos",

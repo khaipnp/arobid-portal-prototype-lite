@@ -1,12 +1,12 @@
-"use client";
+"use client"
 
 /* eslint-disable @next/next/no-img-element */
 
-import { MoreHorizontalIcon, PlusIcon, SearchIcon } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-import * as React from "react";
-import { StatusBadge } from "@/components/tradexpo/status-badge";
+import { MoreHorizontalIcon, PlusIcon, SearchIcon } from "lucide-react"
+import Image from "next/image"
+import Link from "next/link"
+import * as React from "react"
+import { StatusBadge } from "@/components/tradexpo/status-badge"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,25 +17,25 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+} from "@/components/ui/alert-dialog"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Table,
   TableBody,
@@ -43,17 +43,17 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@/components/ui/table"
 import {
   mockAssets,
   mockHallTemplates,
   mockHallTemplateUsage,
-} from "@/lib/tradexpo/mock-data";
+} from "@/lib/tradexpo/mock-data"
 import type {
   HallTemplate,
   HallTemplateUsage,
   ModelAsset,
-} from "@/lib/tradexpo/types";
+} from "@/lib/tradexpo/types"
 import {
   canPublish,
   createMockId,
@@ -62,21 +62,16 @@ import {
   getHallTemplateStatus,
   getTranslationName,
   isValidFileName,
-} from "@/lib/tradexpo/utils";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupButton,
-  InputGroupInput,
-} from "../ui/input-group";
+} from "@/lib/tradexpo/utils"
+import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group"
 
 interface HallTemplateFormState {
-  name: string;
-  glbFileName: string;
-  thumbnailFileName: string;
-  blendFileName: string;
-  isPublic: boolean;
-  isActive: boolean;
+  name: string
+  glbFileName: string
+  thumbnailFileName: string
+  blendFileName: string
+  isPublic: boolean
+  isActive: boolean
 }
 
 const defaultFormState: HallTemplateFormState = {
@@ -86,10 +81,10 @@ const defaultFormState: HallTemplateFormState = {
   blendFileName: "",
   isPublic: false,
   isActive: true,
-};
+}
 
 function cloneAssets() {
-  return mockAssets.map((asset) => ({ ...asset }));
+  return mockAssets.map((asset) => ({ ...asset }))
 }
 
 function cloneTemplates() {
@@ -98,105 +93,100 @@ function cloneTemplates() {
     translations: template.translations.map((translation) => ({
       ...translation,
     })),
-  }));
+  }))
 }
 
 function cloneUsage() {
-  return mockHallTemplateUsage.map((usage) => ({ ...usage }));
+  return mockHallTemplateUsage.map((usage) => ({ ...usage }))
 }
 
 export function HallTemplateLibraryManager() {
-  const [assets, setAssets] = React.useState<ModelAsset[]>(cloneAssets);
+  const [assets, setAssets] = React.useState<ModelAsset[]>(cloneAssets)
   const [templates, setTemplates] =
-    React.useState<HallTemplate[]>(cloneTemplates);
-  const [usages, setUsages] = React.useState<HallTemplateUsage[]>(cloneUsage);
+    React.useState<HallTemplate[]>(cloneTemplates)
+  const [usages, setUsages] = React.useState<HallTemplateUsage[]>(cloneUsage)
 
-  const [search, setSearch] = React.useState("");
-  const [page, setPage] = React.useState(1);
+  const [search, setSearch] = React.useState("")
+  const [page, setPage] = React.useState(1)
 
-  const [formOpen, setFormOpen] = React.useState(false);
-  const [formMode, setFormMode] = React.useState<"create" | "edit">("create");
+  const [formOpen, setFormOpen] = React.useState(false)
+  const [formMode, setFormMode] = React.useState<"create" | "edit">("create")
   const [editingTemplateId, setEditingTemplateId] = React.useState<
     string | null
-  >(null);
+  >(null)
   const [formState, setFormState] =
-    React.useState<HallTemplateFormState>(defaultFormState);
-  const [formErrors, setFormErrors] = React.useState<Record<string, string>>(
-    {},
-  );
+    React.useState<HallTemplateFormState>(defaultFormState)
+  const [formErrors, setFormErrors] = React.useState<Record<string, string>>({})
 
   const [notice, setNotice] = React.useState<{
-    type: "success" | "error" | "info";
-    text: string;
-  } | null>(null);
+    type: "success" | "error" | "info"
+    text: string
+  } | null>(null)
 
   const [translationTemplateId, setTranslationTemplateId] = React.useState<
     string | null
-  >(null);
+  >(null)
   const [translationLanguageCode, setTranslationLanguageCode] =
-    React.useState("vi");
-  const [translationName, setTranslationName] = React.useState("");
-  const [previewLocale, setPreviewLocale] = React.useState("en");
+    React.useState("vi")
+  const [translationName, setTranslationName] = React.useState("")
+  const [previewLocale, setPreviewLocale] = React.useState("en")
   const [deleteTemplateId, setDeleteTemplateId] = React.useState<string | null>(
     null,
-  );
+  )
 
-  const assetMap = React.useMemo(() => getAssetMap(assets), [assets]);
+  const assetMap = React.useMemo(() => getAssetMap(assets), [assets])
 
   const filteredTemplates = React.useMemo(() => {
-    const keyword = search.trim().toLowerCase();
+    const keyword = search.trim().toLowerCase()
 
     if (!keyword) {
-      return templates;
+      return templates
     }
 
     return templates.filter((template) =>
       template.name.toLowerCase().includes(keyword),
-    );
-  }, [templates, search]);
+    )
+  }, [templates, search])
 
-  const pageSize = 5;
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredTemplates.length / pageSize),
-  );
+  const pageSize = 5
+  const totalPages = Math.max(1, Math.ceil(filteredTemplates.length / pageSize))
 
   React.useEffect(() => {
     if (page > totalPages) {
-      setPage(totalPages);
+      setPage(totalPages)
     }
-  }, [page, totalPages]);
+  }, [page, totalPages])
 
   const pagedTemplates = React.useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return filteredTemplates.slice(start, start + pageSize);
-  }, [filteredTemplates, page]);
+    const start = (page - 1) * pageSize
+    return filteredTemplates.slice(start, start + pageSize)
+  }, [filteredTemplates, page])
 
   const translationTarget = React.useMemo(
     () => templates.find((template) => template.id === translationTemplateId),
     [templates, translationTemplateId],
-  );
+  )
 
   const deleteTarget = React.useMemo(
     () => templates.find((template) => template.id === deleteTemplateId),
     [templates, deleteTemplateId],
-  );
+  )
 
   const resetForm = React.useCallback(() => {
-    setFormState(defaultFormState);
-    setFormErrors({});
-    setEditingTemplateId(null);
-  }, []);
+    setFormState(defaultFormState)
+    setFormErrors({})
+    setEditingTemplateId(null)
+  }, [])
 
   const openCreateForm = React.useCallback(() => {
-    resetForm();
-    setFormMode("create");
-    setFormOpen(true);
-  }, [resetForm]);
+    resetForm()
+    setFormMode("create")
+    setFormOpen(true)
+  }, [resetForm])
 
   const openEditForm = React.useCallback((template: HallTemplate) => {
-    setFormMode("edit");
-    setEditingTemplateId(template.id);
+    setFormMode("edit")
+    setEditingTemplateId(template.id)
     setFormState({
       name: template.name,
       glbFileName: "",
@@ -204,21 +194,21 @@ export function HallTemplateLibraryManager() {
       blendFileName: "",
       isPublic: template.isPublic,
       isActive: template.isActive,
-    });
-    setFormErrors({});
-    setFormOpen(true);
-  }, []);
+    })
+    setFormErrors({})
+    setFormOpen(true)
+  }, [])
 
   const handleFormOpenChange = React.useCallback(
     (nextOpen: boolean) => {
-      setFormOpen(nextOpen);
+      setFormOpen(nextOpen)
 
       if (!nextOpen) {
-        resetForm();
+        resetForm()
       }
     },
     [resetForm],
-  );
+  )
 
   const scheduleAssetProcessing = React.useCallback((asset: ModelAsset) => {
     window.setTimeout(() => {
@@ -226,94 +216,94 @@ export function HallTemplateLibraryManager() {
         currentAssets.map((item) =>
           item.id === asset.id ? { ...item, status: "processing" } : item,
         ),
-      );
-    }, 600);
+      )
+    }, 600)
 
     window.setTimeout(() => {
       const nextStatus = asset.fileName.toLowerCase().includes("fail")
         ? "failed"
-        : "ready";
+        : "ready"
 
       setAssets((currentAssets) =>
         currentAssets.map((item) =>
           item.id === asset.id ? { ...item, status: nextStatus } : item,
         ),
-      );
-    }, 2100);
-  }, []);
+      )
+    }, 2100)
+  }, [])
 
   function validateForm() {
-    const nextErrors: Record<string, string> = {};
+    const nextErrors: Record<string, string> = {}
     const currentTemplate = templates.find(
       (template) => template.id === editingTemplateId,
-    );
+    )
 
     const duplicateName = templates.some(
       (template) =>
         template.name.toLowerCase() === formState.name.trim().toLowerCase() &&
         template.id !== editingTemplateId,
-    );
+    )
 
     if (!formState.name.trim()) {
-      nextErrors.name = "Name is required";
+      nextErrors.name = "Name is required"
     } else if (duplicateName) {
-      nextErrors.name = "Name already exists";
+      nextErrors.name = "Name already exists"
     }
 
     const requiresGlb =
-      formMode === "create" || !currentTemplate?.renderGlbAssetId;
+      formMode === "create" || !currentTemplate?.renderGlbAssetId
     const requiresThumbnail =
-      formMode === "create" || !currentTemplate?.thumbnailAssetId;
+      formMode === "create" || !currentTemplate?.thumbnailAssetId
 
     if (requiresGlb && !formState.glbFileName.trim()) {
-      nextErrors.glbFileName = "GLB file is required";
+      nextErrors.glbFileName = "GLB file is required"
     }
 
     if (requiresThumbnail && !formState.thumbnailFileName.trim()) {
-      nextErrors.thumbnailFileName = "Thumbnail is required";
+      nextErrors.thumbnailFileName = "Thumbnail is required"
     }
 
     if (
       formState.glbFileName.trim() &&
       !isValidFileName(formState.glbFileName, "glb")
     ) {
-      nextErrors.glbFileName = "Only .glb format is accepted";
+      nextErrors.glbFileName = "Only .glb format is accepted"
     }
 
     if (
       formState.thumbnailFileName.trim() &&
       !isValidFileName(formState.thumbnailFileName, "thumbnail")
     ) {
-      nextErrors.thumbnailFileName = "Use JPG, PNG, or WEBP image format";
+      nextErrors.thumbnailFileName = "Use JPG, PNG, or WEBP image format"
     }
 
     if (
       formState.blendFileName.trim() &&
       !isValidFileName(formState.blendFileName, "blend")
     ) {
-      nextErrors.blendFileName = "Only .blend format is accepted";
+      nextErrors.blendFileName = "Only .blend format is accepted"
     }
 
     if (formState.isPublic) {
       const willCreateNewRequiredAssets =
         Boolean(formState.glbFileName.trim()) ||
-        Boolean(formState.thumbnailFileName.trim());
+        Boolean(formState.thumbnailFileName.trim())
 
       if (willCreateNewRequiredAssets) {
         nextErrors.isPublic =
-          "Cannot publish while required assets are still processing";
+          "Cannot publish while required assets are still processing"
       } else if (currentTemplate && !canPublish(currentTemplate, assetMap)) {
         nextErrors.isPublic =
-          "Cannot publish: required assets are not ready yet";
+          "Cannot publish: required assets are not ready yet"
       }
     }
 
-    setFormErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
+    setFormErrors(nextErrors)
+    return Object.keys(nextErrors).length === 0
   }
 
   function buildAsset(fileName: string, kind: "blend" | "glb" | "thumbnail") {
-    const id = createMockId("asset");
+    const id = createMockId("asset")
 
     return {
       id,
@@ -325,50 +315,50 @@ export function HallTemplateLibraryManager() {
           ? `https://example.com/files/${fileName}`
           : `https://picsum.photos/seed/${createMockId("preview")}/640/360`,
       createdAt: new Date().toISOString(),
-    };
+    }
   }
 
   function handleSave(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+    event.preventDefault()
 
     if (!validateForm()) {
-      return;
+      return
     }
 
     const currentTemplate = templates.find(
       (template) => template.id === editingTemplateId,
-    );
+    )
 
-    const newAssets: ModelAsset[] = [];
+    const newAssets: ModelAsset[] = []
 
     if (formState.glbFileName.trim()) {
-      newAssets.push(buildAsset(formState.glbFileName.trim(), "glb"));
+      newAssets.push(buildAsset(formState.glbFileName.trim(), "glb"))
     }
 
     if (formState.thumbnailFileName.trim()) {
       newAssets.push(
         buildAsset(formState.thumbnailFileName.trim(), "thumbnail"),
-      );
+      )
     }
 
     if (formState.blendFileName.trim()) {
-      newAssets.push(buildAsset(formState.blendFileName.trim(), "blend"));
+      newAssets.push(buildAsset(formState.blendFileName.trim(), "blend"))
     }
 
     const newGlbAssetId =
       newAssets.find((asset) => asset.kind === "glb")?.id ||
-      currentTemplate?.renderGlbAssetId;
+      currentTemplate?.renderGlbAssetId
 
     const newThumbnailAssetId =
       newAssets.find((asset) => asset.kind === "thumbnail")?.id ||
-      currentTemplate?.thumbnailAssetId;
+      currentTemplate?.thumbnailAssetId
 
     if (!newGlbAssetId || !newThumbnailAssetId) {
       setNotice({
         type: "error",
         text: "Missing required assets. Please upload GLB and thumbnail.",
-      });
-      return;
+      })
+      return
     }
 
     if (formMode === "create") {
@@ -384,9 +374,9 @@ export function HallTemplateLibraryManager() {
         isActive: formState.isActive,
         updatedBy: "Khai Pham",
         updatedAt: new Date().toISOString(),
-      };
+      }
 
-      setTemplates((currentTemplates) => [nextTemplate, ...currentTemplates]);
+      setTemplates((currentTemplates) => [nextTemplate, ...currentTemplates])
       setUsages((currentUsage) => [
         {
           hallTemplateId: nextTemplate.id,
@@ -395,17 +385,17 @@ export function HallTemplateLibraryManager() {
           archivedExpoCount: 0,
         },
         ...currentUsage,
-      ]);
+      ])
 
       setNotice({
         type: "success",
         text: "Hall template created. Required assets are processing.",
-      });
+      })
     } else if (currentTemplate) {
       setTemplates((currentTemplates) =>
         currentTemplates.map((template) => {
           if (template.id !== currentTemplate.id) {
-            return template;
+            return template
           }
 
           return {
@@ -420,40 +410,40 @@ export function HallTemplateLibraryManager() {
             isActive: formState.isActive,
             updatedBy: "Khai Pham",
             updatedAt: new Date().toISOString(),
-          };
+          }
         }),
-      );
+      )
 
       setNotice({
         type: "success",
         text: "Hall template updated successfully.",
-      });
+      })
     }
 
     if (newAssets.length > 0) {
-      setAssets((currentAssets) => [...newAssets, ...currentAssets]);
+      setAssets((currentAssets) => [...newAssets, ...currentAssets])
       newAssets.forEach((asset) => {
-        scheduleAssetProcessing(asset);
-      });
+        scheduleAssetProcessing(asset)
+      })
     }
 
-    setFormOpen(false);
-    resetForm();
+    setFormOpen(false)
+    resetForm()
   }
 
   function getUsage(templateId: string) {
-    return usages.find((item) => item.hallTemplateId === templateId);
+    return usages.find((item) => item.hallTemplateId === templateId)
   }
 
   function handleTogglePublic(template: HallTemplate) {
-    const nextPublic = !template.isPublic;
+    const nextPublic = !template.isPublic
 
     if (nextPublic && !canPublish(template, assetMap)) {
       setNotice({
         type: "error",
         text: "Cannot publish: required assets are not ready yet.",
-      });
-      return;
+      })
+      return
     }
 
     setTemplates((currentTemplates) =>
@@ -467,19 +457,19 @@ export function HallTemplateLibraryManager() {
             }
           : item,
       ),
-    );
+    )
 
     setNotice({
       type: "success",
       text: nextPublic
         ? "Template published for organizers."
         : "Template moved back to draft.",
-    });
+    })
   }
 
   function handleToggleActive(template: HallTemplate) {
-    const nextActive = !template.isActive;
-    const usage = getUsage(template.id);
+    const nextActive = !template.isActive
+    const usage = getUsage(template.id)
 
     setTemplates((currentTemplates) =>
       currentTemplates.map((item) =>
@@ -492,53 +482,53 @@ export function HallTemplateLibraryManager() {
             }
           : item,
       ),
-    );
+    )
 
     if (!nextActive && (usage?.upcomingExpoCount || 0) > 0) {
       setNotice({
         type: "info",
         text: `Template deactivated. Mock notification sent to ${usage?.upcomingExpoCount} expo owner(s).`,
-      });
-      return;
+      })
+      return
     }
 
     setNotice({
       type: "success",
       text: nextActive ? "Template re-activated." : "Template deactivated.",
-    });
+    })
   }
 
   function handleDeleteTemplate(template: HallTemplate) {
-    const usage = getUsage(template.id);
+    const usage = getUsage(template.id)
     const totalReferences =
       (usage?.upcomingExpoCount || 0) +
       (usage?.liveExpoCount || 0) +
-      (usage?.archivedExpoCount || 0);
+      (usage?.archivedExpoCount || 0)
 
     if (totalReferences > 0) {
       setNotice({
         type: "error",
         text: "This template is in use by one or more expos and cannot be deleted.",
-      });
-      return;
+      })
+      return
     }
 
-    const nextTemplates = templates.filter((item) => item.id !== template.id);
+    const nextTemplates = templates.filter((item) => item.id !== template.id)
     const removedAssetIds = [
       template.sourceBlendAssetId,
       template.renderGlbAssetId,
       template.thumbnailAssetId,
-    ].filter(Boolean);
+    ].filter(Boolean)
 
-    setTemplates(nextTemplates);
+    setTemplates(nextTemplates)
     setUsages((currentUsage) =>
       currentUsage.filter((item) => item.hallTemplateId !== template.id),
-    );
+    )
 
     setAssets((currentAssets) =>
       currentAssets.filter((asset) => {
         if (!removedAssetIds.includes(asset.id)) {
-          return true;
+          return true
         }
 
         return nextTemplates.some((candidate) =>
@@ -547,47 +537,47 @@ export function HallTemplateLibraryManager() {
             candidate.renderGlbAssetId,
             candidate.thumbnailAssetId,
           ].includes(asset.id),
-        );
+        )
       }),
-    );
+    )
 
     if (translationTemplateId === template.id) {
-      setTranslationTemplateId(null);
+      setTranslationTemplateId(null)
     }
 
     setNotice({
       type: "success",
       text: "Template and linked unused assets were deleted.",
-    });
+    })
   }
 
   function handleAddTranslation(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+    event.preventDefault()
 
     if (!translationTemplateId) {
-      return;
+      return
     }
 
-    const normalizedCode = translationLanguageCode.trim().toLowerCase();
+    const normalizedCode = translationLanguageCode.trim().toLowerCase()
 
     if (!normalizedCode || !translationName.trim()) {
       setNotice({
         type: "error",
         text: "Language code and translated name are required.",
-      });
-      return;
+      })
+      return
     }
 
     setTemplates((currentTemplates) =>
       currentTemplates.map((template) => {
         if (template.id !== translationTemplateId) {
-          return template;
+          return template
         }
 
         const existing = template.translations.find(
           (translation) =>
             translation.languageCode.toLowerCase() === normalizedCode,
-        );
+        )
 
         if (existing) {
           return {
@@ -599,7 +589,7 @@ export function HallTemplateLibraryManager() {
             ),
             updatedAt: new Date().toISOString(),
             updatedBy: "Khai Pham",
-          };
+          }
         }
 
         return {
@@ -610,23 +600,23 @@ export function HallTemplateLibraryManager() {
           ],
           updatedAt: new Date().toISOString(),
           updatedBy: "Khai Pham",
-        };
+        }
       }),
-    );
+    )
 
-    setTranslationName("");
-    setNotice({ type: "success", text: "Translation saved." });
+    setTranslationName("")
+    setNotice({ type: "success", text: "Translation saved." })
   }
 
   function handleDeleteTranslation(languageCode: string) {
     if (!translationTemplateId) {
-      return;
+      return
     }
 
     setTemplates((currentTemplates) =>
       currentTemplates.map((template) => {
         if (template.id !== translationTemplateId) {
-          return template;
+          return template
         }
 
         return {
@@ -636,11 +626,11 @@ export function HallTemplateLibraryManager() {
           ),
           updatedAt: new Date().toISOString(),
           updatedBy: "Khai Pham",
-        };
+        }
       }),
-    );
+    )
 
-    setNotice({ type: "success", text: "Translation removed." });
+    setNotice({ type: "success", text: "Translation removed." })
   }
 
   return (
@@ -652,8 +642,8 @@ export function HallTemplateLibraryManager() {
               <InputGroupInput
                 value={search}
                 onChange={(event) => {
-                  setSearch(event.target.value);
-                  setPage(1);
+                  setSearch(event.target.value)
+                  setPage(1)
                 }}
                 placeholder="Search hall template by name"
               />
@@ -710,13 +700,13 @@ export function HallTemplateLibraryManager() {
                 </TableRow>
               ) : (
                 pagedTemplates.map((template) => {
-                  const status = getHallTemplateStatus(template, assetMap);
-                  const thumbnail = assetMap[template.thumbnailAssetId];
+                  const status = getHallTemplateStatus(template, assetMap)
+                  const thumbnail = assetMap[template.thumbnailAssetId]
                   const translatedName = getTranslationName(
                     template.name,
                     template.translations,
                     previewLocale,
-                  );
+                  )
 
                   return (
                     <TableRow key={template.id}>
@@ -803,7 +793,7 @@ export function HallTemplateLibraryManager() {
                         </DropdownMenu>
                       </TableCell>
                     </TableRow>
-                  );
+                  )
                 })
               )}
             </TableBody>
@@ -846,7 +836,7 @@ export function HallTemplateLibraryManager() {
         open={Boolean(deleteTarget)}
         onOpenChange={(open) => {
           if (!open) {
-            setDeleteTemplateId(null);
+            setDeleteTemplateId(null)
           }
         }}
       >
@@ -864,11 +854,11 @@ export function HallTemplateLibraryManager() {
               variant="destructive"
               onClick={() => {
                 if (!deleteTarget) {
-                  return;
+                  return
                 }
 
-                handleDeleteTemplate(deleteTarget);
-                setDeleteTemplateId(null);
+                handleDeleteTemplate(deleteTarget)
+                setDeleteTemplateId(null)
               }}
             >
               Delete
@@ -1120,5 +1110,5 @@ export function HallTemplateLibraryManager() {
         </section>
       ) : null}
     </div>
-  );
+  )
 }

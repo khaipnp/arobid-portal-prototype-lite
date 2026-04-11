@@ -122,3 +122,21 @@ export interface Expo {
   categoryIds: string[]
   createdAt: string
 }
+
+export type NotificationKind =
+  | "approval_needed"
+  | "expo_live"
+  | "expo_ended"
+  | "asset_failed"
+  | "expo_starting_soon"
+  | "expo_canceled"
+
+export interface AdminNotification {
+  id: string
+  kind: NotificationKind
+  title: string
+  message: string
+  relatedExpoId?: string
+  createdAt: string
+  isRead: boolean
+}

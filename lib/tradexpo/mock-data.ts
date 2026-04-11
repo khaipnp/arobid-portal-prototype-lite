@@ -1,4 +1,5 @@
 import type {
+  AdminNotification,
   BoothTemplate,
   BoothTemplateUsage,
   BoothType,
@@ -567,5 +568,122 @@ export const mockExpos: Expo[] = [
     status: "Live",
     categoryIds: ["cat-retail", "cat-tech"],
     createdAt: isoOffset(96),
+  },
+]
+
+export const mockNotifications: AdminNotification[] = [
+  {
+    id: "notif-001",
+    kind: "approval_needed",
+    title: "Expo awaiting approval",
+    message:
+      '"VietTech Innovation Summit 2025" submitted by nguyen.van.a@viettech.vn is pending your review.',
+    relatedExpoId: "expo-001",
+    createdAt: isoOffset(12),
+    isRead: false,
+  },
+  {
+    id: "notif-002",
+    kind: "approval_needed",
+    title: "Expo awaiting approval",
+    message:
+      '"GreenEnergy Hanoi 2025" submitted by ceo@greenenergy.vn is pending your review.',
+    relatedExpoId: "expo-006",
+    createdAt: isoOffset(6),
+    isRead: false,
+  },
+  {
+    id: "notif-003",
+    kind: "approval_needed",
+    title: "Expo awaiting approval",
+    message:
+      '"Organic Living Festival" submitted by team@organicliving.vn is pending your review.',
+    relatedExpoId: "expo-012",
+    createdAt: isoOffset(2),
+    isRead: false,
+  },
+  {
+    id: "notif-004",
+    kind: "expo_live",
+    title: "Expo is now Live",
+    message:
+      '"B2B Marketplace Summit APAC" went live and is now visible to the public.',
+    relatedExpoId: "expo-015",
+    createdAt: isoOffset(96),
+    isRead: true,
+  },
+  {
+    id: "notif-005",
+    kind: "expo_live",
+    title: "Expo is now Live",
+    message:
+      '"AI & Robotics Showcase" went live. Approval notification sent to showcase@airobotics.tech.',
+    relatedExpoId: "expo-009",
+    createdAt: isoOffset(48),
+    isRead: true,
+  },
+  {
+    id: "notif-006",
+    kind: "expo_starting_soon",
+    title: "Expo starts in 15 days",
+    message:
+      '"Cloud Connect Vietnam" is scheduled to start on ' +
+      isoDate(15) +
+      ". Ensure all resources are ready.",
+    relatedExpoId: "expo-007",
+    createdAt: isoOffset(3),
+    isRead: false,
+  },
+  {
+    id: "notif-007",
+    kind: "expo_starting_soon",
+    title: "Expo starts in 20 days",
+    message: `"Organic Living Festival" is scheduled to start on ${isoDate(20)}.`,
+    relatedExpoId: "expo-012",
+    createdAt: isoOffset(2),
+    isRead: false,
+  },
+  {
+    id: "notif-008",
+    kind: "asset_failed",
+    title: "Asset processing failed",
+    message:
+      'GLB file for booth template "Pro Corner Neon" failed to process. Please re-upload the asset.',
+    createdAt: isoOffset(10),
+    isRead: false,
+  },
+  {
+    id: "notif-009",
+    kind: "expo_ended",
+    title: "Expo has ended",
+    message:
+      '"Smart Manufacturing Expo" ended on ' +
+      isoDate(-57) +
+      ". Archive or review the record.",
+    relatedExpoId: "expo-011",
+    createdAt: isoOffset(150),
+    isRead: true,
+  },
+  {
+    id: "notif-010",
+    kind: "expo_canceled",
+    title: "Expo canceled",
+    message:
+      '"Retail Innovation Forum 2024" was canceled by the owner. No further action required.',
+    relatedExpoId: "expo-008",
+    createdAt: isoOffset(400),
+    isRead: true,
+  },
+  {
+    id: "notif-011",
+    kind: "expo_ended",
+    title: "Expo has ended",
+    message:
+      '"AutoDrive Expo Southeast Asia" ended on ' +
+      isoDate(-85) +
+      ". Consider archiving.",
+    relatedExpoId: "expo-004",
+    createdAt: isoOffset(200),
+    isRead: true,
   },
 ]
