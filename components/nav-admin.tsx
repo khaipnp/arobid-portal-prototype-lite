@@ -1,11 +1,15 @@
 "use client"
 
 import {
+  CreditCardIcon,
   Grid3x2Icon,
+  LandmarkIcon,
   LayoutDashboardIcon,
   LayoutPanelTopIcon,
   LayoutTemplateIcon,
   PieChartIcon,
+  ReceiptIcon,
+  SettingsIcon,
   ShieldCheckIcon,
   ToyBrickIcon,
   UsersIcon,
@@ -52,6 +56,27 @@ const tradexpoLinks = [
     name: "Booth Templates",
     url: "/admin/tradexpo/booth-templates",
     icon: <ToyBrickIcon />,
+  },
+]
+
+const ordersLinks = [
+  {
+    name: "Order Management",
+    url: "/admin/orders",
+    icon: <ReceiptIcon />,
+  },
+]
+
+const settingsLinks = [
+  {
+    name: "Payment Method",
+    url: "/admin/settings/payment-method",
+    icon: <CreditCardIcon />,
+  },
+  {
+    name: "Bank Accounts",
+    url: "/admin/settings/bank-accounts",
+    icon: <LandmarkIcon />,
   },
 ]
 
@@ -110,6 +135,38 @@ export function NavAdmin() {
         <SidebarGroupLabel>TradeXpo</SidebarGroupLabel>
         <SidebarMenu>
           {tradexpoLinks.map((item) => (
+            <SidebarMenuItem key={item.name}>
+              <SidebarMenuButton asChild>
+                <Link href={item.url}>
+                  {item.icon}
+                  <span>{item.name}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarGroup>
+
+      <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+        <SidebarGroupLabel>Orders & Transactions</SidebarGroupLabel>
+        <SidebarMenu>
+          {ordersLinks.map((item) => (
+            <SidebarMenuItem key={item.name}>
+              <SidebarMenuButton asChild>
+                <Link href={item.url}>
+                  {item.icon}
+                  <span>{item.name}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarGroup>
+
+      <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+        <SidebarGroupLabel>Settings</SidebarGroupLabel>
+        <SidebarMenu>
+          {settingsLinks.map((item) => (
             <SidebarMenuItem key={item.name}>
               <SidebarMenuButton asChild>
                 <Link href={item.url}>

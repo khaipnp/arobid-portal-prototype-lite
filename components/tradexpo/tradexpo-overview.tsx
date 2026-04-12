@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   AlertCircleIcon,
@@ -17,66 +17,57 @@ import {
   ToyBrickIcon,
   XIcon,
   ZapIcon,
-} from "lucide-react";
-import Link from "next/link";
-import * as React from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+} from "lucide-react"
+import Link from "next/link"
+import * as React from "react"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   mockAssets,
   mockBoothTemplates,
   mockExpos,
   mockHallTemplates,
   mockNotifications,
-} from "@/lib/tradexpo/mock-data";
+} from "@/lib/tradexpo/mock-data"
 import type {
   AdminNotification,
   Expo,
   ExpoStatus,
   NotificationKind,
-} from "@/lib/tradexpo/types";
+} from "@/lib/tradexpo/types"
 import {
   getAssetMap,
   getBoothTemplateStatus,
   getHallTemplateStatus,
-} from "@/lib/tradexpo/utils";
-import { cn } from "@/lib/utils";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "../ui/hover-card";
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-  DialogTitle,
-} from "../ui/dialog";
+} from "@/lib/tradexpo/utils"
+import { cn } from "@/lib/utils"
+import { Dialog, DialogContent, DialogTitle, DialogTrigger } from "../ui/dialog"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "../ui/hover-card"
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
 function daysUntil(dateStr: string) {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const target = new Date(dateStr);
-  target.setHours(0, 0, 0, 0);
-  return Math.round((target.getTime() - today.getTime()) / 86_400_000);
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const target = new Date(dateStr)
+  target.setHours(0, 0, 0, 0)
+  return Math.round((target.getTime() - today.getTime()) / 86_400_000)
 }
 
 function formatShortDate(iso: string) {
   return new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" }).format(
     new Date(iso),
-  );
+  )
 }
 
 function timeAgo(iso: string) {
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
+  const diff = Date.now() - new Date(iso).getTime()
+  const mins = Math.floor(diff / 60_000)
+  if (mins < 60) return `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `${hrs}h ago`
+  return `${Math.floor(hrs / 24)}d ago`
 }
 
 // ─── stat cards ──────────────────────────────────────────────────────────────
@@ -88,7 +79,7 @@ const EXPO_STATUS_ORDER: ExpoStatus[] = [
   "Ended",
   "Archived",
   "Canceled",
-];
+]
 
 const STATUS_COLOR: Record<ExpoStatus, string> = {
   Live: "bg-emerald-500",
@@ -97,7 +88,7 @@ const STATUS_COLOR: Record<ExpoStatus, string> = {
   Ended: "bg-zinc-400",
   Archived: "bg-purple-400",
   Canceled: "bg-rose-400",
-};
+}
 
 const STATUS_TEXT: Record<ExpoStatus, string> = {
   Live: "text-emerald-700",
@@ -106,19 +97,19 @@ const STATUS_TEXT: Record<ExpoStatus, string> = {
   Ended: "text-zinc-600",
   Archived: "text-purple-700",
   Canceled: "text-rose-700",
-};
+}
 
 function ExpoStatsCard({ expos }: { expos: Expo[] }) {
   const counts = React.useMemo(() => {
-    const map: Partial<Record<ExpoStatus, number>> = {};
+    const map: Partial<Record<ExpoStatus, number>> = {}
     for (const expo of expos) {
-      map[expo.status] = (map[expo.status] ?? 0) + 1;
+      map[expo.status] = (map[expo.status] ?? 0) + 1
     }
-    return map;
-  }, [expos]);
+    return map
+  }, [expos])
 
-  const liveCount = counts.Live ?? 0;
-  const pendingCount = counts["Pending Review"] ?? 0;
+  const liveCount = counts.Live ?? 0
+  const pendingCount = counts["Pending Review"] ?? 0
 
   return (
     <HoverCard>
@@ -158,9 +149,9 @@ function ExpoStatsCard({ expos }: { expos: Expo[] }) {
 
             <div className="flex h-2 w-full overflow-hidden rounded-full bg-muted">
               {EXPO_STATUS_ORDER.map((status) => {
-                const count = counts[status] ?? 0;
-                if (count === 0) return null;
-                const pct = (count / expos.length) * 100;
+                const count = counts[status] ?? 0
+                if (count === 0) return null
+                const pct = (count / expos.length) * 100
                 return (
                   <div
                     key={status}
@@ -168,14 +159,14 @@ function ExpoStatsCard({ expos }: { expos: Expo[] }) {
                     className={cn("h-full", STATUS_COLOR[status])}
                     style={{ width: `${pct}%` }}
                   />
-                );
+                )
               })}
             </div>
 
             <div className="flex flex-wrap gap-x-3 gap-y-1">
               {EXPO_STATUS_ORDER.map((status) => {
-                const count = counts[status] ?? 0;
-                if (count === 0) return null;
+                const count = counts[status] ?? 0
+                if (count === 0) return null
                 return (
                   <span
                     key={status}
@@ -183,7 +174,7 @@ function ExpoStatsCard({ expos }: { expos: Expo[] }) {
                   >
                     {status} {count}
                   </span>
-                );
+                )
               })}
             </div>
           </CardContent>
@@ -200,11 +191,11 @@ function ExpoStatsCard({ expos }: { expos: Expo[] }) {
         </p>
       </HoverCardContent>
     </HoverCard>
-  );
+  )
 }
 
 function LiveNowCard({ expos }: { expos: Expo[] }) {
-  const live = expos.filter((e) => e.status === "Live");
+  const live = expos.filter((e) => e.status === "Live")
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -245,11 +236,11 @@ function LiveNowCard({ expos }: { expos: Expo[] }) {
         )}
       </CardContent>
     </Card>
-  );
+  )
 }
 
 function PendingReviewCard({ expos }: { expos: Expo[] }) {
-  const pending = expos.filter((e) => e.status === "Pending Review");
+  const pending = expos.filter((e) => e.status === "Pending Review")
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -285,29 +276,29 @@ function PendingReviewCard({ expos }: { expos: Expo[] }) {
         )}
       </CardContent>
     </Card>
-  );
+  )
 }
 
 function TemplatesCard() {
-  const assetMap = React.useMemo(() => getAssetMap(mockAssets), []);
+  const assetMap = React.useMemo(() => getAssetMap(mockAssets), [])
 
   const hallReady = mockHallTemplates.filter(
     (t) => getHallTemplateStatus(t, assetMap) === "Published",
-  ).length;
+  ).length
 
   const boothReady = mockBoothTemplates.filter(
     (t) => getBoothTemplateStatus(t, assetMap) === "Published",
-  ).length;
+  ).length
 
   const hallFailed = mockHallTemplates.filter(
     (t) => getHallTemplateStatus(t, assetMap) === "Failed",
-  ).length;
+  ).length
 
   const boothFailed = mockBoothTemplates.filter(
     (t) => getBoothTemplateStatus(t, assetMap) === "Failed",
-  ).length;
+  ).length
 
-  const hasIssues = hallFailed > 0 || boothFailed > 0;
+  const hasIssues = hallFailed > 0 || boothFailed > 0
 
   return (
     <Card>
@@ -350,30 +341,30 @@ function TemplatesCard() {
         )}
       </CardContent>
     </Card>
-  );
+  )
 }
 
 // ─── reminders ───────────────────────────────────────────────────────────────
 
 function RemindersPanel({ expos }: { expos: Expo[] }) {
-  const assetMap = React.useMemo(() => getAssetMap(mockAssets), []);
+  const assetMap = React.useMemo(() => getAssetMap(mockAssets), [])
 
-  const pendingApproval = expos.filter((e) => e.status === "Pending Review");
+  const pendingApproval = expos.filter((e) => e.status === "Pending Review")
 
   const startingSoon = expos
     .filter((e) => {
-      const d = daysUntil(e.startDate);
+      const d = daysUntil(e.startDate)
       return (
         d >= 0 &&
         d <= 14 &&
         (e.status === "Draft" || e.status === "Pending Review")
-      );
+      )
     })
-    .sort((a, b) => daysUntil(a.startDate) - daysUntil(b.startDate));
+    .sort((a, b) => daysUntil(a.startDate) - daysUntil(b.startDate))
 
   const endedUnarchived = expos.filter(
     (e) => e.status === "Ended" && daysUntil(e.endDate) < -7,
-  );
+  )
 
   const failedTemplates = [
     ...mockHallTemplates
@@ -382,13 +373,13 @@ function RemindersPanel({ expos }: { expos: Expo[] }) {
     ...mockBoothTemplates
       .filter((t) => getBoothTemplateStatus(t, assetMap) === "Failed")
       .map((t) => ({ name: t.name, kind: "Booth Template" })),
-  ];
+  ]
 
   const hasAny =
     pendingApproval.length > 0 ||
     startingSoon.length > 0 ||
     endedUnarchived.length > 0 ||
-    failedTemplates.length > 0;
+    failedTemplates.length > 0
 
   return (
     <section className="rounded-xl border bg-card p-4">
@@ -443,7 +434,7 @@ function RemindersPanel({ expos }: { expos: Expo[] }) {
               </p>
               <ul className="mt-2 space-y-1.5">
                 {startingSoon.map((expo) => {
-                  const days = daysUntil(expo.startDate);
+                  const days = daysUntil(expo.startDate)
                   return (
                     <li
                       key={expo.id}
@@ -456,7 +447,7 @@ function RemindersPanel({ expos }: { expos: Expo[] }) {
                         {days === 0 ? "today" : `in ${days}d`}
                       </span>
                     </li>
-                  );
+                  )
                 })}
               </ul>
             </div>
@@ -501,7 +492,7 @@ function RemindersPanel({ expos }: { expos: Expo[] }) {
         </div>
       )}
     </section>
-  );
+  )
 }
 
 // ─── notification feed ────────────────────────────────────────────────────────
@@ -534,7 +525,7 @@ const KIND_META: Record<
     icon: <XIcon className="h-4 w-4" />,
     color: "text-rose-400",
   },
-};
+}
 
 function NotificationFeed() {
   const [notifications, setNotifications] = React.useState<AdminNotification[]>(
@@ -543,26 +534,26 @@ function NotificationFeed() {
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       ),
-  );
-  const [showAll, setShowAll] = React.useState(false);
+  )
+  const [showAll, setShowAll] = React.useState(false)
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
+  const unreadCount = notifications.filter((n) => !n.isRead).length
 
   function markAllRead() {
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
   }
 
   function dismiss(id: string) {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
+    setNotifications((prev) => prev.filter((n) => n.id !== id))
   }
 
   function markRead(id: string) {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
-    );
+    )
   }
 
-  const visible = showAll ? notifications : notifications.slice(0, 5);
+  const visible = showAll ? notifications : notifications.slice(0, 5)
 
   return (
     <section className="rounded-xl border bg-card p-4">
@@ -592,7 +583,7 @@ function NotificationFeed() {
         <>
           <ul className="mt-3 divide-y">
             {visible.map((notif) => {
-              const meta = KIND_META[notif.kind];
+              const meta = KIND_META[notif.kind]
               return (
                 <li
                   key={notif.id}
@@ -655,7 +646,7 @@ function NotificationFeed() {
                     </div>
                   </div>
                 </li>
-              );
+              )
             })}
           </ul>
 
@@ -672,15 +663,20 @@ function NotificationFeed() {
         </>
       )}
     </section>
-  );
+  )
 }
 
 function UIExplainDialog() {
   return (
     <Dialog>
       <DialogTrigger>
-        <Button variant="destructive" size="icon" className="fixed bottom-4 right-4">
+        <Button
+          variant="destructive"
+          size="lg"
+          className="bg-destructive text-white! text-destructive-foreground hover:bg-destructive/80 fixed bottom-4 right-4"
+        >
           <HelpCircleIcon />
+          UI/UX Explain
         </Button>
       </DialogTrigger>
       <DialogContent>
@@ -688,16 +684,16 @@ function UIExplainDialog() {
         <p>ádasdasd</p>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
 
 // ─── root ─────────────────────────────────────────────────────────────────────
 
 export function TradeXpoOverview() {
-  const expos = React.useMemo(() => mockExpos.map((e) => ({ ...e })), []);
+  const expos = React.useMemo(() => mockExpos.map((e) => ({ ...e })), [])
 
   return (
-    <div className="grid gap-6">
+    <div className="grid gap-4">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <ExpoStatsCard expos={expos} />
         <LiveNowCard expos={expos} />
@@ -710,5 +706,5 @@ export function TradeXpoOverview() {
       <NotificationFeed />
       <UIExplainDialog />
     </div>
-  );
+  )
 }

@@ -140,3 +140,67 @@ export interface AdminNotification {
   createdAt: string
   isRead: boolean
 }
+
+// ─── Orders & Transactions ───────────────────────────────────────────────────
+
+export type PaymentMethod = "vnpay" | "bank_transfer"
+
+export type OrderStatus =
+  | "Pending Payment"
+  | "Awaiting Confirmation"
+  | "Paid"
+  | "Failed"
+  | "Cancelled"
+  | "Expired"
+  | "Rejected"
+
+export type OrderType = "booth_registration"
+
+export interface Order {
+  id: string
+  customerId: string
+  customerName: string
+  customerEmail: string
+  customerCompany: string
+  orderType: OrderType
+  referenceId: string
+  expoName: string
+  boothRef: string
+  boothTier: string
+  amount: number
+  paymentMethod: PaymentMethod
+  status: OrderStatus
+  expiresAt?: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface TransactionLogEntry {
+  id: string
+  orderId: string
+  type: "payment" | "refund" | "status_change"
+  status: OrderStatus
+  actor: string
+  note?: string
+  rejectionReason?: string
+  processedAt: string
+}
+
+export interface BankAccount {
+  id: string
+  bankName: string
+  bankBIN: string
+  accountNumber: string
+  accountHolderName: string
+  branch?: string
+  isPrimary: boolean
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+export interface PaymentConfig {
+  activeMethod: PaymentMethod
+  updatedAt: string
+  updatedBy: string
+}
