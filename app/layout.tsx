@@ -4,6 +4,7 @@ import { Geist_Mono, Manrope } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
+import "./globals.css"
 
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-sans" })
 
