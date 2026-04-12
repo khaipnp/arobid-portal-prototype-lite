@@ -1,5 +1,5 @@
 import { Geist_Mono, Manrope } from "next/font/google"
-
+import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -32,6 +32,7 @@ export default function RootLayout({
         <TooltipProvider>
           <ThemeProvider>{children}</ThemeProvider>
         </TooltipProvider>
+        <Analytics />
       </body>
     </html>
   )
