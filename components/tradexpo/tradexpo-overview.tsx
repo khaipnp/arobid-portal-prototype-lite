@@ -53,8 +53,6 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "../ui/hover-card";
-import { ExplainDialog } from "../ui/explain-dialog";
-
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
 function daysUntil(dateStr: string) {
