@@ -12,7 +12,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
 import { mockBankAccounts, mockPaymentConfig } from "@/lib/orders/mock-data"
 import type { PaymentMethod } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
@@ -191,7 +190,7 @@ export function PaymentMethodConfig() {
       </AlertDialog>
 
       {toast && (
-        <div className="fixed bottom-6 right-6 z-50 max-w-sm rounded-lg border bg-background px-4 py-3 shadow-lg text-sm">
+        <div className="fixed right-6 bottom-6 z-50 max-w-sm rounded-lg border bg-background px-4 py-3 text-sm shadow-lg">
           {toast}
         </div>
       )}

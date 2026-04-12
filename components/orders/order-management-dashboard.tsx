@@ -1,23 +1,23 @@
-"use client";
+"use client"
 
-import { AlertCircleIcon, FilterXIcon, SearchIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
-import { OrderStatusBadge } from "@/components/orders/order-status-badge";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { AlertCircleIcon, FilterXIcon, SearchIcon } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useMemo, useState } from "react"
+import { OrderStatusBadge } from "@/components/orders/order-status-badge"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
-  DateRangePicker,
   type DateRange,
-} from "@/components/ui/date-range-picker";
-import { Input } from "@/components/ui/input";
+  DateRangePicker,
+} from "@/components/ui/date-range-picker"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/select"
 import {
   Table,
   TableBody,
@@ -25,11 +25,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { mockOrders } from "@/lib/orders/mock-data";
-import type { Order, OrderStatus, PaymentMethod } from "@/lib/tradexpo/types";
+} from "@/components/ui/table"
+import { mockOrders } from "@/lib/orders/mock-data"
+import type { Order, OrderStatus, PaymentMethod } from "@/lib/tradexpo/types"
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 20
 
 const ALL_STATUSES: OrderStatus[] = [
   "Pending Payment",
@@ -39,14 +39,14 @@ const ALL_STATUSES: OrderStatus[] = [
   "Cancelled",
   "Expired",
   "Rejected",
-];
+]
 
 function formatVND(amount: number) {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
     currency: "VND",
     maximumFractionDigits: 0,
-  }).format(amount);
+  }).format(amount)
 }
 
 function formatDate(iso: string) {
@@ -56,32 +56,30 @@ function formatDate(iso: string) {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  });
+  })
 }
 
 export function OrderManagementDashboard() {
-  const router = useRouter();
+  const router = useRouter()
   const [orders] = useState<Order[]>(() =>
     [...mockOrders].sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     ),
-  );
+  )
 
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<"all" | OrderStatus>("all");
-  const [methodFilter, setMethodFilter] = useState<"all" | PaymentMethod>(
-    "all",
-  );
-  const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("")
+  const [statusFilter, setStatusFilter] = useState<"all" | OrderStatus>("all")
+  const [methodFilter, setMethodFilter] = useState<"all" | PaymentMethod>("all")
+  const [dateRange, setDateRange] = useState<DateRange | undefined>()
+  const [page, setPage] = useState(1)
 
   const awaitingCount = orders.filter(
     (o) => o.status === "Awaiting Confirmation",
-  ).length;
+  ).length
 
   const filtered = useMemo(() => {
-    const q = search.toLowerCase();
+    const q = search.toLowerCase()
     return orders.filter((o) => {
       if (
         q &&
@@ -89,30 +87,30 @@ export function OrderManagementDashboard() {
         !o.customerName.toLowerCase().includes(q) &&
         !o.customerEmail.toLowerCase().includes(q)
       )
-        return false;
-      if (statusFilter !== "all" && o.status !== statusFilter) return false;
+        return false
+      if (statusFilter !== "all" && o.status !== statusFilter) return false
       if (methodFilter !== "all" && o.paymentMethod !== methodFilter)
-        return false;
+        return false
       if (dateRange?.from && o.createdAt < dateRange.from.toISOString())
-        return false;
+        return false
       if (dateRange?.to) {
-        const toEnd = new Date(dateRange.to);
-        toEnd.setHours(23, 59, 59, 999);
-        if (o.createdAt > toEnd.toISOString()) return false;
+        const toEnd = new Date(dateRange.to)
+        toEnd.setHours(23, 59, 59, 999)
+        if (o.createdAt > toEnd.toISOString()) return false
       }
-      return true;
-    });
-  }, [orders, search, statusFilter, methodFilter, dateRange]);
+      return true
+    })
+  }, [orders, search, statusFilter, methodFilter, dateRange])
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const currentPage = Math.min(page, totalPages);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const currentPage = Math.min(page, totalPages)
   const pageItems = filtered.slice(
     (currentPage - 1) * PAGE_SIZE,
     currentPage * PAGE_SIZE,
-  );
+  )
 
   function handleFilterChange() {
-    setPage(1);
+    setPage(1)
   }
 
   return (
@@ -131,13 +129,13 @@ export function OrderManagementDashboard() {
       {/* Filters */}
       <div className="flex flex-wrap items-end gap-2">
         <div className="relative min-w-56 flex-1">
-          <SearchIcon className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
+          <SearchIcon className="absolute top-2.5 left-2.5 size-4 text-muted-foreground" />
           <Input
             placeholder="Search by Order ID or customer…"
             value={search}
             onChange={(e) => {
-              setSearch(e.target.value);
-              handleFilterChange();
+              setSearch(e.target.value)
+              handleFilterChange()
             }}
             className="pl-8"
           />
@@ -146,8 +144,8 @@ export function OrderManagementDashboard() {
         <Select
           value={statusFilter}
           onValueChange={(v) => {
-            setStatusFilter(v as typeof statusFilter);
-            handleFilterChange();
+            setStatusFilter(v as typeof statusFilter)
+            handleFilterChange()
           }}
         >
           <SelectTrigger className="w-52">
@@ -166,8 +164,8 @@ export function OrderManagementDashboard() {
         <Select
           value={methodFilter}
           onValueChange={(v) => {
-            setMethodFilter(v as typeof methodFilter);
-            handleFilterChange();
+            setMethodFilter(v as typeof methodFilter)
+            handleFilterChange()
           }}
         >
           <SelectTrigger className="w-44">
@@ -183,8 +181,8 @@ export function OrderManagementDashboard() {
         <DateRangePicker
           value={dateRange}
           onChange={(r) => {
-            setDateRange(r);
-            handleFilterChange();
+            setDateRange(r)
+            handleFilterChange()
           }}
           placeholder="Date range"
           className="w-64"
@@ -198,11 +196,11 @@ export function OrderManagementDashboard() {
             variant="ghost"
             size="icon"
             onClick={() => {
-              setSearch("");
-              setStatusFilter("all");
-              setMethodFilter("all");
-              setDateRange(undefined);
-              setPage(1);
+              setSearch("")
+              setStatusFilter("all")
+              setMethodFilter("all")
+              setDateRange(undefined)
+              setPage(1)
             }}
           >
             <FilterXIcon />
@@ -245,11 +243,11 @@ export function OrderManagementDashboard() {
                       : undefined
                   }
                 >
-                  <TableCell className="font-mono text-xs font-medium">
+                  <TableCell className="font-medium font-mono text-xs">
                     {order.id}
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm font-medium">
+                    <div className="font-medium text-sm">
                       {order.customerName}
                     </div>
                     <div className="text-muted-foreground text-xs">
@@ -275,7 +273,7 @@ export function OrderManagementDashboard() {
                   <TableCell>
                     <OrderStatusBadge status={order.status} />
                   </TableCell>
-                  <TableCell className="text-muted-foreground text-xs whitespace-nowrap">
+                  <TableCell className="whitespace-nowrap text-muted-foreground text-xs">
                     {formatDate(order.createdAt)}
                   </TableCell>
                   <TableCell>
@@ -296,7 +294,7 @@ export function OrderManagementDashboard() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <div className="flex items-center justify-between text-muted-foreground text-sm">
           <span>
             {filtered.length} order{filtered.length !== 1 ? "s" : ""} · page{" "}
             {currentPage} of {totalPages}
@@ -322,5 +320,5 @@ export function OrderManagementDashboard() {
         </div>
       )}
     </div>
-  );
+  )
 }

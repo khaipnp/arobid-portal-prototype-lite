@@ -24,7 +24,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
 import { mockOrders, mockTransactionLog } from "@/lib/orders/mock-data"
 import type {
@@ -213,7 +212,7 @@ export function OrderDetail({ orderId }: OrderDetailProps) {
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Order Info */}
         <div className="space-y-4 rounded-lg border p-5">
-          <h2 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+          <h2 className="font-semibold text-muted-foreground text-sm uppercase tracking-wide">
             Order Information
           </h2>
           <div className="grid grid-cols-2 gap-y-3 text-sm">
@@ -243,7 +242,7 @@ export function OrderDetail({ orderId }: OrderDetailProps) {
 
         {/* Customer Info */}
         <div className="space-y-4 rounded-lg border p-5">
-          <h2 className="font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+          <h2 className="font-semibold text-muted-foreground text-sm uppercase tracking-wide">
             Customer
           </h2>
           <div className="grid grid-cols-2 gap-y-3 text-sm">
@@ -261,7 +260,7 @@ export function OrderDetail({ orderId }: OrderDetailProps) {
 
       {/* Transaction Log */}
       <div className="rounded-lg border p-5">
-        <h2 className="mb-4 font-semibold text-sm uppercase tracking-wide text-muted-foreground">
+        <h2 className="mb-4 font-semibold text-muted-foreground text-sm uppercase tracking-wide">
           Transaction Log
         </h2>
         {log.length === 0 ? (
@@ -382,7 +381,7 @@ export function OrderDetail({ orderId }: OrderDetailProps) {
 
       {/* Toast */}
       {toast && (
-        <div className="fixed bottom-6 right-6 z-50 max-w-sm rounded-lg border bg-background px-4 py-3 shadow-lg text-sm">
+        <div className="fixed right-6 bottom-6 z-50 max-w-sm rounded-lg border bg-background px-4 py-3 text-sm shadow-lg">
           {toast}
         </div>
       )}

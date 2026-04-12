@@ -9,7 +9,6 @@ import {
   LayoutTemplateIcon,
   PieChartIcon,
   ReceiptIcon,
-  SettingsIcon,
   ShieldCheckIcon,
   ToyBrickIcon,
   UsersIcon,
