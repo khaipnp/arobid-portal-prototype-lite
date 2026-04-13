@@ -738,21 +738,13 @@ export function DealRoomManager({
             <MessageCircleIcon className="size-8 text-muted-foreground" />
           </div>
           <div>
-            <p className="font-medium text-sm">Your messages</p>
-            <p className="mt-1 text-muted-foreground text-xs">
-              Select a conversation or start a new one
+            <p className="font-semibold text-lg">Your messages</p>
+            <p className="mt-1 text-muted-foreground">
+              Select a conversation to view messages.
+              <br />
+              Let's start a new conversation to get a big deal.
             </p>
           </div>
-          <Button
-            size="sm"
-            onClick={() => {
-              setUserSearchQuery("");
-              setNewMessageOpen(true);
-            }}
-          >
-            <SquarePenIcon className="size-4" />
-            New Message
-          </Button>
         </div>
       )}
     </div>
