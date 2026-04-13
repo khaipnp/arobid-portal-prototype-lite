@@ -40,7 +40,7 @@ The Order Management Dashboard is Admin's central view for all orders on the pla
 |--------|------|---------|
 | Status | Multi-select | `Pending Payment`, `Awaiting Confirmation`, `Paid`, `Failed`, `Cancelled`, `Expired`, `Rejected` |
 | Payment Method | Select | `All`, `VNPay`, `Bank Transfer` |
-| Order Type | Select | `All`, `Booth Registration` (future: Subscription, Marketplace) |
+| Order Type | Select | `All`, `Booth Registration`, `B2B Subscription` |
 | Date Range | Date picker | Created At — from / to |
 | Search | Text | Order ID or customer name / email |
 

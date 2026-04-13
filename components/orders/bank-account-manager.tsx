@@ -232,10 +232,7 @@ export function BankAccountManager() {
   function handleToggleActive(account: BankAccount) {
     if (account.isActive) {
       // Deactivating
-      if (
-        account.isPrimary &&
-        mockPaymentConfig.activeMethod === "bank_transfer"
-      ) {
+      if (account.isPrimary && mockPaymentConfig.bankTransferEnabled) {
         setError(
           `"${account.bankName} ···${account.accountNumber.slice(-4)}" is the active primary account for Bank Transfer payments. Please set a different primary account before deactivating.`,
         )
@@ -248,12 +245,9 @@ export function BankAccountManager() {
   }
 
   function handleDelete(account: BankAccount) {
-    if (
-      account.isPrimary &&
-      mockPaymentConfig.activeMethod === "bank_transfer"
-    ) {
+    if (account.isPrimary && mockPaymentConfig.bankTransferEnabled) {
       setError(
-        "Cannot delete the primary account while Bank Transfer is the active payment method.",
+        "Cannot delete the primary account while Bank Transfer is enabled.",
       )
       return
     }

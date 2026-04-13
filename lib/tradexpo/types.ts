@@ -154,7 +154,7 @@ export type OrderStatus =
   | "Expired"
   | "Rejected"
 
-export type OrderType = "booth_registration"
+export type OrderType = "booth_registration" | "b2b_subscription"
 
 export interface Order {
   id: string
@@ -200,7 +200,18 @@ export interface BankAccount {
 }
 
 export interface PaymentConfig {
-  activeMethod: PaymentMethod
+  vnpayEnabled: boolean
+  bankTransferEnabled: boolean
+  updatedAt: string
+  updatedBy: string
+}
+
+export interface ExpoPaymentConfig {
+  expoId: string
+  isInherited: boolean
+  vnpayEnabled: boolean
+  bankTransferEnabled: boolean
+  bankAccountId: string | null
   updatedAt: string
   updatedBy: string
 }

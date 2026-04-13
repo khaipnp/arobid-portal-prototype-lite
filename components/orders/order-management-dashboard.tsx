@@ -27,7 +27,12 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { mockOrders } from "@/lib/orders/mock-data"
-import type { Order, OrderStatus, PaymentMethod } from "@/lib/tradexpo/types"
+import type {
+  Order,
+  OrderStatus,
+  OrderType,
+  PaymentMethod,
+} from "@/lib/tradexpo/types"
 
 const PAGE_SIZE = 20
 
@@ -71,6 +76,7 @@ export function OrderManagementDashboard() {
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<"all" | OrderStatus>("all")
   const [methodFilter, setMethodFilter] = useState<"all" | PaymentMethod>("all")
+  const [typeFilter, setTypeFilter] = useState<"all" | OrderType>("all")
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
   const [page, setPage] = useState(1)
 
@@ -91,6 +97,7 @@ export function OrderManagementDashboard() {
       if (statusFilter !== "all" && o.status !== statusFilter) return false
       if (methodFilter !== "all" && o.paymentMethod !== methodFilter)
         return false
+      if (typeFilter !== "all" && o.orderType !== typeFilter) return false
       if (dateRange?.from && o.createdAt < dateRange.from.toISOString())
         return false
       if (dateRange?.to) {
@@ -100,7 +107,7 @@ export function OrderManagementDashboard() {
       }
       return true
     })
-  }, [orders, search, statusFilter, methodFilter, dateRange])
+  }, [orders, search, statusFilter, methodFilter, typeFilter, dateRange])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const currentPage = Math.min(page, totalPages)
@@ -178,6 +185,25 @@ export function OrderManagementDashboard() {
           </SelectContent>
         </Select>
 
+        <Select
+          value={typeFilter}
+          onValueChange={(v) => {
+            setTypeFilter(v as typeof typeFilter)
+            handleFilterChange()
+          }}
+        >
+          <SelectTrigger className="w-48">
+            <SelectValue placeholder="All types" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All types</SelectItem>
+            <SelectItem value="booth_registration">
+              Booth Registration
+            </SelectItem>
+            <SelectItem value="b2b_subscription">B2B Subscription</SelectItem>
+          </SelectContent>
+        </Select>
+
         <DateRangePicker
           value={dateRange}
           onChange={(r) => {
@@ -191,6 +217,7 @@ export function OrderManagementDashboard() {
         {(search ||
           statusFilter !== "all" ||
           methodFilter !== "all" ||
+          typeFilter !== "all" ||
           dateRange) && (
           <Button
             variant="ghost"
@@ -199,6 +226,7 @@ export function OrderManagementDashboard() {
               setSearch("")
               setStatusFilter("all")
               setMethodFilter("all")
+              setTypeFilter("all")
               setDateRange(undefined)
               setPage(1)
             }}
