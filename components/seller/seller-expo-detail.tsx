@@ -37,13 +37,20 @@ import type {
 } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
 
-const expoStatusStyles: Record<ExpoStatus, string> = {
-  Draft: "border-slate-300 bg-slate-100 text-slate-700",
-  "Pending Review": "border-amber-300 bg-amber-100 text-amber-700",
+type SellerExpoViewStatus = "Upcoming" | "Live" | "Archive"
+
+const expoStatusStyles: Record<SellerExpoViewStatus, string> = {
+  Upcoming: "border-amber-300 bg-amber-100 text-amber-700",
   Live: "border-emerald-300 bg-emerald-100 text-emerald-700",
-  Ended: "border-zinc-300 bg-zinc-100 text-zinc-700",
-  Archived: "border-purple-300 bg-purple-100 text-purple-700",
-  Canceled: "border-rose-300 bg-rose-100 text-rose-700",
+  Archive: "border-zinc-300 bg-zinc-100 text-zinc-700",
+}
+
+function toSellerExpoViewStatus(status: ExpoStatus): SellerExpoViewStatus {
+  if (status === "Live") return "Live"
+  if (status === "Ended" || status === "Archived" || status === "Canceled") {
+    return "Archive"
+  }
+  return "Upcoming"
 }
 
 const boothStatusStyles: Record<SellerBoothStatus, string> = {
@@ -111,6 +118,8 @@ export function SellerExpoDetail({ expoId }: Props) {
     )
   }
 
+  const displayStatus = toSellerExpoViewStatus(expo.status)
+
   const canConfigure = (status: SellerBoothStatus) =>
     status !== "Ended" &&
     status !== ("Canceled" as unknown as SellerBoothStatus)
@@ -125,7 +134,7 @@ export function SellerExpoDetail({ expoId }: Props) {
             alt={expo.name}
             width={160}
             height={100}
-            className="h-[100px] w-[160px] object-cover"
+            className="h-25 w-40 object-cover"
           />
         </div>
         <div className="min-w-0 flex-1">
@@ -133,9 +142,9 @@ export function SellerExpoDetail({ expoId }: Props) {
             <h2 className="font-semibold text-lg">{expo.name}</h2>
             <Badge
               variant="outline"
-              className={cn("text-xs", expoStatusStyles[expo.status])}
+              className={cn("text-xs", expoStatusStyles[displayStatus])}
             >
-              {expo.status}
+              {displayStatus}
             </Badge>
           </div>
           <p className="mt-1 flex items-center gap-1.5 text-muted-foreground text-sm">

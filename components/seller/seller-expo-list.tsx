@@ -174,7 +174,7 @@ function ExpoCard({
           alt={expo.name}
           width={120}
           height={80}
-          className="h-20 w-[120px] object-cover"
+          className="h-20 w-30 object-cover"
         />
       </div>
 
