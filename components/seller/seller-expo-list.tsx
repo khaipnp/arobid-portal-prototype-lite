@@ -31,13 +31,20 @@ import type {
 } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
 
-const statusStyles: Record<ExpoStatus, string> = {
-  Draft: "border-slate-300 bg-slate-100 text-slate-700",
-  "Pending Review": "border-amber-300 bg-amber-100 text-amber-700",
+type SellerExpoViewStatus = "Upcoming" | "Live" | "Archive"
+
+const statusStyles: Record<SellerExpoViewStatus, string> = {
+  Upcoming: "border-amber-300 bg-amber-100 text-amber-700",
   Live: "border-emerald-300 bg-emerald-100 text-emerald-700",
-  Ended: "border-zinc-300 bg-zinc-100 text-zinc-700",
-  Archived: "border-purple-300 bg-purple-100 text-purple-700",
-  Canceled: "border-rose-300 bg-rose-100 text-rose-700",
+  Archive: "border-zinc-300 bg-zinc-100 text-zinc-700",
+}
+
+function toSellerExpoViewStatus(status: ExpoStatus): SellerExpoViewStatus {
+  if (status === "Live") return "Live"
+  if (status === "Ended" || status === "Archived" || status === "Canceled") {
+    return "Archive"
+  }
+  return "Upcoming"
 }
 
 function formatDate(iso: string) {
@@ -72,20 +79,15 @@ function buildData(): ExpoWithBooths[] {
     )
 }
 
-const ALL_STATUSES: ExpoStatus[] = [
-  "Live",
-  "Pending Review",
-  "Draft",
-  "Ended",
-  "Archived",
-  "Canceled",
-]
+const ALL_STATUSES: SellerExpoViewStatus[] = ["Upcoming", "Live", "Archive"]
 
 export function SellerExpoList() {
   const [data] = React.useState<ExpoWithBooths[]>(buildData)
   const [search, setSearch] = React.useState("")
   const [debouncedSearch, setDebouncedSearch] = React.useState("")
-  const [statusFilter, setStatusFilter] = React.useState<ExpoStatus | "All">(
+  const [statusFilter, setStatusFilter] = React.useState<
+    SellerExpoViewStatus | "All"
+  >(
     "All",
   )
 
@@ -101,7 +103,9 @@ export function SellerExpoList() {
       result = result.filter(({ expo }) => expo.name.toLowerCase().includes(kw))
     }
     if (statusFilter !== "All") {
-      result = result.filter(({ expo }) => expo.status === statusFilter)
+      result = result.filter(
+        ({ expo }) => toSellerExpoViewStatus(expo.status) === statusFilter,
+      )
     }
     return result
   }, [data, debouncedSearch, statusFilter])
@@ -121,7 +125,7 @@ export function SellerExpoList() {
         </InputGroup>
         <Select
           value={statusFilter}
-          onValueChange={(v) => setStatusFilter(v as ExpoStatus | "All")}
+          onValueChange={(v) => setStatusFilter(v as SellerExpoViewStatus | "All")}
         >
           <SelectTrigger className="w-44">
             <SelectValue placeholder="All Statuses" />
@@ -160,6 +164,7 @@ function ExpoCard({
   registrations: SellerBoothRegistration[]
 }) {
   const boothCount = registrations.length
+  const displayStatus = toSellerExpoViewStatus(expo.status)
 
   return (
     <div className="flex items-start gap-4 rounded-xl border bg-card p-4 transition-colors hover:bg-accent/40">
@@ -178,9 +183,9 @@ function ExpoCard({
           <h2 className="truncate font-semibold text-base">{expo.name}</h2>
           <Badge
             variant="outline"
-            className={cn("shrink-0 text-xs", statusStyles[expo.status])}
+            className={cn("shrink-0 text-xs", statusStyles[displayStatus])}
           >
-            {expo.status}
+            {displayStatus}
           </Badge>
         </div>
 
