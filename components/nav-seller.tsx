@@ -24,22 +24,19 @@ import {
 
 const nav = [
   {
+    title: "My Expos",
+    url: "/seller/my-expos",
+    icon: <CalendarIcon />,
+    isActive: true,
+    items: [{ title: "All Expos", url: "/seller/my-expos" }],
+  },
+  {
     title: "My Booths",
     url: "#",
     icon: <BoxIcon />,
-    isActive: true,
     items: [
       { title: "Active", url: "#" },
       { title: "Archived", url: "#" },
-    ],
-  },
-  {
-    title: "Events",
-    url: "#",
-    icon: <CalendarIcon />,
-    items: [
-      { title: "Browse", url: "#" },
-      { title: "Registered", url: "#" },
     ],
   },
   {

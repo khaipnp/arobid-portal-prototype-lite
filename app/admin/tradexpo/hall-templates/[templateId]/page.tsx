@@ -1,40 +1,40 @@
-import { notFound } from "next/navigation";
+import { notFound } from "next/navigation"
 
-import { DashboardShell } from "@/components/tradexpo/dashboard-shell";
-import { HallSlotManager } from "@/components/tradexpo/hall-slot-manager";
-import { HallTemplateDetailManager } from "@/components/tradexpo/hall-template-detail-manager";
-import { StatusBadge } from "@/components/tradexpo/status-badge";
-import { TemplateTranslationsDialog } from "@/components/tradexpo/template-translations-dialog";
+import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
+import { HallSlotManager } from "@/components/tradexpo/hall-slot-manager"
+import { HallTemplateDetailManager } from "@/components/tradexpo/hall-template-detail-manager"
+import { StatusBadge } from "@/components/tradexpo/status-badge"
+import { TemplateTranslationsDialog } from "@/components/tradexpo/template-translations-dialog"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@/components/ui/card"
 import {
   mockAssets,
   mockHallTemplateSlots,
   mockHallTemplates,
   mockHallTemplateUsage,
-} from "@/lib/tradexpo/mock-data";
+} from "@/lib/tradexpo/mock-data"
 import {
   formatDateTime,
   getAssetMap,
   getHallTemplateStatus,
-} from "@/lib/tradexpo/utils";
+} from "@/lib/tradexpo/utils"
 
 export default async function HallTemplateDetailPage({
   params,
 }: {
-  params: Promise<{ templateId: string }>;
+  params: Promise<{ templateId: string }>
 }) {
-  const { templateId } = await params;
+  const { templateId } = await params
 
-  const template = mockHallTemplates.find((item) => item.id === templateId);
+  const template = mockHallTemplates.find((item) => item.id === templateId)
 
   if (!template) {
-    notFound();
+    notFound()
   }
 
   const usage = mockHallTemplateUsage.find(
@@ -44,14 +44,14 @@ export default async function HallTemplateDetailPage({
     upcomingExpoCount: 0,
     liveExpoCount: 0,
     archivedExpoCount: 0,
-  };
+  }
 
   const slotCount = mockHallTemplateSlots.filter(
     (slot) => slot.hallTemplateId === template.id,
-  ).length;
+  ).length
 
-  const assetMap = getAssetMap(mockAssets);
-  const status = getHallTemplateStatus(template, assetMap);
+  const assetMap = getAssetMap(mockAssets)
+  const status = getHallTemplateStatus(template, assetMap)
 
   return (
     <DashboardShell
@@ -134,5 +134,5 @@ export default async function HallTemplateDetailPage({
 
       <HallSlotManager templateId={templateId} embedded />
     </DashboardShell>
-  );
+  )
 }

@@ -215,3 +215,69 @@ export interface ExpoPaymentConfig {
   updatedAt: string
   updatedBy: string
 }
+
+// ─── Seller / Supplier ───────────────────────────────────────────────────────
+
+export type SellerBoothStatus =
+  | "Pending Setup"
+  | "Configured"
+  | "Approved"
+  | "Live"
+  | "Ended"
+
+export interface SellerBoothRegistration {
+  id: string
+  expoId: string
+  slotId?: string
+  /** Exhibitor-selected booth template. undefined = not yet selected. */
+  boothTemplateId?: string
+  boothRef: string
+  boothTier: string
+  status: SellerBoothStatus
+  purchasedAt: string
+}
+
+export interface SellerBoothProduct {
+  id: string
+  name: string
+  description: string
+  imageUrl?: string
+}
+
+/** Customization config defined per BoothTemplate (what fields the template exposes). */
+export interface BoothTemplateCustomizationConfig {
+  boothTemplateId: string
+  colorSlots: number
+  imageSlots: number
+  productLimit: number
+  hasVideo: boolean
+}
+
+/** Which BoothTemplates the admin has made available for a given expo. */
+export interface ExpoBoothTemplateAssignment {
+  expoId: string
+  boothTemplateIds: string[]
+}
+
+/** An item from the exhibitor's B2B Marketplace product catalog. */
+export interface ExhibitorCatalogProduct {
+  id: string
+  name: string
+  description: string
+  imageUrl?: string
+}
+
+export type BoothPublishStatus = "Draft" | "Published"
+
+/** Rich booth customization state — template-driven. Replaces SellerBoothConfig. */
+export interface BoothCustomization {
+  registrationId: string
+  selectedBoothTemplateId: string | null
+  publishStatus: BoothPublishStatus
+  colors: string[]
+  logoUrl: string
+  imageUrls: string[]
+  videoType: "upload" | "youtube" | null
+  videoUrl: string
+  products: SellerBoothProduct[]
+}

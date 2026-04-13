@@ -1,15 +1,20 @@
 import type {
   AdminNotification,
+  BoothCustomization,
   BoothTemplate,
+  BoothTemplateCustomizationConfig,
   BoothTemplateUsage,
   BoothType,
+  ExhibitorCatalogProduct,
   Expo,
+  ExpoBoothTemplateAssignment,
   ExpoCategory,
   HallSlotUsage,
   HallTemplate,
   HallTemplateSlot,
   HallTemplateUsage,
   ModelAsset,
+  SellerBoothRegistration,
 } from "@/lib/tradexpo/types"
 
 const now = new Date()
@@ -568,6 +573,246 @@ export const mockExpos: Expo[] = [
     status: "Live",
     categoryIds: ["cat-retail", "cat-tech"],
     createdAt: isoOffset(96),
+  },
+]
+
+// ─── Seller Mock Data ────────────────────────────────────────────────────────
+
+/** Which booth templates the admin has made available for each expo. */
+export const mockExpoBoothTemplateAssignments: ExpoBoothTemplateAssignment[] = [
+  {
+    expoId: "expo-001",
+    boothTemplateIds: ["booth-template-1", "booth-template-3"],
+  },
+  {
+    expoId: "expo-003",
+    boothTemplateIds: ["booth-template-1", "booth-template-2"],
+  },
+  {
+    expoId: "expo-004",
+    boothTemplateIds: ["booth-template-1", "booth-template-2"],
+  },
+  {
+    expoId: "expo-009",
+    boothTemplateIds: [
+      "booth-template-1",
+      "booth-template-2",
+      "booth-template-3",
+    ],
+  },
+  { expoId: "expo-011", boothTemplateIds: ["booth-template-2"] },
+]
+
+/** Template-driven customization config per booth template. */
+export const mockBoothTemplateCustomizationConfigs: BoothTemplateCustomizationConfig[] =
+  [
+    {
+      boothTemplateId: "booth-template-1",
+      colorSlots: 2,
+      imageSlots: 1,
+      productLimit: 3,
+      hasVideo: false,
+    },
+    {
+      boothTemplateId: "booth-template-2",
+      colorSlots: 3,
+      imageSlots: 2,
+      productLimit: 5,
+      hasVideo: true,
+    },
+    {
+      boothTemplateId: "booth-template-3",
+      colorSlots: 3,
+      imageSlots: 4,
+      productLimit: 5,
+      hasVideo: true,
+    },
+  ]
+
+/** Exhibitor's own B2B Marketplace product catalog. */
+export const mockExhibitorCatalogProducts: ExhibitorCatalogProduct[] = [
+  {
+    id: "cat-prod-1",
+    name: "FarmSense Pro",
+    description:
+      "Real-time soil and weather monitoring system with AI-driven recommendations.",
+    imageUrl: "https://picsum.photos/seed/farmsense/400/300",
+  },
+  {
+    id: "cat-prod-2",
+    name: "TraceChain Platform",
+    description:
+      "Blockchain-backed traceability for produce from farm to shelf.",
+    imageUrl: "https://picsum.photos/seed/tracechain/400/300",
+  },
+  {
+    id: "cat-prod-3",
+    name: "AgroAI Enterprise",
+    description:
+      "Machine learning pipeline for yield prediction and logistics optimisation.",
+    imageUrl: "https://picsum.photos/seed/agroai/400/300",
+  },
+  {
+    id: "cat-prod-4",
+    name: "FieldBot Lite",
+    description:
+      "Autonomous field robot for crop scouting and data collection.",
+    imageUrl: "https://picsum.photos/seed/fieldbot/400/300",
+  },
+  {
+    id: "cat-prod-5",
+    name: "ColdChain Monitor",
+    description: "End-to-end cold storage monitoring with real-time alerts.",
+    imageUrl: "https://picsum.photos/seed/coldchain/400/300",
+  },
+  {
+    id: "cat-prod-6",
+    name: "HarvestIQ",
+    description:
+      "Predictive analytics platform for harvest planning and yield optimisation.",
+    imageUrl: "https://picsum.photos/seed/harvestiq/400/300",
+  },
+]
+
+export const mockSellerRegistrations: SellerBoothRegistration[] = [
+  {
+    id: "reg-001",
+    expoId: "expo-003",
+    slotId: "slot-1",
+    boothTemplateId: "booth-template-1",
+    boothRef: "A01",
+    boothTier: "Basic",
+    status: "Live",
+    purchasedAt: isoOffset(80),
+  },
+  {
+    id: "reg-002",
+    expoId: "expo-003",
+    slotId: "slot-2",
+    boothTemplateId: "booth-template-2",
+    boothRef: "A02",
+    boothTier: "Pro",
+    status: "Live",
+    purchasedAt: isoOffset(78),
+  },
+  {
+    id: "reg-003",
+    expoId: "expo-009",
+    slotId: "slot-3",
+    boothTemplateId: "booth-template-1",
+    boothRef: "B01",
+    boothTier: "Basic",
+    status: "Configured",
+    purchasedAt: isoOffset(50),
+  },
+  {
+    // No template selected yet — demonstrates US-01 (Select Booth Template)
+    id: "reg-004",
+    expoId: "expo-001",
+    boothRef: "C05",
+    boothTier: "Premium",
+    status: "Pending Setup",
+    purchasedAt: isoOffset(10),
+  },
+  {
+    id: "reg-005",
+    expoId: "expo-004",
+    slotId: "slot-4",
+    boothTemplateId: "booth-template-1",
+    boothRef: "C01",
+    boothTier: "Basic",
+    status: "Ended",
+    purchasedAt: isoOffset(250),
+  },
+  {
+    id: "reg-006",
+    expoId: "expo-011",
+    boothTemplateId: "booth-template-2",
+    boothRef: "D03",
+    boothTier: "Pro",
+    status: "Ended",
+    purchasedAt: isoOffset(180),
+  },
+]
+
+export const mockBoothCustomizations: BoothCustomization[] = [
+  {
+    registrationId: "reg-001",
+    selectedBoothTemplateId: "booth-template-1",
+    publishStatus: "Published",
+    colors: ["#2563eb", "#f59e0b"],
+    logoUrl: "https://picsum.photos/seed/arotechlogo/200/200",
+    imageUrls: ["https://picsum.photos/seed/arotechbooth1/800/500"],
+    videoType: null,
+    videoUrl: "",
+    products: [
+      {
+        id: "cat-prod-1",
+        name: "FarmSense Pro",
+        description:
+          "Real-time soil and weather monitoring system with AI-driven recommendations.",
+        imageUrl: "https://picsum.photos/seed/farmsense/400/300",
+      },
+      {
+        id: "cat-prod-2",
+        name: "TraceChain Platform",
+        description:
+          "Blockchain-backed traceability for produce from farm to shelf.",
+        imageUrl: "https://picsum.photos/seed/tracechain/400/300",
+      },
+    ],
+  },
+  {
+    registrationId: "reg-002",
+    selectedBoothTemplateId: "booth-template-2",
+    publishStatus: "Draft",
+    colors: ["#7c3aed", "#ec4899", "#14b8a6"],
+    logoUrl: "https://picsum.photos/seed/arotechlogo/200/200",
+    imageUrls: [
+      "https://picsum.photos/seed/arotechbooth2a/800/500",
+      "https://picsum.photos/seed/arotechbooth2b/800/500",
+    ],
+    videoType: "youtube",
+    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    products: [
+      {
+        id: "cat-prod-3",
+        name: "AgroAI Enterprise",
+        description:
+          "Machine learning pipeline for yield prediction and logistics optimisation.",
+        imageUrl: "https://picsum.photos/seed/agroai/400/300",
+      },
+    ],
+  },
+  {
+    registrationId: "reg-003",
+    selectedBoothTemplateId: "booth-template-1",
+    publishStatus: "Draft",
+    colors: ["#16a34a", "#f97316"],
+    logoUrl: "",
+    imageUrls: [],
+    videoType: null,
+    videoUrl: "",
+    products: [],
+  },
+  {
+    registrationId: "reg-005",
+    selectedBoothTemplateId: "booth-template-1",
+    publishStatus: "Published",
+    colors: ["#dc2626", "#facc15"],
+    logoUrl: "https://picsum.photos/seed/arotechlogo/200/200",
+    imageUrls: ["https://picsum.photos/seed/autodrivebooth/800/500"],
+    videoType: null,
+    videoUrl: "",
+    products: [
+      {
+        id: "cat-prod-5",
+        name: "ColdChain Monitor",
+        description:
+          "End-to-end cold storage monitoring with real-time alerts.",
+        imageUrl: "https://picsum.photos/seed/coldchain/400/300",
+      },
+    ],
   },
 ]
 

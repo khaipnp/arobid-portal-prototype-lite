@@ -1,38 +1,38 @@
-import { notFound } from "next/navigation";
-import { BoothTemplateDetailManager } from "@/components/tradexpo/booth-template-detail-manager";
-import { DashboardShell } from "@/components/tradexpo/dashboard-shell";
-import { StatusBadge } from "@/components/tradexpo/status-badge";
-import { TemplateTranslationsDialog } from "@/components/tradexpo/template-translations-dialog";
+import { notFound } from "next/navigation"
+import { BoothTemplateDetailManager } from "@/components/tradexpo/booth-template-detail-manager"
+import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
+import { StatusBadge } from "@/components/tradexpo/status-badge"
+import { TemplateTranslationsDialog } from "@/components/tradexpo/template-translations-dialog"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@/components/ui/card"
 import {
   mockAssets,
   mockBoothTemplates,
   mockBoothTemplateUsage,
   mockBoothTypes,
-} from "@/lib/tradexpo/mock-data";
+} from "@/lib/tradexpo/mock-data"
 import {
   formatDateTime,
   getAssetMap,
   getBoothTemplateStatus,
-} from "@/lib/tradexpo/utils";
+} from "@/lib/tradexpo/utils"
 
 export default async function BoothTemplateDetailPage({
   params,
 }: {
-  params: Promise<{ templateId: string }>;
+  params: Promise<{ templateId: string }>
 }) {
-  const { templateId } = await params;
+  const { templateId } = await params
 
-  const template = mockBoothTemplates.find((item) => item.id === templateId);
+  const template = mockBoothTemplates.find((item) => item.id === templateId)
 
   if (!template) {
-    notFound();
+    notFound()
   }
 
   const usage = mockBoothTemplateUsage.find(
@@ -42,14 +42,14 @@ export default async function BoothTemplateDetailPage({
     upcomingExpoBoothCount: 0,
     liveExpoBoothCount: 0,
     archivedExpoBoothCount: 0,
-  };
+  }
 
   const boothTypeName =
     mockBoothTypes.find((type) => type.id === template.boothTypeId)?.name ??
-    "Unknown";
+    "Unknown"
 
-  const assetMap = getAssetMap(mockAssets);
-  const status = getBoothTemplateStatus(template, assetMap);
+  const assetMap = getAssetMap(mockAssets)
+  const status = getBoothTemplateStatus(template, assetMap)
 
   return (
     <DashboardShell
@@ -128,5 +128,5 @@ export default async function BoothTemplateDetailPage({
 
       <BoothTemplateDetailManager templateId={templateId} />
     </DashboardShell>
-  );
+  )
 }
