@@ -1,90 +1,41 @@
 "use client"
 
 import {
-  BoxIcon,
   CalendarIcon,
-  ChevronRightIcon,
-  Settings2Icon,
 } from "lucide-react"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
 import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
+import Link from "next/link"
 
 const nav = [
   {
-    title: "My Expos",
+    name: "My Expos",
     url: "/seller/my-expos",
-    icon: <CalendarIcon />,
-    isActive: true,
-    items: [{ title: "All Expos", url: "/seller/my-expos" }],
-  },
-  {
-    title: "My Booths",
-    url: "#",
-    icon: <BoxIcon />,
-    items: [
-      { title: "Active", url: "#" },
-      { title: "Archived", url: "#" },
-    ],
-  },
-  {
-    title: "Settings",
-    url: "#",
-    icon: <Settings2Icon />,
-    items: [
-      { title: "Profile", url: "#" },
-      { title: "Billing", url: "#" },
-    ],
-  },
+    icon: <CalendarIcon />
+  }
 ]
 
 export function NavSeller() {
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Supplier</SidebarGroupLabel>
+      <SidebarGroupLabel>TradeXpo</SidebarGroupLabel>
       <SidebarMenu>
-        {nav.map((item) => (
-          <Collapsible
-            key={item.title}
-            asChild
-            defaultOpen={item.isActive}
-            className="group/collapsible"
-          >
-            <SidebarMenuItem>
-              <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip={item.title}>
+          {nav.map((item) => (
+            <SidebarMenuItem key={item.name}>
+              <SidebarMenuButton asChild>
+                <Link href={item.url}>
                   {item.icon}
-                  <span>{item.title}</span>
-                  <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                </SidebarMenuButton>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <SidebarMenuSub>
-                  {item.items?.map((sub) => (
-                    <SidebarMenuSubItem key={sub.title}>
-                      <SidebarMenuSubButton asChild>
-                        <a href={sub.url}>{sub.title}</a>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                  ))}
-                </SidebarMenuSub>
-              </CollapsibleContent>
+                  <span>{item.name}</span>
+                </Link>
+              </SidebarMenuButton>
             </SidebarMenuItem>
-          </Collapsible>
-        ))}
-      </SidebarMenu>
+          ))}
+        </SidebarMenu>
     </SidebarGroup>
   )
 }
