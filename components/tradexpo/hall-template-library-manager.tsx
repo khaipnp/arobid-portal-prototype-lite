@@ -712,7 +712,7 @@ export function HallTemplateLibraryManager() {
                     <TableRow key={template.id}>
                       <TableCell>
                         <Link
-                          href={`/dashboard/tradexpo/hall-templates/${template.id}`}
+                          href={`/admin/tradexpo/hall-templates/${template.id}`}
                         >
                           <Image
                             width={120}
@@ -725,7 +725,7 @@ export function HallTemplateLibraryManager() {
                       </TableCell>
                       <TableCell>
                         <Link
-                          href={`/dashboard/tradexpo/hall-templates/${template.id}`}
+                          href={`/admin/tradexpo/hall-templates/${template.id}`}
                           className="font-medium"
                         >
                           {translatedName}
@@ -749,7 +749,7 @@ export function HallTemplateLibraryManager() {
                           <DropdownMenuContent align="end" className="w-44">
                             <DropdownMenuItem asChild>
                               <Link
-                                href={`/dashboard/tradexpo/hall-templates/${template.id}`}
+                                href={`/admin/tradexpo/hall-templates/${template.id}`}
                               >
                                 Detail
                               </Link>
@@ -1016,17 +1016,26 @@ export function HallTemplateLibraryManager() {
         </DialogContent>
       </Dialog>
 
-      {translationTarget ? (
-        <section className="rounded-xl border bg-card p-4">
-          <h2 className="font-semibold text-base">
-            Translation Panel: {translationTarget.name}
-          </h2>
-          <p className="mt-1 text-muted-foreground text-sm">
-            Add or update localized template names.
-          </p>
+      <Dialog
+        open={Boolean(translationTarget)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setTranslationTemplateId(null)
+            setTranslationName("")
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Translations — {translationTarget?.name}</DialogTitle>
+            <DialogDescription>
+              Add or update localized template names. Falls back to the default
+              name when no translation exists for a locale.
+            </DialogDescription>
+          </DialogHeader>
 
           <form
-            className="mt-4 grid gap-3 md:grid-cols-3"
+            className="grid gap-3 md:grid-cols-3"
             onSubmit={handleAddTranslation}
           >
             <Input
@@ -1041,10 +1050,10 @@ export function HallTemplateLibraryManager() {
               onChange={(event) => setTranslationName(event.target.value)}
               placeholder="translated name"
             />
-            <Button type="submit">Add Translation</Button>
+            <Button type="submit">Add</Button>
           </form>
 
-          <div className="mt-3 rounded-md border">
+          <div className="rounded-md border">
             <Table>
               <TableHeader className="bg-muted/40">
                 <TableRow>
@@ -1054,7 +1063,7 @@ export function HallTemplateLibraryManager() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {translationTarget.translations.length === 0 ? (
+                {translationTarget?.translations.length === 0 ? (
                   <TableRow>
                     <TableCell
                       colSpan={3}
@@ -1064,7 +1073,7 @@ export function HallTemplateLibraryManager() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  translationTarget.translations.map((translation) => (
+                  translationTarget?.translations.map((translation) => (
                     <TableRow key={translation.languageCode}>
                       <TableCell>{translation.languageCode}</TableCell>
                       <TableCell>{translation.name}</TableCell>
@@ -1107,8 +1116,8 @@ export function HallTemplateLibraryManager() {
               </TableBody>
             </Table>
           </div>
-        </section>
-      ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

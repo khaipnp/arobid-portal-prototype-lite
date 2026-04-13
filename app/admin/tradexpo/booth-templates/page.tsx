@@ -7,8 +7,8 @@ export default function BoothTemplateLibraryPage() {
       title="Booth Template Library"
       description="Manage booth templates by booth type"
       breadcrumbs={[
-        { label: "Dashboard", href: "/dashboard" },
-        { label: "TradeXpo", href: "/dashboard/tradexpo" },
+        { label: "Dashboard", href: "/admin" },
+        { label: "TradeXpo", href: "/admin/tradexpo" },
         { label: "Booth Templates" },
       ]}
     >

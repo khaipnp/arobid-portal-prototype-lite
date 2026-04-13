@@ -7,8 +7,8 @@ export default function HallTemplateLibraryPage() {
       title="Hall Template Library"
       description="Manage hall templates and translations, with publish/deactivate safeguards."
       breadcrumbs={[
-        { label: "Dashboard", href: "/dashboard" },
-        { label: "TradeXpo", href: "/dashboard/tradexpo" },
+        { label: "Dashboard", href: "/admin" },
+        { label: "TradeXpo", href: "/admin/tradexpo" },
         { label: "Hall Templates" },
       ]}
     >

@@ -1,8 +1,6 @@
 import { notFound } from "next/navigation";
-
+import { BoothTemplateDetailManager } from "@/components/tradexpo/booth-template-detail-manager";
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell";
-import { HallSlotManager } from "@/components/tradexpo/hall-slot-manager";
-import { HallTemplateDetailManager } from "@/components/tradexpo/hall-template-detail-manager";
 import { StatusBadge } from "@/components/tradexpo/status-badge";
 import { TemplateTranslationsDialog } from "@/components/tradexpo/template-translations-dialog";
 import {
@@ -14,76 +12,81 @@ import {
 } from "@/components/ui/card";
 import {
   mockAssets,
-  mockHallTemplateSlots,
-  mockHallTemplates,
-  mockHallTemplateUsage,
+  mockBoothTemplates,
+  mockBoothTemplateUsage,
+  mockBoothTypes,
 } from "@/lib/tradexpo/mock-data";
 import {
   formatDateTime,
   getAssetMap,
-  getHallTemplateStatus,
+  getBoothTemplateStatus,
 } from "@/lib/tradexpo/utils";
 
-export default async function HallTemplateDetailPage({
+export default async function BoothTemplateDetailPage({
   params,
 }: {
   params: Promise<{ templateId: string }>;
 }) {
   const { templateId } = await params;
 
-  const template = mockHallTemplates.find((item) => item.id === templateId);
+  const template = mockBoothTemplates.find((item) => item.id === templateId);
 
   if (!template) {
     notFound();
   }
 
-  const usage = mockHallTemplateUsage.find(
-    (item) => item.hallTemplateId === template.id,
+  const usage = mockBoothTemplateUsage.find(
+    (item) => item.boothTemplateId === template.id,
   ) || {
-    hallTemplateId: template.id,
-    upcomingExpoCount: 0,
-    liveExpoCount: 0,
-    archivedExpoCount: 0,
+    boothTemplateId: template.id,
+    upcomingExpoBoothCount: 0,
+    liveExpoBoothCount: 0,
+    archivedExpoBoothCount: 0,
   };
 
-  const slotCount = mockHallTemplateSlots.filter(
-    (slot) => slot.hallTemplateId === template.id,
-  ).length;
+  const boothTypeName =
+    mockBoothTypes.find((type) => type.id === template.boothTypeId)?.name ??
+    "Unknown";
 
   const assetMap = getAssetMap(mockAssets);
-  const status = getHallTemplateStatus(template, assetMap);
+  const status = getBoothTemplateStatus(template, assetMap);
 
   return (
     <DashboardShell
-      title="Hall Template Detail"
-      description="US-02 UX: Keep hall context and slot configuration together in one page."
+      title="Booth Template Detail"
+      description="View and manage booth template assets and translations."
       breadcrumbs={[
         { label: "Dashboard", href: "/admin" },
         { label: "TradeXpo", href: "/admin/tradexpo" },
-        { label: "Hall Templates", href: "/admin/tradexpo/hall-templates" },
+        { label: "Booth Templates", href: "/admin/tradexpo/booth-templates" },
         { label: template.name },
       ]}
     >
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <div className="flex flex-col">
+            <div className="flex justify-between">
               <CardTitle className="flex flex-wrap items-center gap-2">
                 {template.name}
                 <StatusBadge status={status} />
               </CardTitle>
-              <CardDescription>
-                Unified detail page for template context, status tracking, and
-                slot management.
-              </CardDescription>
+              <TemplateTranslationsDialog
+                templateName={template.name}
+                initialTranslations={template.translations}
+              />
             </div>
-            <TemplateTranslationsDialog
-              templateName={template.name}
-              initialTranslations={template.translations}
-            />
+            <CardDescription>
+              {template.description || "No description provided."}
+            </CardDescription>
           </CardHeader>
-
           <CardContent className="grid gap-2 text-sm md:grid-cols-2">
+            <p>
+              <span className="font-medium">Booth Type:</span> {boothTypeName}
+            </p>
+            <p>
+              <span className="font-medium">Visibility:</span>{" "}
+              {template.isPublic ? "Published" : "Draft"}
+            </p>
             <p>
               <span className="font-medium">Updated by:</span>{" "}
               {template.updatedBy}
@@ -91,10 +94,6 @@ export default async function HallTemplateDetailPage({
             <p>
               <span className="font-medium">Updated at:</span>{" "}
               {formatDateTime(template.updatedAt)}
-            </p>
-            <p>
-              <span className="font-medium">Visibility:</span>{" "}
-              {template.isPublic ? "Published" : "Draft"}
             </p>
             <p>
               <span className="font-medium">Activation:</span>{" "}
@@ -107,32 +106,27 @@ export default async function HallTemplateDetailPage({
           <CardHeader>
             <CardTitle>Usage Snapshot</CardTitle>
             <CardDescription>
-              Quick references before updating slot positions.
+              Exhibitor booth references across expos.
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-2 text-sm">
             <p>
-              <span className="font-medium">Total slots:</span> {slotCount}
+              <span className="font-medium">Upcoming expo booths:</span>{" "}
+              {usage.upcomingExpoBoothCount}
             </p>
             <p>
-              <span className="font-medium">Upcoming expos:</span>{" "}
-              {usage.upcomingExpoCount}
+              <span className="font-medium">Live expo booths:</span>{" "}
+              {usage.liveExpoBoothCount}
             </p>
             <p>
-              <span className="font-medium">Live expos:</span>{" "}
-              {usage.liveExpoCount}
-            </p>
-            <p>
-              <span className="font-medium">Archived expos:</span>{" "}
-              {usage.archivedExpoCount}
+              <span className="font-medium">Archived expo booths:</span>{" "}
+              {usage.archivedExpoBoothCount}
             </p>
           </CardContent>
         </Card>
       </div>
 
-      <HallTemplateDetailManager templateId={templateId} />
-
-      <HallSlotManager templateId={templateId} embedded />
+      <BoothTemplateDetailManager templateId={templateId} />
     </DashboardShell>
   );
 }
