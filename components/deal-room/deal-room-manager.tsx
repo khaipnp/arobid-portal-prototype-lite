@@ -2,10 +2,15 @@
 
 import {
   ArchiveIcon,
+  BuildingIcon,
+  GlobeIcon,
+  MailIcon,
+  MapPinIcon,
   MessageCircleIcon,
   MoreHorizontalIcon,
   PaperclipIcon,
   PencilIcon,
+  PhoneIcon,
   SearchIcon,
   SendHorizontalIcon,
   SquarePenIcon,
@@ -23,7 +28,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import type { ChatUser, Conversation, Message } from "@/lib/deal-room/types";
 import {
@@ -123,6 +134,98 @@ function ConversationAvatar({
       <AvatarFallback>{initials ?? "?"}</AvatarFallback>
     </Avatar>
   );
+}
+
+function UserHoverCard({
+  user,
+  side = "right",
+  children,
+  onMessageClick,
+}: {
+  user: ChatUser
+  side?: "top" | "right" | "bottom" | "left"
+  children: React.ReactNode
+  onMessageClick?: () => void
+}) {
+  const initials = user.name
+    .split(" ")
+    .map((w) => w[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase()
+
+  return (
+    <HoverCard openDelay={400} closeDelay={150}>
+      <HoverCardTrigger asChild>{children}</HoverCardTrigger>
+      <HoverCardContent side={side} align="start" className="w-72 p-0">
+        {/* Header */}
+        <div className="flex items-center gap-3 p-3">
+          <Avatar>
+            <AvatarFallback className="text-sm">{initials}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <p className="truncate font-semibold text-sm">{user.name}</p>
+            {user.jobTitle && (
+              <p className="truncate text-xs text-muted-foreground">
+                {user.jobTitle}
+              </p>
+            )}
+          </div>
+        </div>
+
+        <Separator />
+
+        {/* Details */}
+        <div className="space-y-2 p-3 text-xs">
+          <div className="flex items-start gap-2">
+            <BuildingIcon className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+            <span className="font-medium">{user.company}</span>
+          </div>
+          <div className="flex items-start gap-2">
+            <MailIcon className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+            <span className="truncate text-muted-foreground">{user.email}</span>
+          </div>
+          {user.phone && (
+            <div className="flex items-start gap-2">
+              <PhoneIcon className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+              <span className="text-muted-foreground">{user.phone}</span>
+            </div>
+          )}
+          {user.website && (
+            <div className="flex items-start gap-2">
+              <GlobeIcon className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+              <span className="truncate text-muted-foreground">
+                {user.website}
+              </span>
+            </div>
+          )}
+          {user.location && (
+            <div className="flex items-start gap-2">
+              <MapPinIcon className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" />
+              <span className="text-muted-foreground">{user.location}</span>
+            </div>
+          )}
+        </div>
+
+        {onMessageClick && (
+          <>
+            <Separator />
+            <div className="p-2">
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 w-full text-xs"
+                onClick={onMessageClick}
+              >
+                <MessageCircleIcon className="size-3.5" />
+                Send Direct Message
+              </Button>
+            </div>
+          </>
+        )}
+      </HoverCardContent>
+    </HoverCard>
+  )
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -427,39 +530,59 @@ export function DealRoomManager({
           {/* Thread header */}
           <div className="flex h-14 items-center justify-between border-b px-4">
             <div className="flex items-center gap-3">
-              <ConversationAvatar
-                conv={activeConversation}
-                users={users}
-                currentUserId={CURRENT_USER_ID}
-                size="sm"
-              />
-              <div>
-                <p className="font-semibold text-sm leading-tight">
-                  {getConversationDisplayName(
-                    activeConversation,
-                    users,
-                    CURRENT_USER_ID,
-                  )}
-                </p>
-                {activeConversation.type === "expo_group" ? (
-                  <p className="text-xs text-muted-foreground">
-                    {activeConversation.members.length} members
-                    {activeConversation.isReadOnly && " · Archived"}
-                  </p>
-                ) : (
-                  (() => {
-                    const otherId = activeConversation.members.find(
-                      (m) => m.userId !== CURRENT_USER_ID,
-                    )?.userId;
-                    const other = users.find((u) => u.id === otherId);
-                    return other ? (
-                      <p className="text-xs text-muted-foreground">
-                        {other.company}
+              {(() => {
+                if (activeConversation.type === "direct") {
+                  const otherId = activeConversation.members.find(
+                    (m) => m.userId !== CURRENT_USER_ID,
+                  )?.userId
+                  const other = users.find((u) => u.id === otherId)
+                  if (other) {
+                    return (
+                      <UserHoverCard user={other} side="bottom">
+                        <button type="button" className="flex items-center gap-3 cursor-pointer">
+                          <ConversationAvatar
+                            conv={activeConversation}
+                            users={users}
+                            currentUserId={CURRENT_USER_ID}
+                            size="sm"
+                          />
+                          <div className="text-left">
+                            <p className="font-semibold text-sm leading-tight hover:underline">
+                              {other.name}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {other.company}
+                            </p>
+                          </div>
+                        </button>
+                      </UserHoverCard>
+                    )
+                  }
+                }
+                return (
+                  <div className="flex items-center gap-3">
+                    <ConversationAvatar
+                      conv={activeConversation}
+                      users={users}
+                      currentUserId={CURRENT_USER_ID}
+                      size="sm"
+                    />
+                    <div>
+                      <p className="font-semibold text-sm leading-tight">
+                        {getConversationDisplayName(
+                          activeConversation,
+                          users,
+                          CURRENT_USER_ID,
+                        )}
                       </p>
-                    ) : null;
-                  })()
-                )}
-              </div>
+                      <p className="text-xs text-muted-foreground">
+                        {activeConversation.members.length} members
+                        {activeConversation.isReadOnly && " · Archived"}
+                      </p>
+                    </div>
+                  </div>
+                )
+              })()}
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -530,16 +653,34 @@ export function DealRoomManager({
                   {/* Other's avatar */}
                   {!isOwn && (
                     <div className="mb-4 shrink-0">
-                      <Avatar size="sm">
-                        <AvatarFallback>
-                          {sender?.name
-                            .split(" ")
-                            .map((w) => w[0])
-                            .slice(0, 2)
-                            .join("")
-                            .toUpperCase() ?? "?"}
-                        </AvatarFallback>
-                      </Avatar>
+                      {sender ? (
+                        <UserHoverCard
+                          user={sender}
+                          side="right"
+                          onMessageClick={
+                            activeConversation.type === "expo_group"
+                              ? () => handleCreateOrOpenDirect(sender.id)
+                              : undefined
+                          }
+                        >
+                          <button type="button" className="cursor-pointer">
+                            <Avatar size="sm">
+                              <AvatarFallback>
+                                {sender.name
+                                  .split(" ")
+                                  .map((w) => w[0])
+                                  .slice(0, 2)
+                                  .join("")
+                                  .toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                          </button>
+                        </UserHoverCard>
+                      ) : (
+                        <Avatar size="sm">
+                          <AvatarFallback>?</AvatarFallback>
+                        </Avatar>
+                      )}
                     </div>
                   )}
 
@@ -549,10 +690,23 @@ export function DealRoomManager({
                       isOwn ? "items-end" : "items-start",
                     )}
                   >
-                    {showSenderName && (
-                      <span className="ml-1 text-xs text-muted-foreground">
-                        {sender?.name}
-                      </span>
+                    {showSenderName && sender && (
+                      <UserHoverCard
+                        user={sender}
+                        side="right"
+                        onMessageClick={
+                          activeConversation.type === "expo_group"
+                            ? () => handleCreateOrOpenDirect(sender.id)
+                            : undefined
+                        }
+                      >
+                        <button
+                          type="button"
+                          className="ml-1 cursor-pointer text-xs text-muted-foreground hover:text-foreground hover:underline"
+                        >
+                          {sender.name}
+                        </button>
+                      </UserHoverCard>
                     )}
 
                     {/* Editing state */}
@@ -734,8 +888,8 @@ export function DealRoomManager({
       ) : (
         /* Empty state */
         <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
-          <div className="rounded-full bg-muted p-4">
-            <MessageCircleIcon className="size-8 text-muted-foreground" />
+          <div className="rounded-full bg-primary p-4">
+            <MessageCircleIcon className="size-8 text-primary-foreground" />
           </div>
           <div>
             <p className="font-semibold text-lg">Your messages</p>

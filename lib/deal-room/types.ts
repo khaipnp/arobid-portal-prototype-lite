@@ -9,6 +9,10 @@ export interface ChatUser {
   name: string
   email: string
   company: string
+  jobTitle?: string
+  phone?: string
+  website?: string
+  location?: string
   avatarUrl?: string
   isActive: boolean
 }
