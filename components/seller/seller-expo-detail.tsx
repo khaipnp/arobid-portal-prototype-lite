@@ -12,6 +12,7 @@ import {
 import Image from "next/image"
 import Link from "next/link"
 import * as React from "react"
+import { GoLIVESection } from "@/components/tradexpo/golive-section"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -157,6 +158,9 @@ export function SellerExpoDetail({ expoId }: Props) {
           </p>
         </div>
       </div>
+
+      {/* GoLIVE Sessions */}
+      <GoLIVESection expoId={expoId} expoStatus={expo.status} />
 
       {/* Booth list */}
       <section>

@@ -7,6 +7,7 @@ import {
   LayoutDashboardIcon,
   LayoutPanelTopIcon,
   LayoutTemplateIcon,
+  MonitorPlayIcon,
   PieChartIcon,
   ReceiptIcon,
   ShieldCheckIcon,
@@ -55,6 +56,14 @@ const tradexpoLinks = [
     name: "Booth Templates",
     url: "/admin/tradexpo/booth-templates",
     icon: <ToyBrickIcon />,
+  },
+]
+
+const streamingLinks = [
+  {
+    name: "Host Dashboard",
+    url: "/admin/streaming",
+    icon: <MonitorPlayIcon />,
   },
 ]
 
@@ -134,6 +143,22 @@ export function NavAdmin() {
         <SidebarGroupLabel>TradeXpo</SidebarGroupLabel>
         <SidebarMenu>
           {tradexpoLinks.map((item) => (
+            <SidebarMenuItem key={item.name}>
+              <SidebarMenuButton asChild>
+                <Link href={item.url}>
+                  {item.icon}
+                  <span>{item.name}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarGroup>
+
+      <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+        <SidebarGroupLabel>Streaming</SidebarGroupLabel>
+        <SidebarMenu>
+          {streamingLinks.map((item) => (
             <SidebarMenuItem key={item.name}>
               <SidebarMenuButton asChild>
                 <Link href={item.url}>

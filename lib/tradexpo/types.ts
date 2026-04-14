@@ -269,6 +269,77 @@ export interface ExhibitorCatalogProduct {
 
 export type BoothPublishStatus = "Draft" | "Published"
 
+// ─── Core: Streaming Service ─────────────────────────────────────────────────
+
+export type StreamSessionStatus =
+  | "Provisioned"
+  | "Active"
+  | "Ended"
+  | "Canceled"
+
+export interface StreamSession {
+  streamSessionId: string
+  status: StreamSessionStatus
+  hostUserId: string
+  hostDisplayName: string
+  streamUrl: string
+  streamKey: string
+  replayEnabled: boolean
+  replayUrl: string | null
+  startedAt: string | null
+  endedAt: string | null
+  peakViewerCount: number | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface LiveComment {
+  liveCommentId: string
+  streamSessionId: string
+  authorUserId: string | null
+  authorDisplayName: string | null
+  guestDisplayName: string | null
+  guestEmail: string | null
+  commentText: string
+  isDeleted: boolean
+  createdAt: string
+  deletedAt: string | null
+  deletedByUserId: string | null
+}
+
+// ─── TradeXpo: Event GoLIVE ───────────────────────────────────────────────────
+
+export type GoLIVEEventStatus =
+  | "Scheduled"
+  | "Ready"
+  | "Live"
+  | "Ended"
+  | "Canceled"
+
+export type GoLIVESessionType =
+  | "Workshop"
+  | "Talkshow"
+  | "Keynote"
+  | "Panel"
+  | "ProductDemo"
+  | "Other"
+
+export interface GoLIVEEvent {
+  goLiveEventId: string
+  expoId: string
+  streamSessionId: string
+  title: string
+  description: string | null
+  thumbnailUrl: string | null
+  sessionType: GoLIVESessionType
+  scheduledStartAt: string | null
+  status: GoLIVEEventStatus
+  broadcasterUserId: string
+  broadcasterDisplayName: string
+  createdAt: string
+  updatedAt: string
+}
+
 /** Rich booth customization state — template-driven. Replaces SellerBoothConfig. */
 export interface BoothCustomization {
   registrationId: string
