@@ -12,7 +12,9 @@ When a business applies an eVoucher at checkout, one unit of quantity must be te
 
 ### 3.1. Pre-condition
 
-- A voucher has been applied at checkout (one unit is in `Locked` state for the current transaction).
+- A voucher has been applied at checkout (one unit of remaining quantity is in `Locked` state for the current transaction).
+  - For **single-use batch**: the specific individual code is locked.
+  - For **multi-use code**: one unit of the shared code's redemption counter is locked.
 - The business has proceeded to the payment step.
 
 ### 3.2. Input
@@ -29,14 +31,17 @@ The system observes the outcome of the payment transaction. No additional user i
 ### 3.3. Process / Logic
 
 **On payment success:**
-1. System marks the locked code as permanently **Redeemed**.
-2. The code transitions from `Locked` → `Redeemed`. Remaining quantity (Issued − Locked − Redeemed) decreases by 1.
-3. The code cannot be reused for any future transaction.
-4. If remaining quantity reaches 0, voucher batch status transitions to `Depleted`.
+1. System marks the locked unit as permanently **Redeemed**.
+   - **Single-use batch**: the individual code transitions `Locked` → `Redeemed`. That code cannot be used again.
+   - **Multi-use code**: one unit of the redemption counter is finalized as consumed.
+2. Remaining quantity (Issued − Locked − Redeemed) decreases by 1.
+3. If remaining quantity reaches 0, voucher status transitions to `Depleted`.
 
 **On payment failure, timeout, or cancellation:**
-1. System **releases** the locked code back to `Available`.
-2. The code transitions from `Locked` → `Available`. Remaining quantity is restored.
+1. System **releases** the locked unit.
+   - **Single-use batch**: the individual code transitions `Locked` → `Available`. It may be applied again.
+   - **Multi-use code**: the locked unit is returned to the available counter.
+2. Remaining quantity is restored.
 3. The code can be applied again in a new transaction, provided:
    - Parent batch status is still `Active`.
    - `Valid Until` has not passed.

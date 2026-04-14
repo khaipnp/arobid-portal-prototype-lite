@@ -2,6 +2,7 @@ export type VoucherBatchStatus = "Active" | "Expired" | "Depleted" | "Revoked"
 export type VoucherScope = "service" | "expo"
 export type DiscountType = "percentage" | "fixed"
 export type VoucherCodeStatus = "Available" | "Locked" | "Redeemed" | "Revoked"
+export type VoucherCodeType = "single-use" | "multi-use"
 
 export interface VoucherPartner {
   id: string
@@ -16,7 +17,14 @@ export interface VoucherTarget {
 
 export interface VoucherBatch {
   id: string
+  codeType: VoucherCodeType
+  // single-use: prefix used to seed generation (e.g. "EXPO2025")
   codePrefix: string
+  // multi-use: the single shared code (e.g. "SUMMER25"). Empty string for single-use.
+  multiUseCode: string
+  // multi-use counters (stored directly; single-use derives from VoucherCode array)
+  multiUseLockedCount: number
+  multiUseRedeemedCount: number
   name: string
   applicableTo: VoucherScope
   targetId: string

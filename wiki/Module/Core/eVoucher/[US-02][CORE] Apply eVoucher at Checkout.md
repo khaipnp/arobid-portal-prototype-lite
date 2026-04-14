@@ -28,19 +28,23 @@ This feature supports both B2B Marketplace service purchases and TradeXpo expo b
 
 **Validation sequence (in order):**
 
-1. **Existence check** — The normalized code matches a known individual code in the system.
-2. **Status check** — The parent batch status is `Active` (not `Expired`, `Depleted`, or `Revoked`).
+1. **Existence check** — The normalized code matches a known voucher in the system (either an individual code in a single-use batch, or a multi-use code).
+2. **Status check** — The voucher/batch status is `Active` (not `Expired`, `Depleted`, or `Revoked`).
 3. **Validity window** — Current date is within `Valid From` – `Valid Until`.
-4. **Scope check** — The batch's target (service or expo) matches the item being purchased.
+4. **Scope check** — The voucher's target (service or expo) matches the item being purchased.
 5. **Quantity check** — Remaining quantity > 0, where `Remaining = Issued − Locked − Redeemed`.
 
-All five checks are evaluated as a single **atomic operation** to prevent race conditions (e.g., two businesses applying the last available code simultaneously).
+All five checks are evaluated as a single **atomic operation** to prevent race conditions (e.g., two businesses applying the last available use simultaneously).
 
 If any check fails, an appropriate error message is shown and the code is not applied. The order total remains unchanged.
 
+**Per-business reuse:**
+- **Single-use batch**: each individual code is a one-time use. A business cannot reuse a code they have already redeemed.
+- **Multi-use code**: no per-business restriction. A business may apply the same multi-use code to multiple separate orders, as long as remaining quantity > 0 each time.
+
 **On successful validation:**
 - If another voucher code was already applied to this order, its lock is **released first**.
-- The validated code's status transitions to `Locked` (reserved for this transaction).
+- One unit of remaining quantity is **locked** (reserved for this transaction).
 - The discount is calculated and applied to the order total:
   - `Percentage`: `Order Total × (1 − Discount% / 100)`
   - `Fixed Amount`: `max(0, Order Total − Discount Value)`
@@ -129,8 +133,10 @@ flowchart TD
 | **08** | A voucher is applied at checkout | Business removes the applied code before paying | Locked code is released back to `Available`; order total reverts to original |
 | **09** | A voucher code is already applied | Business applies a different valid code | Existing lock is released first; new code is locked; order summary updates |
 | **10** | Business enters a code in lowercase | Code matches an existing code when normalized to uppercase | Code is accepted; no error shown |
-| **11** | Percentage voucher is applied | Discount is 15% on a 2,000,000 VND order | Final total shown as 1,700,000 VND |
-| **12** | Fixed amount voucher is applied | Discount is 500,000 VND on a 300,000 VND order | Final total shown as 0 VND (not negative) |
+| **11** | Business has previously redeemed a **single-use** code on another order | Business enters the same code again | Error shown: code has already been used; total unchanged |
+| **12** | Business has previously redeemed a **multi-use** code on another order | Business enters the same code again on a new order (remaining > 0) | Code is accepted; discount applied normally |
+| **13** | Percentage voucher is applied | Discount is 15% on a 2,000,000 VND order | Final total shown as 1,700,000 VND |
+| **14** | Fixed amount voucher is applied | Discount is 500,000 VND on a 300,000 VND order | Final total shown as 0 VND (not negative) |
 
 ---
 

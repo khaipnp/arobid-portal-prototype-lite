@@ -1,15 +1,14 @@
-"use client"
+"use client";
 
 import {
   AlertCircleIcon,
   CheckCircle2Icon,
-  DownloadIcon,
+  EllipsisVerticalIcon,
   FilterXIcon,
-  PencilIcon,
+  ChevronDownIcon,
   PlusIcon,
-  ShieldOffIcon,
-} from "lucide-react"
-import { useMemo, useState } from "react"
+} from "lucide-react";
+import { useMemo, useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,9 +18,16 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Command,
+  CommandEmpty,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import {
   Dialog,
   DialogContent,
@@ -29,16 +35,28 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -46,95 +64,202 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Textarea } from "@/components/ui/textarea"
+} from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
 import {
   mockVoucherBatches,
   mockVoucherCodes,
   mockVoucherPartners,
   mockVoucherTargets,
-} from "@/lib/evoucher/mock-data"
+} from "@/lib/evoucher/mock-data";
 import type {
   DiscountType,
   VoucherBatch,
   VoucherBatchStatus,
   VoucherBatchView,
   VoucherCode,
+  VoucherCodeType,
   VoucherScope,
-} from "@/lib/evoucher/types"
+} from "@/lib/evoucher/types";
 import {
   buildVoucherBatchView,
+  displayCode,
   formatDate,
-  formatDiscount,
   generateCodes,
-} from "@/lib/evoucher/utils"
+} from "@/lib/evoucher/utils";
 
-// ─── Status Badge ─────────────────────────────────────────────────────────────
+// ─── Badges ───────────────────────────────────────────────────────────────────
 
 function VoucherStatusBadge({ status }: { status: VoucherBatchStatus }) {
-  const map: Record<VoucherBatchStatus, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
+  const map: Record<
+    VoucherBatchStatus,
+    {
+      label: string;
+      variant: "default" | "secondary" | "destructive" | "outline";
+    }
+  > = {
     Active: { label: "Active", variant: "default" },
     Expired: { label: "Expired", variant: "secondary" },
     Depleted: { label: "Depleted", variant: "outline" },
     Revoked: { label: "Revoked", variant: "destructive" },
-  }
-  const { label, variant } = map[status]
-  return <Badge variant={variant}>{label}</Badge>
+  };
+  const { label, variant } = map[status];
+  return <Badge variant={variant}>{label}</Badge>;
+}
+
+function CodeTypeBadge({ type }: { type: VoucherCodeType }) {
+  return type === "multi-use" ? (
+    <Badge variant="secondary" className="font-normal">
+      Multi-use
+    </Badge>
+  ) : (
+    <Badge variant="outline" className="font-normal">
+      Single-use
+    </Badge>
+  );
+}
+
+function CodeTypeCard({
+  active,
+  badge,
+  description,
+  disabled,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  badge: string;
+  description: string;
+  disabled?: boolean;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      aria-pressed={active}
+      onClick={onClick}
+      className={
+        active
+          ? "flex min-h-28 flex-col justify-between rounded-xl border border-primary bg-primary/5 p-4 text-left shadow-sm ring-1 ring-primary/20 transition disabled:cursor-not-allowed disabled:opacity-60"
+          : "flex min-h-28 flex-col justify-between rounded-xl border border-border bg-background p-4 text-left transition hover:border-foreground/20 hover:bg-muted/30 disabled:cursor-not-allowed disabled:opacity-60"
+      }
+    >
+      <div className="w-full flex flex-col gap-2">
+        <div className="flex-1 flex justify-between items-center">
+          <div className="font-medium">{label}</div>
+          <Badge
+            variant={active ? "default" : "outline"}
+            className="font-normal"
+          >
+            {badge}
+          </Badge>
+        </div>
+        <p className="text-muted-foreground text-xs leading-5">{description}</p>
+      </div>
+    </button>
+  );
+}
+
+function DiscountTypeBadge({ type }: { type: DiscountType }) {
+  return type === "percentage" ? (
+    <Badge variant="secondary" className="font-normal">
+      Percent
+    </Badge>
+  ) : (
+    <Badge variant="outline" className="font-normal">
+      Fixed
+    </Badge>
+  );
 }
 
 // ─── CSV Export ───────────────────────────────────────────────────────────────
 
-function exportBatchCSV(batch: VoucherBatch, codes: VoucherCode[]) {
-  const batchCodes = codes.filter((c) => c.batchId === batch.id)
+function exportBatchCSV(
+  batch: VoucherBatch,
+  codes: VoucherCode[],
+  remainingCount: number,
+) {
+  const today = new Date().toISOString().slice(0, 10);
   const discount =
     batch.discountType === "percentage"
       ? `${batch.discountValue}%`
-      : `${batch.discountValue.toLocaleString("vi-VN")} VND`
+      : `${batch.discountValue.toLocaleString("vi-VN")} VND`;
+  const fileSlug =
+    batch.codeType === "multi-use"
+      ? batch.multiUseCode.toLowerCase()
+      : batch.codePrefix.toLowerCase();
 
-  const header = "Code,Voucher Name,Applicable To,Assigned To (Partner),Valid From,Valid Until,Discount,Description,Status"
-  const rows = batchCodes.map((c) =>
-    [
-      c.code,
+  let csv: string;
+
+  if (batch.codeType === "multi-use") {
+    const header =
+      "Code,Voucher Name,Applicable To,Assigned To (Partner),Valid From,Valid Until,Discount,Issued Quantity,Remaining,Description";
+    const row = [
+      batch.multiUseCode,
       `"${batch.name}"`,
       `${batch.applicableTo === "expo" ? "Expo" : "Service"}: ${batch.targetName}`,
       batch.assignedToPartnerName,
       batch.validFrom,
       batch.validUntil,
       discount,
+      batch.issuedQuantity,
+      remainingCount,
       `"${batch.description ?? ""}"`,
-      c.status,
-    ].join(","),
-  )
+    ].join(",");
+    csv = [header, row].join("\n");
+  } else {
+    const batchCodes = codes.filter((c) => c.batchId === batch.id);
+    const header =
+      "Code,Voucher Name,Applicable To,Assigned To (Partner),Valid From,Valid Until,Discount,Description,Status";
+    const rows = batchCodes.map((c) =>
+      [
+        c.code,
+        `"${batch.name}"`,
+        `${batch.applicableTo === "expo" ? "Expo" : "Service"}: ${batch.targetName}`,
+        batch.assignedToPartnerName,
+        batch.validFrom,
+        batch.validUntil,
+        discount,
+        `"${batch.description ?? ""}"`,
+        c.status,
+      ].join(","),
+    );
+    csv = [header, ...rows].join("\n");
+  }
 
-  const csv = [header, ...rows].join("\n")
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement("a")
-  const today = new Date().toISOString().slice(0, 10)
-  a.href = url
-  a.download = `evoucher-${batch.codePrefix.toLowerCase()}-${today}.csv`
-  a.click()
-  URL.revokeObjectURL(url)
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `evoucher-${fileSlug}-${today}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 // ─── Form Types ───────────────────────────────────────────────────────────────
 
 interface FormState {
-  codePrefix: string
-  name: string
-  applicableTo: VoucherScope | ""
-  targetId: string
-  assignedToPartnerId: string
-  validFrom: string
-  validUntil: string
-  issuedQuantity: string
-  discountType: DiscountType | ""
-  discountValue: string
-  description: string
+  codeType: VoucherCodeType | "";
+  codePrefix: string; // single-use
+  multiUseCode: string; // multi-use
+  name: string;
+  applicableTo: VoucherScope | "";
+  targetId: string;
+  assignedToPartnerId: string;
+  validFrom: string;
+  validUntil: string;
+  issuedQuantity: string;
+  discountType: DiscountType | "";
+  discountValue: string;
+  description: string;
 }
 
 const emptyForm: FormState = {
+  codeType: "",
   codePrefix: "",
+  multiUseCode: "",
   name: "",
   applicableTo: "",
   targetId: "",
@@ -145,16 +270,17 @@ const emptyForm: FormState = {
   discountType: "",
   discountValue: "",
   description: "",
-}
+};
 
-// ─── Create/Edit Dialog ───────────────────────────────────────────────────────
+// ─── Create / Edit Dialog ─────────────────────────────────────────────────────
 
 interface VoucherFormDialogProps {
-  open: boolean
-  onClose: () => void
-  editing: VoucherBatchView | null
-  existingPrefixes: Set<string>
-  onSave: (batch: VoucherBatch, deltaCodes: VoucherCode[]) => void
+  open: boolean;
+  onClose: () => void;
+  editing: VoucherBatchView | null;
+  existingPrefixes: Set<string>;
+  existingMultiUseCodes: Set<string>;
+  onSave: (batch: VoucherBatch, deltaCodes: VoucherCode[]) => void;
 }
 
 function VoucherFormDialog({
@@ -162,15 +288,18 @@ function VoucherFormDialog({
   onClose,
   editing,
   existingPrefixes,
+  existingMultiUseCodes,
   onSave,
 }: VoucherFormDialogProps) {
-  const isEdit = editing !== null
-  const hasRedemptions = isEdit ? editing.redeemedCount > 0 : false
+  const isEdit = editing !== null;
+  const hasRedemptions = isEdit ? editing.redeemedCount > 0 : false;
 
   const [form, setForm] = useState<FormState>(() => {
     if (editing) {
       return {
+        codeType: editing.codeType,
         codePrefix: editing.codePrefix,
+        multiUseCode: editing.multiUseCode,
         name: editing.name,
         applicableTo: editing.applicableTo,
         targetId: editing.targetId,
@@ -181,113 +310,155 @@ function VoucherFormDialog({
         discountType: editing.discountType,
         discountValue: String(editing.discountValue),
         description: editing.description ?? "",
-      }
+      };
     }
-    return emptyForm
-  })
+    return emptyForm;
+  });
 
-  // Reset form when dialog opens
-  const [errors, setErrors] = useState<Partial<Record<keyof FormState | "form", string>>>({})
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof FormState | "form", string>>
+  >({});
 
   const filteredTargets = useMemo(
     () => mockVoucherTargets.filter((t) => t.type === form.applicableTo),
     [form.applicableTo],
-  )
+  );
+  const [targetPickerOpen, setTargetPickerOpen] = useState(false);
+  const [targetSearch, setTargetSearch] = useState("");
+
+  const selectedTarget = useMemo(
+    () => mockVoucherTargets.find((t) => t.id === form.targetId) ?? null,
+    [form.targetId],
+  );
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
-    setForm((prev) => ({ ...prev, [key]: value }))
-    setErrors((prev) => ({ ...prev, [key]: undefined }))
+    setForm((prev) => ({ ...prev, [key]: value }));
+    setErrors((prev) => ({ ...prev, [key]: undefined }));
   }
 
   function validate(): boolean {
-    const errs: typeof errors = {}
+    const errs: typeof errors = {};
+
+    if (!isEdit && !form.codeType) errs.codeType = "Please select a code type.";
 
     if (!isEdit) {
-      if (!form.codePrefix.trim()) errs.codePrefix = "Code Prefix is required."
-      else if (existingPrefixes.has(form.codePrefix.trim().toUpperCase())) {
-        errs.codePrefix = "Code Prefix already exists on the platform."
+      if (form.codeType === "single-use") {
+        if (!form.codePrefix.trim())
+          errs.codePrefix = "Code Prefix is required.";
+        else if (existingPrefixes.has(form.codePrefix.trim().toUpperCase())) {
+          errs.codePrefix = "This Code Prefix already exists on the platform.";
+        }
+      } else if (form.codeType === "multi-use") {
+        if (!form.multiUseCode.trim()) errs.multiUseCode = "Code is required.";
+        else if (
+          existingMultiUseCodes.has(form.multiUseCode.trim().toUpperCase())
+        ) {
+          errs.multiUseCode = "This code already exists on the platform.";
+        }
       }
     }
 
-    if (!form.name.trim()) errs.name = "Name is required."
-    if (!isEdit && !form.applicableTo) errs.applicableTo = "Please select a scope."
-    if (!isEdit && !form.targetId) errs.targetId = "Please select a target."
-    if (!form.assignedToPartnerId) errs.assignedToPartnerId = "Please assign a partner."
-    if (!form.validFrom) errs.validFrom = "Valid From is required."
-    if (!form.validUntil) errs.validUntil = "Valid Until is required."
+    if (!form.name.trim()) errs.name = "Name is required.";
+    if (!isEdit && !form.applicableTo)
+      errs.applicableTo = "Please select a scope.";
+    if (!isEdit && !form.targetId) errs.targetId = "Please select a target.";
+    if (!form.assignedToPartnerId)
+      errs.assignedToPartnerId = "Please assign a partner.";
+    if (!form.validFrom) errs.validFrom = "Valid From is required.";
+    if (!form.validUntil) errs.validUntil = "Valid Until is required.";
     else if (form.validFrom && form.validUntil <= form.validFrom) {
-      errs.validUntil = "Valid Until must be after Valid From."
+      errs.validUntil = "Valid Until must be after Valid From.";
     }
 
     if (isEdit && editing) {
       if (form.validUntil < editing.validUntil) {
-        errs.validUntil = "Valid Until can only be extended, not shortened."
+        errs.validUntil = "Valid Until can only be extended, not shortened.";
       }
-      const newQty = Number(form.issuedQuantity)
+      const newQty = Number(form.issuedQuantity);
       if (newQty < editing.redeemedCount) {
-        errs.issuedQuantity = `Cannot reduce below number already redeemed (${editing.redeemedCount}).`
+        errs.issuedQuantity = `Cannot reduce below number already redeemed (${editing.redeemedCount}).`;
       }
       if (newQty < editing.issuedQuantity) {
-        errs.issuedQuantity = "Issued Quantity can only be increased."
+        errs.issuedQuantity = "Issued Quantity can only be increased.";
       }
     }
 
     if (!form.issuedQuantity || Number(form.issuedQuantity) < 1) {
-      errs.issuedQuantity = "Issued Quantity must be at least 1."
+      errs.issuedQuantity = "Issued Quantity must be at least 1.";
     }
 
-    if (!form.discountType) errs.discountType = "Please select a discount type."
-    const dv = Number(form.discountValue)
+    if (!form.discountType)
+      errs.discountType = "Please select a discount type.";
+    const dv = Number(form.discountValue);
     if (!form.discountValue || dv <= 0) {
-      errs.discountValue = "Discount Value must be greater than 0."
+      errs.discountValue = "Discount Value must be greater than 0.";
     } else if (form.discountType === "percentage" && (dv < 1 || dv > 100)) {
-      errs.discountValue = "Percentage must be between 1 and 100."
+      errs.discountValue = "Percentage must be between 1 and 100.";
     }
 
-    setErrors(errs)
-    return Object.keys(errs).length === 0
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
   }
 
   function handleSave() {
-    if (!validate()) return
-
-    const prefix = form.codePrefix.trim().toUpperCase()
-    const now = new Date().toISOString()
+    if (!validate()) return;
+    const now = new Date().toISOString();
 
     if (isEdit && editing) {
-      const newQty = Number(form.issuedQuantity)
-      const delta = newQty - editing.issuedQuantity
+      const newQty = Number(form.issuedQuantity);
+      const delta = newQty - editing.issuedQuantity;
       const updatedBatch: VoucherBatch = {
         ...editing,
         name: form.name.trim(),
         assignedToPartnerId: form.assignedToPartnerId,
         assignedToPartnerName:
-          mockVoucherPartners.find((p) => p.id === form.assignedToPartnerId)?.name ??
-          editing.assignedToPartnerName,
+          mockVoucherPartners.find((p) => p.id === form.assignedToPartnerId)
+            ?.name ?? editing.assignedToPartnerName,
         validUntil: form.validUntil,
         issuedQuantity: newQty,
-        discountType: hasRedemptions ? editing.discountType : (form.discountType as DiscountType),
-        discountValue: hasRedemptions ? editing.discountValue : Number(form.discountValue),
+        discountType: hasRedemptions
+          ? editing.discountType
+          : (form.discountType as DiscountType),
+        discountValue: hasRedemptions
+          ? editing.discountValue
+          : Number(form.discountValue),
         description: form.description,
         updatedAt: now,
-      }
+      };
+      // Single-use: generate delta codes. Multi-use: just raise counter (no new codes).
       const deltaCodes =
-        delta > 0
+        editing.codeType === "single-use" && delta > 0
           ? generateCodes(
               editing.id,
               editing.codePrefix,
               delta,
-              new Set(mockVoucherCodes.filter((c) => c.batchId === editing.id).map((c) => c.code)),
+              new Set(
+                mockVoucherCodes
+                  .filter((c) => c.batchId === editing.id)
+                  .map((c) => c.code),
+              ),
             )
-          : []
-      onSave(updatedBatch, deltaCodes)
+          : [];
+      onSave(updatedBatch, deltaCodes);
     } else {
-      const id = `batch-${Date.now()}`
-      const target = mockVoucherTargets.find((t) => t.id === form.targetId)
-      const partner = mockVoucherPartners.find((p) => p.id === form.assignedToPartnerId)
+      const id = `batch-${Date.now()}`;
+      const target = mockVoucherTargets.find((t) => t.id === form.targetId);
+      const partner = mockVoucherPartners.find(
+        (p) => p.id === form.assignedToPartnerId,
+      );
+      const codeType = form.codeType as VoucherCodeType;
+      const prefix =
+        codeType === "single-use" ? form.codePrefix.trim().toUpperCase() : "";
+      const muCode =
+        codeType === "multi-use" ? form.multiUseCode.trim().toUpperCase() : "";
+
       const newBatch: VoucherBatch = {
         id,
+        codeType,
         codePrefix: prefix,
+        multiUseCode: muCode,
+        multiUseLockedCount: 0,
+        multiUseRedeemedCount: 0,
         name: form.name.trim(),
         applicableTo: form.applicableTo as VoucherScope,
         targetId: form.targetId,
@@ -303,45 +474,132 @@ function VoucherFormDialog({
         isRevoked: false,
         createdAt: now,
         updatedAt: now,
-      }
-      const newCodes = generateCodes(id, prefix, Number(form.issuedQuantity))
-      onSave(newBatch, newCodes)
+      };
+      const newCodes =
+        codeType === "single-use"
+          ? generateCodes(id, prefix, Number(form.issuedQuantity))
+          : []; // multi-use: no individual codes
+      onSave(newBatch, newCodes);
     }
   }
 
-  const fieldClass = "space-y-1"
-  const errClass = "text-destructive text-xs mt-1"
+  const fieldClass = "space-y-1";
+  const errClass = "text-destructive text-xs mt-1";
+  const readonlyNote = (msg: string) => (
+    <p className="text-muted-foreground text-xs">{msg}</p>
+  );
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose() }}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        if (!o) onClose();
+      }}
+    >
       <DialogContent className="max-w-xl! max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit Voucher Batch" : "Create eVoucher Batch"}</DialogTitle>
+          <DialogTitle>
+            {isEdit ? "Edit Voucher Batch" : "Create eVoucher"}
+          </DialogTitle>
           <DialogDescription>
             {isEdit
               ? "Update allowed fields. Some fields are locked after creation or first redemption."
-              : "Fill in all required fields to create a new voucher batch."}
+              : "Fill in all required fields to create a new voucher."}
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 py-2">
-          {/* Code Prefix */}
+          {/* Code Type */}
           <div className={fieldClass}>
-            <Label htmlFor="codePrefix">
-              Code Prefix <span className="text-destructive">*</span>
-            </Label>
-            <Input
-              id="codePrefix"
-              placeholder="e.g. EXPO2025"
-              value={form.codePrefix}
-              onChange={(e) => set("codePrefix", e.target.value.toUpperCase())}
-              disabled={isEdit}
-            />
-            {errors.codePrefix && <p className={errClass}>{errors.codePrefix}</p>}
-            {isEdit && (
-              <p className="text-muted-foreground text-xs">Code Prefix is immutable after creation.</p>
-            )}
+            <div className="grid gap-3 sm:grid-cols-2">
+              <CodeTypeCard
+                active={form.codeType === "single-use"}
+                badge="Single-use"
+                label="Single-use batch"
+                description="Generate unique codes. Each code can be redeemed once."
+                disabled={isEdit}
+                onClick={() => {
+                  if (isEdit) return;
+                  set("codeType", "single-use");
+                  set("codePrefix", "");
+                  set("multiUseCode", "");
+                }}
+              />
+              <CodeTypeCard
+                active={form.codeType === "multi-use"}
+                badge="Multi-use"
+                label="Shared code"
+                description="Create one shared code that can be redeemed up to the max uses."
+                disabled={isEdit}
+                onClick={() => {
+                  if (isEdit) return;
+                  set("codeType", "multi-use");
+                  set("codePrefix", "");
+                  set("multiUseCode", "");
+                }}
+              />
+            </div>
+            {errors.codeType && <p className={errClass}>{errors.codeType}</p>}
+            {isEdit && readonlyNote("Code Type is immutable after creation.")}
           </div>
+
+          {/* Code Prefix (single-use) */}
+          {(form.codeType === "single-use" || (!isEdit && !form.codeType)) && (
+            <div
+              className={fieldClass}
+              style={{
+                display:
+                  form.codeType === "single-use" || (!isEdit && !form.codeType)
+                    ? undefined
+                    : "none",
+              }}
+            >
+              {form.codeType === "single-use" && (
+                <>
+                  <Label htmlFor="codePrefix">
+                    Code Prefix <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="codePrefix"
+                    placeholder="e.g. EXPO2025 (leave blank for auto)"
+                    value={form.codePrefix}
+                    onChange={(e) =>
+                      set("codePrefix", e.target.value.toUpperCase())
+                    }
+                    disabled={isEdit}
+                  />
+                  {errors.codePrefix && (
+                    <p className={errClass}>{errors.codePrefix}</p>
+                  )}
+                  {isEdit &&
+                    readonlyNote("Code Prefix is immutable after creation.")}
+                </>
+              )}
+            </div>
+          )}
+
+          {/* Shared code (multi-use) */}
+          {form.codeType === "multi-use" && (
+            <div className={fieldClass}>
+              <Label htmlFor="multiUseCode">
+                Code<span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="multiUseCode"
+                placeholder="e.g. SUMMER25"
+                value={form.multiUseCode}
+                onChange={(e) =>
+                  set("multiUseCode", e.target.value.toUpperCase())
+                }
+                disabled={isEdit}
+                className="font-mono"
+              />
+              {errors.multiUseCode && (
+                <p className={errClass}>{errors.multiUseCode}</p>
+              )}
+              {isEdit && readonlyNote("Code is immutable after creation.")}
+            </div>
+          )}
 
           {/* Name */}
           <div className={fieldClass}>
@@ -361,55 +619,101 @@ function VoucherFormDialog({
           <div className="grid grid-cols-2 gap-3">
             <div className={fieldClass}>
               <Label>
-                Applicable To <span className="text-destructive">*</span>
+                Module <span className="text-destructive">*</span>
               </Label>
               <Select
                 value={form.applicableTo}
                 onValueChange={(v) => {
-                  set("applicableTo", v as VoucherScope)
-                  set("targetId", "")
+                  set("applicableTo", v as VoucherScope);
+                  set("targetId", "");
+                  setTargetSearch("");
                 }}
                 disabled={isEdit}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select scope" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="expo">Expo</SelectItem>
-                  <SelectItem value="service">Service</SelectItem>
+                  <SelectItem value="expo">TradeXpo</SelectItem>
+                  <SelectItem value="service">B2B Martketplace</SelectItem>
                 </SelectContent>
               </Select>
-              {errors.applicableTo && <p className={errClass}>{errors.applicableTo}</p>}
+              {errors.applicableTo && (
+                <p className={errClass}>{errors.applicableTo}</p>
+              )}
             </div>
 
             <div className={fieldClass}>
               <Label>
                 Target <span className="text-destructive">*</span>
               </Label>
-              <Select
-                value={form.targetId}
-                onValueChange={(v) => set("targetId", v)}
-                disabled={isEdit || !form.applicableTo}
+              <Popover
+                open={targetPickerOpen}
+                onOpenChange={(open) => {
+                  setTargetPickerOpen(open);
+                  if (!open) setTargetSearch("");
+                }}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder={form.applicableTo ? "Select target" : "Select scope first"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {filteredTargets.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>
-                      {t.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    disabled={isEdit || !form.applicableTo}
+                    className="w-full justify-between font-normal rounded-lg"
+                  >
+                    <span className="truncate">
+                      {selectedTarget?.name ??
+                        (form.applicableTo
+                          ? "Select target"
+                          : "Select scope first")}
+                    </span>
+                    <ChevronDownIcon className="size-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  align="start"
+                  className="w-(--radix-popover-trigger-width) p-0"
+                >
+                  <Command shouldFilter={false}>
+                    <CommandInput
+                      placeholder="Search Expo / target..."
+                      value={targetSearch}
+                      onValueChange={setTargetSearch}
+                    />
+                    <CommandList className="mt-1">
+                      <CommandEmpty>No target found.</CommandEmpty>
+                      {filteredTargets
+                        .filter((target) => {
+                          const q = targetSearch.trim().toLowerCase();
+                          if (!q) return true;
+                          return (
+                            target.name.toLowerCase().includes(q) ||
+                            target.id.toLowerCase().includes(q)
+                          );
+                        })
+                        .map((t) => (
+                          <CommandItem
+                            key={t.id}
+                            value={t.name}
+                            onSelect={() => {
+                              set("targetId", t.id);
+                              setTargetPickerOpen(false);
+                              setTargetSearch("");
+                            }}
+                          >
+                            {t.name}
+                          </CommandItem>
+                        ))}
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               {errors.targetId && <p className={errClass}>{errors.targetId}</p>}
-              {isEdit && (
-                <p className="text-muted-foreground text-xs">Target is immutable after creation.</p>
-              )}
+              {isEdit && readonlyNote("Target is immutable after creation.")}
             </div>
           </div>
 
-          {/* Assigned To */}
+          {/* Assigned To Partner */}
           <div className={fieldClass}>
             <Label>
               Assigned To (Partner) <span className="text-destructive">*</span>
@@ -447,9 +751,10 @@ function VoucherFormDialog({
                 onChange={(e) => set("validFrom", e.target.value)}
                 disabled={isEdit}
               />
-              {errors.validFrom && <p className={errClass}>{errors.validFrom}</p>}
+              {errors.validFrom && (
+                <p className={errClass}>{errors.validFrom}</p>
+              )}
             </div>
-
             <div className={fieldClass}>
               <Label htmlFor="validUntil">
                 Valid Until <span className="text-destructive">*</span>
@@ -460,17 +765,18 @@ function VoucherFormDialog({
                 value={form.validUntil}
                 onChange={(e) => set("validUntil", e.target.value)}
               />
-              {errors.validUntil && <p className={errClass}>{errors.validUntil}</p>}
-              {isEdit && (
-                <p className="text-muted-foreground text-xs">Can only be extended, not shortened.</p>
+              {errors.validUntil && (
+                <p className={errClass}>{errors.validUntil}</p>
               )}
+              {isEdit && readonlyNote("Can only be extended, not shortened.")}
             </div>
           </div>
 
           {/* Issued Quantity */}
           <div className={fieldClass}>
             <Label htmlFor="issuedQuantity">
-              Issued Quantity <span className="text-destructive">*</span>
+              {form.codeType === "multi-use" ? "Max Uses" : "Issued Quantity"}{" "}
+              <span className="text-destructive">*</span>
             </Label>
             <Input
               id="issuedQuantity"
@@ -478,11 +784,21 @@ function VoucherFormDialog({
               min={isEdit ? editing?.issuedQuantity : 1}
               value={form.issuedQuantity}
               onChange={(e) => set("issuedQuantity", e.target.value)}
+              placeholder={
+                form.codeType === "multi-use"
+                  ? "Max total redemptions"
+                  : "Number of codes to generate"
+              }
             />
-            {errors.issuedQuantity && <p className={errClass}>{errors.issuedQuantity}</p>}
+            {errors.issuedQuantity && (
+              <p className={errClass}>{errors.issuedQuantity}</p>
+            )}
             {isEdit && (
               <p className="text-muted-foreground text-xs">
                 Can only be increased. Currently: {editing?.issuedQuantity}.
+                {editing?.codeType === "multi-use"
+                  ? " Raises redemption ceiling only — no new codes generated."
+                  : " Generates additional codes for the delta."}
               </p>
             )}
           </div>
@@ -506,12 +822,11 @@ function VoucherFormDialog({
                   <SelectItem value="fixed">Fixed Amount (VND)</SelectItem>
                 </SelectContent>
               </Select>
-              {errors.discountType && <p className={errClass}>{errors.discountType}</p>}
-              {hasRedemptions && (
-                <p className="text-muted-foreground text-xs">Locked — redemptions exist.</p>
+              {errors.discountType && (
+                <p className={errClass}>{errors.discountType}</p>
               )}
+              {hasRedemptions && readonlyNote("Locked — redemptions exist.")}
             </div>
-
             <div className={fieldClass}>
               <Label htmlFor="discountValue">
                 Discount Value <span className="text-destructive">*</span>
@@ -524,9 +839,13 @@ function VoucherFormDialog({
                 value={form.discountValue}
                 onChange={(e) => set("discountValue", e.target.value)}
                 disabled={hasRedemptions}
-                placeholder={form.discountType === "percentage" ? "1–100" : "e.g. 500000"}
+                placeholder={
+                  form.discountType === "percentage" ? "1–100" : "e.g. 500000"
+                }
               />
-              {errors.discountValue && <p className={errClass}>{errors.discountValue}</p>}
+              {errors.discountValue && (
+                <p className={errClass}>{errors.discountValue}</p>
+              )}
             </div>
           </div>
 
@@ -538,7 +857,7 @@ function VoucherFormDialog({
               rows={3}
               value={form.description}
               onChange={(e) => set("description", e.target.value)}
-              placeholder="Usage conditions shown to the business at checkout..."
+              placeholder="Usage conditions shown to the business at checkout…"
             />
           </div>
         </div>
@@ -547,119 +866,161 @@ function VoucherFormDialog({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSave}>{isEdit ? "Save Changes" : "Create Batch"}</Button>
+          <Button onClick={handleSave}>
+            {isEdit ? "Save Changes" : "Create"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-const PAGE_SIZE = 10
+const PAGE_SIZE = 10;
 
 export function EVoucherManagement() {
   const [batches, setBatches] = useState<VoucherBatch[]>(() =>
     mockVoucherBatches.map((b) => ({ ...b })),
-  )
-  const [codes, setCodes] = useState<VoucherCode[]>(() => mockVoucherCodes.map((c) => ({ ...c })))
+  );
+  const [codes, setCodes] = useState<VoucherCode[]>(() =>
+    mockVoucherCodes.map((c) => ({ ...c })),
+  );
 
   // Filters
-  const [statusFilter, setStatusFilter] = useState<VoucherBatchStatus | "all">("all")
-  const [scopeFilter, setScopeFilter] = useState<VoucherScope | "all">("all")
-  const [partnerFilter, setPartnerFilter] = useState<string>("all")
-  const [search, setSearch] = useState("")
+  const [statusFilter, setStatusFilter] = useState<VoucherBatchStatus | "all">(
+    "all",
+  );
+  const [codeTypeFilter, setCodeTypeFilter] = useState<VoucherCodeType | "all">(
+    "all",
+  );
+  const [scopeFilter, setScopeFilter] = useState<VoucherScope | "all">("all");
+  const [partnerFilter, setPartnerFilter] = useState<string>("all");
+  const [search, setSearch] = useState("");
 
-  // Pagination
-  const [page, setPage] = useState(1)
+  const [page, setPage] = useState(1);
 
-  // Dialog state
-  const [formOpen, setFormOpen] = useState(false)
-  const [editingBatch, setEditingBatch] = useState<VoucherBatchView | null>(null)
-  const [revokeTarget, setRevokeTarget] = useState<VoucherBatchView | null>(null)
-  const [successMsg, setSuccessMsg] = useState<string | null>(null)
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingBatch, setEditingBatch] = useState<VoucherBatchView | null>(
+    null,
+  );
+  const [revokeTarget, setRevokeTarget] = useState<VoucherBatchView | null>(
+    null,
+  );
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const views = useMemo<VoucherBatchView[]>(
     () => batches.map((b) => buildVoucherBatchView(b, codes)),
     [batches, codes],
-  )
+  );
 
   const filtered = useMemo(() => {
     return views.filter((v) => {
-      if (statusFilter !== "all" && v.derivedStatus !== statusFilter) return false
-      if (scopeFilter !== "all" && v.applicableTo !== scopeFilter) return false
-      if (partnerFilter !== "all" && v.assignedToPartnerId !== partnerFilter) return false
-      if (
-        search &&
-        !v.name.toLowerCase().includes(search.toLowerCase()) &&
-        !v.codePrefix.toLowerCase().includes(search.toLowerCase()) &&
-        !v.targetName.toLowerCase().includes(search.toLowerCase())
-      ) {
-        return false
+      if (statusFilter !== "all" && v.derivedStatus !== statusFilter)
+        return false;
+      if (codeTypeFilter !== "all" && v.codeType !== codeTypeFilter)
+        return false;
+      if (scopeFilter !== "all" && v.applicableTo !== scopeFilter) return false;
+      if (partnerFilter !== "all" && v.assignedToPartnerId !== partnerFilter)
+        return false;
+      if (search) {
+        const q = search.toLowerCase();
+        const codeDisplay =
+          v.codeType === "multi-use" ? v.multiUseCode : v.codePrefix;
+        if (
+          !v.name.toLowerCase().includes(q) &&
+          !codeDisplay.toLowerCase().includes(q) &&
+          !v.targetName.toLowerCase().includes(q)
+        ) {
+          return false;
+        }
       }
-      return true
-    })
-  }, [views, statusFilter, scopeFilter, partnerFilter, search])
+      return true;
+    });
+  }, [views, statusFilter, codeTypeFilter, scopeFilter, partnerFilter, search]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
-  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const existingPrefixes = useMemo(
-    () => new Set(batches.map((b) => b.codePrefix.toUpperCase())),
+    () =>
+      new Set(
+        batches
+          .filter((b) => b.codeType === "single-use")
+          .map((b) => b.codePrefix.toUpperCase()),
+      ),
     [batches],
-  )
+  );
+
+  const existingMultiUseCodes = useMemo(
+    () =>
+      new Set(
+        batches
+          .filter((b) => b.codeType === "multi-use")
+          .map((b) => b.multiUseCode.toUpperCase()),
+      ),
+    [batches],
+  );
 
   function handleSave(updatedBatch: VoucherBatch, deltaCodes: VoucherCode[]) {
     setBatches((prev) => {
-      const idx = prev.findIndex((b) => b.id === updatedBatch.id)
-      if (idx === -1) return [updatedBatch, ...prev]
-      const next = [...prev]
-      next[idx] = updatedBatch
-      return next
-    })
-    if (deltaCodes.length > 0) {
-      setCodes((prev) => [...prev, ...deltaCodes])
-    }
-    const isNew = !batches.find((b) => b.id === updatedBatch.id)
+      const idx = prev.findIndex((b) => b.id === updatedBatch.id);
+      if (idx === -1) return [updatedBatch, ...prev];
+      const next = [...prev];
+      next[idx] = updatedBatch;
+      return next;
+    });
+    if (deltaCodes.length > 0) setCodes((prev) => [...prev, ...deltaCodes]);
+
+    const isNew = !batches.find((b) => b.id === updatedBatch.id);
+    const codeTypeLabel =
+      updatedBatch.codeType === "multi-use"
+        ? "multi-use code"
+        : "single-use batch";
     setSuccessMsg(
       isNew
-        ? `Batch "${updatedBatch.name}" created with ${updatedBatch.issuedQuantity} codes.`
-        : `Batch "${updatedBatch.name}" updated.${deltaCodes.length > 0 ? ` ${deltaCodes.length} new codes generated.` : ""}`,
-    )
-    setTimeout(() => setSuccessMsg(null), 4000)
-    setFormOpen(false)
-    setEditingBatch(null)
-    setPage(1)
+        ? `${updatedBatch.codeType === "multi-use" ? "Multi-use code" : "Batch"} "${updatedBatch.name}" created.${updatedBatch.codeType === "single-use" ? ` ${updatedBatch.issuedQuantity} codes generated.` : ""}`
+        : `"${updatedBatch.name}" updated.${deltaCodes.length > 0 ? ` ${deltaCodes.length} new codes generated.` : ""}`,
+    );
+    setTimeout(() => setSuccessMsg(null), 4000);
+    setFormOpen(false);
+    setEditingBatch(null);
+    setPage(1);
+    void codeTypeLabel;
   }
 
   function handleRevoke() {
-    if (!revokeTarget) return
+    if (!revokeTarget) return;
     setBatches((prev) =>
       prev.map((b) =>
         b.id === revokeTarget.id
           ? { ...b, isRevoked: true, updatedAt: new Date().toISOString() }
           : b,
       ),
-    )
-    setSuccessMsg(`Batch "${revokeTarget.name}" has been revoked.`)
-    setTimeout(() => setSuccessMsg(null), 4000)
-    setRevokeTarget(null)
+    );
+    setSuccessMsg(`"${revokeTarget.name}" has been revoked.`);
+    setTimeout(() => setSuccessMsg(null), 4000);
+    setRevokeTarget(null);
   }
 
   function clearFilters() {
-    setStatusFilter("all")
-    setScopeFilter("all")
-    setPartnerFilter("all")
-    setSearch("")
-    setPage(1)
+    setStatusFilter("all");
+    setCodeTypeFilter("all");
+    setScopeFilter("all");
+    setPartnerFilter("all");
+    setSearch("");
+    setPage(1);
   }
 
   const hasFilters =
-    statusFilter !== "all" || scopeFilter !== "all" || partnerFilter !== "all" || search !== ""
+    statusFilter !== "all" ||
+    codeTypeFilter !== "all" ||
+    scopeFilter !== "all" ||
+    partnerFilter !== "all" ||
+    search !== "";
 
   return (
     <div className="space-y-4">
-      {/* Success Message */}
       {successMsg && (
         <div className="flex items-center gap-2 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-green-800 text-sm dark:border-green-800 dark:bg-green-950 dark:text-green-300">
           <CheckCircle2Icon className="size-4 shrink-0" />
@@ -670,20 +1031,20 @@ export function EVoucherManagement() {
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2">
         <Input
-          className="w-56"
-          placeholder="Search name, prefix, target…"
+          className="w-52"
+          placeholder="Search name, code, target…"
           value={search}
           onChange={(e) => {
-            setSearch(e.target.value)
-            setPage(1)
+            setSearch(e.target.value);
+            setPage(1);
           }}
         />
 
         <Select
           value={statusFilter}
           onValueChange={(v) => {
-            setStatusFilter(v as VoucherBatchStatus | "all")
-            setPage(1)
+            setStatusFilter(v as VoucherBatchStatus | "all");
+            setPage(1);
           }}
         >
           <SelectTrigger className="w-36">
@@ -699,17 +1060,34 @@ export function EVoucherManagement() {
         </Select>
 
         <Select
+          value={codeTypeFilter}
+          onValueChange={(v) => {
+            setCodeTypeFilter(v as VoucherCodeType | "all");
+            setPage(1);
+          }}
+        >
+          <SelectTrigger className="w-36">
+            <SelectValue placeholder="Code Type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value="single-use">Single-use</SelectItem>
+            <SelectItem value="multi-use">Multi-use</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select
           value={scopeFilter}
           onValueChange={(v) => {
-            setScopeFilter(v as VoucherScope | "all")
-            setPage(1)
+            setScopeFilter(v as VoucherScope | "all");
+            setPage(1);
           }}
         >
           <SelectTrigger className="w-36">
             <SelectValue placeholder="Scope" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Types</SelectItem>
+            <SelectItem value="all">All Scopes</SelectItem>
             <SelectItem value="expo">Expo</SelectItem>
             <SelectItem value="service">Service</SelectItem>
           </SelectContent>
@@ -718,8 +1096,8 @@ export function EVoucherManagement() {
         <Select
           value={partnerFilter}
           onValueChange={(v) => {
-            setPartnerFilter(v)
-            setPage(1)
+            setPartnerFilter(v);
+            setPage(1);
           }}
         >
           <SelectTrigger className="w-48">
@@ -737,7 +1115,7 @@ export function EVoucherManagement() {
 
         {hasFilters && (
           <Button variant="ghost" size="sm" onClick={clearFilters}>
-            <FilterXIcon className="mr-1 size-4" />
+            <FilterXIcon />
             Clear
           </Button>
         )}
@@ -745,12 +1123,12 @@ export function EVoucherManagement() {
         <Button
           className="ml-auto"
           onClick={() => {
-            setEditingBatch(null)
-            setFormOpen(true)
+            setEditingBatch(null);
+            setFormOpen(true);
           }}
         >
-          <PlusIcon className="mr-1 size-4" />
-          Create eVoucher
+          <PlusIcon />
+          Create New
         </Button>
       </div>
 
@@ -759,10 +1137,10 @@ export function EVoucherManagement() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Code Prefix</TableHead>
+              <TableHead>Code</TableHead>
+              <TableHead>Type</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Applicable To</TableHead>
-              <TableHead>Assigned To</TableHead>
               <TableHead>Valid Period</TableHead>
               <TableHead className="text-right">Quantity</TableHead>
               <TableHead>Discount</TableHead>
@@ -773,79 +1151,81 @@ export function EVoucherManagement() {
           <TableBody>
             {paginated.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="py-12 text-center text-muted-foreground">
+                <TableCell
+                  colSpan={10}
+                  className="py-12 text-center text-muted-foreground"
+                >
                   <AlertCircleIcon className="mx-auto mb-2 size-8 opacity-40" />
-                  No voucher batches found.
+                  No vouchers found.
                 </TableCell>
               </TableRow>
             ) : (
               paginated.map((v) => (
                 <TableRow key={v.id}>
-                  <TableCell className="font-mono text-sm font-medium">{v.codePrefix}</TableCell>
-                  <TableCell className="max-w-48 truncate">{v.name}</TableCell>
+                  <TableCell className="font-mono text-sm font-medium">
+                    {displayCode(v)}
+                  </TableCell>
                   <TableCell>
-                    <span className="text-muted-foreground text-xs">
-                      {v.applicableTo === "expo" ? "Expo" : "Service"}:
-                    </span>{" "}
+                    <CodeTypeBadge type={v.codeType} />
+                  </TableCell>
+                  <TableCell className="max-w-40 truncate">{v.name}</TableCell>
+                  <TableCell>
                     <span className="text-sm">{v.targetName}</span>
                   </TableCell>
-                  <TableCell className="text-sm">{v.assignedToPartnerName}</TableCell>
                   <TableCell className="text-nowrap text-sm">
                     {formatDate(v.validFrom)} – {formatDate(v.validUntil)}
                   </TableCell>
                   <TableCell className="text-right text-sm">
-                    <span className="font-medium">{v.issuedQuantity}</span>
-                    <span className="text-muted-foreground"> / </span>
                     <span
                       className={
-                        v.remainingCount === 0 ? "text-destructive" : "text-foreground"
+                        v.remainingCount === 0 ? "text-destructive" : ""
                       }
                     >
                       {v.remainingCount}
                     </span>
-                    {v.lockedCount > 0 && (
-                      <span className="text-muted-foreground text-xs"> ({v.lockedCount} locked)</span>
-                    )}
+                    <span className="text-muted-foreground"> / </span>
+                    <span className="font-medium">{v.issuedQuantity}</span>
                   </TableCell>
-                  <TableCell className="text-sm font-medium">
-                    {formatDiscount(v.discountType, v.discountValue)}
+                  <TableCell>
+                    <DiscountTypeBadge type={v.discountType} />
                   </TableCell>
                   <TableCell>
                     <VoucherStatusBadge status={v.derivedStatus} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        title="Edit"
-                        disabled={v.derivedStatus === "Revoked"}
-                        onClick={() => {
-                          setEditingBatch(v)
-                          setFormOpen(true)
-                        }}
-                      >
-                        <PencilIcon className="size-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        title="Export Codes"
-                        onClick={() => exportBatchCSV(v, codes)}
-                      >
-                        <DownloadIcon className="size-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        title="Revoke"
-                        disabled={v.derivedStatus === "Revoked"}
-                        onClick={() => setRevokeTarget(v)}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <ShieldOffIcon className="size-4" />
-                      </Button>
-                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" title="Actions">
+                          <EllipsisVerticalIcon className="size-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-44">
+                        <DropdownMenuItem
+                          disabled={v.derivedStatus === "Revoked"}
+                          onClick={() => {
+                            setEditingBatch(v);
+                            setFormOpen(true);
+                          }}
+                        >
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() =>
+                            exportBatchCSV(v, codes, v.remainingCount)
+                          }
+                        >
+                          Export Codes
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          variant="destructive"
+                          disabled={v.derivedStatus === "Revoked"}
+                          onClick={() => setRevokeTarget(v)}
+                        >
+                          Revoke
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))
@@ -856,9 +1236,9 @@ export function EVoucherManagement() {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <div className="flex items-center justify-between text-muted-foreground text-sm">
           <span>
-            {filtered.length} batch{filtered.length !== 1 ? "es" : ""} total
+            {filtered.length} voucher{filtered.length !== 1 ? "s" : ""} total
           </span>
           <div className="flex items-center gap-2">
             <Button
@@ -889,28 +1269,52 @@ export function EVoucherManagement() {
         <VoucherFormDialog
           open={formOpen}
           onClose={() => {
-            setFormOpen(false)
-            setEditingBatch(null)
+            setFormOpen(false);
+            setEditingBatch(null);
           }}
           editing={editingBatch}
           existingPrefixes={
             editingBatch
-              ? new Set([...existingPrefixes].filter((p) => p !== editingBatch.codePrefix.toUpperCase()))
+              ? new Set(
+                  [...existingPrefixes].filter(
+                    (p) => p !== editingBatch.codePrefix.toUpperCase(),
+                  ),
+                )
               : existingPrefixes
+          }
+          existingMultiUseCodes={
+            editingBatch
+              ? new Set(
+                  [...existingMultiUseCodes].filter(
+                    (c) => c !== editingBatch.multiUseCode.toUpperCase(),
+                  ),
+                )
+              : existingMultiUseCodes
           }
           onSave={handleSave}
         />
       )}
 
       {/* Revoke Confirm */}
-      <AlertDialog open={!!revokeTarget} onOpenChange={(o) => { if (!o) setRevokeTarget(null) }}>
+      <AlertDialog
+        open={!!revokeTarget}
+        onOpenChange={(o) => {
+          if (!o) setRevokeTarget(null);
+        }}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Revoke Voucher Batch?</AlertDialogTitle>
+            <AlertDialogTitle>Revoke Voucher?</AlertDialogTitle>
             <AlertDialogDescription>
-              Revoking <strong>{revokeTarget?.name}</strong> will immediately invalidate all unused
-              codes. Any codes locked mid-transaction will enter Revoked state when their transaction
-              resolves. <strong>This cannot be undone.</strong>
+              Revoking <strong>{revokeTarget?.name}</strong> will immediately
+              invalidate all remaining{" "}
+              {revokeTarget?.codeType === "multi-use" ? "uses" : "unused codes"}
+              . Any{" "}
+              {revokeTarget?.codeType === "multi-use"
+                ? "locked units"
+                : "codes locked mid-transaction"}{" "}
+              will enter Revoked state when their transaction resolves.{" "}
+              <strong>This cannot be undone.</strong>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -919,11 +1323,11 @@ export function EVoucherManagement() {
               onClick={handleRevoke}
               className="bg-destructive text-white hover:bg-destructive/90"
             >
-              Revoke Batch
+              Revoke
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  )
+  );
 }

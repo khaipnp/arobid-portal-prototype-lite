@@ -23,9 +23,20 @@ export function buildVoucherBatchView(
   batch: VoucherBatch,
   codes: VoucherCode[],
 ): VoucherBatchView {
-  const batchCodes = codes.filter((c) => c.batchId === batch.id)
-  const lockedCount = batchCodes.filter((c) => c.status === "Locked").length
-  const redeemedCount = batchCodes.filter((c) => c.status === "Redeemed").length
+  let lockedCount: number
+  let redeemedCount: number
+
+  if (batch.codeType === "multi-use") {
+    // Multi-use: counters stored directly on the batch
+    lockedCount = batch.multiUseLockedCount
+    redeemedCount = batch.multiUseRedeemedCount
+  } else {
+    // Single-use: derive from individual code records
+    const batchCodes = codes.filter((c) => c.batchId === batch.id)
+    lockedCount = batchCodes.filter((c) => c.status === "Locked").length
+    redeemedCount = batchCodes.filter((c) => c.status === "Redeemed").length
+  }
+
   const remainingCount = batch.issuedQuantity - lockedCount - redeemedCount
   const derivedStatus = deriveVoucherBatchStatus(batch, lockedCount, redeemedCount)
   return { ...batch, lockedCount, redeemedCount, remainingCount, derivedStatus }
@@ -99,4 +110,9 @@ export function applyDiscount(
     return Math.round(orderTotal * (1 - value / 100))
   }
   return Math.max(0, orderTotal - value)
+}
+
+/** Display label for the code column: prefix-* for single-use, the code itself for multi-use */
+export function displayCode(batch: VoucherBatch): string {
+  return batch.codeType === "multi-use" ? batch.multiUseCode : `${batch.codePrefix}-*`
 }

@@ -20,7 +20,12 @@ This scoping ensures vouchers cannot be misapplied across unintended contexts.
 
 ## Voucher Code Model
 
-Each voucher batch (definition) generates **N unique individual codes** — one per issued quantity unit. For example, a batch with `Issued Quantity = 1000` produces 1000 distinct codes (e.g., `EXPO2025-A1B2`, `EXPO2025-C3D4`, …). Admin exports these codes as a CSV to distribute via Partners.
+Admin chooses one of two code types when creating a voucher:
+
+| Type | Description | Use case |
+|------|-------------|----------|
+| **Single-use batch** | System generates N unique individual codes (e.g., `EXPO2025-A1B2`, `EXPO2025-C3D4`). Each code is redeemable exactly once. Admin exports all codes as CSV to distribute via Partners. | Targeted distribution — each Partner/business gets a distinct code. |
+| **Multi-use code** | Admin enters one memorable code (e.g., `SUMMER25`). That single code can be used up to `Issued Quantity` times across any number of businesses. No per-business use limit. | Broadcast campaigns — one code shared publicly or sent to a group. |
 
 - Codes are **case-insensitive** — the system normalizes input to uppercase before validation.
 - Only **one voucher code** may be applied per order at a time.
@@ -29,8 +34,9 @@ Each voucher batch (definition) generates **N unique individual codes** — one 
 
 - Discount is applied **at the payment step**, reducing the payable amount on the order.
 - Supported discount types: **Percentage (%)** or **Fixed Amount (VND)**.
-- One unique code = one transaction. A code cannot be split or reused across multiple transactions.
-- `Remaining = Issued − Locked − Redeemed`. Locked codes (payment in-progress) are excluded from availability to prevent double-use.
+- For **single-use batch**: each unique code can be redeemed exactly once.
+- For **multi-use code**: the shared code can be applied up to `Issued Quantity` times total, with no per-business restriction.
+- `Remaining = Issued − Locked − Redeemed`. Locked quantity (payment in-progress) is excluded from availability to prevent double-use.
 
 ## Redemption Lifecycle
 
