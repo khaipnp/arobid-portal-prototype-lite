@@ -17,7 +17,7 @@ const expoOwnerLinks = [
     icon: <CalendarIcon />,
   },
   {
-    name: "GoLIVE Events",
+    name: "GoLIVE",
     url: "/partner/expos",
     icon: <RadioIcon />,
   },

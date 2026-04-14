@@ -21,7 +21,22 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 import { mockGoLIVEEvents, mockStreamSessions } from "@/lib/tradexpo/mock-data"
 import type {
   GoLIVEEvent,
@@ -101,9 +116,14 @@ function formatDuration(startIso: string | null, endIso: string | null) {
 interface SessionCardProps {
   event: GoLIVEEvent
   session: StreamSession
+  onSessionChange?: (session: StreamSession) => void
 }
 
-function SessionCard({ event, session: initialSession }: SessionCardProps) {
+function SessionCard({
+  event,
+  session: initialSession,
+  onSessionChange,
+}: SessionCardProps) {
   const [session, setSession] = React.useState<StreamSession>(initialSession)
   const [viewerCount, setViewerCount] = React.useState(
     session.peakViewerCount ?? 0,
@@ -130,19 +150,27 @@ function SessionCard({ event, session: initialSession }: SessionCardProps) {
   function handleGoLive() {
     const now = new Date().toISOString()
     startedAtRef.current = now
-    setSession((s) => ({ ...s, status: "Active", startedAt: now }))
+    const updatedSession = {
+      ...session,
+      status: "Active" as const,
+      startedAt: now,
+    }
+    setSession(updatedSession)
+    onSessionChange?.(updatedSession)
     setViewerCount(1)
     setElapsedLabel("0s")
   }
 
   function handleEndBroadcast() {
     const now = new Date().toISOString()
-    setSession((s) => ({
-      ...s,
-      status: "Ended",
+    const updatedSession = {
+      ...session,
+      status: "Ended" as const,
       endedAt: now,
       peakViewerCount: viewerCount,
-    }))
+    }
+    setSession(updatedSession)
+    onSessionChange?.(updatedSession)
   }
 
   return (
@@ -295,19 +323,48 @@ function SessionCard({ event, session: initialSession }: SessionCardProps) {
 }
 
 export function HostDashboard() {
-  const sessions = mockStreamSessions
+  const baseSessionData = mockStreamSessions
   const events = mockGoLIVEEvents
 
   const myEvents = events.filter((e) => e.broadcasterUserId === CURRENT_USER_ID)
 
-  const myPairs = myEvents
+  const initialPairs = myEvents
     .map((event) => {
-      const session = sessions.find(
+      const session = baseSessionData.find(
         (s) => s.streamSessionId === event.streamSessionId,
       )
       return session ? { event, session } : null
     })
     .filter(Boolean) as { event: GoLIVEEvent; session: StreamSession }[]
+
+  const [selectedSessionId, setSelectedSessionId] = React.useState<
+    string | null
+  >(null)
+  const [sessionStates, setSessionStates] = React.useState<
+    Record<string, StreamSession>
+  >(() => {
+    const initial: Record<string, StreamSession> = {}
+    initialPairs.forEach(({ session }) => {
+      initial[session.streamSessionId] = session
+    })
+    return initial
+  })
+
+  const myPairs = initialPairs.map(({ event, session }) => ({
+    event,
+    session: sessionStates[session.streamSessionId] || session,
+  }))
+
+  const selectedSession = selectedSessionId
+    ? myPairs.find((p) => p.event.goLiveEventId === selectedSessionId) || null
+    : null
+
+  const handleSessionChange = (updatedSession: StreamSession) => {
+    setSessionStates((prev) => ({
+      ...prev,
+      [updatedSession.streamSessionId]: updatedSession,
+    }))
+  }
 
   if (myPairs.length === 0) {
     return (
@@ -319,14 +376,81 @@ export function HostDashboard() {
   }
 
   return (
-    <div className="space-y-4">
-      {myPairs.map(({ event, session }) => (
-        <SessionCard
-          key={event.goLiveEventId}
-          event={event}
-          session={session}
-        />
-      ))}
-    </div>
+    <>
+      <div className="rounded-lg border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Title</TableHead>
+              <TableHead>Type</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Viewers</TableHead>
+              <TableHead>Duration</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {myPairs.map(({ event, session }) => (
+              <TableRow
+                key={event.goLiveEventId}
+                className="cursor-pointer"
+                onClick={() => setSelectedSessionId(event.goLiveEventId)}
+              >
+                <TableCell className="font-medium">{event.title}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {event.sessionType}
+                </TableCell>
+                <TableCell>
+                  <Badge
+                    variant="outline"
+                    className={cn("text-xs", statusStyles[session.status])}
+                  >
+                    {session.status === "Active" && (
+                      <CircleIcon className="mr-1 h-2 w-2 fill-emerald-500 text-emerald-500 animate-pulse" />
+                    )}
+                    {session.status}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-sm">
+                  {session.status === "Active"
+                    ? `${session.peakViewerCount ?? 0} watching`
+                    : session.status === "Ended"
+                      ? `${session.peakViewerCount ?? 0} peak`
+                      : "—"}
+                </TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {formatDuration(session.startedAt, session.endedAt)}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      <Dialog
+        open={!!selectedSession}
+        onOpenChange={(open) => {
+          if (!open) setSelectedSessionId(null)
+        }}
+      >
+        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+          {selectedSession && (
+            <>
+              <DialogHeader>
+                <DialogTitle>{selectedSession.event.title}</DialogTitle>
+                <DialogDescription>
+                  {selectedSession.event.sessionType} ·{" "}
+                  {selectedSession.event.expoId}
+                </DialogDescription>
+              </DialogHeader>
+              <SessionCard
+                event={selectedSession.event}
+                session={selectedSession.session}
+                onSessionChange={handleSessionChange}
+              />
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }
