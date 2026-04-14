@@ -368,9 +368,8 @@ export function GoLIVEManager({ expoId }: Props) {
                           <DropdownMenuItem
                             onClick={() => setCancelTarget(event)}
                             disabled={!isManageable}
-                            className="text-amber-700"
                           >
-                            Cancel Event
+                            Cancel
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() => setDeleteTarget(event)}
@@ -397,7 +396,7 @@ export function GoLIVEManager({ expoId }: Props) {
 
       {/* Create / Edit Dialog */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>
               {editingEvent ? "Edit GoLIVE Event" : "Create GoLIVE Event"}
@@ -419,15 +418,15 @@ export function GoLIVEManager({ expoId }: Props) {
                 placeholder="e.g. Opening Keynote"
                 value={form.title}
                 onChange={(e) =>
-                  setForm({ ...form, title: e.target.value.slice(0, 100) })
+                  setForm({ ...form, title: e.target.value.slice(0, 256) })
                 }
-                maxLength={100}
+                maxLength={256}
               />
               {errors.title && (
                 <p className="text-xs text-destructive">{errors.title}</p>
               )}
               <p className="text-right text-[11px] text-muted-foreground">
-                {form.title.length}/100
+                {form.title.length}/256
               </p>
             </div>
 

@@ -58,10 +58,6 @@ export default async function PartnerExpoDetailPage({
             <TabsTrigger value="golive">GoLIVE</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="golive" className="mt-6">
-            <GoLIVEManager expoId={expoId} />
-          </TabsContent>
-
           <TabsContent value="overview" className="mt-6">
             <div className="max-w-2xl rounded-lg border p-5">
               <h2 className="mb-4 font-semibold text-muted-foreground text-sm uppercase tracking-wide">
@@ -89,6 +85,9 @@ export default async function PartnerExpoDetailPage({
                 </Badge>
               </div>
             </div>
+          </TabsContent>
+          <TabsContent value="golive" className="mt-6">
+            <GoLIVEManager expoId={expoId} />
           </TabsContent>
         </Tabs>
       </div>
