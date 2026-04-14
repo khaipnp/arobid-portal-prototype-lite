@@ -11,6 +11,7 @@ import {
   PieChartIcon,
   ReceiptIcon,
   ShieldCheckIcon,
+  TicketIcon,
   ToyBrickIcon,
   UsersIcon,
 } from "lucide-react"
@@ -72,6 +73,14 @@ const ordersLinks = [
     name: "Order Management",
     url: "/admin/orders",
     icon: <ReceiptIcon />,
+  },
+]
+
+const coreLinks = [
+  {
+    name: "eVoucher",
+    url: "/admin/evoucher",
+    icon: <TicketIcon />,
   },
 ]
 
@@ -187,6 +196,21 @@ export function NavAdmin() {
         </SidebarMenu>
       </SidebarGroup>
 
+      <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+        <SidebarGroupLabel>Core</SidebarGroupLabel>
+        <SidebarMenu>
+          {coreLinks.map((item) => (
+            <SidebarMenuItem key={item.name}>
+              <SidebarMenuButton asChild>
+                <Link href={item.url}>
+                  {item.icon}
+                  <span>{item.name}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          ))}
+        </SidebarMenu>
+      </SidebarGroup>
       <SidebarGroup className="group-data-[collapsible=icon]:hidden">
         <SidebarGroupLabel>Settings</SidebarGroupLabel>
         <SidebarMenu>

@@ -6,6 +6,7 @@ import {
   CalendarIcon,
   MessageCircleIcon,
   ScrollTextIcon,
+  ShoppingCartIcon,
 } from "lucide-react"
 import Link from "next/link"
 import {
@@ -21,6 +22,11 @@ const nav = [
     name: "My Expos",
     url: "/seller/my-expos",
     icon: <CalendarIcon />,
+  },
+  {
+    name: "Checkout Demo (eVoucher)",
+    url: "/seller/checkout-demo",
+    icon: <ShoppingCartIcon />,
   },
 ]
 
