@@ -37,9 +37,9 @@ const portals = [
     url: "/partner",
   },
   {
-    name: "Supplier Portal",
+    name: "Company Name",
     logo: <UsersRoundIcon />,
-    plan: "Supplier View",
+    plan: "User's Workspace",
     url: "/seller",
   },
 ]
