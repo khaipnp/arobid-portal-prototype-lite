@@ -60,15 +60,12 @@ const tradexpoLinks = [
   },
 ];
 
-const streamingLinks = [
+const servicesLinks = [
   {
     name: "Host Dashboard",
     url: "/admin/streaming",
     icon: <MonitorPlayIcon />,
   },
-];
-
-const ordersLinks = [
   {
     name: "Order Management",
     url: "/admin/orders",
@@ -79,9 +76,6 @@ const ordersLinks = [
     url: "/admin/evoucher",
     icon: <TicketIcon />,
   },
-];
-
-const settingsLinks = [
   {
     name: "Payment Method",
     url: "/admin/settings/payment-method",
@@ -162,40 +156,9 @@ export function NavAdmin() {
       </SidebarGroup>
 
       <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-        <SidebarGroupLabel>Streaming</SidebarGroupLabel>
+        <SidebarGroupLabel>Service Management</SidebarGroupLabel>
         <SidebarMenu>
-          {streamingLinks.map((item) => (
-            <SidebarMenuItem key={item.name}>
-              <SidebarMenuButton asChild>
-                <Link href={item.url}>
-                  {item.icon}
-                  <span>{item.name}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarGroup>
-
-      <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-        <SidebarGroupLabel>Orders & Transactions</SidebarGroupLabel>
-        <SidebarMenu>
-          {ordersLinks.map((item) => (
-            <SidebarMenuItem key={item.name}>
-              <SidebarMenuButton asChild>
-                <Link href={item.url}>
-                  {item.icon}
-                  <span>{item.name}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarGroup>
-      <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-        <SidebarGroupLabel>Settings</SidebarGroupLabel>
-        <SidebarMenu>
-          {settingsLinks.map((item) => (
+          {servicesLinks.map((item) => (
             <SidebarMenuItem key={item.name}>
               <SidebarMenuButton asChild>
                 <Link href={item.url}>

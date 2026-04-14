@@ -7,6 +7,7 @@ import {
   FilterXIcon,
   ChevronDownIcon,
   PlusIcon,
+  SearchIcon,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
@@ -88,6 +89,11 @@ import {
   formatDiscount,
 } from "@/lib/evoucher/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "../ui/input-group";
 
 // ─── Badges ───────────────────────────────────────────────────────────────────
 
@@ -165,13 +171,9 @@ function CodeTypeCard({
 
 function DiscountTypeBadge({ type }: { type: DiscountType }) {
   return type === "percentage" ? (
-    <Badge variant="secondary">
-      Percent
-    </Badge>
+    <Badge variant="secondary">Percent</Badge>
   ) : (
-    <Badge variant="outline">
-      Fixed
-    </Badge>
+    <Badge variant="outline">Fixed</Badge>
   );
 }
 
@@ -258,7 +260,7 @@ interface FormState {
 }
 
 const emptyForm: FormState = {
-  codeType: "",
+  codeType: "single-use",
   codePrefix: "",
   multiUseCode: "",
   name: "",
@@ -486,7 +488,7 @@ function VoucherFormDialog({
         if (!o) onClose();
       }}
     >
-      <DialogContent className="max-w-xl! max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl! h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {isEdit ? "Edit Voucher Batch" : "Create eVoucher"}
@@ -498,7 +500,7 @@ function VoucherFormDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid gap-4 py-2">
+        <div className="grid gap-4 py-2 align-top">
           {/* Code Type */}
           <div className={fieldClass}>
             <div className="grid gap-3 sm:grid-cols-2">
@@ -990,15 +992,19 @@ export function EVoucherManagement() {
 
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2">
-        <Input
-          className="w-52"
-          placeholder="Search name, code, target…"
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setPage(1);
-          }}
-        />
+        <InputGroup className="w-xs">
+          <InputGroupInput
+            placeholder="Search name, code, target…"
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+          />
+          <InputGroupAddon>
+            <SearchIcon />
+          </InputGroupAddon>
+        </InputGroup>
 
         <Select
           value={statusFilter}
