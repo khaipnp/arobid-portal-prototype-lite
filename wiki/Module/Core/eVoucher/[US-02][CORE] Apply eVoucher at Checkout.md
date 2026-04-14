@@ -15,7 +15,7 @@ This feature supports both B2B Marketplace service purchases and TradeXpo expo b
 ### 3.1. Pre-condition
 
 - The business has reached the checkout / payment step for a qualifying order.
-- The order is associated with a specific service or expo that an eVoucher may be scoped to.
+- The order is associated with a specific B2B Marketplace service or TradeXpo expo that an eVoucher may be scoped to.
 - Only **one voucher code** may be applied per order at a time. Applying a new code while one is already active automatically releases the existing lock and replaces it.
 
 ### 3.2. Input
@@ -31,7 +31,7 @@ This feature supports both B2B Marketplace service purchases and TradeXpo expo b
 1. **Existence check** — The normalized code matches a known voucher in the system (either an individual code in a single-use batch, or a multi-use code).
 2. **Status check** — The voucher/batch status is `Active` (not `Expired`, `Depleted`, or `Revoked`).
 3. **Validity window** — Current date is within `Valid From` – `Valid Until`.
-4. **Scope check** — The voucher's target (service or expo) matches the item being purchased.
+4. **Scope check** — The voucher's target (B2B Marketplace service or TradeXpo expo) matches the item being purchased.
 5. **Quantity check** — Remaining quantity > 0, where `Remaining = Issued − Locked − Redeemed`.
 
 All five checks are evaluated as a single **atomic operation** to prevent race conditions (e.g., two businesses applying the last available use simultaneously).
@@ -128,7 +128,7 @@ flowchart TD
 | **03** | Business enters a voucher code | Parent batch status is `Expired` | Error shown: voucher has expired; total unchanged |
 | **04** | Business enters a voucher code | Parent batch status is `Revoked` | Error shown: voucher is no longer valid; total unchanged |
 | **05** | Business enters a voucher code | Remaining quantity = 0 (`Depleted`) | Error shown: voucher has been fully used; total unchanged |
-| **06** | Business enters a voucher code | Voucher is valid but scoped to a different service/expo than the current order | Error shown: voucher not applicable to this item; total unchanged |
+| **06** | Business enters a voucher code | Voucher is valid but its Module (`B2B Marketplace` / `TradeXpo`) does not match the current order | Error shown: voucher not applicable to this item; total unchanged |
 | **07** | Business enters a valid code | Validation passes atomically | Code transitions to `Locked`; it is not available to other transactions until this one resolves |
 | **08** | A voucher is applied at checkout | Business removes the applied code before paying | Locked code is released back to `Available`; order total reverts to original |
 | **09** | A voucher code is already applied | Business applies a different valid code | Existing lock is released first; new code is locked; order summary updates |

@@ -69,7 +69,6 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   mockVoucherBatches,
   mockVoucherCodes,
-  mockVoucherPartners,
   mockVoucherTargets,
 } from "@/lib/evoucher/mock-data";
 import type {
@@ -86,7 +85,9 @@ import {
   displayCode,
   formatDate,
   generateCodes,
+  formatDiscount,
 } from "@/lib/evoucher/utils";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 // ─── Badges ───────────────────────────────────────────────────────────────────
 
@@ -164,11 +165,11 @@ function CodeTypeCard({
 
 function DiscountTypeBadge({ type }: { type: DiscountType }) {
   return type === "percentage" ? (
-    <Badge variant="secondary" className="font-normal">
+    <Badge variant="secondary">
       Percent
     </Badge>
   ) : (
-    <Badge variant="outline" className="font-normal">
+    <Badge variant="outline">
       Fixed
     </Badge>
   );
@@ -193,14 +194,16 @@ function exportBatchCSV(
 
   let csv: string;
 
+  const moduleLabel =
+    batch.applicableTo === "expo" ? "TradeXpo" : "B2B Marketplace";
+
   if (batch.codeType === "multi-use") {
     const header =
-      "Code,Voucher Name,Applicable To,Assigned To (Partner),Valid From,Valid Until,Discount,Issued Quantity,Remaining,Description";
+      "Code,Voucher Name,Module,Valid From,Valid Until,Discount,Issued Quantity,Remaining,Description";
     const row = [
       batch.multiUseCode,
       `"${batch.name}"`,
-      `${batch.applicableTo === "expo" ? "Expo" : "Service"}: ${batch.targetName}`,
-      batch.assignedToPartnerName,
+      `${moduleLabel}: ${batch.targetName}`,
       batch.validFrom,
       batch.validUntil,
       discount,
@@ -212,13 +215,12 @@ function exportBatchCSV(
   } else {
     const batchCodes = codes.filter((c) => c.batchId === batch.id);
     const header =
-      "Code,Voucher Name,Applicable To,Assigned To (Partner),Valid From,Valid Until,Discount,Description,Status";
+      "Code,Voucher Name,Module,Valid From,Valid Until,Discount,Description,Status";
     const rows = batchCodes.map((c) =>
       [
         c.code,
         `"${batch.name}"`,
-        `${batch.applicableTo === "expo" ? "Expo" : "Service"}: ${batch.targetName}`,
-        batch.assignedToPartnerName,
+        `${moduleLabel}: ${batch.targetName}`,
         batch.validFrom,
         batch.validUntil,
         discount,
@@ -247,7 +249,6 @@ interface FormState {
   name: string;
   applicableTo: VoucherScope | "";
   targetId: string;
-  assignedToPartnerId: string;
   validFrom: string;
   validUntil: string;
   issuedQuantity: string;
@@ -263,7 +264,6 @@ const emptyForm: FormState = {
   name: "",
   applicableTo: "",
   targetId: "",
-  assignedToPartnerId: "",
   validFrom: "",
   validUntil: "",
   issuedQuantity: "",
@@ -303,7 +303,6 @@ function VoucherFormDialog({
         name: editing.name,
         applicableTo: editing.applicableTo,
         targetId: editing.targetId,
-        assignedToPartnerId: editing.assignedToPartnerId,
         validFrom: editing.validFrom,
         validUntil: editing.validUntil,
         issuedQuantity: String(editing.issuedQuantity),
@@ -362,8 +361,6 @@ function VoucherFormDialog({
     if (!isEdit && !form.applicableTo)
       errs.applicableTo = "Please select a scope.";
     if (!isEdit && !form.targetId) errs.targetId = "Please select a target.";
-    if (!form.assignedToPartnerId)
-      errs.assignedToPartnerId = "Please assign a partner.";
     if (!form.validFrom) errs.validFrom = "Valid From is required.";
     if (!form.validUntil) errs.validUntil = "Valid Until is required.";
     else if (form.validFrom && form.validUntil <= form.validFrom) {
@@ -410,10 +407,6 @@ function VoucherFormDialog({
       const updatedBatch: VoucherBatch = {
         ...editing,
         name: form.name.trim(),
-        assignedToPartnerId: form.assignedToPartnerId,
-        assignedToPartnerName:
-          mockVoucherPartners.find((p) => p.id === form.assignedToPartnerId)
-            ?.name ?? editing.assignedToPartnerName,
         validUntil: form.validUntil,
         issuedQuantity: newQty,
         discountType: hasRedemptions
@@ -443,9 +436,6 @@ function VoucherFormDialog({
     } else {
       const id = `batch-${Date.now()}`;
       const target = mockVoucherTargets.find((t) => t.id === form.targetId);
-      const partner = mockVoucherPartners.find(
-        (p) => p.id === form.assignedToPartnerId,
-      );
       const codeType = form.codeType as VoucherCodeType;
       const prefix =
         codeType === "single-use" ? form.codePrefix.trim().toUpperCase() : "";
@@ -463,8 +453,8 @@ function VoucherFormDialog({
         applicableTo: form.applicableTo as VoucherScope,
         targetId: form.targetId,
         targetName: target?.name ?? form.targetId,
-        assignedToPartnerId: form.assignedToPartnerId,
-        assignedToPartnerName: partner?.name ?? form.assignedToPartnerId,
+        assignedToPartnerId: "",
+        assignedToPartnerName: "",
         validFrom: form.validFrom,
         validUntil: form.validUntil,
         issuedQuantity: Number(form.issuedQuantity),
@@ -635,7 +625,7 @@ function VoucherFormDialog({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="expo">TradeXpo</SelectItem>
-                  <SelectItem value="service">B2B Martketplace</SelectItem>
+                  <SelectItem value="service">B2B Marketplace</SelectItem>
                 </SelectContent>
               </Select>
               {errors.applicableTo && (
@@ -711,31 +701,6 @@ function VoucherFormDialog({
               {errors.targetId && <p className={errClass}>{errors.targetId}</p>}
               {isEdit && readonlyNote("Target is immutable after creation.")}
             </div>
-          </div>
-
-          {/* Assigned To Partner */}
-          <div className={fieldClass}>
-            <Label>
-              Assigned To (Partner) <span className="text-destructive">*</span>
-            </Label>
-            <Select
-              value={form.assignedToPartnerId}
-              onValueChange={(v) => set("assignedToPartnerId", v)}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select partner" />
-              </SelectTrigger>
-              <SelectContent>
-                {mockVoucherPartners.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.assignedToPartnerId && (
-              <p className={errClass}>{errors.assignedToPartnerId}</p>
-            )}
           </div>
 
           {/* Valid Period */}
@@ -814,7 +779,7 @@ function VoucherFormDialog({
                 onValueChange={(v) => set("discountType", v as DiscountType)}
                 disabled={hasRedemptions}
               >
-                <SelectTrigger>
+                <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -895,7 +860,6 @@ export function EVoucherManagement() {
     "all",
   );
   const [scopeFilter, setScopeFilter] = useState<VoucherScope | "all">("all");
-  const [partnerFilter, setPartnerFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
 
   const [page, setPage] = useState(1);
@@ -921,8 +885,6 @@ export function EVoucherManagement() {
       if (codeTypeFilter !== "all" && v.codeType !== codeTypeFilter)
         return false;
       if (scopeFilter !== "all" && v.applicableTo !== scopeFilter) return false;
-      if (partnerFilter !== "all" && v.assignedToPartnerId !== partnerFilter)
-        return false;
       if (search) {
         const q = search.toLowerCase();
         const codeDisplay =
@@ -937,7 +899,7 @@ export function EVoucherManagement() {
       }
       return true;
     });
-  }, [views, statusFilter, codeTypeFilter, scopeFilter, partnerFilter, search]);
+  }, [views, statusFilter, codeTypeFilter, scopeFilter, search]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -1007,7 +969,6 @@ export function EVoucherManagement() {
     setStatusFilter("all");
     setCodeTypeFilter("all");
     setScopeFilter("all");
-    setPartnerFilter("all");
     setSearch("");
     setPage(1);
   }
@@ -1016,7 +977,6 @@ export function EVoucherManagement() {
     statusFilter !== "all" ||
     codeTypeFilter !== "all" ||
     scopeFilter !== "all" ||
-    partnerFilter !== "all" ||
     search !== "";
 
   return (
@@ -1083,33 +1043,13 @@ export function EVoucherManagement() {
             setPage(1);
           }}
         >
-          <SelectTrigger className="w-36">
-            <SelectValue placeholder="Scope" />
+          <SelectTrigger className="w-44">
+            <SelectValue placeholder="Module" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Scopes</SelectItem>
-            <SelectItem value="expo">Expo</SelectItem>
-            <SelectItem value="service">Service</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select
-          value={partnerFilter}
-          onValueChange={(v) => {
-            setPartnerFilter(v);
-            setPage(1);
-          }}
-        >
-          <SelectTrigger className="w-48">
-            <SelectValue placeholder="Partner" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Partners</SelectItem>
-            {mockVoucherPartners.map((p) => (
-              <SelectItem key={p.id} value={p.id}>
-                {p.name}
-              </SelectItem>
-            ))}
+            <SelectItem value="all">All Modules</SelectItem>
+            <SelectItem value="expo">TradeXpo</SelectItem>
+            <SelectItem value="service">B2B Marketplace</SelectItem>
           </SelectContent>
         </Select>
 
@@ -1140,7 +1080,7 @@ export function EVoucherManagement() {
               <TableHead>Code</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Name</TableHead>
-              <TableHead>Applicable To</TableHead>
+              <TableHead>Module</TableHead>
               <TableHead>Valid Period</TableHead>
               <TableHead className="text-right">Quantity</TableHead>
               <TableHead>Discount</TableHead>
@@ -1169,8 +1109,13 @@ export function EVoucherManagement() {
                     <CodeTypeBadge type={v.codeType} />
                   </TableCell>
                   <TableCell className="max-w-40 truncate">{v.name}</TableCell>
-                  <TableCell>
-                    <span className="text-sm">{v.targetName}</span>
+                  <TableCell className="flex flex-col">
+                    <span>{v.targetName}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {v.applicableTo === "expo"
+                        ? "TradeXpo"
+                        : "B2B Marketplace"}
+                    </span>
                   </TableCell>
                   <TableCell className="text-nowrap text-sm">
                     {formatDate(v.validFrom)} – {formatDate(v.validUntil)}
@@ -1187,7 +1132,14 @@ export function EVoucherManagement() {
                     <span className="font-medium">{v.issuedQuantity}</span>
                   </TableCell>
                   <TableCell>
-                    <DiscountTypeBadge type={v.discountType} />
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <DiscountTypeBadge type={v.discountType} />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        {formatDiscount(v.discountType, v.discountValue)}
+                      </TooltipContent>
+                    </Tooltip>
                   </TableCell>
                   <TableCell>
                     <VoucherStatusBadge status={v.derivedStatus} />

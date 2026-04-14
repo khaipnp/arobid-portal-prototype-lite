@@ -7,14 +7,17 @@ The eVoucher module provides a platform-level mechanism for Arobid (Admin) to is
 ## Issuer Model
 
 - **Arobid (Admin)** is the sole issuer of eVouchers. No external party can create or modify vouchers.
-- **Partners** may purchase voucher batches from Arobid under a separate commercial agreement (out of scope for this module) and distribute them to businesses. Each voucher batch records which Partner it was assigned to for audit purposes.
+- **Partners** may purchase voucher batches from Arobid under a separate commercial agreement (out of scope for this module) and distribute them to businesses.
 - **Businesses** receive individual voucher codes and apply them during checkout.
 
 ## Voucher Scope
 
-An eVoucher is always scoped to exactly one of:
-- A **specific service** available on B2B Marketplace, or
-- A **specific Expo** on TradeXpo.
+An eVoucher is always scoped to exactly one **Module** and one **Target** within that module:
+
+| Module | Target |
+|--------|--------|
+| `B2B Marketplace` | A specific service available on the marketplace |
+| `TradeXpo` | A specific expo event |
 
 This scoping ensures vouchers cannot be misapplied across unintended contexts.
 

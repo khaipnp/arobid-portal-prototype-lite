@@ -11,7 +11,7 @@ Arobid is the sole authority for issuing eVouchers on the platform. Admin can ch
 - **Single-use batch**: system generates N unique individual codes, each redeemable once. Suited for targeted distribution where each business gets a distinct code.
 - **Multi-use code**: Admin defines one memorable code (e.g., `SUMMER25`) usable up to N times total by any number of businesses. Suited for broadcast campaigns.
 
-This screen gives Admin full visibility into all voucher batches, their redemption progress, and which Partner each batch was assigned to.
+This screen gives Admin full visibility into all voucher batches and their redemption progress.
 
 # 3. Scope & Technical Constraints
 
@@ -31,24 +31,22 @@ The screen displays all eVoucher batches in a paginated table with the following
 | Code | Code Prefix (single-use batch, e.g., `EXPO2025-*`) or the shared code (multi-use, e.g., `SUMMER25`) |
 | Type | `Single-use batch` / `Multi-use code` |
 | Name | Display name |
-| Applicable To | Service / Expo + target name |
-| Assigned To | Partner name this batch was assigned to |
+| Module | B2B Marketplace / TradeXpo + target name |
 | Valid Period | Start date – End date |
 | Quantity | Issued / Remaining (Remaining = Issued − Locked − Redeemed) |
 | Discount | e.g., `10%` or `50,000 VND` |
 | Status | `Active` / `Expired` / `Depleted` / `Revoked` |
 | Actions | Edit, Export Codes, Revoke |
 
-Filters available: Status, Code Type (Single-use / Multi-use), Applicable Type (Service / Expo), Valid Period range, Assigned Partner.
+Filters available: Status, Code Type (Single-use / Multi-use), Module (B2B Marketplace / TradeXpo), Valid Period range.
 
 #### 3.2.2 Create / Edit Voucher Form
 
 | Field | Type | Required | Notes |
 |-------|------|----------|-------|
 | Name | Text | Yes | Display name shown to users |
-| Applicable To | Select: `Service` / `Expo` | Yes | Determines the scoping dimension |
+| Module | Select: `B2B Marketplace` / `TradeXpo` | Yes | Determines which platform the voucher applies to |
 | Target | Reference lookup | Yes | Specific service or expo the voucher applies to |
-| Assigned To (Partner) | Reference lookup | Yes | Partner receiving this batch for redistribution |
 | Valid From | Date | Yes | Inclusive start of validity window |
 | Valid Until | Date | Yes | Inclusive end of validity window; must be after Valid From |
 | **Code Type** | Select: `Single-use batch` / `Multi-use code` | Yes | Determines how codes are generated and validated. Immutable after creation. |
@@ -86,7 +84,7 @@ Filters available: Status, Code Type (Single-use / Multi-use), Applicable Type (
 
 **Edit:**
 1. System applies edit rules (see 3.2.2).
-2. Admin may update: Name, Valid Until (extend only), Issued Quantity (increase only), Assigned To (Partner), Description.
+2. Admin may update: Name, Valid Until (extend only), Issued Quantity (increase only), Description.
 3. If `Valid Until` is extended past today on an `Expired` voucher, status reverts to `Active`.
 4. If Issued Quantity is increased:
    - **Single-use batch**: system generates additional codes for the delta.
@@ -101,8 +99,8 @@ Filters available: Status, Code Type (Single-use / Multi-use), Applicable Type (
 **Export Codes:**
 1. Admin clicks **"Export Codes"** on a voucher row.
 2. System generates a CSV file. The content differs by code type:
-   - **Single-use batch**: one row per individual code. Columns: `Code`, `Voucher Name`, `Applicable To`, `Assigned To (Partner)`, `Valid From`, `Valid Until`, `Discount`, `Description`, `Status`.
-   - **Multi-use code**: one row containing the shared code and summary stats. Columns: `Code`, `Voucher Name`, `Applicable To`, `Assigned To (Partner)`, `Valid From`, `Valid Until`, `Discount`, `Issued Quantity`, `Remaining`, `Description`.
+   - **Single-use batch**: one row per individual code. Columns: `Code`, `Voucher Name`, `Module`, `Valid From`, `Valid Until`, `Discount`, `Description`, `Status`.
+   - **Multi-use code**: one row containing the shared code and summary stats. Columns: `Code`, `Voucher Name`, `Module`, `Valid From`, `Valid Until`, `Discount`, `Issued Quantity`, `Remaining`, `Description`.
 3. File downloads immediately. Export is available for vouchers in any status.
 4. File name format: `evoucher-{code or prefix}-{date}.csv`.
 
@@ -162,10 +160,10 @@ flowchart TD
 
 - **Step 1:** Admin clicks **"Create eVoucher"**.
 - **Step 2:** System opens a form with all fields from section 3.2.2.
-- **Step 3:** Admin selects **Applicable To** and **Target**.
+- **Step 3:** Admin selects **Module** and **Target**.
 - **Step 4:** Admin selects **Code Type = Single-use batch**. The **Code Prefix** field appears.
 - **Step 5:** Admin enters a Code Prefix (e.g., `EXPO2025`) or leaves blank for auto-generation.
-- **Step 6:** Admin fills in Issued Quantity, discount, validity window, and Assigned Partner.
+- **Step 6:** Admin fills in Issued Quantity, discount, and validity window.
 - **Step 7:** Admin clicks **"Save"**.
 - **Step 8:** On success, the batch is created, and the system generates N individual codes ready for export.
 
@@ -175,10 +173,10 @@ flowchart TD
 
 - **Step 1:** Admin clicks **"Create eVoucher"**.
 - **Step 2:** System opens a form with all fields from section 3.2.2.
-- **Step 3:** Admin selects **Applicable To** and **Target**.
+- **Step 3:** Admin selects **Module** and **Target**.
 - **Step 4:** Admin selects **Code Type = Multi-use code**. The **Code** field appears.
 - **Step 5:** Admin enters a memorable code (e.g., `SUMMER25`).
-- **Step 6:** Admin fills in Issued Quantity (max uses), discount, validity window, and Assigned Partner.
+- **Step 6:** Admin fills in Issued Quantity (max uses), discount, and validity window.
 - **Step 7:** Admin clicks **"Save"**.
 - **Step 8:** On success, the voucher is created with the shared code and a redemption counter set to Issued Quantity.
 
@@ -188,7 +186,7 @@ flowchart TD
 
 - **Step 1:** Admin clicks **"Edit"** on a voucher row.
 - **Step 2:** System opens the edit form pre-filled with current values; immutable fields (`Code Prefix`, `Target`, `Discount Type`/`Value` if redemptions exist) are shown as read-only.
-- **Step 3:** Admin updates allowed fields (e.g., extends `Valid Until`, increases quantity, updates assigned Partner or description).
+- **Step 3:** Admin updates allowed fields (e.g., extends `Valid Until`, increases quantity, updates description).
 - **Step 4:** Admin clicks **"Save"**.
 - **Step 5:** System validates edit rules and saves. If an `Expired` voucher's `Valid Until` was extended past today, its status reverts to `Active` and a confirmation note is shown.
 
@@ -198,8 +196,8 @@ flowchart TD
 
 - **Step 1:** Admin clicks **"Export Codes"** on a voucher row.
 - **Step 2:** System generates a CSV:
-  - **Single-use batch**: one row per unique code. Columns: `Code`, `Voucher Name`, `Applicable To`, `Assigned To (Partner)`, `Valid From`, `Valid Until`, `Discount`, `Description`, `Status`.
-  - **Multi-use code**: one row with the shared code and summary. Columns: `Code`, `Voucher Name`, `Applicable To`, `Assigned To (Partner)`, `Valid From`, `Valid Until`, `Discount`, `Issued Quantity`, `Remaining`, `Description`.
+  - **Single-use batch**: one row per unique code. Columns: `Code`, `Voucher Name`, `Module`, `Valid From`, `Valid Until`, `Discount`, `Description`, `Status`.
+  - **Multi-use code**: one row with the shared code and summary. Columns: `Code`, `Voucher Name`, `Module`, `Valid From`, `Valid Until`, `Discount`, `Issued Quantity`, `Remaining`, `Description`.
 - **Step 3:** File downloads automatically to Admin's device.
 - **Step 4:** Admin shares the file with the designated Partner for redistribution to businesses.
 
@@ -232,5 +230,5 @@ flowchart TD
 | **14** | Admin extends `Valid Until` of an `Expired` batch to a future date | Admin saves the edit | Status transitions from `Expired` back to `Active` |
 | **15** | Admin increases Issued Quantity on a **Single-use batch** | Admin saves the edit | System generates additional codes equal to the delta and appends them to the batch |
 | **16** | Admin increases Issued Quantity on a **Multi-use code** | Admin saves the edit | Redemption ceiling is raised; no new codes are generated |
-| **17** | Admin clicks "Export Codes" on a **Single-use batch** | System generates the export | CSV downloaded with one row per individual code; columns: Code, Voucher Name, Applicable To, Assigned To (Partner), Valid From, Valid Until, Discount, Description, Status |
-| **18** | Admin clicks "Export Codes" on a **Multi-use code** | System generates the export | CSV downloaded with one row; columns: Code, Voucher Name, Applicable To, Assigned To (Partner), Valid From, Valid Until, Discount, Issued Quantity, Remaining, Description |
+| **17** | Admin clicks "Export Codes" on a **Single-use batch** | System generates the export | CSV downloaded with one row per individual code; columns: Code, Voucher Name, Module, Valid From, Valid Until, Discount, Description, Status |
+| **18** | Admin clicks "Export Codes" on a **Multi-use code** | System generates the export | CSV downloaded with one row; columns: Code, Voucher Name, Module, Valid From, Valid Until, Discount, Issued Quantity, Remaining, Description |
