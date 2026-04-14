@@ -116,11 +116,11 @@ function VoucherStatusBadge({ status }: { status: VoucherBatchStatus }) {
 
 function CodeTypeBadge({ type }: { type: VoucherCodeType }) {
   return type === "multi-use" ? (
-    <Badge variant="secondary" className="font-normal">
+    <Badge variant="default" className="bg-green-600">
       Multi-use
     </Badge>
   ) : (
-    <Badge variant="outline" className="font-normal">
+    <Badge variant="default" className="bg-mauve-600">
       Single-use
     </Badge>
   );
