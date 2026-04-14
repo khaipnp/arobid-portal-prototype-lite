@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   BoxIcon,
@@ -6,15 +6,15 @@ import {
   CalendarIcon,
   MessageCircleIcon,
   ScrollTextIcon,
-} from "lucide-react";
-import Link from "next/link";
+} from "lucide-react"
+import Link from "next/link"
 import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar";
+} from "@/components/ui/sidebar"
 
 const nav = [
   {
@@ -22,7 +22,7 @@ const nav = [
     url: "/seller/my-expos",
     icon: <CalendarIcon />,
   },
-];
+]
 
 const b2b = [
   {
@@ -40,7 +40,7 @@ const b2b = [
     url: "/seller/rfq-hub",
     icon: <ScrollTextIcon />,
   },
-];
+]
 
 export function NavSeller() {
   return (
@@ -82,5 +82,5 @@ export function NavSeller() {
         ))}
       </SidebarMenu>
     </SidebarGroup>
-  );
+  )
 }

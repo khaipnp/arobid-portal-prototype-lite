@@ -66,7 +66,7 @@ export function PaymentMethodConfig() {
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
 
-  const inheritedExpoCount = mockExpoPaymentConfigs.filter(
+  const _inheritedExpoCount = mockExpoPaymentConfigs.filter(
     (c) => c.isInherited,
   ).length
   // Total expos is a rough count — expos not in mockExpoPaymentConfigs are all inherited

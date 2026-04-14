@@ -153,7 +153,8 @@ export const mockMessages: Record<string, Message[]> = {
       id: "msg-001-1",
       conversationId: "conv-001",
       senderId: "user-nguyen",
-      content: "Hi Khai! I heard you're interested in a supply partnership with Food Farm Inc?",
+      content:
+        "Hi Khai! I heard you're interested in a supply partnership with Food Farm Inc?",
       attachments: [],
       status: "read",
       sentAt: isoOffset(118),
@@ -164,7 +165,8 @@ export const mockMessages: Record<string, Message[]> = {
       id: "msg-001-2",
       conversationId: "conv-001",
       senderId: "user-current",
-      content: "Yes! I visited your booth at the expo earlier. Very impressed with your organic certification process and the range of products.",
+      content:
+        "Yes! I visited your booth at the expo earlier. Very impressed with your organic certification process and the range of products.",
       attachments: [],
       status: "read",
       sentAt: isoOffset(115),
@@ -175,7 +177,8 @@ export const mockMessages: Record<string, Message[]> = {
       id: "msg-001-3",
       conversationId: "conv-001",
       senderId: "user-nguyen",
-      content: "Thank you! We've been certified since 2019. Here's our latest product catalog with bulk pricing.",
+      content:
+        "Thank you! We've been certified since 2019. Here's our latest product catalog with bulk pricing.",
       attachments: [
         {
           id: "att-001-1",
@@ -194,7 +197,8 @@ export const mockMessages: Record<string, Message[]> = {
       id: "msg-001-4",
       conversationId: "conv-001",
       senderId: "user-current",
-      content: "Perfect, I'll review the catalog and share it with our procurement team. Should have feedback by end of week.",
+      content:
+        "Perfect, I'll review the catalog and share it with our procurement team. Should have feedback by end of week.",
       attachments: [],
       status: "read",
       sentAt: isoOffset(105),
@@ -205,7 +209,8 @@ export const mockMessages: Record<string, Message[]> = {
       id: "msg-001-5",
       conversationId: "conv-001",
       senderId: "user-nguyen",
-      content: "Sounds great! Feel free to reach out if you have any questions about minimum order quantities or logistics.",
+      content:
+        "Sounds great! Feel free to reach out if you have any questions about minimum order quantities or logistics.",
       attachments: [],
       status: "read",
       sentAt: isoOffset(100),
@@ -219,7 +224,8 @@ export const mockMessages: Record<string, Message[]> = {
       id: "msg-002-1",
       conversationId: "conv-002",
       senderId: "user-nina",
-      content: "Hi Khai! I'm the organizer for MedWorld Asia Expo coming up in 60 days. We'd love to have Arobid as an exhibitor — your AI solutions would be a great fit for our healthcare audience.",
+      content:
+        "Hi Khai! I'm the organizer for MedWorld Asia Expo coming up in 60 days. We'd love to have Arobid as an exhibitor — your AI solutions would be a great fit for our healthcare audience.",
       attachments: [],
       status: "read",
       sentAt: isoOffset(195),
@@ -230,7 +236,8 @@ export const mockMessages: Record<string, Message[]> = {
       id: "msg-002-2",
       conversationId: "conv-002",
       senderId: "user-current",
-      content: "Hi Nina! That sounds very interesting. Can you share more details about the booth tiers and what's included?",
+      content:
+        "Hi Nina! That sounds very interesting. Can you share more details about the booth tiers and what's included?",
       attachments: [],
       status: "read",
       sentAt: isoOffset(180),
@@ -241,7 +248,8 @@ export const mockMessages: Record<string, Message[]> = {
       id: "msg-002-3",
       conversationId: "conv-002",
       senderId: "user-nina",
-      content: "Of course! We have three tiers:\n• Basic ($2,000) — 9m² booth, 2 staff passes, listing in expo catalog\n• Pro ($5,000) — 18m² corner booth, 5 staff passes, featured listing + speaking slot\n• Premium ($10,000) — 36m² island booth, unlimited passes, keynote slot, logo on all materials",
+      content:
+        "Of course! We have three tiers:\n• Basic ($2,000) — 9m² booth, 2 staff passes, listing in expo catalog\n• Pro ($5,000) — 18m² corner booth, 5 staff passes, featured listing + speaking slot\n• Premium ($10,000) — 36m² island booth, unlimited passes, keynote slot, logo on all materials",
       attachments: [],
       status: "read",
       sentAt: isoOffset(160),
@@ -252,7 +260,8 @@ export const mockMessages: Record<string, Message[]> = {
       id: "msg-002-4",
       conversationId: "conv-002",
       senderId: "user-nina",
-      content: "Also — we have an early-bird discount of 15% off for registrations confirmed before end of this month!",
+      content:
+        "Also — we have an early-bird discount of 15% off for registrations confirmed before end of this month!",
       attachments: [],
       status: "delivered",
       sentAt: isoOffset(45),
@@ -263,7 +272,8 @@ export const mockMessages: Record<string, Message[]> = {
       id: "msg-002-5",
       conversationId: "conv-002",
       senderId: "user-nina",
-      content: "Would love to jump on a quick call this week to walk you through the floor plan and available slots. Are you free Thursday afternoon?",
+      content:
+        "Would love to jump on a quick call this week to walk you through the floor plan and available slots. Are you free Thursday afternoon?",
       attachments: [],
       status: "delivered",
       sentAt: isoOffset(30),
@@ -277,7 +287,8 @@ export const mockMessages: Record<string, Message[]> = {
       id: "msg-003-1",
       conversationId: "conv-003",
       senderId: "user-current",
-      content: "Hi Minh, I wanted to follow up on the Agricultural IoT data partnership we discussed briefly at the expo last month.",
+      content:
+        "Hi Minh, I wanted to follow up on the Agricultural IoT data partnership we discussed briefly at the expo last month.",
       attachments: [],
       status: "read",
       sentAt: isoOffset(1450),
@@ -288,7 +299,8 @@ export const mockMessages: Record<string, Message[]> = {
       id: "msg-003-2",
       conversationId: "conv-003",
       senderId: "user-minh",
-      content: "Hello Khai! Great to hear from you. Yes, I remember that conversation. What specifically did you have in mind?",
+      content:
+        "Hello Khai! Great to hear from you. Yes, I remember that conversation. What specifically did you have in mind?",
       attachments: [],
       status: "read",
       sentAt: isoOffset(1430),
@@ -299,7 +311,8 @@ export const mockMessages: Record<string, Message[]> = {
       id: "msg-003-3",
       conversationId: "conv-003",
       senderId: "user-current",
-      content: "We're looking to integrate our Arobid AI platform with field sensor data from your farms to provide predictive yield analytics. The data partnership would be mutually beneficial — you get AI insights, we expand our dataset.",
+      content:
+        "We're looking to integrate our Arobid AI platform with field sensor data from your farms to provide predictive yield analytics. The data partnership would be mutually beneficial — you get AI insights, we expand our dataset.",
       attachments: [],
       status: "read",
       sentAt: isoOffset(1420),
@@ -310,7 +323,8 @@ export const mockMessages: Record<string, Message[]> = {
       id: "msg-003-4",
       conversationId: "conv-003",
       senderId: "user-minh",
-      content: "That's an interesting proposition. Our CTO would need to evaluate the technical integration. Can you share a technical brief or API documentation?",
+      content:
+        "That's an interesting proposition. Our CTO would need to evaluate the technical integration. Can you share a technical brief or API documentation?",
       attachments: [],
       status: "read",
       sentAt: isoOffset(1400),
@@ -357,7 +371,8 @@ export const mockMessages: Record<string, Message[]> = {
       id: "msg-004-1",
       conversationId: "conv-004",
       senderId: "user-minh",
-      content: "Welcome everyone! Really excited for Food & Farm Global Fair. Hope we can all make valuable connections here.",
+      content:
+        "Welcome everyone! Really excited for Food & Farm Global Fair. Hope we can all make valuable connections here.",
       attachments: [],
       status: "read",
       sentAt: isoOffset(2890),
@@ -368,7 +383,8 @@ export const mockMessages: Record<string, Message[]> = {
       id: "msg-004-2",
       conversationId: "conv-004",
       senderId: "user-sarah",
-      content: "Same here! Looking forward to connecting with fellow exhibitors. Our team is showcasing sustainable packaging solutions.",
+      content:
+        "Same here! Looking forward to connecting with fellow exhibitors. Our team is showcasing sustainable packaging solutions.",
       attachments: [],
       status: "read",
       sentAt: isoOffset(2870),
@@ -390,7 +406,8 @@ export const mockMessages: Record<string, Message[]> = {
       id: "msg-004-3",
       conversationId: "conv-004",
       senderId: "user-current",
-      content: "Great to be here! Arobid is exhibiting at Booth A01. We'll be demonstrating our AI-powered supply chain platform. Would love to connect with anyone interested in agri-tech.",
+      content:
+        "Great to be here! Arobid is exhibiting at Booth A01. We'll be demonstrating our AI-powered supply chain platform. Would love to connect with anyone interested in agri-tech.",
       attachments: [],
       status: "read",
       sentAt: isoOffset(2750),
@@ -401,7 +418,8 @@ export const mockMessages: Record<string, Message[]> = {
       id: "msg-004-4",
       conversationId: "conv-004",
       senderId: "user-minh",
-      content: "@Khai — Would love to visit! We're at C01. Might be some interesting synergies between your AI platform and our produce data.",
+      content:
+        "@Khai — Would love to visit! We're at C01. Might be some interesting synergies between your AI platform and our produce data.",
       attachments: [],
       status: "delivered",
       sentAt: isoOffset(60),
@@ -412,7 +430,8 @@ export const mockMessages: Record<string, Message[]> = {
       id: "msg-004-5",
       conversationId: "conv-004",
       senderId: "user-sarah",
-      content: "Anyone interested in organizing a networking lunch on Day 2? Could be a great way to explore B2B opportunities outside the booth.",
+      content:
+        "Anyone interested in organizing a networking lunch on Day 2? Could be a great way to explore B2B opportunities outside the booth.",
       attachments: [],
       status: "delivered",
       sentAt: isoOffset(45),
@@ -423,7 +442,8 @@ export const mockMessages: Record<string, Message[]> = {
       id: "msg-004-6",
       conversationId: "conv-004",
       senderId: "user-tommy",
-      content: "Count me in for the lunch! Also sharing our expo schedule here.",
+      content:
+        "Count me in for the lunch! Also sharing our expo schedule here.",
       attachments: [
         {
           id: "att-004-1",
@@ -467,7 +487,8 @@ export const mockMessages: Record<string, Message[]> = {
       id: "msg-005-1",
       conversationId: "conv-005",
       senderId: "user-current",
-      content: "Hello AI & Robotics community! Looking forward to an incredible showcase. Our team will be at Booth B01 demonstrating agricultural AI — stop by!",
+      content:
+        "Hello AI & Robotics community! Looking forward to an incredible showcase. Our team will be at Booth B01 demonstrating agricultural AI — stop by!",
       attachments: [],
       status: "read",
       sentAt: isoOffset(4790),
@@ -478,7 +499,8 @@ export const mockMessages: Record<string, Message[]> = {
       id: "msg-005-2",
       conversationId: "conv-005",
       senderId: "user-nguyen",
-      content: "Looking forward to seeing the demos, Khai! VietTech will be showcasing our computer vision solutions for manufacturing QA. Should be complementary to your work.",
+      content:
+        "Looking forward to seeing the demos, Khai! VietTech will be showcasing our computer vision solutions for manufacturing QA. Should be complementary to your work.",
       attachments: [],
       status: "read",
       sentAt: isoOffset(4750),

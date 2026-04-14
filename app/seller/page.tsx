@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
-import { mockExpos, mockSellerRegistrations } from "@/lib/tradexpo/mock-data"
+import { mockSellerRegistrations } from "@/lib/tradexpo/mock-data"
 
 export default function SellerDashboardPage() {
   const myExpoIds = [...new Set(mockSellerRegistrations.map((r) => r.expoId))]
@@ -22,7 +22,7 @@ export default function SellerDashboardPage() {
           href="/seller/my-expos"
           className="group rounded-xl border bg-card p-4 transition-colors hover:bg-accent/40"
         >
-          <p className="text-3xl font-bold">{myExpoIds.length}</p>
+          <p className="font-bold text-3xl">{myExpoIds.length}</p>
           <p className="mt-1 font-semibold text-base">Expos Joined</p>
           <p className="mt-0.5 text-muted-foreground text-sm">
             Expos where you have purchased a booth.
@@ -32,7 +32,7 @@ export default function SellerDashboardPage() {
           href="/seller/my-expos"
           className="group rounded-xl border bg-card p-4 transition-colors hover:bg-accent/40"
         >
-          <p className="text-3xl font-bold text-emerald-600">{liveCount}</p>
+          <p className="font-bold text-3xl text-emerald-600">{liveCount}</p>
           <p className="mt-1 font-semibold text-base">Active Booths</p>
           <p className="mt-0.5 text-muted-foreground text-sm">
             Booths currently live at an ongoing expo.
@@ -42,7 +42,7 @@ export default function SellerDashboardPage() {
           href="/seller/my-expos"
           className="group rounded-xl border bg-card p-4 transition-colors hover:bg-accent/40"
         >
-          <p className="text-3xl font-bold text-amber-600">{pendingCount}</p>
+          <p className="font-bold text-3xl text-amber-600">{pendingCount}</p>
           <p className="mt-1 font-semibold text-base">Pending Setup</p>
           <p className="mt-0.5 text-muted-foreground text-sm">
             Booths awaiting configuration before the expo.

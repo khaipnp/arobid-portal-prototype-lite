@@ -3,7 +3,6 @@
 import {
   CheckIcon,
   ChevronDownIcon,
-  EyeIcon,
   MoreHorizontalIcon,
   SearchIcon,
 } from "lucide-react"

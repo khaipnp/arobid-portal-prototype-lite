@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   ArchiveIcon,
@@ -13,58 +13,57 @@ import {
   PhoneIcon,
   SearchIcon,
   SendHorizontalIcon,
-  SquarePenIcon,
   TrashIcon,
   UsersRoundIcon,
-} from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+} from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useEffect, useRef, useState } from "react"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@/components/ui/dropdown-menu"
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
-} from "@/components/ui/hover-card";
-import { Input } from "@/components/ui/input";
-import { Separator } from "@/components/ui/separator";
-import { Textarea } from "@/components/ui/textarea";
-import type { ChatUser, Conversation, Message } from "@/lib/deal-room/types";
+} from "@/components/ui/hover-card"
+import { Input } from "@/components/ui/input"
+import { Separator } from "@/components/ui/separator"
+import { Textarea } from "@/components/ui/textarea"
 import {
   CURRENT_USER_ID,
   mockChatUsers,
   mockConversations,
   mockInitialUnreadCounts,
   mockMessages,
-} from "@/lib/deal-room/mock-data";
-import { cn } from "@/lib/utils";
+} from "@/lib/deal-room/mock-data"
+import type { ChatUser, Conversation, Message } from "@/lib/deal-room/types"
+import { cn } from "@/lib/utils"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatRelativeTime(isoStr: string): string {
-  const diffMs = Date.now() - new Date(isoStr).getTime();
-  const diffMin = Math.floor(diffMs / 60_000);
-  const diffHr = Math.floor(diffMin / 60);
-  const diffDay = Math.floor(diffHr / 24);
+  const diffMs = Date.now() - new Date(isoStr).getTime()
+  const diffMin = Math.floor(diffMs / 60_000)
+  const diffHr = Math.floor(diffMin / 60)
+  const diffDay = Math.floor(diffHr / 24)
 
-  if (diffMin < 1) return "just now";
-  if (diffMin < 60) return `${diffMin}m ago`;
-  if (diffHr < 24) return `${diffHr}h ago`;
-  if (diffDay < 7) return `${diffDay}d ago`;
-  return new Date(isoStr).toLocaleDateString();
+  if (diffMin < 1) return "just now"
+  if (diffMin < 60) return `${diffMin}m ago`
+  if (diffHr < 24) return `${diffHr}h ago`
+  if (diffDay < 7) return `${diffDay}d ago`
+  return new Date(isoStr).toLocaleDateString()
 }
 
 function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
 function getConversationDisplayName(
@@ -72,27 +71,27 @@ function getConversationDisplayName(
   users: ChatUser[],
   currentUserId: string,
 ): string {
-  if (conv.type === "expo_group") return conv.name ?? "Group Chat";
-  const otherId = conv.members.find((m) => m.userId !== currentUserId)?.userId;
-  return users.find((u) => u.id === otherId)?.name ?? "Unknown User";
+  if (conv.type === "expo_group") return conv.name ?? "Group Chat"
+  const otherId = conv.members.find((m) => m.userId !== currentUserId)?.userId
+  return users.find((u) => u.id === otherId)?.name ?? "Unknown User"
 }
 
 function getLastMessage(
   messages: Message[],
 ): { preview: string; sentAt: string } | null {
-  const last = messages.at(-1);
-  if (!last) return null;
-  let preview: string;
+  const last = messages.at(-1)
+  if (!last) return null
+  let preview: string
   if (last.isDeleted) {
-    preview = "This message was deleted.";
+    preview = "This message was deleted."
   } else if (last.isSystemMessage) {
-    preview = last.content;
+    preview = last.content
   } else if (last.attachments.length > 0 && !last.content) {
-    preview = `📎 ${last.attachments[0].fileName}`;
+    preview = `📎 ${last.attachments[0].fileName}`
   } else {
-    preview = last.content;
+    preview = last.content
   }
-  return { preview, sentAt: last.sentAt };
+  return { preview, sentAt: last.sentAt }
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -103,10 +102,10 @@ function ConversationAvatar({
   currentUserId,
   size = "default",
 }: {
-  conv: Conversation;
-  users: ChatUser[];
-  currentUserId: string;
-  size?: "sm" | "default";
+  conv: Conversation
+  users: ChatUser[]
+  currentUserId: string
+  size?: "sm" | "default"
 }) {
   if (conv.type === "expo_group") {
     return (
@@ -118,22 +117,22 @@ function ConversationAvatar({
       >
         <UsersRoundIcon className={size === "sm" ? "size-3.5" : "size-4"} />
       </div>
-    );
+    )
   }
-  const otherId = conv.members.find((m) => m.userId !== currentUserId)?.userId;
-  const other = users.find((u) => u.id === otherId);
+  const otherId = conv.members.find((m) => m.userId !== currentUserId)?.userId
+  const other = users.find((u) => u.id === otherId)
   const initials = other?.name
     .split(" ")
     .map((w) => w[0])
     .slice(0, 2)
     .join("")
-    .toUpperCase();
+    .toUpperCase()
 
   return (
     <Avatar size={size === "sm" ? "sm" : "default"}>
       <AvatarFallback>{initials ?? "?"}</AvatarFallback>
     </Avatar>
-  );
+  )
 }
 
 function UserHoverCard({
@@ -166,7 +165,7 @@ function UserHoverCard({
           <div className="min-w-0">
             <p className="truncate font-semibold text-sm">{user.name}</p>
             {user.jobTitle && (
-              <p className="truncate text-xs text-muted-foreground">
+              <p className="truncate text-muted-foreground text-xs">
                 {user.jobTitle}
               </p>
             )}
@@ -233,77 +232,77 @@ function UserHoverCard({
 export function DealRoomManager({
   initialConversationId,
 }: {
-  initialConversationId?: string;
+  initialConversationId?: string
 }) {
-  const router = useRouter();
+  const router = useRouter()
 
   // ── State ──
   const [conversations, setConversations] = useState<Conversation[]>(() =>
     structuredClone(mockConversations),
-  );
+  )
   const [messagesMap, setMessagesMap] = useState<Record<string, Message[]>>(
     () => structuredClone(mockMessages),
-  );
-  const [users] = useState<ChatUser[]>(mockChatUsers);
+  )
+  const [users] = useState<ChatUser[]>(mockChatUsers)
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>(
     () => ({ ...mockInitialUnreadCounts }),
-  );
+  )
   const [activeConversationId, setActiveConversationId] = useState<
     string | null
-  >(initialConversationId ?? null);
+  >(initialConversationId ?? null)
 
-  const [inboxSearch, setInboxSearch] = useState("");
-  const [composerValue, setComposerValue] = useState("");
-  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
-  const [editingContent, setEditingContent] = useState("");
+  const [inboxSearch, setInboxSearch] = useState("")
+  const [composerValue, setComposerValue] = useState("")
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
+  const [editingContent, setEditingContent] = useState("")
 
-  const [newMessageOpen, setNewMessageOpen] = useState(false);
-  const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [_newMessageOpen, setNewMessageOpen] = useState(false)
+  const [_userSearchQuery, _setUserSearchQuery] = useState("")
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // ── Derived ──
   const activeConversation =
-    conversations.find((c) => c.id === activeConversationId) ?? null;
+    conversations.find((c) => c.id === activeConversationId) ?? null
   const activeMessages = activeConversationId
     ? (messagesMap[activeConversationId] ?? [])
-    : [];
+    : []
 
   const visibleConversations = conversations
     .filter((c) => {
       const isMember = c.members.some(
         (m) => m.userId === CURRENT_USER_ID && !m.isArchived,
-      );
-      if (!isMember) return false;
-      if (!inboxSearch) return true;
-      const name = getConversationDisplayName(c, users, CURRENT_USER_ID);
-      return name.toLowerCase().includes(inboxSearch.toLowerCase());
+      )
+      if (!isMember) return false
+      if (!inboxSearch) return true
+      const name = getConversationDisplayName(c, users, CURRENT_USER_ID)
+      return name.toLowerCase().includes(inboxSearch.toLowerCase())
     })
     .sort((a, b) => {
-      const aTime = messagesMap[a.id]?.at(-1)?.sentAt ?? a.createdAt;
-      const bTime = messagesMap[b.id]?.at(-1)?.sentAt ?? b.createdAt;
-      return new Date(bTime).getTime() - new Date(aTime).getTime();
-    });
+      const aTime = messagesMap[a.id]?.at(-1)?.sentAt ?? a.createdAt
+      const bTime = messagesMap[b.id]?.at(-1)?.sentAt ?? b.createdAt
+      return new Date(bTime).getTime() - new Date(aTime).getTime()
+    })
 
-  const totalUnread = Object.values(unreadCounts).reduce((s, n) => s + n, 0);
+  const totalUnread = Object.values(unreadCounts).reduce((s, n) => s + n, 0)
 
   // ── Scroll to bottom when thread changes or new message arrives ──
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [activeConversationId, activeMessages.length]);
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [])
 
   // ── Handlers ──
   function selectConversation(id: string) {
-    setActiveConversationId(id);
-    setUnreadCounts((prev) => ({ ...prev, [id]: 0 }));
-    setComposerValue("");
-    setEditingMessageId(null);
-    router.push(`/seller/deal-room/${id}`, { scroll: false });
+    setActiveConversationId(id)
+    setUnreadCounts((prev) => ({ ...prev, [id]: 0 }))
+    setComposerValue("")
+    setEditingMessageId(null)
+    router.push(`/seller/deal-room/${id}`, { scroll: false })
   }
 
   function handleSendMessage() {
-    const text = composerValue.trim();
-    if (!activeConversationId || !text) return;
+    const text = composerValue.trim()
+    if (!activeConversationId || !text) return
 
     const newMsg: Message = {
       id: `msg-${Date.now()}`,
@@ -315,19 +314,19 @@ export function DealRoomManager({
       sentAt: new Date().toISOString(),
       isDeleted: false,
       isSystemMessage: false,
-    };
+    }
 
     setMessagesMap((prev) => ({
       ...prev,
       [activeConversationId]: [...(prev[activeConversationId] ?? []), newMsg],
-    }));
-    setComposerValue("");
+    }))
+    setComposerValue("")
   }
 
   function handleSaveEdit() {
-    if (!activeConversationId || !editingMessageId) return;
-    const text = editingContent.trim();
-    if (!text) return;
+    if (!activeConversationId || !editingMessageId) return
+    const text = editingContent.trim()
+    if (!text) return
     setMessagesMap((prev) => ({
       ...prev,
       [activeConversationId]:
@@ -336,19 +335,19 @@ export function DealRoomManager({
             ? { ...m, content: text, editedAt: new Date().toISOString() }
             : m,
         ) ?? [],
-    }));
-    setEditingMessageId(null);
+    }))
+    setEditingMessageId(null)
   }
 
   function handleDeleteMessage(id: string) {
-    if (!activeConversationId) return;
+    if (!activeConversationId) return
     setMessagesMap((prev) => ({
       ...prev,
       [activeConversationId]:
         prev[activeConversationId]?.map((m) =>
           m.id === id ? { ...m, isDeleted: true, attachments: [] } : m,
         ) ?? [],
-    }));
+    }))
   }
 
   function handleArchiveConversation(id: string) {
@@ -363,10 +362,10 @@ export function DealRoomManager({
             }
           : c,
       ),
-    );
+    )
     if (activeConversationId === id) {
-      setActiveConversationId(null);
-      router.push("/seller/deal-room", { scroll: false });
+      setActiveConversationId(null)
+      router.push("/seller/deal-room", { scroll: false })
     }
   }
 
@@ -376,12 +375,12 @@ export function DealRoomManager({
         c.type === "direct" &&
         c.members.some((m) => m.userId === CURRENT_USER_ID) &&
         c.members.some((m) => m.userId === targetUserId),
-    );
+    )
 
     if (existing) {
-      setNewMessageOpen(false);
-      selectConversation(existing.id);
-      return;
+      setNewMessageOpen(false)
+      selectConversation(existing.id)
+      return
     }
 
     const newConv: Conversation = {
@@ -401,12 +400,12 @@ export function DealRoomManager({
       ],
       createdAt: new Date().toISOString(),
       isReadOnly: false,
-    };
+    }
 
-    setConversations((prev) => [newConv, ...prev]);
-    setMessagesMap((prev) => ({ ...prev, [newConv.id]: [] }));
-    setNewMessageOpen(false);
-    selectConversation(newConv.id);
+    setConversations((prev) => [newConv, ...prev])
+    setMessagesMap((prev) => ({ ...prev, [newConv.id]: [] }))
+    setNewMessageOpen(false)
+    selectConversation(newConv.id)
   }
 
   // ── Render ──
@@ -466,10 +465,10 @@ export function DealRoomManager({
                 conv,
                 users,
                 CURRENT_USER_ID,
-              );
-              const lastMsg = getLastMessage(messagesMap[conv.id] ?? []);
-              const unread = unreadCounts[conv.id] ?? 0;
-              const isActive = conv.id === activeConversationId;
+              )
+              const lastMsg = getLastMessage(messagesMap[conv.id] ?? [])
+              const unread = unreadCounts[conv.id] ?? 0
+              const isActive = conv.id === activeConversationId
 
               return (
                 <button
@@ -499,13 +498,13 @@ export function DealRoomManager({
                         {displayName}
                       </span>
                       {lastMsg && (
-                        <span className="shrink-0 text-xs text-muted-foreground">
+                        <span className="shrink-0 text-muted-foreground text-xs">
                           {formatRelativeTime(lastMsg.sentAt)}
                         </span>
                       )}
                     </div>
                     <div className="mt-0.5 flex items-center justify-between gap-1">
-                      <span className="truncate text-xs text-muted-foreground">
+                      <span className="truncate text-muted-foreground text-xs">
                         {lastMsg
                           ? lastMsg.preview.slice(0, 60)
                           : "No messages yet"}
@@ -518,7 +517,7 @@ export function DealRoomManager({
                     </div>
                   </div>
                 </button>
-              );
+              )
             })
           )}
         </div>
@@ -539,7 +538,10 @@ export function DealRoomManager({
                   if (other) {
                     return (
                       <UserHoverCard user={other} side="bottom">
-                        <button type="button" className="flex items-center gap-3 cursor-pointer">
+                        <button
+                          type="button"
+                          className="flex cursor-pointer items-center gap-3"
+                        >
                           <ConversationAvatar
                             conv={activeConversation}
                             users={users}
@@ -550,7 +552,7 @@ export function DealRoomManager({
                             <p className="font-semibold text-sm leading-tight hover:underline">
                               {other.name}
                             </p>
-                            <p className="text-xs text-muted-foreground">
+                            <p className="text-muted-foreground text-xs">
                               {other.company}
                             </p>
                           </div>
@@ -575,7 +577,7 @@ export function DealRoomManager({
                           CURRENT_USER_ID,
                         )}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-muted-foreground text-xs">
                         {activeConversation.members.length} members
                         {activeConversation.isReadOnly && " · Archived"}
                       </p>
@@ -613,30 +615,30 @@ export function DealRoomManager({
               </div>
             )}
             {activeMessages.map((msg, idx) => {
-              const isOwn = msg.senderId === CURRENT_USER_ID;
-              const sender = users.find((u) => u.id === msg.senderId);
-              const prevMsg = activeMessages[idx - 1];
+              const isOwn = msg.senderId === CURRENT_USER_ID
+              const sender = users.find((u) => u.id === msg.senderId)
+              const prevMsg = activeMessages[idx - 1]
               const showSenderName =
                 !isOwn &&
                 !msg.isSystemMessage &&
-                msg.senderId !== prevMsg?.senderId;
+                msg.senderId !== prevMsg?.senderId
 
-              const sentMs = new Date(msg.sentAt).getTime();
+              const sentMs = new Date(msg.sentAt).getTime()
               const isEditable =
                 isOwn &&
                 !msg.isDeleted &&
                 !msg.isSystemMessage &&
-                Date.now() - sentMs < 15 * 60 * 1000;
+                Date.now() - sentMs < 15 * 60 * 1000
 
               // System message
               if (msg.isSystemMessage) {
                 return (
                   <div key={msg.id} className="flex justify-center py-1">
-                    <span className="rounded-full bg-muted/60 px-3 py-0.5 text-xs text-muted-foreground italic">
+                    <span className="rounded-full bg-muted/60 px-3 py-0.5 text-muted-foreground text-xs italic">
                       {msg.content}
                     </span>
                   </div>
-                );
+                )
               }
 
               return (
@@ -702,7 +704,7 @@ export function DealRoomManager({
                       >
                         <button
                           type="button"
-                          className="ml-1 cursor-pointer text-xs text-muted-foreground hover:text-foreground hover:underline"
+                          className="ml-1 cursor-pointer text-muted-foreground text-xs hover:text-foreground hover:underline"
                         >
                           {sender.name}
                         </button>
@@ -719,10 +721,10 @@ export function DealRoomManager({
                           rows={3}
                           onKeyDown={(e) => {
                             if (e.key === "Enter" && !e.shiftKey) {
-                              e.preventDefault();
-                              handleSaveEdit();
+                              e.preventDefault()
+                              handleSaveEdit()
                             }
-                            if (e.key === "Escape") setEditingMessageId(null);
+                            if (e.key === "Escape") setEditingMessageId(null)
                           }}
                           autoFocus
                         />
@@ -796,8 +798,8 @@ export function DealRoomManager({
                                 variant="ghost"
                                 className="size-6"
                                 onClick={() => {
-                                  setEditingMessageId(msg.id);
-                                  setEditingContent(msg.content);
+                                  setEditingMessageId(msg.id)
+                                  setEditingContent(msg.content)
                                 }}
                               >
                                 <PencilIcon className="size-3" />
@@ -820,16 +822,16 @@ export function DealRoomManager({
 
                     {/* Timestamp + meta */}
                     <div className="flex items-center gap-1 px-1">
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-muted-foreground text-xs">
                         {formatRelativeTime(msg.sentAt)}
                       </span>
                       {msg.editedAt && (
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-muted-foreground text-xs">
                           · Edited
                         </span>
                       )}
                       {isOwn && !msg.isDeleted && (
-                        <span className="text-xs text-muted-foreground">
+                        <span className="text-muted-foreground text-xs">
                           ·{" "}
                           {msg.status === "read"
                             ? "Read"
@@ -844,7 +846,7 @@ export function DealRoomManager({
                   {/* Own avatar placeholder for alignment */}
                   {isOwn && <div className="mb-4 size-7 shrink-0" />}
                 </div>
-              );
+              )
             })}
             <div ref={messagesEndRef} />
           </div>
@@ -858,7 +860,7 @@ export function DealRoomManager({
             </div>
           ) : (
             <div className="border-t p-3">
-              <div className="flex items-end gap-2 rounded-xl border bg-background px-3 py-2 focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 transition-shadow">
+              <div className="flex items-end gap-2 rounded-xl border bg-background px-3 py-2 transition-shadow focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50">
                 <Textarea
                   placeholder="Type a message… (Enter to send, Shift+Enter for new line)"
                   className="min-h-0 flex-1 resize-none border-0 p-0 text-sm shadow-none focus-visible:ring-0"
@@ -867,8 +869,8 @@ export function DealRoomManager({
                   onChange={(e) => setComposerValue(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage();
+                      e.preventDefault()
+                      handleSendMessage()
                     }
                   }}
                 />
@@ -902,5 +904,5 @@ export function DealRoomManager({
         </div>
       )}
     </div>
-  );
+  )
 }

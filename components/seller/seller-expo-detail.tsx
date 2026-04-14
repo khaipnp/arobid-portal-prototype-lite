@@ -183,7 +183,7 @@ export function SellerExpoDetail({ expoId }: Props) {
 
                 return (
                   <TableRow key={reg.id}>
-                    <TableCell className="font-mono font-medium">
+                    <TableCell className="font-medium font-mono">
                       {reg.boothRef}
                     </TableCell>
                     <TableCell>
@@ -218,7 +218,7 @@ export function SellerExpoDetail({ expoId }: Props) {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {!customization || !customization.hasTemplate ? (
+                      {!customization?.hasTemplate ? (
                         <span className="text-muted-foreground text-sm">
                           No template
                         </span>

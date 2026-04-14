@@ -67,11 +67,19 @@ function buildData(): ExpoWithBooths[] {
   }
 
   return mockExpos
-    .filter((expo) => grouped.has(expo.id))
-    .map((expo) => ({
-      expo: { ...expo },
-      registrations: grouped.get(expo.id)!,
-    }))
+    .flatMap((expo) => {
+      const registrations = grouped.get(expo.id)
+      if (!registrations) {
+        return []
+      }
+
+      return [
+        {
+          expo: { ...expo },
+          registrations,
+        },
+      ]
+    })
     .sort(
       (a, b) =>
         new Date(b.expo.startDate).getTime() -
@@ -87,9 +95,7 @@ export function SellerExpoList() {
   const [debouncedSearch, setDebouncedSearch] = React.useState("")
   const [statusFilter, setStatusFilter] = React.useState<
     SellerExpoViewStatus | "All"
-  >(
-    "All",
-  )
+  >("All")
 
   React.useEffect(() => {
     const t = window.setTimeout(() => setDebouncedSearch(search), 300)
@@ -125,7 +131,9 @@ export function SellerExpoList() {
         </InputGroup>
         <Select
           value={statusFilter}
-          onValueChange={(v) => setStatusFilter(v as SellerExpoViewStatus | "All")}
+          onValueChange={(v) =>
+            setStatusFilter(v as SellerExpoViewStatus | "All")
+          }
         >
           <SelectTrigger className="w-44">
             <SelectValue placeholder="All Statuses" />

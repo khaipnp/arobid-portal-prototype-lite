@@ -10,7 +10,6 @@ import {
   ImageIcon,
   LayoutGridIcon,
   LinkIcon,
-  PencilIcon,
   PlusIcon,
   SendIcon,
   Trash2Icon,
@@ -33,7 +32,6 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import { Textarea } from "@/components/ui/textarea"
 import {
   mockBoothCustomizations,
   mockBoothTemplateCustomizationConfigs,
@@ -475,10 +473,6 @@ export function SellerBoothConfigurator({ expoId, registrationId }: Props) {
           onPatch={patch}
           onRemoveProduct={removeProduct}
           onOpenProductSelector={() => setProductSelectorOpen(true)}
-          onPreview3D={() => {
-            setPreview3DTemplate(selectedTemplate ?? null)
-            setPreview3DOpen(true)
-          }}
           onSaveDraft={handleSaveDraft}
           onPublish={handlePublish}
           expoId={expoId}
@@ -720,7 +714,6 @@ function CustomizationPanel({
   onPatch,
   onRemoveProduct,
   onOpenProductSelector,
-  onPreview3D,
   onSaveDraft,
   onPublish,
   expoId,
@@ -739,7 +732,6 @@ function CustomizationPanel({
   ) => void
   onRemoveProduct: (id: string) => void
   onOpenProductSelector: () => void
-  onPreview3D: () => void
   onSaveDraft: () => void
   onPublish: () => void
   expoId: string
@@ -757,12 +749,15 @@ function CustomizationPanel({
       {colorSlots > 0 && (
         <Section title="Brand Colors">
           <div className="flex flex-wrap gap-6">
-            {Array.from({ length: colorSlots }, (_, i) => (
+            {Array.from({ length: colorSlots }, (_, index) => ({
+              id: `color-slot-${index + 1}`,
+              index,
+            })).map((slot) => (
               <ColorSlot
-                key={i}
-                label={`Color ${i + 1}`}
-                value={customization.colors[i] ?? "#ffffff"}
-                onChange={(hex) => onPatchColor(i, hex)}
+                key={slot.id}
+                label={`Color ${slot.index + 1}`}
+                value={customization.colors[slot.index] ?? "#ffffff"}
+                onChange={(hex) => onPatchColor(slot.index, hex)}
                 disabled={isReadOnly}
               />
             ))}
@@ -806,20 +801,25 @@ function CustomizationPanel({
             title={`Images (${imageSlots} slot${imageSlots !== 1 ? "s" : ""})`}
           >
             <div className="grid gap-4">
-              {Array.from({ length: imageSlots }, (_, i) => (
-                <div key={i} className="grid gap-2">
-                  <FieldGroup label={`Image ${i + 1}`}>
+              {Array.from({ length: imageSlots }, (_, index) => ({
+                id: `image-slot-${index + 1}`,
+                index,
+              })).map((slot) => (
+                <div key={slot.id} className="grid gap-2">
+                  <FieldGroup label={`Image ${slot.index + 1}`}>
                     <Input
-                      value={customization.imageUrls[i] ?? ""}
-                      onChange={(e) => onPatchImageUrl(i, e.target.value)}
+                      value={customization.imageUrls[slot.index] ?? ""}
+                      onChange={(e) =>
+                        onPatchImageUrl(slot.index, e.target.value)
+                      }
                       placeholder="https://… (recommended 1200×600)"
                       disabled={isReadOnly}
                     />
                   </FieldGroup>
-                  {(customization.imageUrls[i] ?? "") && (
+                  {(customization.imageUrls[slot.index] ?? "") && (
                     <Image
-                      src={customization.imageUrls[i]}
-                      alt={`Booth image ${i + 1}`}
+                      src={customization.imageUrls[slot.index]}
+                      alt={`Booth image ${slot.index + 1}`}
                       width={400}
                       height={250}
                       className="w-full max-w-sm rounded-md border object-cover"
@@ -1217,9 +1217,9 @@ function Preview3DViewer({
             {/* Color swatches overlay */}
             {customization.colors.length > 0 && (
               <div className="absolute bottom-2 left-2 flex gap-1">
-                {customization.colors.map((c, i) => (
+                {customization.colors.map((c, i, colors) => (
                   <div
-                    key={i}
+                    key={`${c}-${colors.slice(0, i).filter((value) => value === c).length}`}
                     className="h-4 w-4 rounded-full border-2 border-white shadow-md"
                     style={{ background: c }}
                   />
@@ -1270,7 +1270,7 @@ function ProductSelectorList({
   const atLimit = selectedIds.length >= limit
 
   return (
-    <div className="grid gap-2 max-h-96 overflow-y-auto pr-1">
+    <div className="grid max-h-96 gap-2 overflow-y-auto pr-1">
       {catalogProducts.map((p) => {
         const isSelected = selectedSet.has(p.id)
         const isDisabled = atLimit && !isSelected
@@ -1324,7 +1324,7 @@ function ProductSelectorList({
         )
       })}
       {atLimit && (
-        <p className="text-center text-muted-foreground text-xs py-1">
+        <p className="py-1 text-center text-muted-foreground text-xs">
           Limit reached ({limit} products max for this template).
         </p>
       )}
