@@ -209,27 +209,23 @@ export function VoucherCheckoutWidget({
               <span className="font-mono text-sm font-semibold text-green-800 dark:text-green-300">
                 {applied.inputCode}
               </span>
-              <span className="ml-2 text-muted-foreground text-xs">
+       {" - "}
+              <span className="text-foreground">
                 {formatDiscount(
                   applied.batch.discountType,
                   applied.batch.discountValue,
                 )}{" "}
                 off
               </span>
-              {applied.batch.codeType === "multi-use" && (
-                <Badge variant="outline" className="ml-2 py-0 text-xs">
-                  Multi-use
-                </Badge>
-              )}
             </div>
           </div>
           <Button
             variant="ghost"
             size="icon"
-            className="size-7"
+            className="size-6"
             onClick={handleRemove}
           >
-            <XIcon className="size-4" />
+            <XIcon />
           </Button>
         </div>
       ) : (
@@ -407,7 +403,6 @@ export function CheckoutOrderSummary({
   return (
     <div className="rounded-lg border p-6 space-y-4">
       <h3 className="font-semibold text-base">Order Summary</h3>
-
       <div className="space-y-2 text-sm">
         <div className="flex justify-between">
           <span className="text-muted-foreground">{orderLabel}</span>
@@ -468,11 +463,7 @@ export function CheckoutOrderSummary({
             onClick={() => simulatePayment("success")}
             disabled={processing}
           >
-            {processing ? (
-              <Loader2Icon className="size-4 animate-spin" />
-            ) : (
-              "Pay (Success)"
-            )}
+            {processing ? <Spinner /> : "Pay (Success)"}
           </Button>
           <Button
             variant="destructive"

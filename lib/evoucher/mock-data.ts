@@ -3,7 +3,7 @@ import type {
   VoucherCode,
   VoucherPartner,
   VoucherTarget,
-} from "./types"
+} from "./types";
 
 // ─── Partners ────────────────────────────────────────────────────────────────
 
@@ -12,19 +12,23 @@ export const mockVoucherPartners: VoucherPartner[] = [
   { id: "partner-002", name: "GlobalTrade Vietnam" },
   { id: "partner-003", name: "Asia Commerce Hub" },
   { id: "partner-004", name: "Vietnam B2B Network" },
-]
+];
 
 // ─── Targets (services + expos) ───────────────────────────────────────────────
 
 export const mockVoucherTargets: VoucherTarget[] = [
   { id: "svc-b2b-pro", name: "B2B Pro Plan (Annual)", type: "service" },
   { id: "svc-premium-booth", name: "Premium Booth Package", type: "service" },
-  { id: "svc-brand-spotlight", name: "Brand Spotlight Listing", type: "service" },
+  {
+    id: "svc-brand-spotlight",
+    name: "Brand Spotlight Listing",
+    type: "service",
+  },
   { id: "expo-001", name: "VietTech Innovation Summit 2025", type: "expo" },
   { id: "expo-002", name: "MedWorld Asia Expo", type: "expo" },
   { id: "expo-003", name: "Food & Farm Global Fair", type: "expo" },
   { id: "expo-004", name: "AutoDrive Expo Southeast Asia", type: "expo" },
-]
+];
 
 // ─── Helper for single-use batch defaults ─────────────────────────────────────
 
@@ -33,7 +37,7 @@ const singleUseDefaults = {
   multiUseCode: "",
   multiUseLockedCount: 0,
   multiUseRedeemedCount: 0,
-}
+};
 
 // ─── Voucher Batches (mutable for prototype) ─────────────────────────────────
 
@@ -54,7 +58,8 @@ export const mockVoucherBatches: VoucherBatch[] = [
     issuedQuantity: 100,
     discountType: "percentage",
     discountValue: 15,
-    description: "15% off booth registration for early bird exhibitors at VietTech Summit 2025.",
+    description:
+      "15% off booth registration for early bird exhibitors at VietTech Summit 2025.",
     isRevoked: false,
     createdAt: "2025-01-01T08:00:00Z",
     updatedAt: "2025-01-01T08:00:00Z",
@@ -94,7 +99,8 @@ export const mockVoucherBatches: VoucherBatch[] = [
     issuedQuantity: 200,
     discountType: "percentage",
     discountValue: 10,
-    description: "Happy New Year! 10% off participation at Food & Farm Global Fair.",
+    description:
+      "Happy New Year! 10% off participation at Food & Farm Global Fair.",
     isRevoked: false,
     createdAt: "2024-12-20T10:00:00Z",
     updatedAt: "2024-12-20T10:00:00Z",
@@ -114,7 +120,8 @@ export const mockVoucherBatches: VoucherBatch[] = [
     issuedQuantity: 20,
     discountType: "fixed",
     discountValue: 1000000,
-    description: "Grand launch exclusive: 1,000,000 VND off AutoDrive Expo booth.",
+    description:
+      "Grand launch exclusive: 1,000,000 VND off AutoDrive Expo booth.",
     isRevoked: false,
     createdAt: "2025-04-01T08:00:00Z",
     updatedAt: "2025-04-01T08:00:00Z",
@@ -199,7 +206,32 @@ export const mockVoucherBatches: VoucherBatch[] = [
     issuedQuantity: 200,
     discountType: "percentage",
     discountValue: 10,
-    description: "Summer campaign: 10% off for all exhibitors at VietTech. Share this code with your network.",
+    description:
+      "Summer campaign: 10% off for all exhibitors at VietTech. Share this code with your network.",
+    isRevoked: false,
+    createdAt: "2025-06-01T08:00:00Z",
+    updatedAt: "2025-06-01T08:00:00Z",
+  },
+  {
+    codeType: "multi-use",
+    codePrefix: "",
+    multiUseCode: "IPTCWELCOME",
+    multiUseLockedCount: 3,
+    multiUseRedeemedCount: 47,
+    id: "batch-009",
+    name: "Summer 2025 Campaign",
+    applicableTo: "expo",
+    targetId: "expo-001",
+    targetName: "VietTech Innovation Summit 2025",
+    assignedToPartnerId: "partner-001",
+    assignedToPartnerName: "TechViet Partners Co.",
+    validFrom: "2025-06-01",
+    validUntil: "2026-08-31",
+    issuedQuantity: 200,
+    discountType: "fixed",
+    discountValue: 1000000,
+    description:
+      "Summer campaign: 1,000,000 VND off for all exhibitors at VietTech. Share this code with your network.",
     isRevoked: false,
     createdAt: "2025-06-01T08:00:00Z",
     updatedAt: "2025-06-01T08:00:00Z",
@@ -210,7 +242,7 @@ export const mockVoucherBatches: VoucherBatch[] = [
     multiUseCode: "MEDPRO25",
     multiUseLockedCount: 0,
     multiUseRedeemedCount: 5,
-    id: "batch-009",
+    id: "batch-0010",
     name: "MedWorld Pro Subscriber Perk",
     applicableTo: "service",
     targetId: "svc-b2b-pro",
@@ -222,19 +254,24 @@ export const mockVoucherBatches: VoucherBatch[] = [
     issuedQuantity: 50,
     discountType: "fixed",
     discountValue: 300000,
-    description: "300,000 VND off B2B Pro for MedWorld network subscribers. Reusable per transaction.",
+    description:
+      "300,000 VND off B2B Pro for MedWorld network subscribers. Reusable per transaction.",
     isRevoked: false,
     createdAt: "2025-05-01T09:00:00Z",
     updatedAt: "2025-05-01T09:00:00Z",
   },
-]
+];
 
 // ─── Individual Codes (single-use batches only) ───────────────────────────────
 
 function seed(
   batchId: string,
   prefix: string,
-  entries: Array<{ suffix: string; status: VoucherCode["status"]; orderId?: string }>,
+  entries: Array<{
+    suffix: string;
+    status: VoucherCode["status"];
+    orderId?: string;
+  }>,
 ): VoucherCode[] {
   return entries.map((e, i) => ({
     id: `${batchId}-code-${i + 1}`,
@@ -242,7 +279,7 @@ function seed(
     code: `${prefix}-${e.suffix}`,
     status: e.status,
     lockedByOrderId: e.orderId,
-  }))
+  }));
 }
 
 const batch001Codes = seed("batch-001", "EXPO2025", [
@@ -261,7 +298,7 @@ const batch001Codes = seed("batch-001", "EXPO2025", [
   { suffix: "X5Y6Z7", status: "Redeemed" },
   { suffix: "A8B9C1", status: "Redeemed" },
   { suffix: "D2E3F4", status: "Redeemed" },
-])
+]);
 
 const batch002Codes = seed("batch-002", "SVC2025", [
   { suffix: "DEMO01", status: "Available" },
@@ -276,7 +313,7 @@ const batch002Codes = seed("batch-002", "SVC2025", [
   { suffix: "U4V5W6", status: "Available" },
   { suffix: "X7Y8Z9", status: "Locked", orderId: "order-demo-lock-3" },
   { suffix: "A1B2C3", status: "Redeemed" },
-])
+]);
 
 const batch003Codes = seed("batch-003", "NEWYR25", [
   { suffix: "DEMO01", status: "Available" },
@@ -294,7 +331,7 @@ const batch003Codes = seed("batch-003", "NEWYR25", [
   { suffix: "D2E3F4", status: "Redeemed" },
   { suffix: "G5H6J7", status: "Redeemed" },
   { suffix: "K8L9M1", status: "Redeemed" },
-])
+]);
 
 // batch-004: Depleted — all 20 Redeemed
 const batch004Codes: VoucherCode[] = Array.from({ length: 20 }, (_, i) => ({
@@ -302,7 +339,7 @@ const batch004Codes: VoucherCode[] = Array.from({ length: 20 }, (_, i) => ({
   batchId: "batch-004",
   code: `LAUNCH25-${String(i + 1).padStart(4, "0")}XX`,
   status: "Redeemed",
-}))
+}));
 
 const batch005Codes = seed("batch-005", "REVOKE24", [
   { suffix: "DEMO01", status: "Available" },
@@ -317,7 +354,7 @@ const batch005Codes = seed("batch-005", "REVOKE24", [
   { suffix: "A8B9C1", status: "Available" },
   { suffix: "D2E3F4", status: "Locked", orderId: "order-demo-lock-4" },
   { suffix: "G5H6J7", status: "Redeemed" },
-])
+]);
 
 const batch006Codes = seed("batch-006", "TECHXPO", [
   { suffix: "DEMO01", status: "Available" },
@@ -330,7 +367,7 @@ const batch006Codes = seed("batch-006", "TECHXPO", [
   { suffix: "R8S9T1", status: "Available" },
   { suffix: "U2V3W4", status: "Available" },
   { suffix: "X5Y6Z7", status: "Available" },
-])
+]);
 
 const batch007Codes = seed("batch-007", "BRAND25", [
   { suffix: "DEMO01", status: "Available" },
@@ -343,7 +380,7 @@ const batch007Codes = seed("batch-007", "BRAND25", [
   { suffix: "R8S9T1", status: "Available" },
   { suffix: "U2V3W4", status: "Available" },
   { suffix: "X5Y6Z7", status: "Available" },
-])
+]);
 
 // batch-008, batch-009 are multi-use — no individual VoucherCode records
 
@@ -355,4 +392,4 @@ export const mockVoucherCodes: VoucherCode[] = [
   ...batch005Codes,
   ...batch006Codes,
   ...batch007Codes,
-]
+];

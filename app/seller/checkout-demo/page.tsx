@@ -1,27 +1,35 @@
-import { CheckoutOrderSummary } from "@/components/evoucher/voucher-checkout-widget"
-import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
+import { CheckoutOrderSummary } from "@/components/evoucher/voucher-checkout-widget";
+import { DashboardShell } from "@/components/tradexpo/dashboard-shell";
 
 const DEMO_ORDER = {
   id: "order-checkout-demo",
-  label: "Booth Registration — VietTech Innovation Summit 2025 (Standard Booth)",
+  label:
+    "Booth Registration — VietTech Innovation Summit 2025 (Standard Booth)",
   total: 5_000_000,
   scopeType: "expo" as const,
   scopeId: "expo-001",
-}
+};
 
 const HINT_CODES = [
   // Single-use — valid
   { code: "EXPO2025-DEMO01", note: "Single-use · 15% off VietTech — valid ✓" },
   { code: "TECHXPO-DEMO01", note: "Single-use · 5% off VietTech — valid ✓" },
   // Multi-use — valid
-  { code: "SUMMER25", note: "Multi-use · 10% off VietTech · reusable across orders ✓" },
+  {
+    code: "SUMMER25",
+    note: "Multi-use · 10% off VietTech · reusable across orders ✓",
+  },
+  {
+    code: "IPTCWELCOME",
+    note: "Multi-use · Discount 1.000.000 VND off VietTech · reusable across orders ✓",
+  },
   // Failure cases
   { code: "SVC2025-DEMO01", note: "Wrong scope (service voucher) — will fail" },
   { code: "MEDPRO25", note: "Wrong scope (multi-use, service) — will fail" },
   { code: "NEWYR25-DEMO01", note: "Expired batch — will fail" },
   { code: "REVOKE24-DEMO01", note: "Revoked batch — will fail" },
   { code: "LAUNCH25-0001XX", note: "Depleted batch — will fail" },
-]
+];
 
 export default function CheckoutDemoPage() {
   return (
@@ -44,11 +52,12 @@ export default function CheckoutDemoPage() {
                 <span className="font-mono">{DEMO_ORDER.id}</span>
               </p>
               <p>
-                <span className="text-muted-foreground">Item:</span> {DEMO_ORDER.label}
+                <span className="text-muted-foreground">Item:</span>{" "}
+                {DEMO_ORDER.label}
               </p>
               <p>
-                <span className="text-muted-foreground">Scope:</span> Expo / VietTech Innovation
-                Summit 2025
+                <span className="text-muted-foreground">Scope:</span> Expo /
+                VietTech Innovation Summit 2025
               </p>
             </div>
           </div>
@@ -56,15 +65,18 @@ export default function CheckoutDemoPage() {
           <div className="rounded-lg border p-4 space-y-3">
             <h3 className="font-semibold text-sm">Test Voucher Codes</h3>
             <p className="text-muted-foreground text-xs">
-              Codes are case-insensitive. Multi-use codes can be applied to multiple orders.
+              Codes are case-insensitive. Multi-use codes can be applied to
+              multiple orders.
             </p>
             <div className="space-y-2">
               {HINT_CODES.map(({ code, note }) => (
-                <div key={code} className="flex items-start gap-2 text-xs">
-                  <code className="shrink-0 rounded bg-muted px-1.5 py-0.5 font-mono">
-                    {code}
-                  </code>
-                  <span className="text-muted-foreground">{note}</span>
+                <div key={code} className="flex items-start gap-2 text-sm">
+                  <div className="w-36 shrink-0">
+                    <code className="text-xs shrink-0 rounded bg-muted px-1.5 py-0.5 font-mono">
+                      {code}
+                    </code>
+                  </div>
+                  <span className="flex-1 text-foreground">{note}</span>
                 </div>
               ))}
             </div>
@@ -78,16 +90,20 @@ export default function CheckoutDemoPage() {
                 <strong>Locked</strong>
               </li>
               <li>
-                Click Pay (Success) — unit transitions to <strong>Redeemed</strong> (permanent)
+                Click Pay (Success) — unit transitions to{" "}
+                <strong>Redeemed</strong> (permanent)
               </li>
               <li>
-                Click Fail or Cancel — unit is released back to <strong>Available</strong>
+                Click Fail or Cancel — unit is released back to{" "}
+                <strong>Available</strong>
               </li>
               <li>
-                <strong>Single-use</strong>: each individual code can only be redeemed once
+                <strong>Single-use</strong>: each individual code can only be
+                redeemed once
               </li>
               <li>
-                <strong>Multi-use</strong>: same code accepted again on a new order (if remaining &gt; 0)
+                <strong>Multi-use</strong>: same code accepted again on a new
+                order (if remaining &gt; 0)
               </li>
             </ol>
           </div>
@@ -105,5 +121,5 @@ export default function CheckoutDemoPage() {
         </div>
       </div>
     </DashboardShell>
-  )
+  );
 }
