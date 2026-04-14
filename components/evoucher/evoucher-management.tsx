@@ -314,7 +314,7 @@ function VoucherFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose() }}>
-      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-xl! max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEdit ? "Edit Voucher Batch" : "Create eVoucher Batch"}</DialogTitle>
           <DialogDescription>

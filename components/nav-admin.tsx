@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   CreditCardIcon,
@@ -14,15 +14,15 @@ import {
   TicketIcon,
   ToyBrickIcon,
   UsersIcon,
-} from "lucide-react"
-import Link from "next/link"
+} from "lucide-react";
+import Link from "next/link";
 import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
 const b2bMarketplaceLinks = [
   {
@@ -35,7 +35,7 @@ const b2bMarketplaceLinks = [
     url: "/admin/tradexpo/booth-templates",
     icon: <LayoutPanelTopIcon />,
   },
-]
+];
 
 const tradexpoLinks = [
   {
@@ -58,7 +58,7 @@ const tradexpoLinks = [
     url: "/admin/tradexpo/booth-templates",
     icon: <ToyBrickIcon />,
   },
-]
+];
 
 const streamingLinks = [
   {
@@ -66,7 +66,7 @@ const streamingLinks = [
     url: "/admin/streaming",
     icon: <MonitorPlayIcon />,
   },
-]
+];
 
 const ordersLinks = [
   {
@@ -74,15 +74,12 @@ const ordersLinks = [
     url: "/admin/orders",
     icon: <ReceiptIcon />,
   },
-]
-
-const coreLinks = [
   {
     name: "eVoucher",
     url: "/admin/evoucher",
     icon: <TicketIcon />,
   },
-]
+];
 
 const settingsLinks = [
   {
@@ -95,7 +92,7 @@ const settingsLinks = [
     url: "/admin/settings/bank-accounts",
     icon: <LandmarkIcon />,
   },
-]
+];
 
 const administrationLinks = [
   {
@@ -128,7 +125,7 @@ const administrationLinks = [
     url: "/admin/administration/permissions",
     icon: <UsersIcon />,
   },
-]
+];
 
 export function NavAdmin() {
   return (
@@ -195,22 +192,6 @@ export function NavAdmin() {
           ))}
         </SidebarMenu>
       </SidebarGroup>
-
-      <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-        <SidebarGroupLabel>Core</SidebarGroupLabel>
-        <SidebarMenu>
-          {coreLinks.map((item) => (
-            <SidebarMenuItem key={item.name}>
-              <SidebarMenuButton asChild>
-                <Link href={item.url}>
-                  {item.icon}
-                  <span>{item.name}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarGroup>
       <SidebarGroup className="group-data-[collapsible=icon]:hidden">
         <SidebarGroupLabel>Settings</SidebarGroupLabel>
         <SidebarMenu>
@@ -243,5 +224,5 @@ export function NavAdmin() {
         </SidebarMenu>
       </SidebarGroup>
     </>
-  )
+  );
 }
