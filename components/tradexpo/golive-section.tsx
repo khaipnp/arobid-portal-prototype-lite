@@ -9,7 +9,6 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import * as React from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { mockGoLIVEEvents, mockStreamSessions } from "@/lib/tradexpo/mock-data"
@@ -20,7 +19,6 @@ import type {
   GoLIVESessionType,
   StreamSession,
 } from "@/lib/tradexpo/types"
-import { cn } from "@/lib/utils"
 
 type VisitorExpoStatus = "Upcoming" | "Live" | "Archive"
 

@@ -45,10 +45,9 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import {
-  mockAssets,
-  mockHallTemplates,
-  mockHallTemplateUsage,
-} from "@/lib/tradexpo/mock-data"
+  toggleHallTemplateActive,
+  toggleHallTemplatePublic,
+} from "@/lib/tradexpo/actions/hall-templates"
 import type {
   HallTemplate,
   HallTemplateUsage,
@@ -83,28 +82,27 @@ const defaultFormState: HallTemplateFormState = {
   isActive: true,
 }
 
-function cloneAssets() {
-  return mockAssets.map((asset) => ({ ...asset }))
-}
-
-function cloneTemplates() {
-  return mockHallTemplates.map((template) => ({
-    ...template,
-    translations: template.translations.map((translation) => ({
-      ...translation,
+export function HallTemplateLibraryManager({
+  initialAssets,
+  initialTemplates,
+  initialUsage,
+}: {
+  initialAssets: ModelAsset[]
+  initialTemplates: HallTemplate[]
+  initialUsage: HallTemplateUsage[]
+}) {
+  const [assets, setAssets] = React.useState<ModelAsset[]>(() =>
+    initialAssets.map((a) => ({ ...a })),
+  )
+  const [templates, setTemplates] = React.useState<HallTemplate[]>(() =>
+    initialTemplates.map((t) => ({
+      ...t,
+      translations: t.translations.map((tr) => ({ ...tr })),
     })),
-  }))
-}
-
-function cloneUsage() {
-  return mockHallTemplateUsage.map((usage) => ({ ...usage }))
-}
-
-export function HallTemplateLibraryManager() {
-  const [assets, setAssets] = React.useState<ModelAsset[]>(cloneAssets)
-  const [templates, setTemplates] =
-    React.useState<HallTemplate[]>(cloneTemplates)
-  const [usages, setUsages] = React.useState<HallTemplateUsage[]>(cloneUsage)
+  )
+  const [usages, setUsages] = React.useState<HallTemplateUsage[]>(() =>
+    initialUsage.map((u) => ({ ...u })),
+  )
 
   const [search, setSearch] = React.useState("")
   const [page, setPage] = React.useState(1)
@@ -453,17 +451,24 @@ export function HallTemplateLibraryManager() {
               ...item,
               isPublic: nextPublic,
               updatedAt: new Date().toISOString(),
-              updatedBy: "Khai Pham",
+              updatedBy: item.updatedBy,
             }
           : item,
       ),
     )
 
-    setNotice({
-      type: "success",
-      text: nextPublic
-        ? "Template published for organizers."
-        : "Template moved back to draft.",
+    void toggleHallTemplatePublic(template.id).catch(() => {
+      setTemplates((currentTemplates) =>
+        currentTemplates.map((item) =>
+          item.id === template.id
+            ? { ...item, isPublic: template.isPublic }
+            : item,
+        ),
+      )
+      setNotice({
+        type: "error",
+        text: "Failed to update template visibility.",
+      })
     })
   }
 
@@ -478,11 +483,25 @@ export function HallTemplateLibraryManager() {
               ...item,
               isActive: nextActive,
               updatedAt: new Date().toISOString(),
-              updatedBy: "Khai Pham",
+              updatedBy: item.updatedBy,
             }
           : item,
       ),
     )
+
+    void toggleHallTemplateActive(template.id).catch(() => {
+      setTemplates((currentTemplates) =>
+        currentTemplates.map((item) =>
+          item.id === template.id
+            ? { ...item, isActive: template.isActive }
+            : item,
+        ),
+      )
+      setNotice({
+        type: "error",
+        text: "Failed to update template activation.",
+      })
+    })
 
     if (!nextActive && (usage?.upcomingExpoCount || 0) > 0) {
       setNotice({

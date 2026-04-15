@@ -87,6 +87,10 @@ export function StreamPlayer({
     Other: "from-gray-900 via-gray-800 to-gray-900",
   }
   const gradient = gradients[sessionType] ?? gradients.Other
+  const liveBars = React.useMemo(
+    () => Array.from({ length: 20 }, (_, index) => `bar-${index}`),
+    [],
+  )
 
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: video player container needs mouse events for control visibility
@@ -104,10 +108,9 @@ export function StreamPlayer({
           <>
             {/* Animated live bars */}
             <div className="flex items-end gap-1 h-12">
-              {[...Array(20)].map((_, i) => (
-                // biome-ignore lint/suspicious/noArrayIndexKey: purely decorative animation bars
+              {liveBars.map((barKey, i) => (
                 <div
-                  key={i}
+                  key={barKey}
                   className="w-1.5 rounded-full bg-white/30"
                   style={{
                     height: `${20 + Math.sin((Date.now() / 300 + i) * 0.8) * 60}%`,

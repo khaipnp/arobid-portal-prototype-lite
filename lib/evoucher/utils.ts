@@ -38,11 +38,18 @@ export function buildVoucherBatchView(
   }
 
   const remainingCount = batch.issuedQuantity - lockedCount - redeemedCount
-  const derivedStatus = deriveVoucherBatchStatus(batch, lockedCount, redeemedCount)
+  const derivedStatus = deriveVoucherBatchStatus(
+    batch,
+    lockedCount,
+    redeemedCount,
+  )
   return { ...batch, lockedCount, redeemedCount, remainingCount, derivedStatus }
 }
 
-export function formatDiscount(type: VoucherBatch["discountType"], value: number): string {
+export function formatDiscount(
+  type: VoucherBatch["discountType"],
+  value: number,
+): string {
   if (type === "percentage") return `${value}%`
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
@@ -114,5 +121,7 @@ export function applyDiscount(
 
 /** Display label for the code column: prefix-* for single-use, the code itself for multi-use */
 export function displayCode(batch: VoucherBatch): string {
-  return batch.codeType === "multi-use" ? batch.multiUseCode : `${batch.codePrefix}-*`
+  return batch.codeType === "multi-use"
+    ? batch.multiUseCode
+    : `${batch.codePrefix}-*`
 }

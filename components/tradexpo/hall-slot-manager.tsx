@@ -31,11 +31,6 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  mockHallSlotUsage,
-  mockHallTemplateSlots,
-  mockHallTemplates,
-} from "@/lib/tradexpo/mock-data"
 import type { HallSlotUsage, HallTemplateSlot } from "@/lib/tradexpo/types"
 import {
   createMockId,
@@ -79,17 +74,6 @@ const defaultSlotForm: SlotFormState = {
   metadataInput: "",
 }
 
-function cloneSlots() {
-  return mockHallTemplateSlots.map((slot) => ({
-    ...slot,
-    metadata: { ...slot.metadata },
-  }))
-}
-
-function cloneUsage() {
-  return mockHallSlotUsage.map((usage) => ({ ...usage }))
-}
-
 function fieldToNumber(value: string, fallback = 0) {
   const parsed = Number(value)
   return Number.isFinite(parsed) ? parsed : fallback
@@ -97,18 +81,26 @@ function fieldToNumber(value: string, fallback = 0) {
 
 export function HallSlotManager({
   templateId,
+  templateName,
+  initialSlots,
+  initialUsage,
   embedded = false,
 }: {
   templateId: string
+  templateName: string
+  initialSlots: HallTemplateSlot[]
+  initialUsage: HallSlotUsage[]
   embedded?: boolean
 }) {
-  const hallTemplate = React.useMemo(
-    () => mockHallTemplates.find((template) => template.id === templateId),
-    [templateId],
+  const [slots, setSlots] = React.useState<HallTemplateSlot[]>(() =>
+    initialSlots.map((slot) => ({
+      ...slot,
+      metadata: { ...slot.metadata },
+    })),
   )
-
-  const [slots, setSlots] = React.useState<HallTemplateSlot[]>(cloneSlots)
-  const [slotUsage, setSlotUsage] = React.useState<HallSlotUsage[]>(cloneUsage)
+  const [slotUsage, setSlotUsage] = React.useState<HallSlotUsage[]>(() =>
+    initialUsage.map((usage) => ({ ...usage })),
+  )
   const [slotCodeSortAsc, setSlotCodeSortAsc] = React.useState(true)
 
   const [formOpen, setFormOpen] = React.useState(false)
@@ -306,21 +298,13 @@ export function HallSlotManager({
     setNotice({ type: "success", text: "Slot removed." })
   }
 
-  if (!hallTemplate) {
-    return (
-      <section className="rounded-xl border bg-card p-4">
-        <p className="text-rose-600 text-sm">Hall template not found.</p>
-      </section>
-    )
-  }
-
   return (
     <div className="grid gap-4">
       <section className="rounded-xl border bg-card p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h2 className="font-semibold text-base">
-              {embedded ? "Slot Configuration" : hallTemplate.name}
+              {embedded ? "Slot Configuration" : templateName}
             </h2>
             <p className="text-muted-foreground text-sm">
               {embedded

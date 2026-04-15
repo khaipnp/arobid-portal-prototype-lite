@@ -18,4 +18,3 @@ export default defineConfig({
     url: env<Env>("DATABASE_URL"),
   },
 })
-

@@ -3,7 +3,6 @@
 import { CalendarIcon, RadioIcon } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import * as React from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { mockExpos, mockGoLIVEEvents } from "@/lib/tradexpo/mock-data"
@@ -78,7 +77,9 @@ export function PartnerExpoList() {
               {goLIVECount > 0 && (
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                   <RadioIcon className="h-3.5 w-3.5" />
-                  <span>{goLIVECount} GoLIVE session{goLIVECount !== 1 ? "s" : ""}</span>
+                  <span>
+                    {goLIVECount} GoLIVE session{goLIVECount !== 1 ? "s" : ""}
+                  </span>
                 </div>
               )}
 
