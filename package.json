@@ -16,7 +16,8 @@
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
-    "tradexpo:seed": "bun scripts/tradexpo/seed.ts"
+    "tradexpo:seed": "bun scripts/tradexpo/seed.ts",
+    "evoucher:seed": "bun scripts/evoucher/seed.ts"
   },
   "prisma": {
     "seed": "bun prisma/seed.ts"
