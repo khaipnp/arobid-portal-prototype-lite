@@ -14,10 +14,9 @@ import {
   SearchIcon,
   SendHorizontalIcon,
   TrashIcon,
-  UsersRoundIcon,
 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useEffect, useRef, useState } from "react"
+import { useRef, useState } from "react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -46,6 +45,28 @@ import type { ChatUser, Conversation, Message } from "@/lib/deal-room/types"
 import { cn } from "@/lib/utils"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+const MAX_ATTACHMENTS_PER_MESSAGE = 5
+const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024
+const ALLOWED_FILE_TYPES = new Set([
+  "jpg",
+  "jpeg",
+  "png",
+  "webp",
+  "mp4",
+  "pdf",
+  "md",
+  "doc",
+  "docx",
+  "csv",
+  "xlsx",
+])
+
+type PendingAttachment = {
+  id: string
+  fileName: string
+  fileSize: number
+  fileType: string
+}
 
 function formatRelativeTime(isoStr: string): string {
   const diffMs = Date.now() - new Date(isoStr).getTime()
@@ -71,7 +92,6 @@ function getConversationDisplayName(
   users: ChatUser[],
   currentUserId: string,
 ): string {
-  if (conv.type === "expo_group") return conv.name ?? "Group Chat"
   const otherId = conv.members.find((m) => m.userId !== currentUserId)?.userId
   return users.find((u) => u.id === otherId)?.name ?? "Unknown User"
 }
@@ -107,18 +127,6 @@ function ConversationAvatar({
   currentUserId: string
   size?: "sm" | "default"
 }) {
-  if (conv.type === "expo_group") {
-    return (
-      <div
-        className={cn(
-          "flex shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary",
-          size === "sm" ? "size-7" : "size-9",
-        )}
-      >
-        <UsersRoundIcon className={size === "sm" ? "size-3.5" : "size-4"} />
-      </div>
-    )
-  }
   const otherId = conv.members.find((m) => m.userId !== currentUserId)?.userId
   const other = users.find((u) => u.id === otherId)
   const initials = other?.name
@@ -252,12 +260,14 @@ export function DealRoomManager({
   >(initialConversationId ?? null)
 
   const [inboxSearch, setInboxSearch] = useState("")
+  const [inboxFilter, setInboxFilter] = useState<"active" | "archived">("active")
   const [composerValue, setComposerValue] = useState("")
+  const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>(
+    [],
+  )
+  const [composerError, setComposerError] = useState<string | null>(null)
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
   const [editingContent, setEditingContent] = useState("")
-
-  const [_newMessageOpen, setNewMessageOpen] = useState(false)
-  const [_userSearchQuery, _setUserSearchQuery] = useState("")
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -270,13 +280,19 @@ export function DealRoomManager({
 
   const visibleConversations = conversations
     .filter((c) => {
-      const isMember = c.members.some(
-        (m) => m.userId === CURRENT_USER_ID && !m.isArchived,
-      )
-      if (!isMember) return false
+      const myMember = c.members.find((m) => m.userId === CURRENT_USER_ID)
+      if (!myMember) return false
+      if (inboxFilter === "active" && myMember.isArchived) return false
+      if (inboxFilter === "archived" && !myMember.isArchived) return false
       if (!inboxSearch) return true
       const name = getConversationDisplayName(c, users, CURRENT_USER_ID)
-      return name.toLowerCase().includes(inboxSearch.toLowerCase())
+      const otherId = c.members.find((m) => m.userId !== CURRENT_USER_ID)?.userId
+      const otherUser = users.find((u) => u.id === otherId)
+      const query = inboxSearch.toLowerCase()
+      return (
+        name.toLowerCase().includes(query) ||
+        (otherUser?.company.toLowerCase().includes(query) ?? false)
+      )
     })
     .sort((a, b) => {
       const aTime = messagesMap[a.id]?.at(-1)?.sentAt ?? a.createdAt
@@ -286,30 +302,88 @@ export function DealRoomManager({
 
   const totalUnread = Object.values(unreadCounts).reduce((s, n) => s + n, 0)
 
-  // ── Scroll to bottom when thread changes or new message arrives ──
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [])
-
   // ── Handlers ──
   function selectConversation(id: string) {
     setActiveConversationId(id)
     setUnreadCounts((prev) => ({ ...prev, [id]: 0 }))
     setComposerValue("")
+    setPendingAttachments([])
+    setComposerError(null)
     setEditingMessageId(null)
     router.push(`/seller/deal-room/${id}`, { scroll: false })
   }
 
+  function handleSelectAttachments(event: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(event.target.files ?? [])
+    if (files.length === 0) return
+
+    setComposerError(null)
+    setPendingAttachments((prev) => {
+      const next = [...prev]
+      for (const file of files) {
+        const ext = file.name.split(".").pop()?.toLowerCase() ?? ""
+        if (!ALLOWED_FILE_TYPES.has(ext)) {
+          setComposerError(
+            "File type not supported. Allowed: JPG, JPEG, PNG, WEBP, MP4, PDF, MD, DOC, DOCX, CSV, XLSX.",
+          )
+          continue
+        }
+        if (file.size > MAX_FILE_SIZE_BYTES) {
+          setComposerError("File too large. Maximum file size is 20 MB.")
+          continue
+        }
+        if (next.length >= MAX_ATTACHMENTS_PER_MESSAGE) {
+          setComposerError("Maximum 5 files per message.")
+          break
+        }
+        next.push({
+          id: `pending-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          fileName: file.name,
+          fileSize: file.size,
+          fileType: ext,
+        })
+      }
+      return next
+    })
+    event.target.value = ""
+  }
+
+  function handleRemovePendingAttachment(id: string) {
+    setPendingAttachments((prev) => prev.filter((att) => att.id !== id))
+  }
+
   function handleSendMessage() {
     const text = composerValue.trim()
-    if (!activeConversationId || !text) return
+    if (!activeConversationId) return
+    if (!text && pendingAttachments.length === 0) {
+      setComposerError("Message cannot be empty.")
+      return
+    }
+    setComposerError(null)
 
     const newMsg: Message = {
       id: `msg-${Date.now()}`,
       conversationId: activeConversationId,
       senderId: CURRENT_USER_ID,
       content: text,
-      attachments: [],
+      attachments: pendingAttachments.map((file) => ({
+        id: file.id,
+        fileName: file.fileName,
+        fileUrl: "#",
+        fileSize: file.fileSize,
+        fileType: file.fileType as
+          | "jpg"
+          | "jpeg"
+          | "png"
+          | "webp"
+          | "mp4"
+          | "pdf"
+          | "md"
+          | "doc"
+          | "docx"
+          | "csv"
+          | "xlsx",
+      })),
       status: "sent",
       sentAt: new Date().toISOString(),
       isDeleted: false,
@@ -320,7 +394,22 @@ export function DealRoomManager({
       ...prev,
       [activeConversationId]: [...(prev[activeConversationId] ?? []), newMsg],
     }))
+    setConversations((prev) =>
+      prev.map((conv) =>
+        conv.id === activeConversationId
+          ? {
+              ...conv,
+              members: conv.members.map((member) =>
+                member.userId === CURRENT_USER_ID
+                  ? { ...member, isArchived: false }
+                  : member,
+              ),
+            }
+          : conv,
+      ),
+    )
     setComposerValue("")
+    setPendingAttachments([])
   }
 
   function handleSaveEdit() {
@@ -369,45 +458,6 @@ export function DealRoomManager({
     }
   }
 
-  function handleCreateOrOpenDirect(targetUserId: string) {
-    const existing = conversations.find(
-      (c) =>
-        c.type === "direct" &&
-        c.members.some((m) => m.userId === CURRENT_USER_ID) &&
-        c.members.some((m) => m.userId === targetUserId),
-    )
-
-    if (existing) {
-      setNewMessageOpen(false)
-      selectConversation(existing.id)
-      return
-    }
-
-    const newConv: Conversation = {
-      id: `conv-${Date.now()}`,
-      type: "direct",
-      members: [
-        {
-          userId: CURRENT_USER_ID,
-          joinedAt: new Date().toISOString(),
-          isArchived: false,
-        },
-        {
-          userId: targetUserId,
-          joinedAt: new Date().toISOString(),
-          isArchived: false,
-        },
-      ],
-      createdAt: new Date().toISOString(),
-      isReadOnly: false,
-    }
-
-    setConversations((prev) => [newConv, ...prev])
-    setMessagesMap((prev) => ({ ...prev, [newConv.id]: [] }))
-    setNewMessageOpen(false)
-    selectConversation(newConv.id)
-  }
-
   // ── Render ──
   return (
     <div className="flex h-[calc(100vh-0px)] overflow-hidden">
@@ -431,11 +481,29 @@ export function DealRoomManager({
           <div className="relative">
             <SearchIcon className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search conversations..."
+              placeholder="Search by name or company..."
               className="h-8 pl-8 text-xs"
               value={inboxSearch}
               onChange={(e) => setInboxSearch(e.target.value)}
             />
+          </div>
+          <div className="mt-2 grid grid-cols-2 gap-1 rounded-md bg-muted p-1">
+            <Button
+              variant={inboxFilter === "active" ? "default" : "ghost"}
+              size="sm"
+              className="h-7 text-xs"
+              onClick={() => setInboxFilter("active")}
+            >
+              Inbox
+            </Button>
+            <Button
+              variant={inboxFilter === "archived" ? "default" : "ghost"}
+              size="sm"
+              className="h-7 text-xs"
+              onClick={() => setInboxFilter("archived")}
+            >
+              Archived
+            </Button>
           </div>
         </div>
 
@@ -446,18 +514,10 @@ export function DealRoomManager({
               <p className="text-muted-foreground text-xs">
                 {inboxSearch
                   ? "No conversations match your search."
-                  : "No conversations yet. Start a conversation to begin negotiating."}
+                  : inboxFilter === "archived"
+                    ? "No archived conversations."
+                    : "No conversations yet. Start a conversation to begin negotiating."}
               </p>
-              {!inboxSearch && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="mt-3 h-7 text-xs"
-                  onClick={() => setNewMessageOpen(true)}
-                >
-                  New Message
-                </Button>
-              )}
             </div>
           ) : (
             visibleConversations.map((conv) => {
@@ -578,8 +638,7 @@ export function DealRoomManager({
                         )}
                       </p>
                       <p className="text-muted-foreground text-xs">
-                        {activeConversation.members.length} members
-                        {activeConversation.isReadOnly && " · Archived"}
+                        1:1 direct conversation
                       </p>
                     </div>
                   </div>
@@ -656,15 +715,7 @@ export function DealRoomManager({
                   {!isOwn && (
                     <div className="mb-4 shrink-0">
                       {sender ? (
-                        <UserHoverCard
-                          user={sender}
-                          side="right"
-                          onMessageClick={
-                            activeConversation.type === "expo_group"
-                              ? () => handleCreateOrOpenDirect(sender.id)
-                              : undefined
-                          }
-                        >
+                        <UserHoverCard user={sender} side="right">
                           <button type="button" className="cursor-pointer">
                             <Avatar size="sm">
                               <AvatarFallback>
@@ -693,15 +744,7 @@ export function DealRoomManager({
                     )}
                   >
                     {showSenderName && sender && (
-                      <UserHoverCard
-                        user={sender}
-                        side="right"
-                        onMessageClick={
-                          activeConversation.type === "expo_group"
-                            ? () => handleCreateOrOpenDirect(sender.id)
-                            : undefined
-                        }
-                      >
+                      <UserHoverCard user={sender} side="right">
                         <button
                           type="button"
                           className="ml-1 cursor-pointer text-muted-foreground text-xs hover:text-foreground hover:underline"
@@ -851,16 +894,41 @@ export function DealRoomManager({
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Composer or read-only notice */}
-          {activeConversation.isReadOnly ? (
-            <div className="border-t bg-muted/30 px-4 py-3 text-center">
-              <p className="text-muted-foreground text-sm">
-                This Expo has ended. The Deal Room is now read-only.
-              </p>
-            </div>
-          ) : (
-            <div className="border-t p-3">
-              <div className="flex items-end gap-2 rounded-xl border bg-background px-3 py-2 transition-shadow focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50">
+          {/* Composer */}
+          <div className="border-t p-3">
+            <div className="space-y-2 rounded-xl border bg-background px-3 py-2 transition-shadow focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50">
+              {pendingAttachments.length > 0 && (
+                <div className="flex flex-wrap gap-1.5">
+                  {pendingAttachments.map((att) => (
+                    <button
+                      key={att.id}
+                      type="button"
+                      className="inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs"
+                      onClick={() => handleRemovePendingAttachment(att.id)}
+                    >
+                      <PaperclipIcon className="size-3" />
+                      <span className="max-w-40 truncate">{att.fileName}</span>
+                      <span className="text-muted-foreground">
+                        ({formatFileSize(att.fileSize)})
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="flex items-end gap-2">
+                <Button size="icon-sm" variant="ghost" asChild>
+                  <label className="cursor-pointer">
+                    <input
+                      type="file"
+                      className="hidden"
+                      multiple
+                      accept=".jpg,.jpeg,.png,.webp,.mp4,.pdf,.md,.doc,.docx,.csv,.xlsx"
+                      onChange={handleSelectAttachments}
+                    />
+                    <PaperclipIcon className="size-4" />
+                    <span className="sr-only">Attach files</span>
+                  </label>
+                </Button>
                 <Textarea
                   placeholder="Type a message… (Enter to send, Shift+Enter for new line)"
                   className="min-h-0 flex-1 resize-none border-0 p-0 text-sm shadow-none focus-visible:ring-0"
@@ -876,7 +944,7 @@ export function DealRoomManager({
                 />
                 <Button
                   size="icon-sm"
-                  disabled={!composerValue.trim()}
+                  disabled={!composerValue.trim() && pendingAttachments.length === 0}
                   onClick={handleSendMessage}
                   className="shrink-0"
                 >
@@ -885,7 +953,10 @@ export function DealRoomManager({
                 </Button>
               </div>
             </div>
-          )}
+            {composerError && (
+              <p className="mt-2 text-destructive text-xs">{composerError}</p>
+            )}
+          </div>
         </div>
       ) : (
         /* Empty state */
