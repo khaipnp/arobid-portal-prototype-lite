@@ -15,6 +15,7 @@ import {
   SendHorizontalIcon,
   TrashIcon,
 } from "lucide-react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useRef, useState } from "react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -40,6 +41,7 @@ import { cn } from "@/lib/utils"
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const MAX_ATTACHMENTS_PER_MESSAGE = 5
 const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024
+const MAX_INLINE_IMAGE_SIZE_BYTES = 5 * 1024 * 1024
 const ALLOWED_FILE_TYPES = new Set([
   "jpg",
   "jpeg",
@@ -53,12 +55,18 @@ const ALLOWED_FILE_TYPES = new Set([
   "csv",
   "xlsx",
 ])
+const IMAGE_FILE_TYPES = new Set(["jpg", "jpeg", "png", "webp"])
 
 type PendingAttachment = {
   id: string
   fileName: string
+  fileUrl: string
   fileSize: number
   fileType: string
+}
+
+function isImageAttachment(att: { fileType: string; fileUrl: string }): boolean {
+  return IMAGE_FILE_TYPES.has(att.fileType.toLowerCase()) && att.fileUrl !== "#"
 }
 
 function formatRelativeTime(isoStr: string): string {
@@ -318,37 +326,54 @@ export function DealRoomManager({
     router.push(`/seller/deal-room/${id}`, { scroll: false })
   }
 
-  function handleSelectAttachments(event: React.ChangeEvent<HTMLInputElement>) {
+  async function handleSelectAttachments(
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) {
     const files = Array.from(event.target.files ?? [])
     if (files.length === 0) return
 
+    async function toDataUrl(file: File): Promise<string> {
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "#")
+        reader.onerror = () => reject(new Error("Failed to read file"))
+        reader.readAsDataURL(file)
+      })
+    }
+
     setComposerError(null)
-    setPendingAttachments((prev) => {
-      const next = [...prev]
-      for (const file of files) {
-        const ext = file.name.split(".").pop()?.toLowerCase() ?? ""
-        if (!ALLOWED_FILE_TYPES.has(ext)) {
-          setComposerError(
-            "File type not supported. Allowed: JPG, JPEG, PNG, WEBP, MP4, PDF, MD, DOC, DOCX, CSV, XLSX.",
-          )
-          continue
-        }
-        if (file.size > MAX_FILE_SIZE_BYTES) {
-          setComposerError("File too large. Maximum file size is 20 MB.")
-          continue
-        }
-        if (next.length >= MAX_ATTACHMENTS_PER_MESSAGE) {
-          setComposerError("Maximum 5 files per message.")
-          break
-        }
-        next.push({
-          id: `pending-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-          fileName: file.name,
-          fileSize: file.size,
-          fileType: ext,
-        })
+    const accepted: PendingAttachment[] = []
+    for (const file of files) {
+      const ext = file.name.split(".").pop()?.toLowerCase() ?? ""
+      if (!ALLOWED_FILE_TYPES.has(ext)) {
+        setComposerError(
+          "File type not supported. Allowed: JPG, JPEG, PNG, WEBP, MP4, PDF, MD, DOC, DOCX, CSV, XLSX.",
+        )
+        continue
       }
-      return next
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        setComposerError("File too large. Maximum file size is 20 MB.")
+        continue
+      }
+      if (IMAGE_FILE_TYPES.has(ext) && file.size > MAX_INLINE_IMAGE_SIZE_BYTES) {
+        setComposerError("Image too large to preview. Maximum preview size is 5 MB.")
+        continue
+      }
+      const fileUrl = IMAGE_FILE_TYPES.has(ext) ? await toDataUrl(file) : "#"
+      accepted.push({
+        id: `pending-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        fileName: file.name,
+        fileUrl,
+        fileSize: file.size,
+        fileType: ext,
+      })
+    }
+    setPendingAttachments((prev) => {
+      const availableSlots = Math.max(MAX_ATTACHMENTS_PER_MESSAGE - prev.length, 0)
+      if (accepted.length > availableSlots) {
+        setComposerError("Maximum 5 files per message.")
+      }
+      return [...prev, ...accepted.slice(0, availableSlots)]
     })
     event.target.value = ""
   }
@@ -374,7 +399,7 @@ export function DealRoomManager({
       attachments: pendingAttachments.map((file) => ({
         id: file.id,
         fileName: file.fileName,
-        fileUrl: "#",
+        fileUrl: file.fileUrl,
         fileSize: file.fileSize,
         fileType: file.fileType as
           | "jpg"
@@ -871,22 +896,46 @@ export function DealRoomManager({
                             {msg.attachments.length > 0 && (
                               <div className="mt-2 flex flex-col gap-1.5">
                                 {msg.attachments.map((att) => (
-                                  <div
-                                    key={att.id}
-                                    className={cn(
-                                      "flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs",
-                                      isOwn
-                                        ? "bg-primary-foreground/20"
-                                        : "bg-background/60",
+                                  <div key={att.id}>
+                                    {isImageAttachment(att) ? (
+                                      <a
+                                        href={att.fileUrl}
+                                        target="_blank"
+                                        rel="noreferrer noopener"
+                                        className={cn(
+                                          "block overflow-hidden rounded-lg border",
+                                          isOwn
+                                            ? "border-primary-foreground/30"
+                                            : "border-border/70",
+                                        )}
+                                      >
+                                        <Image
+                                          src={att.fileUrl}
+                                          alt={att.fileName}
+                                          width={360}
+                                          height={220}
+                                          unoptimized
+                                          className="h-auto max-h-64 w-full max-w-72 object-cover"
+                                        />
+                                      </a>
+                                    ) : (
+                                      <div
+                                        className={cn(
+                                          "flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs",
+                                          isOwn
+                                            ? "bg-primary-foreground/20"
+                                            : "bg-background/60",
+                                        )}
+                                      >
+                                        <PaperclipIcon className="size-3.5 shrink-0" />
+                                        <span className="min-w-0 truncate">
+                                          {att.fileName}
+                                        </span>
+                                        <span className="shrink-0 opacity-70">
+                                          {formatFileSize(att.fileSize)}
+                                        </span>
+                                      </div>
                                     )}
-                                  >
-                                    <PaperclipIcon className="size-3.5 shrink-0" />
-                                    <span className="min-w-0 truncate">
-                                      {att.fileName}
-                                    </span>
-                                    <span className="shrink-0 opacity-70">
-                                      {formatFileSize(att.fileSize)}
-                                    </span>
                                   </div>
                                 ))}
                               </div>

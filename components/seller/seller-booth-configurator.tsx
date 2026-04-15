@@ -2,7 +2,6 @@
 
 import {
   AlertTriangleIcon,
-  ArrowLeftIcon,
   CheckCircle2Icon,
   ChevronLeftIcon,
   CuboidIcon,
