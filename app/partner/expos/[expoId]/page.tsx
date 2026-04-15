@@ -1,13 +1,13 @@
-import { notFound } from "next/navigation";
-import { DashboardShell } from "@/components/tradexpo/dashboard-shell";
-import { GoLIVEManager } from "@/components/tradexpo/golive-manager";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { mockExpos } from "@/lib/tradexpo/mock-data";
-import type { ExpoStatus } from "@/lib/tradexpo/types";
+import { notFound } from "next/navigation"
+import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
+import { GoLIVEManager } from "@/components/tradexpo/golive-manager"
+import { Badge } from "@/components/ui/badge"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { mockExpos } from "@/lib/tradexpo/mock-data"
+import type { ExpoStatus } from "@/lib/tradexpo/types"
 
 // Partner sở hữu các expo này trong prototype
-const PARTNER_EXPO_IDS = ["expo-003", "expo-015", "expo-001", "expo-004"];
+const PARTNER_EXPO_IDS = ["expo-003", "expo-015", "expo-001", "expo-004"]
 
 const statusStyles: Record<ExpoStatus, string> = {
   Draft: "border-slate-300 bg-slate-100 text-slate-700",
@@ -16,24 +16,24 @@ const statusStyles: Record<ExpoStatus, string> = {
   Ended: "border-zinc-300 bg-zinc-100 text-zinc-700",
   Archived: "border-purple-300 bg-purple-100 text-purple-700",
   Canceled: "border-rose-300 bg-rose-100 text-rose-700",
-};
+}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", {
     day: "2-digit",
     month: "short",
     year: "numeric",
-  });
+  })
 }
 
 export default async function PartnerExpoDetailPage({
   params,
 }: {
-  params: Promise<{ expoId: string }>;
+  params: Promise<{ expoId: string }>
 }) {
-  const { expoId } = await params;
-  const expo = mockExpos.find((e) => e.id === expoId);
-  if (!expo || !PARTNER_EXPO_IDS.includes(expoId)) notFound();
+  const { expoId } = await params
+  const expo = mockExpos.find((e) => e.id === expoId)
+  if (!expo || !PARTNER_EXPO_IDS.includes(expoId)) notFound()
 
   return (
     <DashboardShell
@@ -92,5 +92,5 @@ export default async function PartnerExpoDetailPage({
         </Tabs>
       </div>
     </DashboardShell>
-  );
+  )
 }

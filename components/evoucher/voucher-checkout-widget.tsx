@@ -1,197 +1,206 @@
-"use client";
+"use client"
 
 import {
   CheckCircle2Icon,
-  Loader2Icon,
   TagIcon,
   TicketCheckIcon,
   TicketXIcon,
   XCircleIcon,
   XIcon,
-} from "lucide-react";
-import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { mockVoucherBatches, mockVoucherCodes } from "@/lib/evoucher/mock-data";
-import type { VoucherBatch, VoucherCode } from "@/lib/evoucher/types";
+} from "lucide-react"
+import { useState } from "react"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Separator } from "@/components/ui/separator"
+import type { VoucherBatch, VoucherCode } from "@/lib/evoucher/types"
 import {
   applyDiscount,
   buildVoucherBatchView,
   formatDiscount,
   formatVND,
-} from "@/lib/evoucher/utils";
+} from "@/lib/evoucher/utils"
 import {
   InputGroup,
   InputGroupButton,
   InputGroupInput,
-} from "../ui/input-group";
-import { Spinner } from "../ui/spinner";
+} from "../ui/input-group"
+import { Spinner } from "../ui/spinner"
 
 // Represents what was locked for the current order
 interface AppliedVoucher {
   // For single-use: the individual code record
-  code: VoucherCode | null;
+  code: VoucherCode | null
   // For multi-use: the batch (counter-based lock)
-  batch: VoucherBatch;
-  inputCode: string; // normalized code string entered
-  discountAmount: number;
-  finalTotal: number;
+  batch: VoucherBatch
+  inputCode: string // normalized code string entered
+  discountAmount: number
+  finalTotal: number
 }
 
 interface VoucherCheckoutWidgetProps {
-  orderTotal: number;
-  orderScopeType: "expo" | "service";
-  orderScopeId: string;
-  orderId: string;
-  onApplied?: (voucher: AppliedVoucher | null) => void;
+  batches: VoucherBatch[]
+  codes: VoucherCode[]
+  orderTotal: number
+  orderScopeType: "expo" | "service"
+  orderScopeId: string
+  orderId: string
+  onApplied?: (voucher: AppliedVoucher | null) => void
 }
 
 export function VoucherCheckoutWidget({
+  batches,
+  codes,
   orderTotal,
   orderScopeType,
   orderScopeId,
   orderId,
   onApplied,
 }: VoucherCheckoutWidgetProps) {
-  const [inputCode, setInputCode] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [applied, setApplied] = useState<AppliedVoucher | null>(null);
+  const [voucherBatches, setVoucherBatches] = useState<VoucherBatch[]>(() =>
+    batches.map((batch) => ({ ...batch })),
+  )
+  const [voucherCodes, setVoucherCodes] = useState<VoucherCode[]>(() =>
+    codes.map((code) => ({ ...code })),
+  )
+  const [inputCode, setInputCode] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [applied, setApplied] = useState<AppliedVoucher | null>(null)
 
   function validateAndApply() {
-    setError(null);
-    const normalized = inputCode.trim().toUpperCase();
-    if (!normalized) return;
-    setLoading(true);
+    setError(null)
+    const normalized = inputCode.trim().toUpperCase()
+    if (!normalized) return
+    setLoading(true)
 
     setTimeout(() => {
-      setLoading(false);
+      setLoading(false)
 
       // ── Try single-use first ────────────────────────────────────────────────
-      const singleCode = mockVoucherCodes.find((c) => c.code === normalized);
+      const singleCode = voucherCodes.find((c) => c.code === normalized)
 
       // ── Try multi-use ──────────────────────────────────────────────────────
-      const multiUseBatch = mockVoucherBatches.find(
+      const multiUseBatch = voucherBatches.find(
         (b) => b.codeType === "multi-use" && b.multiUseCode === normalized,
-      );
+      )
 
       if (!singleCode && !multiUseBatch) {
-        setError("Voucher code not recognized. Please check and try again.");
-        return;
+        setError("Voucher code not recognized. Please check and try again.")
+        return
       }
 
       const batch = singleCode
-        ? mockVoucherBatches.find((b) => b.id === singleCode.batchId)
-        : multiUseBatch;
+        ? voucherBatches.find((b) => b.id === singleCode.batchId)
+        : multiUseBatch
 
       if (!batch) {
-        setError("Voucher code not recognized.");
-        return;
+        setError("Voucher code not recognized.")
+        return
       }
 
       // ── Individual code status (single-use only) ───────────────────────────
       if (singleCode) {
         if (singleCode.status === "Redeemed") {
-          setError("This voucher code has already been used.");
-          return;
+          setError("This voucher code has already been used.")
+          return
         }
         if (singleCode.status === "Locked") {
           setError(
             "This voucher code is currently reserved by another transaction.",
-          );
-          return;
+          )
+          return
         }
         if (singleCode.status !== "Available") {
-          setError("This voucher code is no longer valid.");
-          return;
+          setError("This voucher code is no longer valid.")
+          return
         }
       }
 
       // ── Batch-level checks (both types) ────────────────────────────────────
       if (batch.isRevoked) {
-        setError("This voucher is no longer valid.");
-        return;
+        setError("This voucher is no longer valid.")
+        return
       }
 
-      const now = new Date();
+      const now = new Date()
       if (now < new Date(batch.validFrom)) {
-        setError("This voucher is not yet active.");
-        return;
+        setError("This voucher is not yet active.")
+        return
       }
       if (now > new Date(batch.validUntil)) {
-        setError("This voucher has expired.");
-        return;
+        setError("This voucher has expired.")
+        return
       }
 
       if (
         batch.applicableTo !== orderScopeType ||
         batch.targetId !== orderScopeId
       ) {
-        setError("This voucher cannot be used for this item.");
-        return;
+        setError("This voucher cannot be used for this item.")
+        return
       }
 
-      const view = buildVoucherBatchView(batch, mockVoucherCodes);
+      const view = buildVoucherBatchView(batch, voucherCodes)
       if (view.remainingCount <= 0) {
-        setError("This voucher has been fully used.");
-        return;
+        setError("This voucher has been fully used.")
+        return
       }
 
       // ── Release existing lock if any ──────────────────────────────────────
       if (applied) {
-        releaseLock(applied);
+        releaseLock(applied)
       }
 
       // ── Lock ──────────────────────────────────────────────────────────────
       if (singleCode) {
-        singleCode.status = "Locked";
-        singleCode.lockedByOrderId = orderId;
+        singleCode.status = "Locked"
+        singleCode.lockedByOrderId = orderId
+        setVoucherCodes((prev) => [...prev])
       } else {
         // Multi-use: increment locked counter directly on batch
-        batch.multiUseLockedCount += 1;
+        batch.multiUseLockedCount += 1
+        setVoucherBatches((prev) => [...prev])
       }
 
       const finalTotal = applyDiscount(
         orderTotal,
         batch.discountType,
         batch.discountValue,
-      );
-      const discountAmount = orderTotal - finalTotal;
+      )
+      const discountAmount = orderTotal - finalTotal
       const newApplied: AppliedVoucher = {
         code: singleCode ?? null,
         batch,
         inputCode: normalized,
         discountAmount,
         finalTotal,
-      };
-      setApplied(newApplied);
-      setInputCode("");
-      onApplied?.(newApplied);
-    }, 600);
+      }
+      setApplied(newApplied)
+      setInputCode("")
+      onApplied?.(newApplied)
+    }, 600)
   }
 
   function releaseLock(v: AppliedVoucher) {
     if (v.code) {
       // Single-use
-      v.code.status = "Available";
-      v.code.lockedByOrderId = undefined;
+      v.code.status = "Available"
+      v.code.lockedByOrderId = undefined
+      setVoucherCodes((prev) => [...prev])
     } else {
       // Multi-use
-      v.batch.multiUseLockedCount = Math.max(
-        0,
-        v.batch.multiUseLockedCount - 1,
-      );
+      v.batch.multiUseLockedCount = Math.max(0, v.batch.multiUseLockedCount - 1)
+      setVoucherBatches((prev) => [...prev])
     }
   }
 
   function handleRemove() {
-    if (!applied) return;
-    releaseLock(applied);
-    setApplied(null);
-    setInputCode("");
-    setError(null);
-    onApplied?.(null);
+    if (!applied) return
+    releaseLock(applied)
+    setApplied(null)
+    setInputCode("")
+    setError(null)
+    onApplied?.(null)
   }
 
   return (
@@ -209,7 +218,7 @@ export function VoucherCheckoutWidget({
               <span className="font-mono text-sm font-semibold text-green-800 dark:text-green-300">
                 {applied.inputCode}
               </span>
-       {" - "}
+              {" - "}
               <span className="text-foreground">
                 {formatDiscount(
                   applied.batch.discountType,
@@ -235,11 +244,11 @@ export function VoucherCheckoutWidget({
             placeholder="Enter voucher code"
             value={inputCode}
             onChange={(e) => {
-              setInputCode(e.target.value.toUpperCase());
-              setError(null);
+              setInputCode(e.target.value.toUpperCase())
+              setError(null)
             }}
             onKeyDown={(e) => {
-              if (e.key === "Enter") validateAndApply();
+              if (e.key === "Enter") validateAndApply()
             }}
             disabled={loading}
           />
@@ -261,22 +270,26 @@ export function VoucherCheckoutWidget({
         </div>
       )}
     </div>
-  );
+  )
 }
 
 // ─── Order Summary Panel ───────────────────────────────────────────────────────
 
 interface OrderSummaryProps {
-  orderLabel: string;
-  orderTotal: number;
-  orderScopeType: "expo" | "service";
-  orderScopeId: string;
-  orderId: string;
+  batches: VoucherBatch[]
+  codes: VoucherCode[]
+  orderLabel: string
+  orderTotal: number
+  orderScopeType: "expo" | "service"
+  orderScopeId: string
+  orderId: string
 }
 
-type PaymentOutcome = "success" | "failure" | "cancel" | null;
+type PaymentOutcome = "success" | "failure" | "cancel" | null
 
 export function CheckoutOrderSummary({
+  batches,
+  codes,
   orderLabel,
   orderTotal,
   orderScopeType,
@@ -285,55 +298,55 @@ export function CheckoutOrderSummary({
 }: OrderSummaryProps) {
   const [appliedVoucher, setAppliedVoucher] = useState<AppliedVoucher | null>(
     null,
-  );
-  const [outcome, setOutcome] = useState<PaymentOutcome>(null);
-  const [processing, setProcessing] = useState(false);
+  )
+  const [outcome, setOutcome] = useState<PaymentOutcome>(null)
+  const [processing, setProcessing] = useState(false)
 
-  const finalTotal = appliedVoucher?.finalTotal ?? orderTotal;
-  const discountAmount = appliedVoucher?.discountAmount ?? 0;
+  const finalTotal = appliedVoucher?.finalTotal ?? orderTotal
+  const discountAmount = appliedVoucher?.discountAmount ?? 0
 
   function simulatePayment(result: "success" | "failure" | "cancel") {
-    setProcessing(true);
+    setProcessing(true)
     setTimeout(() => {
-      setProcessing(false);
+      setProcessing(false)
 
       if (appliedVoucher) {
         if (result === "success") {
           if (appliedVoucher.code) {
             // Single-use: mark Redeemed permanently
-            appliedVoucher.code.status = "Redeemed";
-            appliedVoucher.code.redeemedAt = new Date().toISOString();
-            appliedVoucher.code.lockedByOrderId = undefined;
+            appliedVoucher.code.status = "Redeemed"
+            appliedVoucher.code.redeemedAt = new Date().toISOString()
+            appliedVoucher.code.lockedByOrderId = undefined
           } else {
             // Multi-use: finalize locked → redeemed
             appliedVoucher.batch.multiUseLockedCount = Math.max(
               0,
               appliedVoucher.batch.multiUseLockedCount - 1,
-            );
-            appliedVoucher.batch.multiUseRedeemedCount += 1;
+            )
+            appliedVoucher.batch.multiUseRedeemedCount += 1
           }
         } else {
           // Failure / cancel: release lock
           if (appliedVoucher.code) {
-            appliedVoucher.code.status = "Available";
-            appliedVoucher.code.lockedByOrderId = undefined;
+            appliedVoucher.code.status = "Available"
+            appliedVoucher.code.lockedByOrderId = undefined
           } else {
             appliedVoucher.batch.multiUseLockedCount = Math.max(
               0,
               appliedVoucher.batch.multiUseLockedCount - 1,
-            );
+            )
           }
         }
       }
 
-      setOutcome(result);
-    }, 1200);
+      setOutcome(result)
+    }, 1200)
   }
 
   function resetDemo() {
-    setAppliedVoucher(null);
-    setOutcome(null);
-    setProcessing(false);
+    setAppliedVoucher(null)
+    setOutcome(null)
+    setProcessing(false)
   }
 
   if (outcome) {
@@ -397,7 +410,7 @@ export function CheckoutOrderSummary({
           Reset Demo
         </Button>
       </div>
-    );
+    )
   }
 
   return (
@@ -445,6 +458,8 @@ export function CheckoutOrderSummary({
       </div>
 
       <VoucherCheckoutWidget
+        batches={batches}
+        codes={codes}
         orderTotal={orderTotal}
         orderScopeType={orderScopeType}
         orderScopeId={orderScopeId}
@@ -482,5 +497,5 @@ export function CheckoutOrderSummary({
         </div>
       </div>
     </div>
-  );
+  )
 }

@@ -10,13 +10,13 @@
 
 ## 2. Description & Business Value
 
-The **Deal Room** is Arobid's built-in B2B messaging layer. A 1-1 Direct Conversation is the simplest unit: two users in a private thread. This is the primary channel for:
+The **Deal Room** is Arobid's private 1-1 messaging channel for deal negotiations — one dedicated thread between exactly two users. This is the primary communication channel for:
 
 - A **Buyer** following up with a **Supplier** after sending an RFQ ([US-02][TX] Send Inquiry)
 - A **Visitor** initiating contact with an **Exhibitor** discovered on the Expo map
 - Any authenticated user reaching out to another user from their profile or company card
 
-A conversation is created **once** between any two users — if a thread already exists, the system routes the user back to the existing thread instead of creating a duplicate.
+A Deal Room is created **once** between any two users — if a thread already exists, the system routes the user back to the existing thread instead of creating a duplicate.
 
 **Business Value:**
 - Keeps deal communication on-platform, increasing stickiness and data visibility
@@ -46,7 +46,6 @@ The user triggers conversation initiation from one of these entry points:
 |---|---|
 | **"Message"** button on another user's profile or company card | B2B Marketplace |
 | **"Message Exhibitor"** button on the Exhibitor Detail page | TradeXpo |
-| **"New Message"** button in the Conversation Inbox | Any module |
 
 No additional input is required beyond selecting the target user. The thread opens immediately.
 
@@ -97,16 +96,6 @@ flowchart TD
 * **Step 4:** System creates a new 1-1 conversation thread.
 * **Step 5:** Chat panel / page opens, showing the empty thread with the Exhibitor's name and avatar at the top.
 * **Step 6:** Target Exhibitor receives an in-app notification badge on their Inbox icon.
-
-### User Flow 2: Start conversation from Conversation Inbox
-
-**Given:** User is in the Conversation Inbox ([US-04][CORE]).
-
-* **Step 1:** User clicks **"New Message"** button.
-* **Step 2:** A user-search modal appears. User types a name or company to find the target.
-* **Step 3:** User selects a result and clicks **"Start Conversation"**.
-* **Step 4:** System creates or navigates to the existing thread (same logic as above).
-* **Step 5:** Chat panel opens ready to type.
 
 ---
 

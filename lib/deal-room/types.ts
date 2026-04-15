@@ -1,8 +1,19 @@
-export type ConversationType = "direct" | "expo_group"
+export type ConversationType = "direct"
 
 export type MessageStatus = "sent" | "delivered" | "read"
 
-export type MessageFileType = "pdf" | "png" | "jpg" | "jpeg" | "xlsx" | "docx"
+export type MessageFileType =
+  | "jpg"
+  | "jpeg"
+  | "png"
+  | "webp"
+  | "mp4"
+  | "pdf"
+  | "md"
+  | "doc"
+  | "docx"
+  | "csv"
+  | "xlsx"
 
 export interface ChatUser {
   id: string
@@ -47,10 +58,7 @@ export interface Message {
 export interface Conversation {
   id: string
   type: ConversationType
-  name?: string // display name for expo_group
-  contextType?: "expo"
-  contextId?: string // expoId for expo_group
   members: ConversationMember[]
   createdAt: string
-  isReadOnly: boolean // true when expo is archived
+  isReadOnly: boolean
 }

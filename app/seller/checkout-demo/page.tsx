@@ -1,5 +1,6 @@
-import { CheckoutOrderSummary } from "@/components/evoucher/voucher-checkout-widget";
-import { DashboardShell } from "@/components/tradexpo/dashboard-shell";
+import { CheckoutOrderSummary } from "@/components/evoucher/voucher-checkout-widget"
+import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
+import { listVoucherBatches, listVoucherCodes } from "@/lib/evoucher/db"
 
 const DEMO_ORDER = {
   id: "order-checkout-demo",
@@ -8,7 +9,7 @@ const DEMO_ORDER = {
   total: 5_000_000,
   scopeType: "expo" as const,
   scopeId: "expo-001",
-};
+}
 
 const HINT_CODES = [
   // Single-use — valid
@@ -29,9 +30,14 @@ const HINT_CODES = [
   { code: "NEWYR25-DEMO01", note: "Expired batch — will fail" },
   { code: "REVOKE24-DEMO01", note: "Revoked batch — will fail" },
   { code: "LAUNCH25-0001XX", note: "Depleted batch — will fail" },
-];
+]
 
-export default function CheckoutDemoPage() {
+export default async function CheckoutDemoPage() {
+  const [batches, codes] = await Promise.all([
+    listVoucherBatches(),
+    listVoucherCodes(),
+  ])
+
   return (
     <DashboardShell
       title="Checkout Demo — eVoucher"
@@ -112,6 +118,8 @@ export default function CheckoutDemoPage() {
         {/* Right: order summary + voucher widget */}
         <div>
           <CheckoutOrderSummary
+            batches={batches}
+            codes={codes}
             orderLabel={DEMO_ORDER.label}
             orderTotal={DEMO_ORDER.total}
             orderScopeType={DEMO_ORDER.scopeType}
@@ -121,5 +129,5 @@ export default function CheckoutDemoPage() {
         </div>
       </div>
     </DashboardShell>
-  );
+  )
 }

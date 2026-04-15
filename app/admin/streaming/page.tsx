@@ -6,10 +6,7 @@ export default function AdminStreamingPage() {
     <DashboardShell
       title="Host Dashboard"
       description="Manage your assigned GoLIVE sessions. Copy stream credentials and go live using OBS or any RTMP-compatible software."
-      breadcrumbs={[
-        { label: "Admin", href: "/admin" },
-        { label: "Streaming" },
-      ]}
+      breadcrumbs={[{ label: "Admin", href: "/admin" }, { label: "Streaming" }]}
     >
       <HostDashboard />
     </DashboardShell>

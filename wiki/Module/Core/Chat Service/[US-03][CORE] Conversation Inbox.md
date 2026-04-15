@@ -10,7 +10,7 @@
 
 ## 2. Description & Business Value
 
-The **Conversation Inbox** is the central hub for all of a user's messaging activity — both 1-1 Direct threads ([US-01][CORE]) and Group Deal Rooms ([US-02][CORE]). It provides:
+The **Conversation Inbox** is the central hub for all of a user's 1-1 messaging activity ([US-01][CORE]). It provides:
 
 - A chronologically sorted list of all conversations (most recent message first)
 - Unread message badges to surface unanswered threads
@@ -25,8 +25,7 @@ This is where users land when they tap the **message/chat icon** in the global n
 - Scales as a user accumulates many conversations over time
 
 **Dependencies:**
-- **[US-01][CORE] Initiate 1-1 Direct Conversation** — direct threads appear here
-- **[US-02][CORE] Create Group Deal Room** — group rooms appear here
+- **[US-01][CORE] Deal Room – 1-1 Private Conversation** — deal threads appear here
 - **[US-03][CORE] Send & Receive Messages** — unread counts and last message previews are driven by message events
 
 ---
@@ -53,7 +52,7 @@ This is where users land when they tap the **message/chat icon** in the global n
 - Displays all conversations where the user is a participant and has **not archived** the thread
 - Sorted by **last message timestamp** (most recent first)
 - Each row shows:
-  - Conversation name (for groups) or other participant's name + avatar (for 1-1)
+  - Other participant's name + avatar
   - Last message preview (truncated to ~80 chars; if a file attachment, shows "📎 [filename]")
   - Timestamp of last message (relative: "2 min ago", "Yesterday", etc.)
   - **Unread badge** (count of unread messages since user last opened thread)
@@ -66,7 +65,7 @@ This is where users land when they tap the **message/chat icon** in the global n
 **Search:**
 
 - Filters the inbox list in real time as the user types
-- Matches against: conversation name (for groups), participant display name, participant company name
+- Matches against: participant display name, participant company name
 
 **Archive:**
 
@@ -160,6 +159,6 @@ flowchart TD
 | # | Item | Status | Owner |
 |---|------|--------|-------|
 | OI-01 | Should there be a "Mute" option (suppress notifications for a conversation without archiving it)? | **Deferred:** Out of MVP scope. Sẽ thực hiện sau cùng với Block. | Product |
-| OI-02 | Should the Inbox support filters beyond Archived — e.g., "Unread only", "Groups only", "Direct only"? | Open | Product |
+| OI-02 | Should the Inbox support filters beyond Archived — e.g., "Unread only"? | Open | Product |
 | OI-03 | How many conversations can one user have before pagination/virtualization is needed? | Open | Engineering |
 | OI-04 | Should conversations be cross-searchable from the platform's global search, or only within the Inbox? | Open | Product |

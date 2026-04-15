@@ -13,11 +13,14 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import {
-  mockAssets,
-  mockHallTemplateSlots,
-  mockHallTemplates,
-  mockHallTemplateUsage,
-} from "@/lib/tradexpo/mock-data"
+  listHallSlotUsage,
+  listHallTemplateSlots,
+} from "@/lib/tradexpo/db/hall-slots"
+import {
+  listHallTemplateAssets,
+  listHallTemplates,
+  listHallTemplateUsage,
+} from "@/lib/tradexpo/db/hall-templates"
 import {
   formatDateTime,
   getAssetMap,
@@ -31,26 +34,30 @@ export default async function HallTemplateDetailPage({
 }) {
   const { templateId } = await params
 
-  const template = mockHallTemplates.find((item) => item.id === templateId)
+  const [assets, templates, usages, slots, slotUsage] = await Promise.all([
+    listHallTemplateAssets(),
+    listHallTemplates(),
+    listHallTemplateUsage(),
+    listHallTemplateSlots(templateId),
+    listHallSlotUsage(templateId),
+  ])
+
+  const template = templates.find((item) => item.id === templateId)
 
   if (!template) {
     notFound()
   }
 
-  const usage = mockHallTemplateUsage.find(
-    (item) => item.hallTemplateId === template.id,
-  ) || {
+  const usage = usages.find((item) => item.hallTemplateId === template.id) || {
     hallTemplateId: template.id,
     upcomingExpoCount: 0,
     liveExpoCount: 0,
     archivedExpoCount: 0,
   }
 
-  const slotCount = mockHallTemplateSlots.filter(
-    (slot) => slot.hallTemplateId === template.id,
-  ).length
+  const slotCount = slots.length
 
-  const assetMap = getAssetMap(mockAssets)
+  const assetMap = getAssetMap(assets)
   const status = getHallTemplateStatus(template, assetMap)
 
   return (
@@ -132,7 +139,13 @@ export default async function HallTemplateDetailPage({
 
       <HallTemplateDetailManager templateId={templateId} />
 
-      <HallSlotManager templateId={templateId} embedded />
+      <HallSlotManager
+        templateId={templateId}
+        templateName={template.name}
+        initialSlots={slots}
+        initialUsage={slotUsage}
+        embedded
+      />
     </DashboardShell>
   )
 }

@@ -52,14 +52,13 @@ import {
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
 import {
-  mockAssets,
-  mockBoothTemplates,
-  mockBoothTemplateUsage,
-  mockBoothTypes,
-} from "@/lib/tradexpo/mock-data"
+  toggleBoothTemplateActive,
+  toggleBoothTemplatePublic,
+} from "@/lib/tradexpo/actions/booth-templates"
 import type {
   BoothTemplate,
   BoothTemplateUsage,
+  BoothType,
   ModelAsset,
 } from "@/lib/tradexpo/types"
 import {
@@ -95,28 +94,30 @@ const defaultFormState: BoothTemplateFormState = {
   isActive: true,
 }
 
-function cloneAssets() {
-  return mockAssets.map((asset) => ({ ...asset }))
-}
-
-function cloneTemplates() {
-  return mockBoothTemplates.map((template) => ({
-    ...template,
-    translations: template.translations.map((translation) => ({
-      ...translation,
+export function BoothTemplateLibraryManager({
+  initialAssets,
+  initialTemplates,
+  initialUsage,
+  initialBoothTypes,
+}: {
+  initialAssets: ModelAsset[]
+  initialTemplates: BoothTemplate[]
+  initialUsage: BoothTemplateUsage[]
+  initialBoothTypes: BoothType[]
+}) {
+  const [assets, setAssets] = React.useState<ModelAsset[]>(() =>
+    initialAssets.map((a) => ({ ...a })),
+  )
+  const [templates, setTemplates] = React.useState<BoothTemplate[]>(() =>
+    initialTemplates.map((t) => ({
+      ...t,
+      translations: t.translations.map((tr) => ({ ...tr })),
     })),
-  }))
-}
-
-function cloneUsage() {
-  return mockBoothTemplateUsage.map((usage) => ({ ...usage }))
-}
-
-export function BoothTemplateLibraryManager() {
-  const [assets, setAssets] = React.useState<ModelAsset[]>(cloneAssets)
-  const [templates, setTemplates] =
-    React.useState<BoothTemplate[]>(cloneTemplates)
-  const [usages, setUsages] = React.useState<BoothTemplateUsage[]>(cloneUsage)
+  )
+  const [usages, setUsages] = React.useState<BoothTemplateUsage[]>(() =>
+    initialUsage.map((u) => ({ ...u })),
+  )
+  const boothTypes = React.useMemo(() => initialBoothTypes, [initialBoothTypes])
 
   const [search, setSearch] = React.useState("")
   const [page, setPage] = React.useState(1)
@@ -474,17 +475,24 @@ export function BoothTemplateLibraryManager() {
               ...item,
               isPublic: nextPublic,
               updatedAt: new Date().toISOString(),
-              updatedBy: "Khai Pham",
+              updatedBy: item.updatedBy,
             }
           : item,
       ),
     )
 
-    setNotice({
-      type: "success",
-      text: nextPublic
-        ? "Template published for eligible booth types."
-        : "Template moved back to draft.",
+    void toggleBoothTemplatePublic(template.id).catch(() => {
+      setTemplates((currentTemplates) =>
+        currentTemplates.map((item) =>
+          item.id === template.id
+            ? { ...item, isPublic: template.isPublic }
+            : item,
+        ),
+      )
+      setNotice({
+        type: "error",
+        text: "Failed to update template visibility.",
+      })
     })
   }
 
@@ -499,11 +507,25 @@ export function BoothTemplateLibraryManager() {
               ...item,
               isActive: nextActive,
               updatedAt: new Date().toISOString(),
-              updatedBy: "Khai Pham",
+              updatedBy: item.updatedBy,
             }
           : item,
       ),
     )
+
+    void toggleBoothTemplateActive(template.id).catch(() => {
+      setTemplates((currentTemplates) =>
+        currentTemplates.map((item) =>
+          item.id === template.id
+            ? { ...item, isActive: template.isActive }
+            : item,
+        ),
+      )
+      setNotice({
+        type: "error",
+        text: "Failed to update template activation.",
+      })
+    })
 
     if (!nextActive && (usage?.upcomingExpoBoothCount || 0) > 0) {
       setNotice({
@@ -729,9 +751,8 @@ export function BoothTemplateLibraryManager() {
                     previewLocale,
                   )
                   const boothTypeName =
-                    mockBoothTypes.find(
-                      (type) => type.id === template.boothTypeId,
-                    )?.name || "Unknown"
+                    boothTypes.find((type) => type.id === template.boothTypeId)
+                      ?.name || "Unknown"
 
                   return (
                     <TableRow key={template.id}>
@@ -942,7 +963,7 @@ export function BoothTemplateLibraryManager() {
                   <SelectValue placeholder="Select booth type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {mockBoothTypes.map((type) => (
+                  {boothTypes.map((type) => (
                     <SelectItem key={type.id} value={type.id}>
                       {type.name}
                     </SelectItem>

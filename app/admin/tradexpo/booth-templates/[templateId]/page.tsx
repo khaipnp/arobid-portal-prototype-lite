@@ -11,11 +11,11 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import {
-  mockAssets,
-  mockBoothTemplates,
-  mockBoothTemplateUsage,
-  mockBoothTypes,
-} from "@/lib/tradexpo/mock-data"
+  listBoothTemplates,
+  listBoothTemplateUsage,
+  listBoothTypes,
+} from "@/lib/tradexpo/db/booth-templates"
+import { listHallTemplateAssets } from "@/lib/tradexpo/db/hall-templates"
 import {
   formatDateTime,
   getAssetMap,
@@ -29,15 +29,20 @@ export default async function BoothTemplateDetailPage({
 }) {
   const { templateId } = await params
 
-  const template = mockBoothTemplates.find((item) => item.id === templateId)
+  const [assets, templates, usages, boothTypes] = await Promise.all([
+    listHallTemplateAssets(),
+    listBoothTemplates(),
+    listBoothTemplateUsage(),
+    listBoothTypes(),
+  ])
+
+  const template = templates.find((item) => item.id === templateId)
 
   if (!template) {
     notFound()
   }
 
-  const usage = mockBoothTemplateUsage.find(
-    (item) => item.boothTemplateId === template.id,
-  ) || {
+  const usage = usages.find((item) => item.boothTemplateId === template.id) || {
     boothTemplateId: template.id,
     upcomingExpoBoothCount: 0,
     liveExpoBoothCount: 0,
@@ -45,10 +50,10 @@ export default async function BoothTemplateDetailPage({
   }
 
   const boothTypeName =
-    mockBoothTypes.find((type) => type.id === template.boothTypeId)?.name ??
+    boothTypes.find((type) => type.id === template.boothTypeId)?.name ??
     "Unknown"
 
-  const assetMap = getAssetMap(mockAssets)
+  const assetMap = getAssetMap(assets)
   const status = getBoothTemplateStatus(template, assetMap)
 
   return (
