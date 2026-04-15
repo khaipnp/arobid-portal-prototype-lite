@@ -113,7 +113,9 @@ export async function listAdminNotifications(): Promise<AdminNotification[]> {
   }))
 }
 
-export async function markNotificationRead(notificationId: string): Promise<void> {
+export async function markNotificationRead(
+  notificationId: string,
+): Promise<void> {
   await sql`
     update admin_notifications
     set is_read = true
@@ -125,7 +127,9 @@ export async function markAllNotificationsRead(): Promise<void> {
   await sql`update admin_notifications set is_read = true where is_read = false`
 }
 
-export async function deleteNotification(notificationId: string): Promise<void> {
+export async function deleteNotification(
+  notificationId: string,
+): Promise<void> {
   await sql`delete from admin_notifications where id = ${notificationId}`
 }
 

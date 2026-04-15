@@ -304,11 +304,14 @@ export function GoLIVEManager({
 
   async function handleCancel(event: GoLIVEEvent) {
     try {
-      const response = await fetch(`/api/tradexpo/golive-events/${event.goLiveEventId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "cancel" }),
-      })
+      const response = await fetch(
+        `/api/tradexpo/golive-events/${event.goLiveEventId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "cancel" }),
+        },
+      )
       if (!response.ok) throw new Error("failed")
       setEvents((prev) =>
         prev.map((e) =>
@@ -326,9 +329,12 @@ export function GoLIVEManager({
 
   async function handleDelete(event: GoLIVEEvent) {
     try {
-      const response = await fetch(`/api/tradexpo/golive-events/${event.goLiveEventId}`, {
-        method: "DELETE",
-      })
+      const response = await fetch(
+        `/api/tradexpo/golive-events/${event.goLiveEventId}`,
+        {
+          method: "DELETE",
+        },
+      )
       if (!response.ok) throw new Error("failed")
       setEvents((prev) =>
         prev.filter((e) => e.goLiveEventId !== event.goLiveEventId),
@@ -402,7 +408,7 @@ export function GoLIVEManager({
                       className={cn("text-xs", statusStyles[event.status])}
                     >
                       {event.status === "Live" && (
-                        <CircleIcon className="mr-1 h-2 w-2 fill-emerald-500 text-emerald-500 animate-pulse" />
+                        <CircleIcon className="mr-1 h-2 w-2 animate-pulse fill-emerald-500 text-emerald-500" />
                       )}
                       {event.status}
                     </Badge>
@@ -417,13 +423,13 @@ export function GoLIVEManager({
                     </p>
                   )}
 
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                  <div className="flex flex-wrap items-center gap-3 text-muted-foreground text-xs">
                     <span className="flex items-center gap-1">
                       <CalendarIcon className="h-3 w-3" />
                       {formatSchedule(event.scheduledStartAt)}
                     </span>
                     {countdown && (
-                      <span className="flex items-center gap-1 text-amber-600 font-medium">
+                      <span className="flex items-center gap-1 font-medium text-amber-600">
                         <ClockIcon className="h-3 w-3" />
                         {countdown}
                       </span>
@@ -511,7 +517,7 @@ export function GoLIVEManager({
                 maxLength={256}
               />
               {errors.title && (
-                <p className="text-xs text-destructive">{errors.title}</p>
+                <p className="text-destructive text-xs">{errors.title}</p>
               )}
               <p className="text-right text-[11px] text-muted-foreground">
                 {form.title.length}/256
@@ -540,7 +546,7 @@ export function GoLIVEManager({
                 </SelectContent>
               </Select>
               {errors.sessionType && (
-                <p className="text-xs text-destructive">{errors.sessionType}</p>
+                <p className="text-destructive text-xs">{errors.sessionType}</p>
               )}
             </div>
 
@@ -595,7 +601,7 @@ export function GoLIVEManager({
                 </SelectContent>
               </Select>
               {errors.broadcasterUserId && (
-                <p className="text-xs text-destructive">
+                <p className="text-destructive text-xs">
                   {errors.broadcasterUserId}
                 </p>
               )}
@@ -603,8 +609,8 @@ export function GoLIVEManager({
 
             <div className="flex items-center justify-between rounded-lg border px-4 py-3">
               <div>
-                <p className="text-sm font-medium">Enable Replay</p>
-                <p className="text-xs text-muted-foreground">
+                <p className="font-medium text-sm">Enable Replay</p>
+                <p className="text-muted-foreground text-xs">
                   Record this session for on-demand replay after it ends
                 </p>
               </div>

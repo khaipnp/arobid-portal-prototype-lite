@@ -72,7 +72,7 @@ export function LiveComments({
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
-  }, [comments])
+  }, [])
 
   React.useEffect(() => {
     const controller = new AbortController()
@@ -132,11 +132,14 @@ export function LiveComments({
     }
 
     try {
-      const response = await fetch(`/api/stream/sessions/${streamSessionId}/comments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ comment: newComment }),
-      })
+      const response = await fetch(
+        `/api/stream/sessions/${streamSessionId}/comments`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ comment: newComment }),
+        },
+      )
       if (!response.ok) return
       setComments((prev) => [...prev, newComment])
       setCommentText("")
@@ -259,7 +262,7 @@ export function LiveComments({
                       {formatTime(comment.createdAt)}
                     </span>
                   </div>
-                  <p className="mt-0.5 break-words text-sm">
+                  <p className="wrap-break-word mt-0.5 text-sm">
                     {comment.commentText}
                   </p>
                 </div>
@@ -286,7 +289,7 @@ export function LiveComments({
           </p>
         ) : showGuestForm ? (
           <div className="space-y-3">
-            <p className="text-xs font-medium">Enter your details to comment</p>
+            <p className="font-medium text-xs">Enter your details to comment</p>
             <div className="space-y-1">
               <Label htmlFor="guest-name" className="text-xs">
                 Your name
@@ -371,7 +374,7 @@ export function LiveComments({
         )}
         {isActive && !showGuestForm && (
           <div className="mt-1 flex justify-between">
-            <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+            <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
               <UserIcon className="h-3 w-3" /> Khai Pham
             </span>
             <span className="text-[11px] text-muted-foreground">

@@ -52,7 +52,7 @@ export default async function CheckoutDemoPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Left: context + hints */}
         <div className="space-y-4">
-          <div className="rounded-lg border p-4 space-y-3">
+          <div className="space-y-3 rounded-lg border p-4">
             <h3 className="font-semibold text-sm">Order Context</h3>
             <div className="space-y-1 text-sm">
               <p>
@@ -70,7 +70,7 @@ export default async function CheckoutDemoPage() {
             </div>
           </div>
 
-          <div className="rounded-lg border p-4 space-y-3">
+          <div className="space-y-3 rounded-lg border p-4">
             <h3 className="font-semibold text-sm">Test Voucher Codes</h3>
             <p className="text-muted-foreground text-xs">
               Codes are case-insensitive. Multi-use codes can be applied to
@@ -80,7 +80,7 @@ export default async function CheckoutDemoPage() {
               {HINT_CODES.map(({ code, note }) => (
                 <div key={code} className="flex items-start gap-2 text-sm">
                   <div className="w-36 shrink-0">
-                    <code className="text-xs shrink-0 rounded bg-muted px-1.5 py-0.5 font-mono">
+                    <code className="shrink-0 rounded bg-muted px-1.5 py-0.5 font-mono text-xs">
                       {code}
                     </code>
                   </div>
@@ -90,9 +90,9 @@ export default async function CheckoutDemoPage() {
             </div>
           </div>
 
-          <div className="rounded-lg border p-4 space-y-2">
+          <div className="space-y-2 rounded-lg border p-4">
             <h3 className="font-semibold text-sm">Redemption Lifecycle</h3>
-            <ol className="space-y-1 text-xs text-muted-foreground list-decimal list-inside">
+            <ol className="list-inside list-decimal space-y-1 text-muted-foreground text-xs">
               <li>
                 Enter a code and click Apply — one unit of quantity is{" "}
                 <strong>Locked</strong>

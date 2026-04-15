@@ -192,7 +192,10 @@ export function ExpoListManager({
           body: JSON.stringify({ status: "Archived" satisfies ExpoStatus }),
         })
         if (!response.ok) {
-          setNotice({ type: "error", text: `Failed to archive "${expo.name}".` })
+          setNotice({
+            type: "error",
+            text: `Failed to archive "${expo.name}".`,
+          })
           return
         }
         setExpos((prev) =>
@@ -200,7 +203,10 @@ export function ExpoListManager({
             e.id === expo.id ? { ...e, status: "Archived" as ExpoStatus } : e,
           ),
         )
-        setNotice({ type: "success", text: `"${expo.name}" has been archived.` })
+        setNotice({
+          type: "success",
+          text: `"${expo.name}" has been archived.`,
+        })
       } else if (type === "delete") {
         const response = await fetch(`/api/tradexpo/expos/${expo.id}`, {
           method: "DELETE",
@@ -218,7 +224,10 @@ export function ExpoListManager({
           body: JSON.stringify({ status: "Live" satisfies ExpoStatus }),
         })
         if (!response.ok) {
-          setNotice({ type: "error", text: `Failed to approve "${expo.name}".` })
+          setNotice({
+            type: "error",
+            text: `Failed to approve "${expo.name}".`,
+          })
           return
         }
         setExpos((prev) =>

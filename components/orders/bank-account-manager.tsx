@@ -284,9 +284,12 @@ export function BankAccountManager({
 
     try {
       if (type === "delete") {
-        const response = await fetch(`/api/orders/bank-accounts/${account.id}`, {
-          method: "DELETE",
-        })
+        const response = await fetch(
+          `/api/orders/bank-accounts/${account.id}`,
+          {
+            method: "DELETE",
+          },
+        )
         if (!response.ok) throw new Error("Delete failed")
       } else {
         const action =
@@ -295,11 +298,14 @@ export function BankAccountManager({
             : type === "activate"
               ? "activate"
               : "deactivate"
-        const response = await fetch(`/api/orders/bank-accounts/${account.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action }),
-        })
+        const response = await fetch(
+          `/api/orders/bank-accounts/${account.id}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action }),
+          },
+        )
         if (!response.ok) throw new Error("Update failed")
       }
       setAccounts((prev) => {

@@ -414,15 +414,18 @@ export function ExpoPaymentConfigManager({
   ])
 
   async function handleSave(saved: ExpoPaymentConfig) {
-    const response = await fetch(`/api/orders/expo-payment-configs/${saved.expoId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        vnpayEnabled: saved.vnpayEnabled,
-        bankTransferEnabled: saved.bankTransferEnabled,
-        bankAccountId: saved.bankAccountId,
-      }),
-    })
+    const response = await fetch(
+      `/api/orders/expo-payment-configs/${saved.expoId}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          vnpayEnabled: saved.vnpayEnabled,
+          bankTransferEnabled: saved.bankTransferEnabled,
+          bankAccountId: saved.bankAccountId,
+        }),
+      },
+    )
     if (!response.ok) {
       throw new Error("Failed to save expo payment config.")
     }

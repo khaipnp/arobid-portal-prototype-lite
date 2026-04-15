@@ -64,7 +64,7 @@ export default async function WatchPage({ params }: Props) {
           </Link>
         </Button>
         <Separator orientation="vertical" className="h-5" />
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex min-w-0 items-center gap-2">
           <span className="truncate font-medium text-sm">{title}</span>
           <Badge variant="secondary" className="shrink-0 text-xs">
             {SESSION_TYPE_LABELS[sessionType]}
@@ -86,7 +86,7 @@ export default async function WatchPage({ params }: Props) {
       <div className="flex flex-1 overflow-hidden">
         {/* Player */}
         <div className="flex flex-1 flex-col overflow-auto">
-          <div className="mx-auto w-full max-w-4xl p-4 space-y-4">
+          <div className="mx-auto w-full max-w-4xl space-y-4 p-4">
             <StreamPlayer
               session={session}
               title={title}
@@ -101,7 +101,7 @@ export default async function WatchPage({ params }: Props) {
                 </p>
               )}
               {event && (
-                <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-3 text-muted-foreground text-sm">
                   <span>Broadcaster: {event.broadcasterDisplayName}</span>
                   {session.startedAt && (
                     <span>

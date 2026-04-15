@@ -16,7 +16,10 @@ export async function POST(request: Request) {
     !body.accountNumber ||
     !body.accountHolderName
   ) {
-    return NextResponse.json({ error: "Missing required fields." }, { status: 400 })
+    return NextResponse.json(
+      { error: "Missing required fields." },
+      { status: 400 },
+    )
   }
 
   const id = `ba-${crypto.randomUUID()}`

@@ -4,7 +4,10 @@ import {
   updateGoLIVEEventStatusBySession,
   updateStreamSessionStatus,
 } from "@/lib/tradexpo/db/platform-data"
-import type { GoLIVEEventStatus, StreamSessionStatus } from "@/lib/tradexpo/types"
+import type {
+  GoLIVEEventStatus,
+  StreamSessionStatus,
+} from "@/lib/tradexpo/types"
 
 interface Props {
   params: Promise<{ sessionId: string }>

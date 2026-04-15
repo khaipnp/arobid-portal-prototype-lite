@@ -37,7 +37,7 @@ const SESSION_TYPE_LABELS: Record<GoLIVESessionType, string> = {
   Other: "Other",
 }
 
-const statusStyles: Record<GoLIVEEventStatus, string> = {
+const _statusStyles: Record<GoLIVEEventStatus, string> = {
   Scheduled: "border-blue-300 bg-blue-50 text-blue-700",
   Ready: "border-violet-300 bg-violet-50 text-violet-700",
   Live: "border-emerald-300 bg-emerald-50 text-emerald-700",
@@ -93,7 +93,7 @@ function GoLIVECard({ event, session }: CardProps) {
         <div className="absolute top-2 left-2 flex gap-1.5">
           {event.status === "Live" && (
             <div className="flex items-center gap-1.5 rounded-md bg-red-600 px-2 py-0.5 shadow-sm">
-              <CircleIcon className="h-2 w-2 fill-white text-white animate-pulse" />
+              <CircleIcon className="h-2 w-2 animate-pulse fill-white text-white" />
               <span className="font-bold text-white text-xs">LIVE</span>
             </div>
           )}
@@ -106,7 +106,7 @@ function GoLIVECard({ event, session }: CardProps) {
 
         {/* Viewer count overlay for live */}
         {event.status === "Live" && (
-          <div className="absolute right-2 top-2 flex items-center gap-1 rounded-md bg-black/60 px-2 py-0.5 backdrop-blur-sm">
+          <div className="absolute top-2 right-2 flex items-center gap-1 rounded-md bg-black/60 px-2 py-0.5 backdrop-blur-sm">
             <span className="text-white/90 text-xs">
               {(session.peakViewerCount ?? 0).toLocaleString()} watching
             </span>
@@ -124,9 +124,9 @@ function GoLIVECard({ event, session }: CardProps) {
       </div>
 
       {/* Content */}
-      <div className="p-4 space-y-3">
+      <div className="space-y-3 p-4">
         <div>
-          <h3 className="font-semibold text-sm leading-snug line-clamp-2">
+          <h3 className="line-clamp-2 font-semibold text-sm leading-snug">
             {event.title}
           </h3>
           {event.description && (
@@ -136,7 +136,7 @@ function GoLIVECard({ event, session }: CardProps) {
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-2 text-muted-foreground text-xs">
           {event.status === "Scheduled" && (
             <>
               <span className="flex items-center gap-1">
@@ -168,7 +168,7 @@ function GoLIVECard({ event, session }: CardProps) {
               className="w-full gap-1.5 bg-red-600 hover:bg-red-700"
             >
               <Link href={`/watch/${event.streamSessionId}`}>
-                <CircleIcon className="h-3 w-3 fill-current animate-pulse" />
+                <CircleIcon className="h-3 w-3 animate-pulse fill-current" />
                 Watch Now
               </Link>
             </Button>
@@ -191,17 +191,17 @@ function GoLIVECard({ event, session }: CardProps) {
           {event.status === "Ended" &&
             session.replayEnabled &&
             !session.replayUrl && (
-              <p className="text-center text-xs text-muted-foreground italic">
+              <p className="text-center text-muted-foreground text-xs italic">
                 Replay is being prepared…
               </p>
             )}
           {event.status === "Ended" && !session.replayEnabled && (
-            <p className="text-center text-xs text-muted-foreground">
+            <p className="text-center text-muted-foreground text-xs">
               Stream ended
             </p>
           )}
           {(event.status === "Scheduled" || event.status === "Ready") && (
-            <p className="text-center text-xs text-muted-foreground">
+            <p className="text-center text-muted-foreground text-xs">
               {event.status === "Scheduled"
                 ? "Available when session goes live"
                 : "Waiting for broadcaster"}

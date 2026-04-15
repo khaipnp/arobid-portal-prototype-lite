@@ -128,11 +128,13 @@ export function PaymentMethodConfig({
           bankTransferEnabled: bankEnabled,
         }),
       })
-      const data = (await response.json()) as
-        | PaymentConfig
-        | { error?: string }
+      const data = (await response.json()) as PaymentConfig | { error?: string }
       if (!response.ok) {
-        setError(data && "error" in data ? data.error ?? "Save failed." : "Save failed.")
+        setError(
+          data && "error" in data
+            ? (data.error ?? "Save failed.")
+            : "Save failed.",
+        )
         return
       }
       setPlatformPayment(data as PaymentConfig)

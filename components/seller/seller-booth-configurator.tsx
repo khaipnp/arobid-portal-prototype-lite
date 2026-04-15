@@ -208,8 +208,8 @@ export function SellerBoothConfigurator({
     () =>
       customization.selectedBoothTemplateId
         ? boothTemplates.find(
-            (t) => t.id === customization.selectedBoothTemplateId,
-          )
+          (t) => t.id === customization.selectedBoothTemplateId,
+        )
         : undefined,
     [customization.selectedBoothTemplateId, boothTemplates],
   )
@@ -218,8 +218,8 @@ export function SellerBoothConfigurator({
     () =>
       customization.selectedBoothTemplateId
         ? (boothTemplateCustomizationConfigs.find(
-            (c) => c.boothTemplateId === customization.selectedBoothTemplateId,
-          ) ?? null)
+          (c) => c.boothTemplateId === customization.selectedBoothTemplateId,
+        ) ?? null)
         : null,
     [customization.selectedBoothTemplateId, boothTemplateCustomizationConfigs],
   )
@@ -322,7 +322,10 @@ export function SellerBoothConfigurator({
   }
 
   async function handleSaveDraft() {
-    const next: BoothCustomization = { ...customization, publishStatus: "Draft" }
+    const next: BoothCustomization = {
+      ...customization,
+      publishStatus: "Draft",
+    }
     try {
       await persistCustomization(next)
       setCustomization(next)
@@ -402,7 +405,7 @@ export function SellerBoothConfigurator({
   return (
     <div className="grid gap-6">
       {/* Header bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3 rounded-xl border bg-card p-4">
         <div className="flex flex-wrap items-center gap-3">
           {selectedTemplate && (
             <Image
@@ -442,34 +445,17 @@ export function SellerBoothConfigurator({
         </div>
 
         <div className="flex items-center gap-2">
-          {!hasNoTemplate && !isReadOnly && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setPreview3DTemplate(selectedTemplate ?? null)
-                setPreview3DOpen(true)
-              }}
-            >
-              <EyeIcon className="h-3.5 w-3.5" />
-              Preview 3D
-            </Button>
-          )}
           {hasNoTemplate ? null : isReadOnly ? null : (
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={handleChangeTemplateClick}
             >
               Change Template
             </Button>
           )}
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/seller/my-expos/${expoId}`}>
-              <ArrowLeftIcon className="h-3.5 w-3.5" />
-              Back
-            </Link>
-          </Button>
+
+
         </div>
       </div>
 
@@ -515,7 +501,7 @@ export function SellerBoothConfigurator({
 
       {/* Template gallery (US-01 / US-02) */}
       <Dialog open={galleryOpen} onOpenChange={setGalleryOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-3xl!">
           {galleryStep === "list" ? (
             <>
               <DialogHeader>
@@ -1037,7 +1023,10 @@ function CustomizationPanel({
 
       {/* Bottom action bar */}
       {!isReadOnly && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Button variant="ghost" asChild>
+            <Link href={`/seller/my-expos/${expoId}`}>Cancel</Link>
+          </Button>
           <div className="flex items-center gap-2">
             {!isDirty && savedStatus && (
               <span className="flex items-center gap-1 text-emerald-600 text-sm">
@@ -1052,8 +1041,8 @@ function CustomizationPanel({
             )}
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" asChild>
-              <Link href={`/seller/my-expos/${expoId}`}>Cancel</Link>
+            <Button variant="outline" onClick={onSaveDraft}>
+              Preview 3D
             </Button>
             <Button variant="outline" onClick={onSaveDraft} disabled={!canSave}>
               Save Draft
@@ -1063,6 +1052,7 @@ function CustomizationPanel({
               {savedStatus === "Published" ? "Re-Publish" : "Publish"}
             </Button>
           </div>
+
         </div>
       )}
     </div>
@@ -1158,12 +1148,11 @@ function TemplateDetailView({
 }) {
   return (
     <div className="grid gap-5">
-      <div className="flex items-center gap-2">
+      <div>
         <Button variant="ghost" size="sm" onClick={onBack}>
-          <ChevronLeftIcon className="h-4 w-4" />
+          <ChevronLeftIcon />
           Back
         </Button>
-        <span className="text-muted-foreground text-sm">Template Gallery</span>
       </div>
       <Image
         src={`https://picsum.photos/seed/${template.id}/800/400`}
@@ -1222,7 +1211,7 @@ function Preview3DViewer({
     <div className="overflow-hidden rounded-xl border bg-zinc-900">
       <div className="relative min-h-64 overflow-hidden">
         {/* Simulated 3D environment */}
-        <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-zinc-950" />
+        <div className="absolute inset-0 bg-linear-to-br from-zinc-800 to-zinc-950" />
         {/* Grid floor */}
         <div
           className="absolute inset-0 opacity-20"

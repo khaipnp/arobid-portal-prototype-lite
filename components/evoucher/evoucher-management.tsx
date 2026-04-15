@@ -145,8 +145,8 @@ function CodeTypeCard({
           : "flex min-h-28 flex-col justify-between rounded-xl border border-border bg-background p-4 text-left transition hover:border-foreground/20 hover:bg-muted/30 disabled:cursor-not-allowed disabled:opacity-60"
       }
     >
-      <div className="w-full flex flex-col gap-2">
-        <div className="flex-1 flex justify-between items-center">
+      <div className="flex w-full flex-col gap-2">
+        <div className="flex flex-1 items-center justify-between">
           <div className="font-medium">{label}</div>
           <Badge
             variant={active ? "default" : "outline"}
@@ -483,7 +483,7 @@ function VoucherFormDialog({
         if (!o) onClose()
       }}
     >
-      <DialogContent className="max-w-2xl! h-[90vh] overflow-y-auto">
+      <DialogContent className="h-[90vh] max-w-2xl! overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {isEdit ? "Edit Voucher Batch" : "Create eVoucher"}
@@ -646,7 +646,7 @@ function VoucherFormDialog({
                     variant="outline"
                     role="combobox"
                     disabled={isEdit || !form.applicableTo}
-                    className="w-full justify-between font-normal rounded-lg"
+                    className="w-full justify-between rounded-lg font-normal"
                   >
                     <span className="truncate">
                       {selectedTarget?.name ??
@@ -1113,7 +1113,7 @@ export function EVoucherManagement({
             ) : (
               paginated.map((v) => (
                 <TableRow key={v.id}>
-                  <TableCell className="font-mono text-sm font-medium">
+                  <TableCell className="font-medium font-mono text-sm">
                     {displayCode(v)}
                   </TableCell>
                   <TableCell>
@@ -1122,7 +1122,7 @@ export function EVoucherManagement({
                   <TableCell className="max-w-40 truncate">{v.name}</TableCell>
                   <TableCell className="flex flex-col">
                     <span>{v.targetName}</span>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-muted-foreground text-xs">
                       {v.applicableTo === "expo"
                         ? "TradeXpo"
                         : "B2B Marketplace"}

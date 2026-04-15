@@ -60,7 +60,7 @@ export function PartnerExpoList({
               <Badge
                 variant="outline"
                 className={cn(
-                  "absolute right-2 top-2 border text-xs",
+                  "absolute top-2 right-2 border text-xs",
                   statusStyles[expo.status],
                 )}
               >
@@ -68,9 +68,9 @@ export function PartnerExpoList({
               </Badge>
             </div>
 
-            <div className="p-4 space-y-3">
+            <div className="space-y-3 p-4">
               <div>
-                <h3 className="font-semibold text-sm leading-snug line-clamp-2">
+                <h3 className="line-clamp-2 font-semibold text-sm leading-snug">
                   {expo.name}
                 </h3>
                 <p className="mt-1 flex items-center gap-1 text-muted-foreground text-xs">
@@ -80,7 +80,7 @@ export function PartnerExpoList({
               </div>
 
               {goLIVECount > 0 && (
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
                   <RadioIcon className="h-3.5 w-3.5" />
                   <span>
                     {goLIVECount} GoLIVE session{goLIVECount !== 1 ? "s" : ""}
