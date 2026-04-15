@@ -139,7 +139,10 @@ export default async function HallTemplateDetailPage({
         </Card>
       </div>
 
-      <HallTemplateDetailManager templateId={templateId} />
+      <HallTemplateDetailManager
+        initialTemplate={template}
+        initialAssets={assets}
+      />
 
       <HallSlotManager
         templateId={templateId}

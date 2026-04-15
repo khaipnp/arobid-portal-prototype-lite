@@ -4,7 +4,11 @@ import {
   mockVoucherCodes,
   mockVoucherTargets,
 } from "@/lib/evoucher/mock-data"
-import type { VoucherBatch, VoucherCode, VoucherTarget } from "@/lib/evoucher/types"
+import type {
+  VoucherBatch,
+  VoucherCode,
+  VoucherTarget,
+} from "@/lib/evoucher/types"
 
 type VoucherBatchRow = {
   id: string

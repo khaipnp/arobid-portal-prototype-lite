@@ -260,11 +260,13 @@ export function DealRoomManager({
   >(initialConversationId ?? null)
 
   const [inboxSearch, setInboxSearch] = useState("")
-  const [inboxFilter, setInboxFilter] = useState<"active" | "archived">("active")
-  const [composerValue, setComposerValue] = useState("")
-  const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>(
-    [],
+  const [inboxFilter, setInboxFilter] = useState<"active" | "archived">(
+    "active",
   )
+  const [composerValue, setComposerValue] = useState("")
+  const [pendingAttachments, setPendingAttachments] = useState<
+    PendingAttachment[]
+  >([])
   const [composerError, setComposerError] = useState<string | null>(null)
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
   const [editingContent, setEditingContent] = useState("")
@@ -286,7 +288,9 @@ export function DealRoomManager({
       if (inboxFilter === "archived" && !myMember.isArchived) return false
       if (!inboxSearch) return true
       const name = getConversationDisplayName(c, users, CURRENT_USER_ID)
-      const otherId = c.members.find((m) => m.userId !== CURRENT_USER_ID)?.userId
+      const otherId = c.members.find(
+        (m) => m.userId !== CURRENT_USER_ID,
+      )?.userId
       const otherUser = users.find((u) => u.id === otherId)
       const query = inboxSearch.toLowerCase()
       return (
@@ -944,7 +948,9 @@ export function DealRoomManager({
                 />
                 <Button
                   size="icon-sm"
-                  disabled={!composerValue.trim() && pendingAttachments.length === 0}
+                  disabled={
+                    !composerValue.trim() && pendingAttachments.length === 0
+                  }
                   onClick={handleSendMessage}
                   className="shrink-0"
                 >

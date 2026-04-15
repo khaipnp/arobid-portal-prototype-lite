@@ -302,7 +302,6 @@ export const mockMessages: Record<string, Message[]> = {
       isSystemMessage: false,
     },
   ],
-
 }
 
 // ─── Initial unread counts (per current user) ─────────────────────────────────

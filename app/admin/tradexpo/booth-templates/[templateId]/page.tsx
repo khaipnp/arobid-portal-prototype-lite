@@ -133,7 +133,10 @@ export default async function BoothTemplateDetailPage({
         </Card>
       </div>
 
-      <BoothTemplateDetailManager templateId={templateId} />
+      <BoothTemplateDetailManager
+        initialTemplate={template}
+        initialAssets={assets}
+      />
     </DashboardShell>
   )
 }
