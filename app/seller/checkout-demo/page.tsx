@@ -2,6 +2,8 @@ import { CheckoutOrderSummary } from "@/components/evoucher/voucher-checkout-wid
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import { listVoucherBatches, listVoucherCodes } from "@/lib/evoucher/db"
 
+export const dynamic = "force-dynamic"
+
 const DEMO_ORDER = {
   id: "order-checkout-demo",
   label:

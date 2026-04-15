@@ -22,6 +22,8 @@ import {
   getBoothTemplateStatus,
 } from "@/lib/tradexpo/utils"
 
+export const dynamic = "force-dynamic"
+
 export default async function BoothTemplateDetailPage({
   params,
 }: {
