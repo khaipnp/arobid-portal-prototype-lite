@@ -6,5 +6,5 @@ export default async function HallTemplateSlotsPage({
   params: Promise<{ templateId: string }>
 }) {
   const { templateId } = await params
-  redirect(`/dashboard/tradexpo/hall-templates/${templateId}`)
+  redirect(`/admin/tradexpo/hall-templates/${templateId}`)
 }

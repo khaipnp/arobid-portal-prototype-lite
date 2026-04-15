@@ -2,90 +2,89 @@
 
 import {
   BoxIcon,
+  Building2Icon,
   CalendarIcon,
-  ChevronRightIcon,
-  Settings2Icon,
+  MessageCircleIcon,
+  ScrollTextIcon,
+  ShoppingCartIcon,
 } from "lucide-react"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+import Link from "next/link"
 import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
 
 const nav = [
   {
-    title: "My Booths",
-    url: "#",
-    icon: <BoxIcon />,
-    isActive: true,
-    items: [
-      { title: "Active", url: "#" },
-      { title: "Archived", url: "#" },
-    ],
-  },
-  {
-    title: "Events",
-    url: "#",
+    name: "My Expos",
+    url: "/seller/my-expos",
     icon: <CalendarIcon />,
-    items: [
-      { title: "Browse", url: "#" },
-      { title: "Registered", url: "#" },
-    ],
   },
   {
-    title: "Settings",
-    url: "#",
-    icon: <Settings2Icon />,
-    items: [
-      { title: "Profile", url: "#" },
-      { title: "Billing", url: "#" },
-    ],
+    name: "Checkout Demo (eVoucher)",
+    url: "/seller/checkout-demo",
+    icon: <ShoppingCartIcon />,
+  },
+]
+
+const b2b = [
+  {
+    name: "Supplier Profile",
+    url: "/seller/b2b-marketplace",
+    icon: <Building2Icon />,
+  },
+  {
+    name: "Product Management",
+    url: "/seller/product-management",
+    icon: <BoxIcon />,
+  },
+  {
+    name: "RFQ Hub",
+    url: "/seller/rfq-hub",
+    icon: <ScrollTextIcon />,
   },
 ]
 
 export function NavSeller() {
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Supplier</SidebarGroupLabel>
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton asChild>
+            <Link href="/seller/deal-room">
+              <MessageCircleIcon />
+              <span>Deal Room</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+      <SidebarGroupLabel>TradeXpo</SidebarGroupLabel>
       <SidebarMenu>
         {nav.map((item) => (
-          <Collapsible
-            key={item.title}
-            asChild
-            defaultOpen={item.isActive}
-            className="group/collapsible"
-          >
-            <SidebarMenuItem>
-              <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip={item.title}>
-                  {item.icon}
-                  <span>{item.title}</span>
-                  <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                </SidebarMenuButton>
-              </CollapsibleTrigger>
-              <CollapsibleContent>
-                <SidebarMenuSub>
-                  {item.items?.map((sub) => (
-                    <SidebarMenuSubItem key={sub.title}>
-                      <SidebarMenuSubButton asChild>
-                        <a href={sub.url}>{sub.title}</a>
-                      </SidebarMenuSubButton>
-                    </SidebarMenuSubItem>
-                  ))}
-                </SidebarMenuSub>
-              </CollapsibleContent>
-            </SidebarMenuItem>
-          </Collapsible>
+          <SidebarMenuItem key={item.name}>
+            <SidebarMenuButton asChild>
+              <Link href={item.url}>
+                {item.icon}
+                <span>{item.name}</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ))}
+      </SidebarMenu>
+      <SidebarGroupLabel>B2B Marketplace</SidebarGroupLabel>
+      <SidebarMenu>
+        {b2b.map((item) => (
+          <SidebarMenuItem key={item.name}>
+            <SidebarMenuButton asChild>
+              <Link href={item.url}>
+                {item.icon}
+                <span>{item.name}</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
         ))}
       </SidebarMenu>
     </SidebarGroup>

@@ -35,8 +35,8 @@ This story covers the bank transfer checkout flow when Admin has configured Bank
 ### 3.1. Pre-condition
 
 - Exhibitor is authenticated
-- Payment method configured by Admin is `bank_transfer`
-- A primary bank account is active in the system
+- Bank Transfer is enabled for this Expo (either via Expo-specific config or inherited platform default)
+- Exhibitor has selected Bank Transfer as their payment method in [US-01][TX] (or Bank Transfer is the only enabled method for this Expo — auto-resolved)
 - Exhibitor has selected a booth and clicked "Proceed to Payment" in [US-01][TX] — booth is still `Available` at this point (not yet locked)
 - Exhibitor does not already have a confirmed registration (`Occupied` booth) for this Expo
 
@@ -62,11 +62,15 @@ This story covers the bank transfer checkout flow when Admin has configured Bank
    - `status = Pending Payment`
    - `expiresAt = now + 72h`
    - `amount = final price from TX US-01 (post-voucher if applicable)`
-3. System generates a **VietQR** code using:
-   - Bank BIN and Account Number from the primary bank account (US-02)
+3. System resolves the bank account for this Expo:
+   - Read `ExpoPaymentConfig.bankAccountId` for this Expo
+   - If `bankAccountId` is set → use that account
+   - If `bankAccountId` is null (or Expo is `isInherited = true`) → use the global primary bank account from [US-02][CORE]
+4. System generates a **VietQR** code using:
+   - Bank BIN and Account Number from the resolved bank account
    - Amount = order amount
    - Transfer description = Order ID (e.g. `ORD-2026-00001`) — Admin uses this to match the transfer
-4. QR code is displayed alongside bank account details
+5. QR code is displayed alongside bank account details
 
 **On "I've Transferred" click:**
 
@@ -167,7 +171,7 @@ flowchart LR
 
 | # | Given | When | Then |
 |---|-------|------|------|
-| AC-01 | Exhibitor clicks "Proceed to Payment" in TX US-01 and payment method = Bank Transfer | QR Payment screen loads | An Order is created with status `Pending Payment`, `expiresAt = now + 72h`; VietQR code is generated using the primary bank account, order amount, and Order ID as transfer description |
+| AC-01 | Exhibitor clicks "Proceed to Payment" in TX US-01 with Bank Transfer selected | QR Payment screen loads | An Order is created with status `Pending Payment`, `expiresAt = now + 72h`; system resolves bank account from Expo config (or fallback to primary); VietQR code is generated using the resolved bank account, order amount, and Order ID as transfer description |
 | AC-02 | QR Payment screen is loaded | Screen renders | Displays: VietQR code, bank name + logo, account number, account holder name, amount in VND, Order ID (transfer description) with copy button, instruction text, 72h countdown timer, and "I've Transferred" button |
 | AC-03 | Exhibitor scans the QR code with a banking app | App processes QR | Banking app pre-fills: account number, amount, and transfer description (Order ID) — no manual entry needed |
 | AC-04 | Exhibitor clicks "I've Transferred" within the 72h window | Button clicked | Atomically: booth status → `Occupied`; order status → `Awaiting Confirmation`; Exhibitor redirected to Order Detail with banner: "Your transfer has been submitted. We are verifying your payment and will notify you by email once confirmed." |

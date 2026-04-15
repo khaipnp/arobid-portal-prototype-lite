@@ -1,0 +1,29 @@
+import { EVoucherManagement } from "@/components/evoucher/evoucher-management"
+import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
+import {
+  listVoucherBatches,
+  listVoucherCodes,
+  listVoucherTargets,
+} from "@/lib/evoucher/db"
+
+export default async function EVoucherPage() {
+  const [batches, codes, targets] = await Promise.all([
+    listVoucherBatches(),
+    listVoucherCodes(),
+    listVoucherTargets(),
+  ])
+
+  return (
+    <DashboardShell
+      title="eVoucher Management"
+      description="Issue and manage discount voucher batches. Assign batches to Partners for redistribution to businesses."
+      breadcrumbs={[{ label: "Admin", href: "/admin" }, { label: "eVoucher" }]}
+    >
+      <EVoucherManagement
+        initialBatches={batches}
+        initialCodes={codes}
+        targets={targets}
+      />
+    </DashboardShell>
+  )
+}

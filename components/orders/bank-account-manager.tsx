@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   AlertCircleIcon,
@@ -6,8 +6,8 @@ import {
   PlusIcon,
   SearchIcon,
   StarIcon,
-} from "lucide-react";
-import { useMemo, useState } from "react";
+} from "lucide-react"
+import { useMemo, useState } from "react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,32 +17,32 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/alert-dialog"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/select"
 import {
   Table,
   TableBody,
@@ -50,26 +50,26 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Toggle } from "@/components/ui/toggle";
+} from "@/components/ui/table"
+import { Toggle } from "@/components/ui/toggle"
 import {
   mockBankAccounts,
   mockPaymentConfig,
   VIETNAMESE_BANKS,
-} from "@/lib/orders/mock-data";
-import type { BankAccount } from "@/lib/tradexpo/types";
-import { Alert, AlertAction, AlertDescription, AlertTitle } from "../ui/alert";
+} from "@/lib/orders/mock-data"
+import type { BankAccount } from "@/lib/tradexpo/types"
+import { Alert, AlertAction, AlertDescription, AlertTitle } from "../ui/alert"
 
-const BANKS = VIETNAMESE_BANKS;
+const BANKS = VIETNAMESE_BANKS
 
 type FormState = {
-  bankName: string;
-  bankBIN: string;
-  accountNumber: string;
-  accountHolderName: string;
-  branch: string;
-  isPrimary: boolean;
-};
+  bankName: string
+  bankBIN: string
+  accountNumber: string
+  accountHolderName: string
+  branch: string
+  isPrimary: boolean
+}
 
 const emptyForm: FormState = {
   bankName: "",
@@ -78,56 +78,56 @@ const emptyForm: FormState = {
   accountHolderName: "",
   branch: "",
   isPrimary: false,
-};
+}
 
 export function BankAccountManager() {
   const [accounts, setAccounts] = useState<BankAccount[]>(() => [
     ...mockBankAccounts,
-  ]);
-  const [form, setForm] = useState<FormState>(emptyForm);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [showFormDialog, setShowFormDialog] = useState(false);
+  ])
+  const [form, setForm] = useState<FormState>(emptyForm)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [showFormDialog, setShowFormDialog] = useState(false)
   const [confirmAction, setConfirmAction] = useState<null | {
-    type: "set-primary" | "deactivate" | "activate" | "delete";
-    account: BankAccount;
-  }>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
-  const [search, setSearch] = useState("");
+    type: "set-primary" | "deactivate" | "activate" | "delete"
+    account: BankAccount
+  }>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
+  const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState<
     "all" | "active" | "inactive"
-  >("all");
+  >("all")
 
   const visibleAccounts = useMemo(() => {
-    const q = search.toLowerCase();
+    const q = search.toLowerCase()
     return accounts.filter((a) => {
-      if (statusFilter === "active" && !a.isActive) return false;
-      if (statusFilter === "inactive" && a.isActive) return false;
+      if (statusFilter === "active" && !a.isActive) return false
+      if (statusFilter === "inactive" && a.isActive) return false
       if (
         q &&
         !a.bankName.toLowerCase().includes(q) &&
         !a.accountNumber.includes(q) &&
         !a.accountHolderName.toLowerCase().includes(q)
       )
-        return false;
-      return true;
-    });
-  }, [accounts, search, statusFilter]);
+        return false
+      return true
+    })
+  }, [accounts, search, statusFilter])
 
   function showToast(msg: string) {
-    setToast(msg);
-    setTimeout(() => setToast(null), 4000);
+    setToast(msg)
+    setTimeout(() => setToast(null), 4000)
   }
 
   function openAdd() {
-    setEditingId(null);
-    setForm(emptyForm);
-    setError(null);
-    setShowFormDialog(true);
+    setEditingId(null)
+    setForm(emptyForm)
+    setError(null)
+    setShowFormDialog(true)
   }
 
   function openEdit(account: BankAccount) {
-    setEditingId(account.id);
+    setEditingId(account.id)
     setForm({
       bankName: account.bankName,
       bankBIN: account.bankBIN,
@@ -135,18 +135,18 @@ export function BankAccountManager() {
       accountHolderName: account.accountHolderName,
       branch: account.branch ?? "",
       isPrimary: account.isPrimary,
-    });
-    setError(null);
-    setShowFormDialog(true);
+    })
+    setError(null)
+    setShowFormDialog(true)
   }
 
   function handleBankSelect(name: string) {
-    const bank = BANKS.find((b) => b.name === name);
+    const bank = BANKS.find((b) => b.name === name)
     setForm((f) => ({
       ...f,
       bankName: name,
       bankBIN: bank?.bin ?? "",
-    }));
+    }))
   }
 
   function handleSave() {
@@ -155,11 +155,11 @@ export function BankAccountManager() {
       !form.accountNumber.trim() ||
       !form.accountHolderName.trim()
     ) {
-      setError("Please fill in all required fields.");
-      return;
+      setError("Please fill in all required fields.")
+      return
     }
 
-    const now = new Date().toISOString();
+    const now = new Date().toISOString()
 
     if (editingId) {
       setAccounts((prev) =>
@@ -174,15 +174,15 @@ export function BankAccountManager() {
               branch: form.branch.trim() || undefined,
               isPrimary: form.isPrimary ? true : a.isPrimary,
               updatedAt: now,
-            };
+            }
           }
           if (form.isPrimary && a.id !== editingId) {
-            return { ...a, isPrimary: false };
+            return { ...a, isPrimary: false }
           }
-          return a;
+          return a
         }),
-      );
-      showToast("Bank account updated successfully.");
+      )
+      showToast("Bank account updated successfully.")
     } else {
       const newAccount: BankAccount = {
         id: `ba-${Date.now()}`,
@@ -195,19 +195,19 @@ export function BankAccountManager() {
         isActive: true,
         createdAt: now,
         updatedAt: now,
-      };
+      }
       setAccounts((prev) => {
         const updated = form.isPrimary
           ? prev.map((a) => ({ ...a, isPrimary: false }))
-          : prev;
-        return [...updated, newAccount];
-      });
-      showToast("Bank account added successfully.");
+          : prev
+        return [...updated, newAccount]
+      })
+      showToast("Bank account added successfully.")
     }
 
     // Sync to mock source
-    syncToMock();
-    setShowFormDialog(false);
+    syncToMock()
+    setShowFormDialog(false)
   }
 
   function syncToMock() {
@@ -215,100 +215,94 @@ export function BankAccountManager() {
     // (this is best-effort for the prototype — the mockBankAccounts array is
     // used by payment-method-config for the primary account guard)
     setAccounts((current) => {
-      mockBankAccounts.length = 0;
-      for (const a of current) mockBankAccounts.push(a);
-      return current;
-    });
+      mockBankAccounts.length = 0
+      for (const a of current) mockBankAccounts.push(a)
+      return current
+    })
   }
 
   function handleSetPrimary(account: BankAccount) {
     if (!account.isActive) {
-      setError("Cannot set an inactive account as primary.");
-      return;
+      setError("Cannot set an inactive account as primary.")
+      return
     }
-    setConfirmAction({ type: "set-primary", account });
+    setConfirmAction({ type: "set-primary", account })
   }
 
   function handleToggleActive(account: BankAccount) {
     if (account.isActive) {
       // Deactivating
-      if (
-        account.isPrimary &&
-        mockPaymentConfig.activeMethod === "bank_transfer"
-      ) {
+      if (account.isPrimary && mockPaymentConfig.bankTransferEnabled) {
         setError(
           `"${account.bankName} ···${account.accountNumber.slice(-4)}" is the active primary account for Bank Transfer payments. Please set a different primary account before deactivating.`,
-        );
-        return;
+        )
+        return
       }
-      setConfirmAction({ type: "deactivate", account });
+      setConfirmAction({ type: "deactivate", account })
     } else {
-      setConfirmAction({ type: "activate", account });
+      setConfirmAction({ type: "activate", account })
     }
   }
 
   function handleDelete(account: BankAccount) {
-    if (
-      account.isPrimary &&
-      mockPaymentConfig.activeMethod === "bank_transfer"
-    ) {
+    if (account.isPrimary && mockPaymentConfig.bankTransferEnabled) {
       setError(
-        "Cannot delete the primary account while Bank Transfer is the active payment method.",
-      );
-      return;
+        "Cannot delete the primary account while Bank Transfer is enabled.",
+      )
+      return
     }
     // In prototype we allow delete regardless of transaction history guard
     // (no transaction → account link in this mock)
-    setConfirmAction({ type: "delete", account });
+    setConfirmAction({ type: "delete", account })
   }
 
   function executeConfirm() {
-    if (!confirmAction) return;
-    const { type, account } = confirmAction;
-    const now = new Date().toISOString();
+    if (!confirmAction) return
+    const { type, account } = confirmAction
+    const now = new Date().toISOString()
 
     setAccounts((prev) => {
-      let updated: BankAccount[];
+      let updated: BankAccount[]
       if (type === "set-primary") {
         updated = prev.map((a) => ({
           ...a,
           isPrimary: a.id === account.id,
           updatedAt: a.id === account.id ? now : a.updatedAt,
-        }));
+        }))
       } else if (type === "deactivate") {
         updated = prev.map((a) =>
           a.id === account.id ? { ...a, isActive: false, updatedAt: now } : a,
-        );
+        )
       } else if (type === "activate") {
         updated = prev.map((a) =>
           a.id === account.id ? { ...a, isActive: true, updatedAt: now } : a,
-        );
+        )
       } else {
-        updated = prev.filter((a) => a.id !== account.id);
+        updated = prev.filter((a) => a.id !== account.id)
       }
       // Sync mock
-      mockBankAccounts.length = 0;
-      for (const a of updated) mockBankAccounts.push(a);
-      return updated;
-    });
+      mockBankAccounts.length = 0
+      for (const a of updated) mockBankAccounts.push(a)
+      return updated
+    })
 
     const messages: Record<string, string> = {
       "set-primary": `${account.bankName} ···${account.accountNumber.slice(-4)} is now the primary account.`,
       deactivate: "Account deactivated.",
       activate: "Account activated.",
       delete: "Account deleted.",
-    };
-    showToast(messages[type]);
-    setConfirmAction(null);
-    setError(null);
+    }
+    showToast(messages[type])
+    setConfirmAction(null)
+    setError(null)
   }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-12">
-        <div className="flex-1 flex items-center gap-2">
+        <div className="flex flex-1 items-center gap-2">
           <div className="relative flex-1">
-            <SearchIcon className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
+            <SearchIcon className="absolute top-2.5 left-2.5 size-4 text-muted-foreground" />
             <Input
               placeholder="Search by bank, account number, or holder…"
               value={search}
@@ -382,7 +376,7 @@ export function BankAccountManager() {
                         {account.bankName}
                       </span>
                       {account.isPrimary && (
-                        <Badge className="gap-1 text-xs bg-amber-100 text-amber-700 border-amber-300">
+                        <Badge className="gap-1 border-amber-300 bg-amber-100 text-amber-700 text-xs">
                           <StarIcon className="size-2.5" />
                           Primary
                         </Badge>
@@ -562,7 +556,7 @@ export function BankAccountManager() {
       <AlertDialog
         open={!!confirmAction}
         onOpenChange={(open) => {
-          if (!open) setConfirmAction(null);
+          if (!open) setConfirmAction(null)
         }}
       >
         <AlertDialogContent>
@@ -602,10 +596,10 @@ export function BankAccountManager() {
       </AlertDialog>
 
       {toast && (
-        <div className="fixed bottom-6 right-6 z-50 max-w-sm rounded-lg border bg-background px-4 py-3 shadow-lg text-sm">
+        <div className="fixed right-6 bottom-6 z-50 max-w-sm rounded-lg border bg-background px-4 py-3 text-sm shadow-lg">
           {toast}
         </div>
       )}
     </div>
-  );
+  )
 }

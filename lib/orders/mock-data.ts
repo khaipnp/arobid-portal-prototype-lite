@@ -1,5 +1,6 @@
 import type {
   BankAccount,
+  ExpoPaymentConfig,
   Order,
   PaymentConfig,
   TransactionLogEntry,
@@ -51,10 +52,34 @@ export const mockBankAccounts: BankAccount[] = [
 ]
 
 export const mockPaymentConfig: PaymentConfig = {
-  activeMethod: "bank_transfer",
+  vnpayEnabled: true,
+  bankTransferEnabled: true,
   updatedAt: iso(5),
   updatedBy: "admin@arobid.com",
 }
+
+// Per-expo payment config overrides.
+// Expos not listed here are treated as isInherited = true (use platform default).
+export const mockExpoPaymentConfigs: ExpoPaymentConfig[] = [
+  {
+    expoId: "expo-003",
+    isInherited: false,
+    vnpayEnabled: false,
+    bankTransferEnabled: true,
+    bankAccountId: "ba-002",
+    updatedAt: iso(2),
+    updatedBy: "admin@arobid.com",
+  },
+  {
+    expoId: "expo-004",
+    isInherited: false,
+    vnpayEnabled: true,
+    bankTransferEnabled: true,
+    bankAccountId: null,
+    updatedAt: iso(10),
+    updatedBy: "admin@arobid.com",
+  },
+]
 
 const customers = [
   {

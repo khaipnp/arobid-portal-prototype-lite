@@ -7,10 +7,11 @@ import {
   LayoutDashboardIcon,
   LayoutPanelTopIcon,
   LayoutTemplateIcon,
+  MonitorPlayIcon,
   PieChartIcon,
   ReceiptIcon,
-  SettingsIcon,
   ShieldCheckIcon,
+  TicketIcon,
   ToyBrickIcon,
   UsersIcon,
 } from "lucide-react"
@@ -59,15 +60,22 @@ const tradexpoLinks = [
   },
 ]
 
-const ordersLinks = [
+const servicesLinks = [
+  {
+    name: "Host Dashboard",
+    url: "/admin/streaming",
+    icon: <MonitorPlayIcon />,
+  },
   {
     name: "Order Management",
     url: "/admin/orders",
     icon: <ReceiptIcon />,
   },
-]
-
-const settingsLinks = [
+  {
+    name: "eVoucher",
+    url: "/admin/evoucher",
+    icon: <TicketIcon />,
+  },
   {
     name: "Payment Method",
     url: "/admin/settings/payment-method",
@@ -148,25 +156,9 @@ export function NavAdmin() {
       </SidebarGroup>
 
       <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-        <SidebarGroupLabel>Orders & Transactions</SidebarGroupLabel>
+        <SidebarGroupLabel>Service Management</SidebarGroupLabel>
         <SidebarMenu>
-          {ordersLinks.map((item) => (
-            <SidebarMenuItem key={item.name}>
-              <SidebarMenuButton asChild>
-                <Link href={item.url}>
-                  {item.icon}
-                  <span>{item.name}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarGroup>
-
-      <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-        <SidebarGroupLabel>Settings</SidebarGroupLabel>
-        <SidebarMenu>
-          {settingsLinks.map((item) => (
+          {servicesLinks.map((item) => (
             <SidebarMenuItem key={item.name}>
               <SidebarMenuButton asChild>
                 <Link href={item.url}>

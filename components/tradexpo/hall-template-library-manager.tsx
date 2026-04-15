@@ -45,10 +45,9 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import {
-  mockAssets,
-  mockHallTemplates,
-  mockHallTemplateUsage,
-} from "@/lib/tradexpo/mock-data"
+  toggleHallTemplateActive,
+  toggleHallTemplatePublic,
+} from "@/lib/tradexpo/actions/hall-templates"
 import type {
   HallTemplate,
   HallTemplateUsage,
@@ -83,28 +82,27 @@ const defaultFormState: HallTemplateFormState = {
   isActive: true,
 }
 
-function cloneAssets() {
-  return mockAssets.map((asset) => ({ ...asset }))
-}
-
-function cloneTemplates() {
-  return mockHallTemplates.map((template) => ({
-    ...template,
-    translations: template.translations.map((translation) => ({
-      ...translation,
+export function HallTemplateLibraryManager({
+  initialAssets,
+  initialTemplates,
+  initialUsage,
+}: {
+  initialAssets: ModelAsset[]
+  initialTemplates: HallTemplate[]
+  initialUsage: HallTemplateUsage[]
+}) {
+  const [assets, setAssets] = React.useState<ModelAsset[]>(() =>
+    initialAssets.map((a) => ({ ...a })),
+  )
+  const [templates, setTemplates] = React.useState<HallTemplate[]>(() =>
+    initialTemplates.map((t) => ({
+      ...t,
+      translations: t.translations.map((tr) => ({ ...tr })),
     })),
-  }))
-}
-
-function cloneUsage() {
-  return mockHallTemplateUsage.map((usage) => ({ ...usage }))
-}
-
-export function HallTemplateLibraryManager() {
-  const [assets, setAssets] = React.useState<ModelAsset[]>(cloneAssets)
-  const [templates, setTemplates] =
-    React.useState<HallTemplate[]>(cloneTemplates)
-  const [usages, setUsages] = React.useState<HallTemplateUsage[]>(cloneUsage)
+  )
+  const [usages, setUsages] = React.useState<HallTemplateUsage[]>(() =>
+    initialUsage.map((u) => ({ ...u })),
+  )
 
   const [search, setSearch] = React.useState("")
   const [page, setPage] = React.useState(1)
@@ -453,17 +451,24 @@ export function HallTemplateLibraryManager() {
               ...item,
               isPublic: nextPublic,
               updatedAt: new Date().toISOString(),
-              updatedBy: "Khai Pham",
+              updatedBy: item.updatedBy,
             }
           : item,
       ),
     )
 
-    setNotice({
-      type: "success",
-      text: nextPublic
-        ? "Template published for organizers."
-        : "Template moved back to draft.",
+    void toggleHallTemplatePublic(template.id).catch(() => {
+      setTemplates((currentTemplates) =>
+        currentTemplates.map((item) =>
+          item.id === template.id
+            ? { ...item, isPublic: template.isPublic }
+            : item,
+        ),
+      )
+      setNotice({
+        type: "error",
+        text: "Failed to update template visibility.",
+      })
     })
   }
 
@@ -478,11 +483,25 @@ export function HallTemplateLibraryManager() {
               ...item,
               isActive: nextActive,
               updatedAt: new Date().toISOString(),
-              updatedBy: "Khai Pham",
+              updatedBy: item.updatedBy,
             }
           : item,
       ),
     )
+
+    void toggleHallTemplateActive(template.id).catch(() => {
+      setTemplates((currentTemplates) =>
+        currentTemplates.map((item) =>
+          item.id === template.id
+            ? { ...item, isActive: template.isActive }
+            : item,
+        ),
+      )
+      setNotice({
+        type: "error",
+        text: "Failed to update template activation.",
+      })
+    })
 
     if (!nextActive && (usage?.upcomingExpoCount || 0) > 0) {
       setNotice({
@@ -712,7 +731,7 @@ export function HallTemplateLibraryManager() {
                     <TableRow key={template.id}>
                       <TableCell>
                         <Link
-                          href={`/dashboard/tradexpo/hall-templates/${template.id}`}
+                          href={`/admin/tradexpo/hall-templates/${template.id}`}
                         >
                           <Image
                             width={120}
@@ -725,7 +744,7 @@ export function HallTemplateLibraryManager() {
                       </TableCell>
                       <TableCell>
                         <Link
-                          href={`/dashboard/tradexpo/hall-templates/${template.id}`}
+                          href={`/admin/tradexpo/hall-templates/${template.id}`}
                           className="font-medium"
                         >
                           {translatedName}
@@ -749,7 +768,7 @@ export function HallTemplateLibraryManager() {
                           <DropdownMenuContent align="end" className="w-44">
                             <DropdownMenuItem asChild>
                               <Link
-                                href={`/dashboard/tradexpo/hall-templates/${template.id}`}
+                                href={`/admin/tradexpo/hall-templates/${template.id}`}
                               >
                                 Detail
                               </Link>
@@ -1016,17 +1035,26 @@ export function HallTemplateLibraryManager() {
         </DialogContent>
       </Dialog>
 
-      {translationTarget ? (
-        <section className="rounded-xl border bg-card p-4">
-          <h2 className="font-semibold text-base">
-            Translation Panel: {translationTarget.name}
-          </h2>
-          <p className="mt-1 text-muted-foreground text-sm">
-            Add or update localized template names.
-          </p>
+      <Dialog
+        open={Boolean(translationTarget)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setTranslationTemplateId(null)
+            setTranslationName("")
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Translations — {translationTarget?.name}</DialogTitle>
+            <DialogDescription>
+              Add or update localized template names. Falls back to the default
+              name when no translation exists for a locale.
+            </DialogDescription>
+          </DialogHeader>
 
           <form
-            className="mt-4 grid gap-3 md:grid-cols-3"
+            className="grid gap-3 md:grid-cols-3"
             onSubmit={handleAddTranslation}
           >
             <Input
@@ -1041,10 +1069,10 @@ export function HallTemplateLibraryManager() {
               onChange={(event) => setTranslationName(event.target.value)}
               placeholder="translated name"
             />
-            <Button type="submit">Add Translation</Button>
+            <Button type="submit">Add</Button>
           </form>
 
-          <div className="mt-3 rounded-md border">
+          <div className="rounded-md border">
             <Table>
               <TableHeader className="bg-muted/40">
                 <TableRow>
@@ -1054,7 +1082,7 @@ export function HallTemplateLibraryManager() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {translationTarget.translations.length === 0 ? (
+                {translationTarget?.translations.length === 0 ? (
                   <TableRow>
                     <TableCell
                       colSpan={3}
@@ -1064,7 +1092,7 @@ export function HallTemplateLibraryManager() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  translationTarget.translations.map((translation) => (
+                  translationTarget?.translations.map((translation) => (
                     <TableRow key={translation.languageCode}>
                       <TableCell>{translation.languageCode}</TableCell>
                       <TableCell>{translation.name}</TableCell>
@@ -1107,8 +1135,8 @@ export function HallTemplateLibraryManager() {
               </TableBody>
             </Table>
           </div>
-        </section>
-      ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

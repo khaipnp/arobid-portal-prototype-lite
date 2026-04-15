@@ -1,18 +1,33 @@
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import { HallTemplateLibraryManager } from "@/components/tradexpo/hall-template-library-manager"
+import {
+  listHallTemplateAssets,
+  listHallTemplates,
+  listHallTemplateUsage,
+} from "@/lib/tradexpo/db/hall-templates"
 
-export default function HallTemplateLibraryPage() {
+export default async function HallTemplateLibraryPage() {
+  const [assets, templates, usages] = await Promise.all([
+    listHallTemplateAssets(),
+    listHallTemplates(),
+    listHallTemplateUsage(),
+  ])
+
   return (
     <DashboardShell
       title="Hall Template Library"
       description="Manage hall templates and translations, with publish/deactivate safeguards."
       breadcrumbs={[
-        { label: "Dashboard", href: "/dashboard" },
-        { label: "TradeXpo", href: "/dashboard/tradexpo" },
+        { label: "Dashboard", href: "/admin" },
+        { label: "TradeXpo", href: "/admin/tradexpo" },
         { label: "Hall Templates" },
       ]}
     >
-      <HallTemplateLibraryManager />
+      <HallTemplateLibraryManager
+        initialAssets={assets}
+        initialTemplates={templates}
+        initialUsage={usages}
+      />
     </DashboardShell>
   )
 }

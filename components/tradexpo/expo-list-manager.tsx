@@ -3,7 +3,6 @@
 import {
   CheckIcon,
   ChevronDownIcon,
-  EyeIcon,
   MoreHorizontalIcon,
   SearchIcon,
 } from "lucide-react"
@@ -440,7 +439,6 @@ export function ExpoListManager() {
                         <DropdownMenuContent align="end" className="w-40">
                           <DropdownMenuItem asChild>
                             <Link href={`/admin/tradexpo/expos/${expo.id}`}>
-                              <EyeIcon className="mr-2 h-4 w-4" />
                               View Details
                             </Link>
                           </DropdownMenuItem>

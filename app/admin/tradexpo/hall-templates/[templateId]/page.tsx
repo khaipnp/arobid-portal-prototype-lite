@@ -1,10 +1,10 @@
-import Link from "next/link"
 import { notFound } from "next/navigation"
 
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import { HallSlotManager } from "@/components/tradexpo/hall-slot-manager"
+import { HallTemplateDetailManager } from "@/components/tradexpo/hall-template-detail-manager"
 import { StatusBadge } from "@/components/tradexpo/status-badge"
-import { Button } from "@/components/ui/button"
+import { TemplateTranslationsDialog } from "@/components/tradexpo/template-translations-dialog"
 import {
   Card,
   CardContent,
@@ -13,11 +13,14 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import {
-  mockAssets,
-  mockHallTemplateSlots,
-  mockHallTemplates,
-  mockHallTemplateUsage,
-} from "@/lib/tradexpo/mock-data"
+  listHallSlotUsage,
+  listHallTemplateSlots,
+} from "@/lib/tradexpo/db/hall-slots"
+import {
+  listHallTemplateAssets,
+  listHallTemplates,
+  listHallTemplateUsage,
+} from "@/lib/tradexpo/db/hall-templates"
 import {
   formatDateTime,
   getAssetMap,
@@ -31,26 +34,30 @@ export default async function HallTemplateDetailPage({
 }) {
   const { templateId } = await params
 
-  const template = mockHallTemplates.find((item) => item.id === templateId)
+  const [assets, templates, usages, slots, slotUsage] = await Promise.all([
+    listHallTemplateAssets(),
+    listHallTemplates(),
+    listHallTemplateUsage(),
+    listHallTemplateSlots(templateId),
+    listHallSlotUsage(templateId),
+  ])
+
+  const template = templates.find((item) => item.id === templateId)
 
   if (!template) {
     notFound()
   }
 
-  const usage = mockHallTemplateUsage.find(
-    (item) => item.hallTemplateId === template.id,
-  ) || {
+  const usage = usages.find((item) => item.hallTemplateId === template.id) || {
     hallTemplateId: template.id,
     upcomingExpoCount: 0,
     liveExpoCount: 0,
     archivedExpoCount: 0,
   }
 
-  const slotCount = mockHallTemplateSlots.filter(
-    (slot) => slot.hallTemplateId === template.id,
-  ).length
+  const slotCount = slots.length
 
-  const assetMap = getAssetMap(mockAssets)
+  const assetMap = getAssetMap(assets)
   const status = getHallTemplateStatus(template, assetMap)
 
   return (
@@ -60,25 +67,29 @@ export default async function HallTemplateDetailPage({
       breadcrumbs={[
         { label: "Dashboard", href: "/admin" },
         { label: "TradeXpo", href: "/admin/tradexpo" },
-        {
-          label: "Hall Templates",
-          href: "/admin/tradexpo/hall-templates",
-        },
+        { label: "Hall Templates", href: "/admin/tradexpo/hall-templates" },
         { label: template.name },
       ]}
     >
       <div className="grid gap-4 lg:grid-cols-3">
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="flex flex-wrap items-center gap-2">
-              {template.name}
-              <StatusBadge status={status} />
-            </CardTitle>
-            <CardDescription>
-              Unified detail page for template context, status tracking, and
-              slot management.
-            </CardDescription>
+            <div className="flex flex-col">
+              <CardTitle className="flex flex-wrap items-center gap-2">
+                {template.name}
+                <StatusBadge status={status} />
+              </CardTitle>
+              <CardDescription>
+                Unified detail page for template context, status tracking, and
+                slot management.
+              </CardDescription>
+            </div>
+            <TemplateTranslationsDialog
+              templateName={template.name}
+              initialTranslations={template.translations}
+            />
           </CardHeader>
+
           <CardContent className="grid gap-2 text-sm md:grid-cols-2">
             <p>
               <span className="font-medium">Updated by:</span>{" "}
@@ -122,16 +133,19 @@ export default async function HallTemplateDetailPage({
               <span className="font-medium">Archived expos:</span>{" "}
               {usage.archivedExpoCount}
             </p>
-            <Button variant="outline" asChild className="mt-2">
-              <Link href="/admin/tradexpo/hall-templates">
-                Back to Hall Templates
-              </Link>
-            </Button>
           </CardContent>
         </Card>
       </div>
 
-      <HallSlotManager templateId={templateId} embedded />
+      <HallTemplateDetailManager templateId={templateId} />
+
+      <HallSlotManager
+        templateId={templateId}
+        templateName={template.name}
+        initialSlots={slots}
+        initialUsage={slotUsage}
+        embedded
+      />
     </DashboardShell>
   )
 }

@@ -1,145 +1,178 @@
 "use client"
 
-import { CreditCardIcon, LandmarkIcon } from "lucide-react"
+import { CreditCardIcon, InfoIcon, LandmarkIcon } from "lucide-react"
 import { useState } from "react"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
-import { mockBankAccounts, mockPaymentConfig } from "@/lib/orders/mock-data"
-import type { PaymentMethod } from "@/lib/tradexpo/types"
-import { cn } from "@/lib/utils"
+import {
+  mockBankAccounts,
+  mockExpoPaymentConfigs,
+  mockPaymentConfig,
+} from "@/lib/orders/mock-data"
 
-interface MethodCardProps {
-  id: PaymentMethod
+interface ToggleRowProps {
+  icon: React.ReactNode
   label: string
   description: string
-  icon: React.ReactNode
-  selected: boolean
-  onSelect: () => void
+  enabled: boolean
+  onToggle: () => void
 }
 
-function MethodCard({
+function ToggleRow({
+  icon,
   label,
   description,
-  icon,
-  selected,
-  onSelect,
-}: MethodCardProps) {
+  enabled,
+  onToggle,
+}: ToggleRowProps) {
   return (
-    <button
-      type="button"
-      onClick={onSelect}
-      className={cn(
-        "flex w-full items-start gap-4 rounded-xl border-2 p-5 text-left transition-all",
-        selected
-          ? "border-primary bg-primary/5"
-          : "border-border bg-card hover:border-muted-foreground/40",
-      )}
-    >
+    <div className="flex items-start gap-4 rounded-xl border p-5">
       <div
-        className={cn(
-          "mt-0.5 rounded-lg p-2",
-          selected ? "bg-primary text-primary-foreground" : "bg-muted",
-        )}
+        className={`mt-0.5 rounded-lg p-2 ${enabled ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}
       >
         {icon}
       </div>
       <div className="flex-1">
-        <div className="flex items-center justify-between">
-          <span className="font-semibold text-sm">{label}</span>
-          <span
-            className={cn(
-              "size-4 rounded-full border-2",
-              selected
-                ? "border-primary bg-primary"
-                : "border-muted-foreground",
-            )}
-          />
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="font-semibold text-sm">{label}</p>
+            <p className="mt-0.5 text-muted-foreground text-xs">
+              {description}
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={enabled}
+            onClick={onToggle}
+            className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${enabled ? "bg-primary" : "bg-muted-foreground/30"}`}
+          >
+            <span
+              className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform ${enabled ? "translate-x-5" : "translate-x-0"}`}
+            />
+          </button>
         </div>
-        <p className="mt-0.5 text-muted-foreground text-xs">{description}</p>
       </div>
-    </button>
+    </div>
   )
 }
 
 export function PaymentMethodConfig() {
-  const [activeMethod, setActiveMethod] = useState<PaymentMethod>(
-    mockPaymentConfig.activeMethod,
+  const [vnpayEnabled, setVnpayEnabled] = useState(
+    mockPaymentConfig.vnpayEnabled,
   )
-  const [pendingMethod, setPendingMethod] = useState<PaymentMethod | null>(null)
+  const [bankEnabled, setBankEnabled] = useState(
+    mockPaymentConfig.bankTransferEnabled,
+  )
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
+
+  const _inheritedExpoCount = mockExpoPaymentConfigs.filter(
+    (c) => c.isInherited,
+  ).length
+  // Total expos is a rough count — expos not in mockExpoPaymentConfigs are all inherited
+  // For display, we use: inherited = total mock expos (5+) minus those with isInherited=false
+  const customCount = mockExpoPaymentConfigs.filter(
+    (c) => !c.isInherited,
+  ).length
+  // Approximate total expos in system (from mock-data expos, known to be 6+)
+  const approxTotalExpos = 6
+  const inheritingCount = approxTotalExpos - customCount
 
   function showToast(msg: string) {
     setToast(msg)
     setTimeout(() => setToast(null), 4000)
   }
 
-  function handleSelect(method: PaymentMethod) {
-    if (method === activeMethod) return
+  function handleToggleVNPay() {
+    const next = !vnpayEnabled
+    if (!next && !bankEnabled) {
+      setError("At least one payment method must be enabled.")
+      return
+    }
     setError(null)
+    setVnpayEnabled(next)
+  }
 
-    if (method === "bank_transfer") {
-      const hasPrimary = mockBankAccounts.some((b) => b.isPrimary && b.isActive)
-      if (!hasPrimary) {
+  function handleToggleBank() {
+    const next = !bankEnabled
+    if (!next && !vnpayEnabled) {
+      setError("At least one payment method must be enabled.")
+      return
+    }
+    if (next) {
+      const hasActiveAccount = mockBankAccounts.some((b) => b.isActive)
+      if (!hasActiveAccount) {
         setError(
-          "No primary bank account configured. Please add a bank account in Bank Account Settings before activating Bank Transfer.",
+          "No bank accounts configured. Please add a bank account in Bank Account Settings before enabling Bank Transfer.",
         )
         return
       }
     }
-
-    setPendingMethod(method)
+    setError(null)
+    setBankEnabled(next)
   }
 
-  function handleConfirm() {
-    if (!pendingMethod) return
-    setActiveMethod(pendingMethod)
-    mockPaymentConfig.activeMethod = pendingMethod
+  function handleSave() {
+    if (!vnpayEnabled && !bankEnabled) {
+      setError("At least one payment method must be enabled.")
+      return
+    }
+    mockPaymentConfig.vnpayEnabled = vnpayEnabled
+    mockPaymentConfig.bankTransferEnabled = bankEnabled
     mockPaymentConfig.updatedAt = new Date().toISOString()
     mockPaymentConfig.updatedBy = "admin@arobid.com"
-    setPendingMethod(null)
-    showToast(
-      `Payment method updated to ${pendingMethod === "vnpay" ? "VNPay" : "Bank Transfer"}.`,
-    )
+    showToast("Platform default payment configuration updated.")
   }
+
+  const primaryAccount = mockBankAccounts.find((b) => b.isPrimary && b.isActive)
 
   return (
     <div className="max-w-2xl space-y-6">
-      <div className="space-y-1">
-        <p className="text-muted-foreground text-sm">
-          Select the active payment method for all new customer checkouts. Only
-          one method can be active at a time. Existing in-progress orders are
-          not affected.
-        </p>
+      <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 dark:border-blue-800 dark:bg-blue-900/20">
+        <div className="flex gap-2 text-blue-800 text-sm dark:text-blue-300">
+          <InfoIcon className="mt-0.5 size-4 shrink-0" />
+          <p>
+            This configuration applies to{" "}
+            <strong>B2B Marketplace purchases</strong> and all{" "}
+            <strong>
+              {inheritingCount} Expo{inheritingCount !== 1 ? "s" : ""}
+            </strong>{" "}
+            that have not been individually configured. Expos with custom
+            configs are not affected.
+          </p>
+        </div>
       </div>
 
       <div className="space-y-3">
-        <MethodCard
-          id="vnpay"
+        <ToggleRow
+          icon={<CreditCardIcon className="size-5" />}
           label="VNPay"
           description="Customers are redirected to the VNPay gateway to complete payment. Order status is updated automatically via gateway callback."
-          icon={<CreditCardIcon className="size-5" />}
-          selected={activeMethod === "vnpay"}
-          onSelect={() => handleSelect("vnpay")}
+          enabled={vnpayEnabled}
+          onToggle={handleToggleVNPay}
         />
-        <MethodCard
-          id="bank_transfer"
+        <ToggleRow
+          icon={<LandmarkIcon className="size-5" />}
           label="Bank Transfer (VietQR)"
           description="Customers scan a VietQR code and manually confirm their transfer. Admin reconciles each payment against the bank statement."
-          icon={<LandmarkIcon className="size-5" />}
-          selected={activeMethod === "bank_transfer"}
-          onSelect={() => handleSelect("bank_transfer")}
+          enabled={bankEnabled}
+          onToggle={handleToggleBank}
         />
       </div>
+
+      {bankEnabled && primaryAccount && (
+        <div className="rounded-lg border bg-muted/40 px-4 py-3 text-muted-foreground text-xs">
+          <strong>Primary bank account:</strong> {primaryAccount.bankName} ···
+          {primaryAccount.accountNumber.slice(-4)} — used for all Bank Transfer
+          QR codes where no Expo-specific account is configured.{" "}
+          <a
+            href="/admin/settings/bank-accounts"
+            className="text-foreground underline underline-offset-2"
+          >
+            Manage accounts →
+          </a>
+        </div>
+      )}
 
       {error && (
         <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-destructive text-sm">
@@ -155,43 +188,17 @@ export function PaymentMethodConfig() {
         </div>
       )}
 
-      <div className="rounded-lg border bg-muted/40 px-4 py-3 text-muted-foreground text-xs">
-        <strong>Current active method:</strong>{" "}
-        {activeMethod === "vnpay" ? "VNPay" : "Bank Transfer"} · Last updated{" "}
-        {new Date(mockPaymentConfig.updatedAt).toLocaleString("vi-VN")} by{" "}
-        {mockPaymentConfig.updatedBy}
+      <div className="flex items-center justify-between border-t pt-4">
+        <p className="text-muted-foreground text-xs">
+          Last updated{" "}
+          {new Date(mockPaymentConfig.updatedAt).toLocaleString("vi-VN")} by{" "}
+          {mockPaymentConfig.updatedBy}
+        </p>
+        <Button onClick={handleSave}>Save</Button>
       </div>
 
-      {/* Confirmation dialog */}
-      <AlertDialog
-        open={!!pendingMethod}
-        onOpenChange={(open) => {
-          if (!open) setPendingMethod(null)
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              Switch to {pendingMethod === "vnpay" ? "VNPay" : "Bank Transfer"}?
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {pendingMethod === "bank_transfer"
-                ? "All new orders will use QR bank transfer. Admin will need to manually reconcile each payment."
-                : "All new orders will use the VNPay payment gateway. Customers will be redirected to VNPay at checkout."}{" "}
-              This takes effect immediately for new orders.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm}>
-              Confirm
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
       {toast && (
-        <div className="fixed bottom-6 right-6 z-50 max-w-sm rounded-lg border bg-background px-4 py-3 shadow-lg text-sm">
+        <div className="fixed right-6 bottom-6 z-50 max-w-sm rounded-lg border bg-background px-4 py-3 text-sm shadow-lg">
           {toast}
         </div>
       )}

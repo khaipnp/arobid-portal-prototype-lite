@@ -3,6 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { MoreHorizontalIcon, PlusIcon, SearchIcon } from "lucide-react"
+import Link from "next/link"
 import * as React from "react"
 import { StatusBadge } from "@/components/tradexpo/status-badge"
 import {
@@ -51,14 +52,13 @@ import {
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
 import {
-  mockAssets,
-  mockBoothTemplates,
-  mockBoothTemplateUsage,
-  mockBoothTypes,
-} from "@/lib/tradexpo/mock-data"
+  toggleBoothTemplateActive,
+  toggleBoothTemplatePublic,
+} from "@/lib/tradexpo/actions/booth-templates"
 import type {
   BoothTemplate,
   BoothTemplateUsage,
+  BoothType,
   ModelAsset,
 } from "@/lib/tradexpo/types"
 import {
@@ -94,28 +94,30 @@ const defaultFormState: BoothTemplateFormState = {
   isActive: true,
 }
 
-function cloneAssets() {
-  return mockAssets.map((asset) => ({ ...asset }))
-}
-
-function cloneTemplates() {
-  return mockBoothTemplates.map((template) => ({
-    ...template,
-    translations: template.translations.map((translation) => ({
-      ...translation,
+export function BoothTemplateLibraryManager({
+  initialAssets,
+  initialTemplates,
+  initialUsage,
+  initialBoothTypes,
+}: {
+  initialAssets: ModelAsset[]
+  initialTemplates: BoothTemplate[]
+  initialUsage: BoothTemplateUsage[]
+  initialBoothTypes: BoothType[]
+}) {
+  const [assets, setAssets] = React.useState<ModelAsset[]>(() =>
+    initialAssets.map((a) => ({ ...a })),
+  )
+  const [templates, setTemplates] = React.useState<BoothTemplate[]>(() =>
+    initialTemplates.map((t) => ({
+      ...t,
+      translations: t.translations.map((tr) => ({ ...tr })),
     })),
-  }))
-}
-
-function cloneUsage() {
-  return mockBoothTemplateUsage.map((usage) => ({ ...usage }))
-}
-
-export function BoothTemplateLibraryManager() {
-  const [assets, setAssets] = React.useState<ModelAsset[]>(cloneAssets)
-  const [templates, setTemplates] =
-    React.useState<BoothTemplate[]>(cloneTemplates)
-  const [usages, setUsages] = React.useState<BoothTemplateUsage[]>(cloneUsage)
+  )
+  const [usages, setUsages] = React.useState<BoothTemplateUsage[]>(() =>
+    initialUsage.map((u) => ({ ...u })),
+  )
+  const boothTypes = React.useMemo(() => initialBoothTypes, [initialBoothTypes])
 
   const [search, setSearch] = React.useState("")
   const [page, setPage] = React.useState(1)
@@ -473,17 +475,24 @@ export function BoothTemplateLibraryManager() {
               ...item,
               isPublic: nextPublic,
               updatedAt: new Date().toISOString(),
-              updatedBy: "Khai Pham",
+              updatedBy: item.updatedBy,
             }
           : item,
       ),
     )
 
-    setNotice({
-      type: "success",
-      text: nextPublic
-        ? "Template published for eligible booth types."
-        : "Template moved back to draft.",
+    void toggleBoothTemplatePublic(template.id).catch(() => {
+      setTemplates((currentTemplates) =>
+        currentTemplates.map((item) =>
+          item.id === template.id
+            ? { ...item, isPublic: template.isPublic }
+            : item,
+        ),
+      )
+      setNotice({
+        type: "error",
+        text: "Failed to update template visibility.",
+      })
     })
   }
 
@@ -498,11 +507,25 @@ export function BoothTemplateLibraryManager() {
               ...item,
               isActive: nextActive,
               updatedAt: new Date().toISOString(),
-              updatedBy: "Khai Pham",
+              updatedBy: item.updatedBy,
             }
           : item,
       ),
     )
+
+    void toggleBoothTemplateActive(template.id).catch(() => {
+      setTemplates((currentTemplates) =>
+        currentTemplates.map((item) =>
+          item.id === template.id
+            ? { ...item, isActive: template.isActive }
+            : item,
+        ),
+      )
+      setNotice({
+        type: "error",
+        text: "Failed to update template activation.",
+      })
+    })
 
     if (!nextActive && (usage?.upcomingExpoBoothCount || 0) > 0) {
       setNotice({
@@ -728,22 +751,30 @@ export function BoothTemplateLibraryManager() {
                     previewLocale,
                   )
                   const boothTypeName =
-                    mockBoothTypes.find(
-                      (type) => type.id === template.boothTypeId,
-                    )?.name || "Unknown"
+                    boothTypes.find((type) => type.id === template.boothTypeId)
+                      ?.name || "Unknown"
 
                   return (
                     <TableRow key={template.id}>
                       <TableCell>
-                        {/* biome-ignore lint/performance/noImgElement: thumbnail src is dynamic, next/image requires known dimensions */}
-                        <img
-                          src={thumbnail?.fileUrl}
-                          alt={template.name}
-                          className="h-12 w-20 rounded-md border object-cover"
-                        />
+                        <Link
+                          href={`/admin/tradexpo/booth-templates/${template.id}`}
+                        >
+                          {/* biome-ignore lint/performance/noImgElement: thumbnail src is dynamic, next/image requires known dimensions */}
+                          <img
+                            src={thumbnail?.fileUrl}
+                            alt={template.name}
+                            className="h-12 w-20 rounded-md border object-cover"
+                          />
+                        </Link>
                       </TableCell>
                       <TableCell>
-                        <p className="font-medium">{translatedName}</p>
+                        <Link
+                          href={`/admin/tradexpo/booth-templates/${template.id}`}
+                          className="font-medium"
+                        >
+                          {translatedName}
+                        </Link>
                         <p className="text-muted-foreground text-xs">
                           {template.description || "No description"}
                         </p>
@@ -765,6 +796,13 @@ export function BoothTemplateLibraryManager() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuItem asChild>
+                              <Link
+                                href={`/admin/tradexpo/booth-templates/${template.id}`}
+                              >
+                                Detail
+                              </Link>
+                            </DropdownMenuItem>
                             <DropdownMenuItem
                               onSelect={() => openEditForm(template)}
                             >
@@ -925,7 +963,7 @@ export function BoothTemplateLibraryManager() {
                   <SelectValue placeholder="Select booth type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {mockBoothTypes.map((type) => (
+                  {boothTypes.map((type) => (
                     <SelectItem key={type.id} value={type.id}>
                       {type.name}
                     </SelectItem>
@@ -1072,17 +1110,26 @@ export function BoothTemplateLibraryManager() {
         </DialogContent>
       </Dialog>
 
-      {translationTarget ? (
-        <section className="rounded-xl border bg-card p-4">
-          <h2 className="font-semibold text-base">
-            Translation Panel: {translationTarget.name}
-          </h2>
-          <p className="mt-1 text-muted-foreground text-sm">
-            Add or update localized booth template names.
-          </p>
+      <Dialog
+        open={Boolean(translationTarget)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setTranslationTemplateId(null)
+            setTranslationName("")
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Translations — {translationTarget?.name}</DialogTitle>
+            <DialogDescription>
+              Add or update localized booth template names. Falls back to the
+              default name when no translation exists for a locale.
+            </DialogDescription>
+          </DialogHeader>
 
           <form
-            className="mt-4 grid gap-3 md:grid-cols-3"
+            className="grid gap-3 md:grid-cols-3"
             onSubmit={handleAddTranslation}
           >
             <Input
@@ -1097,10 +1144,10 @@ export function BoothTemplateLibraryManager() {
               onChange={(event) => setTranslationName(event.target.value)}
               placeholder="translated name"
             />
-            <Button type="submit">Add Translation</Button>
+            <Button type="submit">Add</Button>
           </form>
 
-          <div className="mt-3 rounded-md border">
+          <div className="rounded-md border">
             <Table>
               <TableHeader className="bg-muted/40">
                 <TableRow>
@@ -1110,7 +1157,7 @@ export function BoothTemplateLibraryManager() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {translationTarget.translations.length === 0 ? (
+                {translationTarget?.translations.length === 0 ? (
                   <TableRow>
                     <TableCell
                       colSpan={3}
@@ -1120,7 +1167,7 @@ export function BoothTemplateLibraryManager() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  translationTarget.translations.map((translation) => (
+                  translationTarget?.translations.map((translation) => (
                     <TableRow key={translation.languageCode}>
                       <TableCell>{translation.languageCode}</TableCell>
                       <TableCell>{translation.name}</TableCell>
@@ -1163,8 +1210,8 @@ export function BoothTemplateLibraryManager() {
               </TableBody>
             </Table>
           </div>
-        </section>
-      ) : null}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

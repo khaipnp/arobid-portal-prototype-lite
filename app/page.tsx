@@ -10,13 +10,13 @@ export default function Page() {
           <h1 className="font-medium">Project ready!</h1>
           <p>You may now add components and start building.</p>
           <p>We&apos;ve already added the button component for you.</p>
-          <Button asChild className="mt-2">
+          <Button variant="default" asChild className="mt-2">
             <Link href="/admin">Admin View</Link>
           </Button>
-          <Button asChild className="mt-2">
+          <Button variant="outline" asChild className="mt-2">
             <Link href="/partner">Partner View</Link>
           </Button>
-          <Button asChild className="mt-2">
+          <Button variant="secondary" asChild className="mt-2">
             <Link href="/seller">Seller View</Link>
           </Button>
         </div>

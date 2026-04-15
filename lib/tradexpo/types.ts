@@ -154,7 +154,7 @@ export type OrderStatus =
   | "Expired"
   | "Rejected"
 
-export type OrderType = "booth_registration"
+export type OrderType = "booth_registration" | "b2b_subscription"
 
 export interface Order {
   id: string
@@ -200,7 +200,155 @@ export interface BankAccount {
 }
 
 export interface PaymentConfig {
-  activeMethod: PaymentMethod
+  vnpayEnabled: boolean
+  bankTransferEnabled: boolean
   updatedAt: string
   updatedBy: string
+}
+
+export interface ExpoPaymentConfig {
+  expoId: string
+  isInherited: boolean
+  vnpayEnabled: boolean
+  bankTransferEnabled: boolean
+  bankAccountId: string | null
+  updatedAt: string
+  updatedBy: string
+}
+
+// ─── Seller / Supplier ───────────────────────────────────────────────────────
+
+export type SellerBoothStatus =
+  | "Pending Setup"
+  | "Configured"
+  | "Approved"
+  | "Live"
+  | "Ended"
+
+export interface SellerBoothRegistration {
+  id: string
+  expoId: string
+  slotId?: string
+  /** Exhibitor-selected booth template. undefined = not yet selected. */
+  boothTemplateId?: string
+  boothRef: string
+  boothTier: string
+  status: SellerBoothStatus
+  purchasedAt: string
+}
+
+export interface SellerBoothProduct {
+  id: string
+  name: string
+  description: string
+  imageUrl?: string
+}
+
+/** Customization config defined per BoothTemplate (what fields the template exposes). */
+export interface BoothTemplateCustomizationConfig {
+  boothTemplateId: string
+  colorSlots: number
+  imageSlots: number
+  productLimit: number
+  hasVideo: boolean
+}
+
+/** Which BoothTemplates the admin has made available for a given expo. */
+export interface ExpoBoothTemplateAssignment {
+  expoId: string
+  boothTemplateIds: string[]
+}
+
+/** An item from the exhibitor's B2B Marketplace product catalog. */
+export interface ExhibitorCatalogProduct {
+  id: string
+  name: string
+  description: string
+  imageUrl?: string
+}
+
+export type BoothPublishStatus = "Draft" | "Published"
+
+// ─── Core: Streaming Service ─────────────────────────────────────────────────
+
+export type StreamSessionStatus =
+  | "Provisioned"
+  | "Active"
+  | "Ended"
+  | "Canceled"
+
+export interface StreamSession {
+  streamSessionId: string
+  status: StreamSessionStatus
+  hostUserId: string
+  hostDisplayName: string
+  streamUrl: string
+  streamKey: string
+  replayEnabled: boolean
+  replayUrl: string | null
+  startedAt: string | null
+  endedAt: string | null
+  peakViewerCount: number | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface LiveComment {
+  liveCommentId: string
+  streamSessionId: string
+  authorUserId: string | null
+  authorDisplayName: string | null
+  guestDisplayName: string | null
+  guestEmail: string | null
+  commentText: string
+  isDeleted: boolean
+  createdAt: string
+  deletedAt: string | null
+  deletedByUserId: string | null
+}
+
+// ─── TradeXpo: Event GoLIVE ───────────────────────────────────────────────────
+
+export type GoLIVEEventStatus =
+  | "Scheduled"
+  | "Ready"
+  | "Live"
+  | "Ended"
+  | "Canceled"
+
+export type GoLIVESessionType =
+  | "Workshop"
+  | "Talkshow"
+  | "Keynote"
+  | "Panel"
+  | "ProductDemo"
+  | "Other"
+
+export interface GoLIVEEvent {
+  goLiveEventId: string
+  expoId: string
+  streamSessionId: string
+  title: string
+  description: string | null
+  thumbnailUrl: string | null
+  sessionType: GoLIVESessionType
+  scheduledStartAt: string | null
+  status: GoLIVEEventStatus
+  broadcasterUserId: string
+  broadcasterDisplayName: string
+  createdAt: string
+  updatedAt: string
+}
+
+/** Rich booth customization state — template-driven. Replaces SellerBoothConfig. */
+export interface BoothCustomization {
+  registrationId: string
+  selectedBoothTemplateId: string | null
+  publishStatus: BoothPublishStatus
+  colors: string[]
+  logoUrl: string
+  imageUrls: string[]
+  videoType: "upload" | "youtube" | null
+  videoUrl: string
+  products: SellerBoothProduct[]
 }
