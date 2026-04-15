@@ -270,9 +270,86 @@ export async function listStreamSessions(): Promise<StreamSession[]> {
   }))
 }
 
+export async function getStreamSessionById(
+  streamSessionId: string,
+): Promise<StreamSession | null> {
+  const rows = (await sql`
+    select *
+    from stream_sessions
+    where stream_session_id = ${streamSessionId}
+    limit 1
+  `) as {
+    stream_session_id: string
+    status: StreamSession["status"]
+    host_user_id: string
+    host_display_name: string
+    stream_url: string
+    stream_key: string
+    replay_enabled: boolean
+    replay_url: string | null
+    started_at: string | Date | null
+    ended_at: string | Date | null
+    peak_viewer_count: number | null
+    created_at: string | Date
+    updated_at: string | Date
+  }[]
+  const r = rows[0]
+  if (!r) return null
+  return {
+    streamSessionId: r.stream_session_id,
+    status: r.status,
+    hostUserId: r.host_user_id,
+    hostDisplayName: r.host_display_name,
+    streamUrl: r.stream_url,
+    streamKey: r.stream_key,
+    replayEnabled: r.replay_enabled,
+    replayUrl: r.replay_url,
+    startedAt: r.started_at ? toIso(r.started_at) : null,
+    endedAt: r.ended_at ? toIso(r.ended_at) : null,
+    peakViewerCount: r.peak_viewer_count,
+    createdAt: toIso(r.created_at),
+    updatedAt: toIso(r.updated_at),
+  }
+}
+
 export async function listLiveComments(): Promise<LiveComment[]> {
   const rows = (await sql`
     select * from live_comments order by created_at asc
+  `) as {
+    live_comment_id: string
+    stream_session_id: string
+    author_user_id: string | null
+    author_display_name: string | null
+    guest_display_name: string | null
+    guest_email: string | null
+    comment_text: string
+    is_deleted: boolean
+    created_at: string | Date
+    deleted_at: string | Date | null
+    deleted_by_user_id: string | null
+  }[]
+  return rows.map((r) => ({
+    liveCommentId: r.live_comment_id,
+    streamSessionId: r.stream_session_id,
+    authorUserId: r.author_user_id,
+    authorDisplayName: r.author_display_name,
+    guestDisplayName: r.guest_display_name,
+    guestEmail: r.guest_email,
+    commentText: r.comment_text,
+    isDeleted: r.is_deleted,
+    createdAt: toIso(r.created_at),
+    deletedAt: r.deleted_at ? toIso(r.deleted_at) : null,
+    deletedByUserId: r.deleted_by_user_id,
+  }))
+}
+
+export async function listLiveCommentsBySession(
+  streamSessionId: string,
+): Promise<LiveComment[]> {
+  const rows = (await sql`
+    select * from live_comments
+    where stream_session_id = ${streamSessionId}
+    order by created_at asc
   `) as {
     live_comment_id: string
     stream_session_id: string

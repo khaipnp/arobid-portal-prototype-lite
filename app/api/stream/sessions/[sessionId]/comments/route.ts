@@ -1,9 +1,18 @@
 import { NextResponse } from "next/server"
-import { createLiveComment } from "@/lib/tradexpo/db/platform-data"
+import {
+  createLiveComment,
+  listLiveCommentsBySession,
+} from "@/lib/tradexpo/db/platform-data"
 import type { LiveComment } from "@/lib/tradexpo/types"
 
 interface Props {
   params: Promise<{ sessionId: string }>
+}
+
+export async function GET(_: Request, { params }: Props) {
+  const { sessionId } = await params
+  const comments = await listLiveCommentsBySession(sessionId)
+  return NextResponse.json({ comments })
 }
 
 export async function POST(request: Request, { params }: Props) {

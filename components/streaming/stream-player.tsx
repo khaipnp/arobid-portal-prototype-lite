@@ -27,23 +27,63 @@ export function StreamPlayer({
   sessionType,
   onStreamEnded,
 }: Props) {
-  const isLive = session.status === "Active"
-  const isReplay = session.status === "Ended" && session.replayUrl !== null
+  const [currentSession, setCurrentSession] = React.useState<StreamSession>(session)
+  const isLive = currentSession.status === "Active"
+  const isReplay =
+    currentSession.status === "Ended" && currentSession.replayUrl !== null
   const isProcessing =
-    session.status === "Ended" &&
-    session.replayUrl === null &&
-    session.replayEnabled
+    currentSession.status === "Ended" &&
+    currentSession.replayUrl === null &&
+    currentSession.replayEnabled
 
   const [playing, setPlaying] = React.useState(false)
   const [muted, setMuted] = React.useState(false)
   const [progress, setProgress] = React.useState(0)
   const [viewerCount, setViewerCount] = React.useState(
-    session.peakViewerCount ?? 0,
+    currentSession.peakViewerCount ?? 0,
   )
   const [showControls, setShowControls] = React.useState(true)
   const controlsTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(
     null,
   )
+
+  React.useEffect(() => {
+    setCurrentSession(session)
+  }, [session])
+
+  React.useEffect(() => {
+    setViewerCount(currentSession.peakViewerCount ?? 0)
+  }, [currentSession.peakViewerCount])
+
+  React.useEffect(() => {
+    const controller = new AbortController()
+    const syncSession = async () => {
+      try {
+        const response = await fetch(
+          `/api/stream/sessions/${currentSession.streamSessionId}`,
+          {
+            signal: controller.signal,
+            cache: "no-store",
+          },
+        )
+        if (!response.ok) return
+        const payload = (await response.json()) as { session?: StreamSession }
+        if (!payload.session) return
+        setCurrentSession(payload.session)
+        if (payload.session.status === "Ended") {
+          onStreamEnded?.()
+        }
+      } catch {
+        // no-op
+      }
+    }
+    const interval = setInterval(syncSession, 5000)
+    void syncSession()
+    return () => {
+      controller.abort()
+      clearInterval(interval)
+    }
+  }, [currentSession.streamSessionId, onStreamEnded])
 
   // Simulate live viewer count fluctuation
   React.useEffect(() => {
@@ -150,7 +190,7 @@ export function StreamPlayer({
                 </p>
               </div>
             )}
-            {session.status === "Ended" && !session.replayEnabled && (
+            {currentSession.status === "Ended" && !currentSession.replayEnabled && (
               <div className="mt-4 rounded-lg bg-black/40 px-6 py-3">
                 <p className="text-white/60 text-sm">This stream has ended</p>
               </div>
@@ -174,7 +214,7 @@ export function StreamPlayer({
             </div>
           )}
           <span className="rounded bg-black/40 px-2 py-0.5 text-white/80 text-xs">
-            {sessionType}
+                {sessionType}
           </span>
         </div>
         {isLive && playing && (

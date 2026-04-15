@@ -74,6 +74,38 @@ export function LiveComments({
     }
   }, [comments])
 
+  React.useEffect(() => {
+    const controller = new AbortController()
+    const syncComments = async () => {
+      try {
+        const response = await fetch(
+          `/api/stream/sessions/${streamSessionId}/comments`,
+          {
+            signal: controller.signal,
+            cache: "no-store",
+          },
+        )
+        if (!response.ok) return
+        const payload = (await response.json()) as { comments?: LiveComment[] }
+        if (!payload.comments) return
+        setComments(
+          [...payload.comments].sort(
+            (a, b) =>
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+          ),
+        )
+      } catch {
+        // no-op
+      }
+    }
+    const interval = setInterval(syncComments, 3000)
+    void syncComments()
+    return () => {
+      controller.abort()
+      clearInterval(interval)
+    }
+  }, [streamSessionId])
+
   async function submitComment(text: string, identity?: GuestIdentity) {
     const trimmed = text.trim()
     if (!trimmed) return

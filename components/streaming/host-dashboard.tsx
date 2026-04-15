@@ -129,6 +129,12 @@ function SessionCard({
   const startedAtRef = React.useRef<string | null>(session.startedAt)
 
   React.useEffect(() => {
+    setSession(initialSession)
+    setViewerCount(initialSession.peakViewerCount ?? 0)
+    startedAtRef.current = initialSession.startedAt
+  }, [initialSession])
+
+  React.useEffect(() => {
     if (session.status !== "Active") return
     const interval = setInterval(() => {
       setViewerCount((prev) =>
@@ -388,6 +394,39 @@ export function HostDashboard({
     })
     return initial
   })
+
+  React.useEffect(() => {
+    const controller = new AbortController()
+    const syncSessions = async () => {
+      try {
+        const response = await fetch("/api/stream/sessions", {
+          signal: controller.signal,
+          cache: "no-store",
+        })
+        if (!response.ok) return
+        const payload = (await response.json()) as { sessions?: StreamSession[] }
+        if (!payload.sessions) return
+        const sessions = payload.sessions
+        setSessionStates((prev) => {
+          const next = { ...prev }
+          for (const s of sessions) {
+            if (next[s.streamSessionId]) {
+              next[s.streamSessionId] = s
+            }
+          }
+          return next
+        })
+      } catch {
+        // no-op
+      }
+    }
+    const interval = setInterval(syncSessions, 5000)
+    void syncSessions()
+    return () => {
+      controller.abort()
+      clearInterval(interval)
+    }
+  }, [])
 
   const myPairs = initialPairs.map(({ event, session }) => ({
     event,

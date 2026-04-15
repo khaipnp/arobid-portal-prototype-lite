@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import {
+  getStreamSessionById,
   updateGoLIVEEventStatusBySession,
   updateStreamSessionStatus,
 } from "@/lib/tradexpo/db/platform-data"
@@ -7,6 +8,15 @@ import type { GoLIVEEventStatus, StreamSessionStatus } from "@/lib/tradexpo/type
 
 interface Props {
   params: Promise<{ sessionId: string }>
+}
+
+export async function GET(_: Request, { params }: Props) {
+  const { sessionId } = await params
+  const session = await getStreamSessionById(sessionId)
+  if (!session) {
+    return NextResponse.json({ error: "Not found." }, { status: 404 })
+  }
+  return NextResponse.json({ session })
 }
 
 export async function PATCH(request: Request, { params }: Props) {
