@@ -86,64 +86,87 @@ export function OrderDetail({
     setTimeout(() => setToast(null), 4000)
   }
 
-  function handleConfirm() {
-    if (!order) return
+  async function handleConfirm() {
     const now = new Date().toISOString()
-    const updated: Order = { ...order, status: "Paid", updatedAt: now }
-    setOrder(updated)
-    setLog((prev) => [
-      ...prev,
-      {
-        id: `tx-${orderId}-confirm`,
-        orderId,
-        type: "payment",
-        status: "Paid",
-        actor: "Admin (admin@arobid.com)",
-        note: "Payment confirmed after bank statement verification",
-        processedAt: now,
-      },
-    ])
-    setShowConfirmDialog(false)
-    showToast("Payment confirmed. Customer has been notified.")
+    try {
+      const response = await fetch(`/api/orders/${orderId}/payment/confirm`, {
+        method: "POST",
+      })
+      if (!response.ok) {
+        throw new Error("Unable to confirm payment")
+      }
+      const updated: Order = { ...order, status: "Paid", updatedAt: now }
+      setOrder(updated)
+      setLog((prev) => [
+        ...prev,
+        {
+          id: `tx-${orderId}-confirm-${Date.now()}`,
+          orderId,
+          type: "payment",
+          status: "Paid",
+          actor: "Admin (admin@arobid.com)",
+          note: "Payment confirmed after bank statement verification",
+          processedAt: now,
+        },
+      ])
+      setShowConfirmDialog(false)
+      showToast("Payment confirmed. Customer has been notified.")
+    } catch {
+      showToast("Unable to confirm payment.")
+    }
   }
 
-  function handleReject() {
-    if (!order || !rejectionReason.trim()) return
+  async function handleReject() {
+    if (!rejectionReason.trim()) return
     const now = new Date().toISOString()
     const expiresAt = new Date(
       new Date(now).getTime() + 72 * 3600_000,
     ).toISOString()
-    const updated: Order = {
-      ...order,
-      status: "Pending Payment",
-      expiresAt,
-      updatedAt: now,
-    }
-    setOrder(updated)
-    setLog((prev) => [
-      ...prev,
-      {
-        id: `tx-${orderId}-reject`,
-        orderId,
-        type: "payment",
-        status: "Rejected",
-        actor: "Admin (admin@arobid.com)",
-        rejectionReason: rejectionReason.trim(),
-        processedAt: now,
-      },
-      {
-        id: `tx-${orderId}-retry`,
-        orderId,
-        type: "status_change",
+    try {
+      const response = await fetch(`/api/orders/${orderId}/payment/reject`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          rejectionReason: rejectionReason.trim(),
+        }),
+      })
+      if (!response.ok) {
+        throw new Error("Unable to reject payment")
+      }
+      const updated: Order = {
+        ...order,
         status: "Pending Payment",
-        actor: "System",
-        note: "Order reverted to Pending Payment — 72h retry window started",
-        processedAt: now,
-      },
-    ])
-    setShowRejectDialog(false)
-    setRejectionReason("")
-    showToast("Payment rejected. Customer has been notified and can retry.")
+        expiresAt,
+        updatedAt: now,
+      }
+      setOrder(updated)
+      setLog((prev) => [
+        ...prev,
+        {
+          id: `tx-${orderId}-reject-${Date.now()}`,
+          orderId,
+          type: "payment",
+          status: "Rejected",
+          actor: "Admin (admin@arobid.com)",
+          rejectionReason: rejectionReason.trim(),
+          processedAt: now,
+        },
+        {
+          id: `tx-${orderId}-retry-${Date.now()}`,
+          orderId,
+          type: "status_change",
+          status: "Pending Payment",
+          actor: "System",
+          note: "Order reverted to Pending Payment — 72h retry window started",
+          processedAt: now,
+        },
+      ])
+      setShowRejectDialog(false)
+      setRejectionReason("")
+      showToast("Payment rejected. Customer has been notified and can retry.")
+    } catch {
+      showToast("Unable to reject payment.")
+    }
   }
 
   return (

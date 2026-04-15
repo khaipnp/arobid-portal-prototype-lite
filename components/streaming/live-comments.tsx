@@ -52,7 +52,7 @@ export function LiveComments({
     ),
   )
   const [commentText, setCommentText] = React.useState("")
-  const [guestIdentity, setGuestIdentity] =
+  const [_guestIdentity, setGuestIdentity] =
     React.useState<GuestIdentity | null>(null)
   const [showGuestForm, setShowGuestForm] = React.useState(false)
   const [guestName, setGuestName] = React.useState("")
@@ -74,7 +74,7 @@ export function LiveComments({
     }
   }, [comments])
 
-  function submitComment(text: string, identity?: GuestIdentity) {
+  async function submitComment(text: string, identity?: GuestIdentity) {
     const trimmed = text.trim()
     if (!trimmed) return
 
@@ -99,17 +99,27 @@ export function LiveComments({
       newComment.guestEmail = identity.email
     }
 
-    setComments((prev) => [...prev, newComment])
-    setCommentText("")
-    setPendingText("")
+    try {
+      const response = await fetch(`/api/stream/sessions/${streamSessionId}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ comment: newComment }),
+      })
+      if (!response.ok) return
+      setComments((prev) => [...prev, newComment])
+      setCommentText("")
+      setPendingText("")
+    } catch {
+      // no-op
+    }
   }
 
-  function handlePost() {
+  async function handlePost() {
     if (!commentText.trim()) return
-    submitComment(commentText)
+    await submitComment(commentText)
   }
 
-  function handleGuestPost() {
+  async function handleGuestPost() {
     let hasError = false
     setGuestNameError("")
     setGuestEmailError("")
@@ -130,24 +140,38 @@ export function LiveComments({
     }
     setGuestIdentity(identity)
     setShowGuestForm(false)
-    submitComment(pendingText, identity)
+    await submitComment(pendingText, identity)
     setGuestName("")
     setGuestEmail("")
   }
 
-  function handleDelete(commentId: string) {
-    setComments((prev) =>
-      prev.map((c) =>
-        c.liveCommentId === commentId
-          ? {
-              ...c,
-              isDeleted: true,
-              deletedAt: new Date().toISOString(),
-              deletedByUserId: currentUserId,
-            }
-          : c,
-      ),
-    )
+  async function handleDelete(commentId: string) {
+    const deletedAt = new Date().toISOString()
+    try {
+      const response = await fetch(`/api/stream/comments/${commentId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          deletedByUserId: currentUserId,
+          deletedAt,
+        }),
+      })
+      if (!response.ok) return
+      setComments((prev) =>
+        prev.map((c) =>
+          c.liveCommentId === commentId
+            ? {
+                ...c,
+                isDeleted: true,
+                deletedAt,
+                deletedByUserId: currentUserId,
+              }
+            : c,
+        ),
+      )
+    } catch {
+      // no-op
+    }
   }
 
   const visibleComments = comments.filter((c) => !c.isDeleted)

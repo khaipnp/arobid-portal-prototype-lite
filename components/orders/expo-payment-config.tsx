@@ -84,8 +84,8 @@ interface ExpoPaymentConfigPanelProps {
   configs: ExpoPaymentConfig[]
   platformPayment: PaymentConfig
   bankAccounts: BankAccount[]
-  onSave: (saved: ExpoPaymentConfig) => void
-  onReset: () => void
+  onSave: (saved: ExpoPaymentConfig) => Promise<void>
+  onReset: () => Promise<void>
 }
 
 function ExpoPaymentConfigPanel({
@@ -171,7 +171,7 @@ function ExpoPaymentConfigPanel({
     setEditing((e) => e && { ...e, bankTransferEnabled: next })
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!editing) return
     if (!editing.vnpayEnabled && !editing.bankTransferEnabled) {
       setError("At least one payment method must be enabled.")
@@ -186,18 +186,26 @@ function ExpoPaymentConfigPanel({
       updatedAt: new Date().toISOString(),
       updatedBy: "admin@arobid.com",
     }
-    onSave(saved)
-    setEditing(null)
-    setError(null)
-    showToastMsg(`Payment configuration saved for ${expoName}.`)
+    try {
+      await onSave(saved)
+      setEditing(null)
+      setError(null)
+      showToastMsg(`Payment configuration saved for ${expoName}.`)
+    } catch {
+      setError("Unable to save expo payment configuration.")
+    }
   }
 
-  function handleReset() {
+  async function handleReset() {
     setShowResetConfirm(false)
-    onReset()
-    setEditing(null)
-    setError(null)
-    showToastMsg(`Payment config for ${expoName} reset to platform default.`)
+    try {
+      await onReset()
+      setEditing(null)
+      setError(null)
+      showToastMsg(`Payment config for ${expoName} reset to platform default.`)
+    } catch {
+      setError("Unable to reset expo payment configuration.")
+    }
   }
 
   return (
@@ -405,17 +413,36 @@ export function ExpoPaymentConfigManager({
     ...initialConfigs,
   ])
 
-  function handleSave(saved: ExpoPaymentConfig) {
+  async function handleSave(saved: ExpoPaymentConfig) {
+    const response = await fetch(`/api/orders/expo-payment-configs/${saved.expoId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        vnpayEnabled: saved.vnpayEnabled,
+        bankTransferEnabled: saved.bankTransferEnabled,
+        bankAccountId: saved.bankAccountId,
+      }),
+    })
+    if (!response.ok) {
+      throw new Error("Failed to save expo payment config.")
+    }
+    const persisted = (await response.json()) as ExpoPaymentConfig
     setConfigs((prev) => {
-      const idx = prev.findIndex((c) => c.expoId === saved.expoId)
+      const idx = prev.findIndex((c) => c.expoId === persisted.expoId)
       const next = [...prev]
-      if (idx !== -1) next[idx] = saved
-      else next.push(saved)
+      if (idx !== -1) next[idx] = persisted
+      else next.push(persisted)
       return next
     })
   }
 
-  function handleReset() {
+  async function handleReset() {
+    const response = await fetch(`/api/orders/expo-payment-configs/${expoId}`, {
+      method: "DELETE",
+    })
+    if (!response.ok) {
+      throw new Error("Failed to reset expo payment config.")
+    }
     setConfigs((prev) => prev.filter((c) => c.expoId !== expoId))
   }
 

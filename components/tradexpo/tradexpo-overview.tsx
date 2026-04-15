@@ -558,18 +558,42 @@ function NotificationFeed({
 
   const unreadCount = notifications.filter((n) => !n.isRead).length
 
-  function markAllRead() {
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
+  async function markAllRead() {
+    try {
+      const response = await fetch("/api/tradexpo/notifications", {
+        method: "PATCH",
+      })
+      if (!response.ok) return
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
+    } catch {
+      // no-op
+    }
   }
 
-  function dismiss(id: string) {
-    setNotifications((prev) => prev.filter((n) => n.id !== id))
+  async function dismiss(id: string) {
+    try {
+      const response = await fetch(`/api/tradexpo/notifications/${id}`, {
+        method: "DELETE",
+      })
+      if (!response.ok) return
+      setNotifications((prev) => prev.filter((n) => n.id !== id))
+    } catch {
+      // no-op
+    }
   }
 
-  function markRead(id: string) {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
-    )
+  async function markRead(id: string) {
+    try {
+      const response = await fetch(`/api/tradexpo/notifications/${id}`, {
+        method: "PATCH",
+      })
+      if (!response.ok) return
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
+      )
+    } catch {
+      // no-op
+    }
   }
 
   const visible = showAll ? notifications : notifications.slice(0, 5)

@@ -151,7 +151,7 @@ export function BankAccountManager({
     }))
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (
       !form.bankName ||
       !form.accountNumber.trim() ||
@@ -161,53 +161,85 @@ export function BankAccountManager({
       return
     }
 
-    const now = new Date().toISOString()
-
-    if (editingId) {
-      setAccounts((prev) =>
-        prev.map((a) => {
-          if (a.id === editingId) {
-            return {
-              ...a,
-              bankName: form.bankName,
-              bankBIN: form.bankBIN,
-              accountNumber: form.accountNumber.trim(),
-              accountHolderName: form.accountHolderName.trim(),
-              branch: form.branch.trim() || undefined,
-              isPrimary: form.isPrimary ? true : a.isPrimary,
-              updatedAt: now,
+    try {
+      if (editingId) {
+        const response = await fetch(`/api/orders/bank-accounts/${editingId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "update",
+            bankName: form.bankName,
+            bankBIN: form.bankBIN,
+            accountNumber: form.accountNumber.trim(),
+            accountHolderName: form.accountHolderName.trim(),
+            branch: form.branch.trim() || undefined,
+            isPrimary: form.isPrimary,
+          }),
+        })
+        if (!response.ok) throw new Error("Update failed")
+        const now = new Date().toISOString()
+        setAccounts((prev) =>
+          prev.map((a) => {
+            if (a.id === editingId) {
+              return {
+                ...a,
+                bankName: form.bankName,
+                bankBIN: form.bankBIN,
+                accountNumber: form.accountNumber.trim(),
+                accountHolderName: form.accountHolderName.trim(),
+                branch: form.branch.trim() || undefined,
+                isPrimary: form.isPrimary ? true : a.isPrimary,
+                updatedAt: now,
+              }
             }
-          }
-          if (form.isPrimary && a.id !== editingId) {
-            return { ...a, isPrimary: false }
-          }
-          return a
-        }),
-      )
-      showToast("Bank account updated successfully.")
-    } else {
-      const newAccount: BankAccount = {
-        id: `ba-${Date.now()}`,
-        bankName: form.bankName,
-        bankBIN: form.bankBIN,
-        accountNumber: form.accountNumber.trim(),
-        accountHolderName: form.accountHolderName.trim(),
-        branch: form.branch.trim() || undefined,
-        isPrimary: form.isPrimary,
-        isActive: true,
-        createdAt: now,
-        updatedAt: now,
+            if (form.isPrimary && a.id !== editingId) {
+              return { ...a, isPrimary: false }
+            }
+            return a
+          }),
+        )
+        showToast("Bank account updated successfully.")
+      } else {
+        const response = await fetch("/api/orders/bank-accounts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            bankName: form.bankName,
+            bankBIN: form.bankBIN,
+            accountNumber: form.accountNumber.trim(),
+            accountHolderName: form.accountHolderName.trim(),
+            branch: form.branch.trim() || undefined,
+            isPrimary: form.isPrimary,
+          }),
+        })
+        if (!response.ok) throw new Error("Create failed")
+        const data = (await response.json()) as { id: string }
+        const now = new Date().toISOString()
+        const newAccount: BankAccount = {
+          id: data.id,
+          bankName: form.bankName,
+          bankBIN: form.bankBIN,
+          accountNumber: form.accountNumber.trim(),
+          accountHolderName: form.accountHolderName.trim(),
+          branch: form.branch.trim() || undefined,
+          isPrimary: form.isPrimary,
+          isActive: true,
+          createdAt: now,
+          updatedAt: now,
+        }
+        setAccounts((prev) => {
+          const updated = form.isPrimary
+            ? prev.map((a) => ({ ...a, isPrimary: false }))
+            : prev
+          return [...updated, newAccount]
+        })
+        showToast("Bank account added successfully.")
       }
-      setAccounts((prev) => {
-        const updated = form.isPrimary
-          ? prev.map((a) => ({ ...a, isPrimary: false }))
-          : prev
-        return [...updated, newAccount]
-      })
-      showToast("Bank account added successfully.")
+      setShowFormDialog(false)
+      setError(null)
+    } catch {
+      setError("Unable to save bank account.")
     }
-
-    setShowFormDialog(false)
   }
 
   function handleSetPrimary(account: BankAccount) {
@@ -245,42 +277,65 @@ export function BankAccountManager({
     setConfirmAction({ type: "delete", account })
   }
 
-  function executeConfirm() {
+  async function executeConfirm() {
     if (!confirmAction) return
     const { type, account } = confirmAction
     const now = new Date().toISOString()
 
-    setAccounts((prev) => {
-      let updated: BankAccount[]
-      if (type === "set-primary") {
-        updated = prev.map((a) => ({
-          ...a,
-          isPrimary: a.id === account.id,
-          updatedAt: a.id === account.id ? now : a.updatedAt,
-        }))
-      } else if (type === "deactivate") {
-        updated = prev.map((a) =>
-          a.id === account.id ? { ...a, isActive: false, updatedAt: now } : a,
-        )
-      } else if (type === "activate") {
-        updated = prev.map((a) =>
-          a.id === account.id ? { ...a, isActive: true, updatedAt: now } : a,
-        )
+    try {
+      if (type === "delete") {
+        const response = await fetch(`/api/orders/bank-accounts/${account.id}`, {
+          method: "DELETE",
+        })
+        if (!response.ok) throw new Error("Delete failed")
       } else {
-        updated = prev.filter((a) => a.id !== account.id)
+        const action =
+          type === "set-primary"
+            ? "set-primary"
+            : type === "activate"
+              ? "activate"
+              : "deactivate"
+        const response = await fetch(`/api/orders/bank-accounts/${account.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action }),
+        })
+        if (!response.ok) throw new Error("Update failed")
       }
-      return updated
-    })
+      setAccounts((prev) => {
+        let updated: BankAccount[]
+        if (type === "set-primary") {
+          updated = prev.map((a) => ({
+            ...a,
+            isPrimary: a.id === account.id,
+            updatedAt: a.id === account.id ? now : a.updatedAt,
+          }))
+        } else if (type === "deactivate") {
+          updated = prev.map((a) =>
+            a.id === account.id ? { ...a, isActive: false, updatedAt: now } : a,
+          )
+        } else if (type === "activate") {
+          updated = prev.map((a) =>
+            a.id === account.id ? { ...a, isActive: true, updatedAt: now } : a,
+          )
+        } else {
+          updated = prev.filter((a) => a.id !== account.id)
+        }
+        return updated
+      })
 
-    const messages: Record<string, string> = {
-      "set-primary": `${account.bankName} ···${account.accountNumber.slice(-4)} is now the primary account.`,
-      deactivate: "Account deactivated.",
-      activate: "Account activated.",
-      delete: "Account deleted.",
+      const messages: Record<string, string> = {
+        "set-primary": `${account.bankName} ···${account.accountNumber.slice(-4)} is now the primary account.`,
+        deactivate: "Account deactivated.",
+        activate: "Account activated.",
+        delete: "Account deleted.",
+      }
+      showToast(messages[type])
+      setConfirmAction(null)
+      setError(null)
+    } catch {
+      setError("Unable to update bank account.")
     }
-    showToast(messages[type])
-    setConfirmAction(null)
-    setError(null)
   }
 
   return (

@@ -144,7 +144,7 @@ function SessionCard({
     return () => clearInterval(interval)
   }, [session.status])
 
-  function handleGoLive() {
+  async function handleGoLive() {
     const now = new Date().toISOString()
     startedAtRef.current = now
     const updatedSession = {
@@ -152,13 +152,30 @@ function SessionCard({
       status: "Active" as const,
       startedAt: now,
     }
-    setSession(updatedSession)
-    onSessionChange?.(updatedSession)
-    setViewerCount(1)
-    setElapsedLabel("0s")
+    try {
+      const response = await fetch(`/api/stream/sessions/${session.streamSessionId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          streamStatus: "Active",
+          goLiveEventStatus: "Live",
+          startedAt: now,
+          endedAt: null,
+          peakViewerCount: null,
+          updatedAt: now,
+        }),
+      })
+      if (!response.ok) return
+      setSession(updatedSession)
+      onSessionChange?.(updatedSession)
+      setViewerCount(1)
+      setElapsedLabel("0s")
+    } catch {
+      // no-op
+    }
   }
 
-  function handleEndBroadcast() {
+  async function handleEndBroadcast() {
     const now = new Date().toISOString()
     const updatedSession = {
       ...session,
@@ -166,8 +183,25 @@ function SessionCard({
       endedAt: now,
       peakViewerCount: viewerCount,
     }
-    setSession(updatedSession)
-    onSessionChange?.(updatedSession)
+    try {
+      const response = await fetch(`/api/stream/sessions/${session.streamSessionId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          streamStatus: "Ended",
+          goLiveEventStatus: "Ended",
+          startedAt: session.startedAt,
+          endedAt: now,
+          peakViewerCount: viewerCount,
+          updatedAt: now,
+        }),
+      })
+      if (!response.ok) return
+      setSession(updatedSession)
+      onSessionChange?.(updatedSession)
+    } catch {
+      // no-op
+    }
   }
 
   return (

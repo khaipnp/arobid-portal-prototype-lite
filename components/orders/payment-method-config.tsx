@@ -114,18 +114,33 @@ export function PaymentMethodConfig({
     setBankEnabled(next)
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!vnpayEnabled && !bankEnabled) {
       setError("At least one payment method must be enabled.")
       return
     }
-    setPlatformPayment({
-      vnpayEnabled,
-      bankTransferEnabled: bankEnabled,
-      updatedAt: new Date().toISOString(),
-      updatedBy: "admin@arobid.com",
-    })
-    showToast("Platform default payment configuration updated.")
+    try {
+      const response = await fetch("/api/orders/platform-payment", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          vnpayEnabled,
+          bankTransferEnabled: bankEnabled,
+        }),
+      })
+      const data = (await response.json()) as
+        | PaymentConfig
+        | { error?: string }
+      if (!response.ok) {
+        setError(data && "error" in data ? data.error ?? "Save failed." : "Save failed.")
+        return
+      }
+      setPlatformPayment(data as PaymentConfig)
+      setError(null)
+      showToast("Platform default payment configuration updated.")
+    } catch {
+      setError("Unable to update payment config.")
+    }
   }
 
   const primaryAccount = bankAccounts.find((b) => b.isPrimary && b.isActive)

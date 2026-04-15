@@ -8,6 +8,7 @@ import {
   PlusIcon,
   RadioIcon,
 } from "lucide-react"
+import Image from "next/image"
 import * as React from "react"
 import {
   AlertDialog,
@@ -159,6 +160,7 @@ export function GoLIVEManager({
   const [deleteTarget, setDeleteTarget] = React.useState<GoLIVEEvent | null>(
     null,
   )
+  const [requestError, setRequestError] = React.useState<string | null>(null)
 
   function openCreate() {
     setEditingEvent(null)
@@ -196,38 +198,59 @@ export function GoLIVEManager({
     return Object.keys(errs).length === 0
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!validate()) return
     const now = new Date().toISOString()
     const broadcaster = MOCK_EXPO_MEMBERS.find(
       (m) => m.userId === form.broadcasterUserId,
-    )!
+    )
+    if (!broadcaster) return
 
     if (editingEvent) {
-      setEvents((prev) =>
-        prev.map((e) =>
-          e.goLiveEventId === editingEvent.goLiveEventId
-            ? {
-                ...e,
-                title: form.title.trim(),
-                sessionType: form.sessionType as GoLIVESessionType,
-                description: form.description.trim() || null,
-                scheduledStartAt: form.scheduledStartAt
-                  ? new Date(form.scheduledStartAt).toISOString()
-                  : null,
-                status: form.scheduledStartAt ? "Scheduled" : "Ready",
-                broadcasterUserId: form.broadcasterUserId,
-                broadcasterDisplayName: broadcaster.displayName,
-                updatedAt: now,
-              }
-            : e,
-        ),
-      )
+      const updatedEvent: GoLIVEEvent = {
+        ...editingEvent,
+        title: form.title.trim(),
+        sessionType: form.sessionType as GoLIVESessionType,
+        description: form.description.trim() || null,
+        scheduledStartAt: form.scheduledStartAt
+          ? new Date(form.scheduledStartAt).toISOString()
+          : null,
+        status: form.scheduledStartAt ? "Scheduled" : "Ready",
+        broadcasterUserId: form.broadcasterUserId,
+        broadcasterDisplayName: broadcaster.displayName,
+        updatedAt: now,
+      }
+      try {
+        const response = await fetch(
+          `/api/tradexpo/golive-events/${editingEvent.goLiveEventId}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "update",
+              event: updatedEvent,
+              replayEnabled: form.replayEnabled,
+            }),
+          },
+        )
+        if (!response.ok) throw new Error("failed")
+        setEvents((prev) =>
+          prev.map((e) =>
+            e.goLiveEventId === editingEvent.goLiveEventId ? updatedEvent : e,
+          ),
+        )
+        setRequestError(null)
+      } catch {
+        setRequestError("Unable to save GoLIVE event.")
+        return
+      }
     } else {
+      const eventId = `gl-${crypto.randomUUID()}`
+      const streamSessionId = `ss-${crypto.randomUUID()}`
       const newEvent: GoLIVEEvent = {
-        goLiveEventId: `gl-${Date.now()}`,
+        goLiveEventId: eventId,
         expoId,
-        streamSessionId: `ss-new-${Date.now()}`,
+        streamSessionId,
         title: form.title.trim(),
         sessionType: form.sessionType as GoLIVESessionType,
         description: form.description.trim() || null,
@@ -241,27 +264,80 @@ export function GoLIVEManager({
         createdAt: now,
         updatedAt: now,
       }
-      setEvents((prev) => [newEvent, ...prev])
+      const streamSession: StreamSession = {
+        streamSessionId,
+        status: "Provisioned",
+        hostUserId: form.broadcasterUserId,
+        hostDisplayName: broadcaster.displayName,
+        streamUrl: `rtmp://stream.arobid.local/live/${streamSessionId}`,
+        streamKey: `key-${crypto.randomUUID().replaceAll("-", "")}`,
+        replayEnabled: form.replayEnabled,
+        replayUrl: null,
+        startedAt: null,
+        endedAt: null,
+        peakViewerCount: null,
+        createdAt: now,
+        updatedAt: now,
+      }
+      try {
+        const response = await fetch(
+          `/api/tradexpo/expos/${expoId}/golive-events`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              event: newEvent,
+              streamSession,
+            }),
+          },
+        )
+        if (!response.ok) throw new Error("failed")
+        setEvents((prev) => [newEvent, ...prev])
+        setRequestError(null)
+      } catch {
+        setRequestError("Unable to create GoLIVE event.")
+        return
+      }
     }
     setFormOpen(false)
   }
 
-  function handleCancel(event: GoLIVEEvent) {
-    setEvents((prev) =>
-      prev.map((e) =>
-        e.goLiveEventId === event.goLiveEventId
-          ? { ...e, status: "Canceled", updatedAt: new Date().toISOString() }
-          : e,
-      ),
-    )
-    setCancelTarget(null)
+  async function handleCancel(event: GoLIVEEvent) {
+    try {
+      const response = await fetch(`/api/tradexpo/golive-events/${event.goLiveEventId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "cancel" }),
+      })
+      if (!response.ok) throw new Error("failed")
+      setEvents((prev) =>
+        prev.map((e) =>
+          e.goLiveEventId === event.goLiveEventId
+            ? { ...e, status: "Canceled", updatedAt: new Date().toISOString() }
+            : e,
+        ),
+      )
+      setRequestError(null)
+      setCancelTarget(null)
+    } catch {
+      setRequestError("Unable to cancel GoLIVE event.")
+    }
   }
 
-  function handleDelete(event: GoLIVEEvent) {
-    setEvents((prev) =>
-      prev.filter((e) => e.goLiveEventId !== event.goLiveEventId),
-    )
-    setDeleteTarget(null)
+  async function handleDelete(event: GoLIVEEvent) {
+    try {
+      const response = await fetch(`/api/tradexpo/golive-events/${event.goLiveEventId}`, {
+        method: "DELETE",
+      })
+      if (!response.ok) throw new Error("failed")
+      setEvents((prev) =>
+        prev.filter((e) => e.goLiveEventId !== event.goLiveEventId),
+      )
+      setRequestError(null)
+      setDeleteTarget(null)
+    } catch {
+      setRequestError("Unable to delete GoLIVE event.")
+    }
   }
 
   const canManage = (status: GoLIVEEventStatus) =>
@@ -282,6 +358,10 @@ export function GoLIVEManager({
         </Button>
       </div>
 
+      {requestError && (
+        <p className="text-destructive text-sm">{requestError}</p>
+      )}
+
       {events.length === 0 ? (
         <div className="rounded-lg border border-dashed py-12 text-center text-muted-foreground">
           <RadioIcon className="mx-auto mb-3 h-8 w-8 opacity-30" />
@@ -301,9 +381,11 @@ export function GoLIVEManager({
                 className="flex items-start gap-4 p-4"
               >
                 {event.thumbnailUrl ? (
-                  <img
+                  <Image
                     src={event.thumbnailUrl}
                     alt=""
+                    width={112}
+                    height={64}
                     className="h-16 w-28 shrink-0 rounded-md object-cover"
                   />
                 ) : (

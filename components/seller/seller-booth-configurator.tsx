@@ -202,6 +202,7 @@ export function SellerBoothConfigurator({
 
   // Publish confirm
   const [publishConfirmOpen, setPublishConfirmOpen] = React.useState(false)
+  const [requestError, setRequestError] = React.useState<string | null>(null)
 
   const selectedTemplate = React.useMemo<BoothTemplate | undefined>(
     () =>
@@ -306,21 +307,52 @@ export function SellerBoothConfigurator({
 
   // ── Save / Publish ─────────────────────────────────────────────────────────
 
-  function handleSaveDraft() {
-    setCustomization((prev) => ({ ...prev, publishStatus: "Draft" }))
-    setSavedStatus("Draft")
-    setIsDirty(false)
+  async function persistCustomization(next: BoothCustomization) {
+    const response = await fetch(
+      `/api/seller/booth-customizations/${registrationId}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customization: next }),
+      },
+    )
+    if (!response.ok) {
+      throw new Error("Failed to persist customization")
+    }
+  }
+
+  async function handleSaveDraft() {
+    const next: BoothCustomization = { ...customization, publishStatus: "Draft" }
+    try {
+      await persistCustomization(next)
+      setCustomization(next)
+      setSavedStatus("Draft")
+      setIsDirty(false)
+      setRequestError(null)
+    } catch {
+      setRequestError("Unable to save draft.")
+    }
   }
 
   function handlePublish() {
     setPublishConfirmOpen(true)
   }
 
-  function confirmPublish() {
-    setCustomization((prev) => ({ ...prev, publishStatus: "Published" }))
-    setSavedStatus("Published")
-    setIsDirty(false)
-    setPublishConfirmOpen(false)
+  async function confirmPublish() {
+    const next: BoothCustomization = {
+      ...customization,
+      publishStatus: "Published",
+    }
+    try {
+      await persistCustomization(next)
+      setCustomization(next)
+      setSavedStatus("Published")
+      setIsDirty(false)
+      setPublishConfirmOpen(false)
+      setRequestError(null)
+    } catch {
+      setRequestError("Unable to publish booth.")
+    }
   }
 
   // ── Products ───────────────────────────────────────────────────────────────
@@ -444,6 +476,12 @@ export function SellerBoothConfigurator({
       {isReadOnly && (
         <div className="rounded-md border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-600">
           This expo has ended or is archived. Booth configuration is read-only.
+        </div>
+      )}
+
+      {requestError && (
+        <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-destructive text-sm">
+          {requestError}
         </div>
       )}
 

@@ -357,7 +357,7 @@ export function DealRoomManager({
     setPendingAttachments((prev) => prev.filter((att) => att.id !== id))
   }
 
-  function handleSendMessage() {
+  async function handleSendMessage() {
     const text = composerValue.trim()
     if (!activeConversationId) return
     if (!text && pendingAttachments.length === 0) {
@@ -395,71 +395,128 @@ export function DealRoomManager({
       isSystemMessage: false,
     }
 
-    setMessagesMap((prev) => ({
-      ...prev,
-      [activeConversationId]: [...(prev[activeConversationId] ?? []), newMsg],
-    }))
-    setConversations((prev) =>
-      prev.map((conv) =>
-        conv.id === activeConversationId
-          ? {
-              ...conv,
-              members: conv.members.map((member) =>
-                member.userId === currentUserId
-                  ? { ...member, isArchived: false }
-                  : member,
-              ),
-            }
-          : conv,
-      ),
-    )
-    setComposerValue("")
-    setPendingAttachments([])
+    try {
+      const response = await fetch(
+        `/api/deal-room/conversations/${activeConversationId}/messages`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: newMsg.id,
+            senderId: newMsg.senderId,
+            content: newMsg.content,
+            attachments: newMsg.attachments,
+            status: newMsg.status,
+            sentAt: newMsg.sentAt,
+          }),
+        },
+      )
+      if (!response.ok) {
+        setComposerError("Unable to send message.")
+        return
+      }
+      setMessagesMap((prev) => ({
+        ...prev,
+        [activeConversationId]: [...(prev[activeConversationId] ?? []), newMsg],
+      }))
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv.id === activeConversationId
+            ? {
+                ...conv,
+                members: conv.members.map((member) =>
+                  member.userId === currentUserId
+                    ? { ...member, isArchived: false }
+                    : member,
+                ),
+              }
+            : conv,
+        ),
+      )
+      setComposerValue("")
+      setPendingAttachments([])
+    } catch {
+      setComposerError("Unable to send message.")
+    }
   }
 
-  function handleSaveEdit() {
+  async function handleSaveEdit() {
     if (!activeConversationId || !editingMessageId) return
     const text = editingContent.trim()
     if (!text) return
-    setMessagesMap((prev) => ({
-      ...prev,
-      [activeConversationId]:
-        prev[activeConversationId]?.map((m) =>
-          m.id === editingMessageId
-            ? { ...m, content: text, editedAt: new Date().toISOString() }
-            : m,
-        ) ?? [],
-    }))
-    setEditingMessageId(null)
+    const editedAt = new Date().toISOString()
+    try {
+      const response = await fetch(
+        `/api/deal-room/conversations/${activeConversationId}/messages/${editingMessageId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content: text, editedAt }),
+        },
+      )
+      if (!response.ok) return
+      setMessagesMap((prev) => ({
+        ...prev,
+        [activeConversationId]:
+          prev[activeConversationId]?.map((m) =>
+            m.id === editingMessageId ? { ...m, content: text, editedAt } : m,
+          ) ?? [],
+      }))
+      setEditingMessageId(null)
+    } catch {
+      // keep editing state to let user retry
+    }
   }
 
-  function handleDeleteMessage(id: string) {
+  async function handleDeleteMessage(id: string) {
     if (!activeConversationId) return
-    setMessagesMap((prev) => ({
-      ...prev,
-      [activeConversationId]:
-        prev[activeConversationId]?.map((m) =>
-          m.id === id ? { ...m, isDeleted: true, attachments: [] } : m,
-        ) ?? [],
-    }))
+    try {
+      const response = await fetch(
+        `/api/deal-room/conversations/${activeConversationId}/messages/${id}`,
+        { method: "DELETE" },
+      )
+      if (!response.ok) return
+      setMessagesMap((prev) => ({
+        ...prev,
+        [activeConversationId]:
+          prev[activeConversationId]?.map((m) =>
+            m.id === id ? { ...m, isDeleted: true, attachments: [] } : m,
+          ) ?? [],
+      }))
+    } catch {
+      // no-op
+    }
   }
 
-  function handleArchiveConversation(id: string) {
-    setConversations((prev) =>
-      prev.map((c) =>
-        c.id === id
-          ? {
-              ...c,
-              members: c.members.map((m) =>
-                m.userId === currentUserId ? { ...m, isArchived: true } : m,
-              ),
-            }
-          : c,
-      ),
-    )
-    if (activeConversationId === id) {
-      setActiveConversationId(null)
-      router.push("/seller/deal-room", { scroll: false })
+  async function handleArchiveConversation(id: string) {
+    try {
+      const response = await fetch(
+        `/api/deal-room/conversations/${id}/archive`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: currentUserId }),
+        },
+      )
+      if (!response.ok) return
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === id
+            ? {
+                ...c,
+                members: c.members.map((m) =>
+                  m.userId === currentUserId ? { ...m, isArchived: true } : m,
+                ),
+              }
+            : c,
+        ),
+      )
+      if (activeConversationId === id) {
+        setActiveConversationId(null)
+        router.push("/seller/deal-room", { scroll: false })
+      }
+    } catch {
+      // no-op
     }
   }
 

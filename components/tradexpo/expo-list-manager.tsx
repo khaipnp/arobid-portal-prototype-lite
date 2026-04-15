@@ -180,31 +180,60 @@ export function ExpoListManager({
     setPage(1)
   }
 
-  function handleConfirm() {
+  async function handleConfirm() {
     if (!confirmAction) return
 
     const { type, expo } = confirmAction
-
-    if (type === "archive") {
-      setExpos((prev) =>
-        prev.map((e) =>
-          e.id === expo.id ? { ...e, status: "Archived" as ExpoStatus } : e,
-        ),
-      )
-      setNotice({ type: "success", text: `"${expo.name}" has been archived.` })
-    } else if (type === "delete") {
-      setExpos((prev) => prev.filter((e) => e.id !== expo.id))
-      setNotice({ type: "success", text: `"${expo.name}" has been deleted.` })
-    } else if (type === "approve") {
-      setExpos((prev) =>
-        prev.map((e) =>
-          e.id === expo.id ? { ...e, status: "Live" as ExpoStatus } : e,
-        ),
-      )
-      setNotice({
-        type: "success",
-        text: `"${expo.name}" is now Live. Approval notification sent to ${expo.ownerEmail}.`,
-      })
+    try {
+      if (type === "archive") {
+        const response = await fetch(`/api/tradexpo/expos/${expo.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "Archived" satisfies ExpoStatus }),
+        })
+        if (!response.ok) {
+          setNotice({ type: "error", text: `Failed to archive "${expo.name}".` })
+          return
+        }
+        setExpos((prev) =>
+          prev.map((e) =>
+            e.id === expo.id ? { ...e, status: "Archived" as ExpoStatus } : e,
+          ),
+        )
+        setNotice({ type: "success", text: `"${expo.name}" has been archived.` })
+      } else if (type === "delete") {
+        const response = await fetch(`/api/tradexpo/expos/${expo.id}`, {
+          method: "DELETE",
+        })
+        if (!response.ok) {
+          setNotice({ type: "error", text: `Failed to delete "${expo.name}".` })
+          return
+        }
+        setExpos((prev) => prev.filter((e) => e.id !== expo.id))
+        setNotice({ type: "success", text: `"${expo.name}" has been deleted.` })
+      } else if (type === "approve") {
+        const response = await fetch(`/api/tradexpo/expos/${expo.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "Live" satisfies ExpoStatus }),
+        })
+        if (!response.ok) {
+          setNotice({ type: "error", text: `Failed to approve "${expo.name}".` })
+          return
+        }
+        setExpos((prev) =>
+          prev.map((e) =>
+            e.id === expo.id ? { ...e, status: "Live" as ExpoStatus } : e,
+          ),
+        )
+        setNotice({
+          type: "success",
+          text: `"${expo.name}" is now Live. Approval notification sent to ${expo.ownerEmail}.`,
+        })
+      }
+    } catch {
+      setNotice({ type: "error", text: "Network error. Please try again." })
+      return
     }
 
     setConfirmAction(null)

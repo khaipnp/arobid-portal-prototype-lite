@@ -7,11 +7,14 @@ import type {
   Expo,
   ExpoBoothTemplateAssignment,
   ExpoCategory,
+  ExpoStatus,
   GoLIVEEvent,
+  GoLIVEEventStatus,
   LiveComment,
   NotificationKind,
   SellerBoothRegistration,
   StreamSession,
+  StreamSessionStatus,
 } from "@/lib/tradexpo/types"
 
 type ExpoRow = {
@@ -80,6 +83,21 @@ export async function listExpos(): Promise<Expo[]> {
   }))
 }
 
+export async function updateExpoStatus(
+  expoId: string,
+  status: ExpoStatus,
+): Promise<void> {
+  await sql`
+    update expos
+    set status = ${status}
+    where id = ${expoId}
+  `
+}
+
+export async function deleteExpo(expoId: string): Promise<void> {
+  await sql`delete from expos where id = ${expoId}`
+}
+
 export async function listAdminNotifications(): Promise<AdminNotification[]> {
   const rows = (await sql`
     select * from admin_notifications order by created_at desc
@@ -93,6 +111,22 @@ export async function listAdminNotifications(): Promise<AdminNotification[]> {
     createdAt: toIso(r.created_at),
     isRead: r.is_read,
   }))
+}
+
+export async function markNotificationRead(notificationId: string): Promise<void> {
+  await sql`
+    update admin_notifications
+    set is_read = true
+    where id = ${notificationId}
+  `
+}
+
+export async function markAllNotificationsRead(): Promise<void> {
+  await sql`update admin_notifications set is_read = true where is_read = false`
+}
+
+export async function deleteNotification(notificationId: string): Promise<void> {
+  await sql`delete from admin_notifications where id = ${notificationId}`
 }
 
 export async function listExpoBoothTemplateAssignments(): Promise<
@@ -300,4 +334,263 @@ export async function listGoLIVEEvents(): Promise<GoLIVEEvent[]> {
     createdAt: toIso(r.created_at),
     updatedAt: toIso(r.updated_at),
   }))
+}
+
+export async function createGoLIVEEventWithSession(input: {
+  event: GoLIVEEvent
+  streamSession: StreamSession
+}): Promise<void> {
+  await sql`begin`
+  try {
+    await sql`
+      insert into stream_sessions (
+        stream_session_id,
+        status,
+        host_user_id,
+        host_display_name,
+        stream_url,
+        stream_key,
+        replay_enabled,
+        replay_url,
+        started_at,
+        ended_at,
+        peak_viewer_count,
+        created_at,
+        updated_at
+      )
+      values (
+        ${input.streamSession.streamSessionId},
+        ${input.streamSession.status},
+        ${input.streamSession.hostUserId},
+        ${input.streamSession.hostDisplayName},
+        ${input.streamSession.streamUrl},
+        ${input.streamSession.streamKey},
+        ${input.streamSession.replayEnabled},
+        ${input.streamSession.replayUrl},
+        ${input.streamSession.startedAt},
+        ${input.streamSession.endedAt},
+        ${input.streamSession.peakViewerCount},
+        ${input.streamSession.createdAt},
+        ${input.streamSession.updatedAt}
+      )
+    `
+    await sql`
+      insert into go_live_events (
+        go_live_event_id,
+        expo_id,
+        stream_session_id,
+        title,
+        description,
+        thumbnail_url,
+        session_type,
+        scheduled_start_at,
+        status,
+        broadcaster_user_id,
+        broadcaster_display_name,
+        created_at,
+        updated_at
+      )
+      values (
+        ${input.event.goLiveEventId},
+        ${input.event.expoId},
+        ${input.event.streamSessionId},
+        ${input.event.title},
+        ${input.event.description},
+        ${input.event.thumbnailUrl},
+        ${input.event.sessionType},
+        ${input.event.scheduledStartAt},
+        ${input.event.status},
+        ${input.event.broadcasterUserId},
+        ${input.event.broadcasterDisplayName},
+        ${input.event.createdAt},
+        ${input.event.updatedAt}
+      )
+    `
+    await sql`commit`
+  } catch (error) {
+    await sql`rollback`
+    throw error
+  }
+}
+
+export async function updateGoLIVEEventAndSession(input: {
+  event: GoLIVEEvent
+  replayEnabled: boolean
+}): Promise<void> {
+  await sql`begin`
+  try {
+    await sql`
+      update go_live_events
+      set
+        title = ${input.event.title},
+        description = ${input.event.description},
+        session_type = ${input.event.sessionType},
+        scheduled_start_at = ${input.event.scheduledStartAt},
+        status = ${input.event.status},
+        broadcaster_user_id = ${input.event.broadcasterUserId},
+        broadcaster_display_name = ${input.event.broadcasterDisplayName},
+        updated_at = ${input.event.updatedAt}
+      where go_live_event_id = ${input.event.goLiveEventId}
+    `
+    await sql`
+      update stream_sessions
+      set
+        host_user_id = ${input.event.broadcasterUserId},
+        host_display_name = ${input.event.broadcasterDisplayName},
+        replay_enabled = ${input.replayEnabled},
+        updated_at = ${input.event.updatedAt}
+      where stream_session_id = ${input.event.streamSessionId}
+    `
+    await sql`commit`
+  } catch (error) {
+    await sql`rollback`
+    throw error
+  }
+}
+
+export async function cancelGoLIVEEvent(eventId: string): Promise<void> {
+  await sql`
+    update go_live_events
+    set status = 'Canceled', updated_at = now()
+    where go_live_event_id = ${eventId}
+  `
+}
+
+export async function deleteGoLIVEEvent(eventId: string): Promise<void> {
+  await sql`begin`
+  try {
+    const rows = (await sql`
+      select stream_session_id
+      from go_live_events
+      where go_live_event_id = ${eventId}
+    `) as { stream_session_id: string }[]
+    const streamSessionId = rows[0]?.stream_session_id
+    await sql`delete from go_live_events where go_live_event_id = ${eventId}`
+    if (streamSessionId) {
+      await sql`
+        delete from stream_sessions
+        where stream_session_id = ${streamSessionId}
+      `
+    }
+    await sql`commit`
+  } catch (error) {
+    await sql`rollback`
+    throw error
+  }
+}
+
+export async function createLiveComment(input: LiveComment): Promise<void> {
+  await sql`
+    insert into live_comments (
+      live_comment_id,
+      stream_session_id,
+      author_user_id,
+      author_display_name,
+      guest_display_name,
+      guest_email,
+      comment_text,
+      is_deleted,
+      created_at,
+      deleted_at,
+      deleted_by_user_id
+    )
+    values (
+      ${input.liveCommentId},
+      ${input.streamSessionId},
+      ${input.authorUserId},
+      ${input.authorDisplayName},
+      ${input.guestDisplayName},
+      ${input.guestEmail},
+      ${input.commentText},
+      ${input.isDeleted},
+      ${input.createdAt},
+      ${input.deletedAt},
+      ${input.deletedByUserId}
+    )
+  `
+}
+
+export async function softDeleteLiveComment(input: {
+  liveCommentId: string
+  deletedByUserId: string
+  deletedAt: string
+}): Promise<void> {
+  await sql`
+    update live_comments
+    set
+      is_deleted = true,
+      deleted_at = ${input.deletedAt},
+      deleted_by_user_id = ${input.deletedByUserId}
+    where live_comment_id = ${input.liveCommentId}
+  `
+}
+
+export async function upsertBoothCustomization(
+  customization: BoothCustomization,
+): Promise<void> {
+  await sql`
+    insert into booth_customizations (
+      registration_id,
+      selected_booth_template_id,
+      publish_status,
+      colors,
+      logo_url,
+      image_urls,
+      video_type,
+      video_url,
+      products
+    )
+    values (
+      ${customization.registrationId},
+      ${customization.selectedBoothTemplateId},
+      ${customization.publishStatus},
+      ${JSON.stringify(customization.colors)}::jsonb,
+      ${customization.logoUrl},
+      ${JSON.stringify(customization.imageUrls)}::jsonb,
+      ${customization.videoType},
+      ${customization.videoUrl},
+      ${JSON.stringify(customization.products)}::jsonb
+    )
+    on conflict (registration_id) do update set
+      selected_booth_template_id = excluded.selected_booth_template_id,
+      publish_status = excluded.publish_status,
+      colors = excluded.colors,
+      logo_url = excluded.logo_url,
+      image_urls = excluded.image_urls,
+      video_type = excluded.video_type,
+      video_url = excluded.video_url,
+      products = excluded.products
+  `
+}
+
+export async function updateStreamSessionStatus(input: {
+  streamSessionId: string
+  status: StreamSessionStatus
+  startedAt: string | null
+  endedAt: string | null
+  peakViewerCount: number | null
+  updatedAt: string
+}): Promise<void> {
+  await sql`
+    update stream_sessions
+    set
+      status = ${input.status},
+      started_at = ${input.startedAt},
+      ended_at = ${input.endedAt},
+      peak_viewer_count = ${input.peakViewerCount},
+      updated_at = ${input.updatedAt}
+    where stream_session_id = ${input.streamSessionId}
+  `
+}
+
+export async function updateGoLIVEEventStatusBySession(input: {
+  streamSessionId: string
+  status: GoLIVEEventStatus
+  updatedAt: string
+}): Promise<void> {
+  await sql`
+    update go_live_events
+    set status = ${input.status}, updated_at = ${input.updatedAt}
+    where stream_session_id = ${input.streamSessionId}
+  `
 }

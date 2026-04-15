@@ -3,6 +3,7 @@ import type {
   BankAccount,
   ExpoPaymentConfig,
   Order,
+  OrderStatus,
   PaymentConfig,
   TransactionLogEntry,
 } from "@/lib/tradexpo/types"
@@ -179,4 +180,266 @@ export async function listTransactionLogForOrder(
     rejectionReason: r.rejection_reason ?? undefined,
     processedAt: toIso(r.processed_at),
   }))
+}
+
+export async function updatePlatformPaymentConfig(input: {
+  vnpayEnabled: boolean
+  bankTransferEnabled: boolean
+  updatedBy: string
+}): Promise<PaymentConfig> {
+  const rows = (await sql`
+    insert into platform_payment_config (
+      id,
+      vnpay_enabled,
+      bank_transfer_enabled,
+      updated_at,
+      updated_by
+    )
+    values (
+      'default',
+      ${input.vnpayEnabled},
+      ${input.bankTransferEnabled},
+      now(),
+      ${input.updatedBy}
+    )
+    on conflict (id) do update set
+      vnpay_enabled = excluded.vnpay_enabled,
+      bank_transfer_enabled = excluded.bank_transfer_enabled,
+      updated_at = excluded.updated_at,
+      updated_by = excluded.updated_by
+    returning vnpay_enabled, bank_transfer_enabled, updated_at, updated_by
+  `) as {
+    vnpay_enabled: boolean
+    bank_transfer_enabled: boolean
+    updated_at: string | Date
+    updated_by: string
+  }[]
+  const r = rows[0]
+  return {
+    vnpayEnabled: r.vnpay_enabled,
+    bankTransferEnabled: r.bank_transfer_enabled,
+    updatedAt: toIso(r.updated_at),
+    updatedBy: r.updated_by,
+  }
+}
+
+export async function upsertExpoPaymentConfig(input: {
+  expoId: string
+  vnpayEnabled: boolean
+  bankTransferEnabled: boolean
+  bankAccountId: string | null
+  updatedBy: string
+}): Promise<ExpoPaymentConfig> {
+  const rows = (await sql`
+    insert into expo_payment_configs (
+      expo_id,
+      is_inherited,
+      vnpay_enabled,
+      bank_transfer_enabled,
+      bank_account_id,
+      updated_at,
+      updated_by
+    )
+    values (
+      ${input.expoId},
+      false,
+      ${input.vnpayEnabled},
+      ${input.bankTransferEnabled},
+      ${input.bankAccountId},
+      now(),
+      ${input.updatedBy}
+    )
+    on conflict (expo_id) do update set
+      is_inherited = false,
+      vnpay_enabled = excluded.vnpay_enabled,
+      bank_transfer_enabled = excluded.bank_transfer_enabled,
+      bank_account_id = excluded.bank_account_id,
+      updated_at = excluded.updated_at,
+      updated_by = excluded.updated_by
+    returning *
+  `) as {
+    expo_id: string
+    is_inherited: boolean
+    vnpay_enabled: boolean
+    bank_transfer_enabled: boolean
+    bank_account_id: string | null
+    updated_at: string | Date
+    updated_by: string
+  }[]
+  const r = rows[0]
+  return {
+    expoId: r.expo_id,
+    isInherited: r.is_inherited,
+    vnpayEnabled: r.vnpay_enabled,
+    bankTransferEnabled: r.bank_transfer_enabled,
+    bankAccountId: r.bank_account_id,
+    updatedAt: toIso(r.updated_at),
+    updatedBy: r.updated_by,
+  }
+}
+
+export async function resetExpoPaymentConfig(expoId: string): Promise<void> {
+  await sql`
+    delete from expo_payment_configs where expo_id = ${expoId}
+  `
+}
+
+export async function createBankAccount(input: {
+  id: string
+  bankName: string
+  bankBIN: string
+  accountNumber: string
+  accountHolderName: string
+  branch?: string
+  isPrimary: boolean
+}): Promise<void> {
+  await sql`begin`
+  try {
+    if (input.isPrimary) {
+      await sql`update bank_accounts set is_primary = false`
+    }
+    await sql`
+      insert into bank_accounts (
+        id, bank_name, bank_bin, account_number, account_holder_name, branch,
+        is_primary, is_active, created_at, updated_at
+      )
+      values (
+        ${input.id},
+        ${input.bankName},
+        ${input.bankBIN},
+        ${input.accountNumber},
+        ${input.accountHolderName},
+        ${input.branch ?? null},
+        ${input.isPrimary},
+        true,
+        now(),
+        now()
+      )
+    `
+    await sql`commit`
+  } catch (error) {
+    await sql`rollback`
+    throw error
+  }
+}
+
+export async function updateBankAccount(
+  id: string,
+  input: {
+    bankName: string
+    bankBIN: string
+    accountNumber: string
+    accountHolderName: string
+    branch?: string
+    isPrimary: boolean
+  },
+): Promise<void> {
+  await sql`begin`
+  try {
+    if (input.isPrimary) {
+      await sql`update bank_accounts set is_primary = false where id <> ${id}`
+    }
+    await sql`
+      update bank_accounts
+      set
+        bank_name = ${input.bankName},
+        bank_bin = ${input.bankBIN},
+        account_number = ${input.accountNumber},
+        account_holder_name = ${input.accountHolderName},
+        branch = ${input.branch ?? null},
+        is_primary = ${input.isPrimary},
+        updated_at = now()
+      where id = ${id}
+    `
+    await sql`commit`
+  } catch (error) {
+    await sql`rollback`
+    throw error
+  }
+}
+
+export async function setPrimaryBankAccount(id: string): Promise<void> {
+  await sql`begin`
+  try {
+    await sql`update bank_accounts set is_primary = false`
+    await sql`
+      update bank_accounts
+      set is_primary = true, updated_at = now()
+      where id = ${id}
+    `
+    await sql`commit`
+  } catch (error) {
+    await sql`rollback`
+    throw error
+  }
+}
+
+export async function setBankAccountActiveState(
+  id: string,
+  isActive: boolean,
+): Promise<void> {
+  await sql`
+    update bank_accounts
+    set is_active = ${isActive}, updated_at = now()
+    where id = ${id}
+  `
+}
+
+export async function deleteBankAccount(id: string): Promise<void> {
+  await sql`delete from bank_accounts where id = ${id}`
+}
+
+export async function updateOrderStatusAndAppendLogs(input: {
+  orderId: string
+  status: OrderStatus
+  expiresAt?: string
+  logs: {
+    id: string
+    type: TransactionLogEntry["type"]
+    status: OrderStatus
+    actor: string
+    note?: string
+    rejectionReason?: string
+    processedAt: string
+  }[]
+}): Promise<void> {
+  await sql`begin`
+  try {
+    await sql`
+      update orders
+      set
+        status = ${input.status},
+        expires_at = ${input.expiresAt ?? null},
+        updated_at = now()
+      where id = ${input.orderId}
+    `
+    for (const entry of input.logs) {
+      await sql`
+        insert into transaction_log (
+          id,
+          order_id,
+          type,
+          status,
+          actor,
+          note,
+          rejection_reason,
+          processed_at
+        )
+        values (
+          ${entry.id},
+          ${input.orderId},
+          ${entry.type},
+          ${entry.status},
+          ${entry.actor},
+          ${entry.note ?? null},
+          ${entry.rejectionReason ?? null},
+          ${entry.processedAt}
+        )
+      `
+    }
+    await sql`commit`
+  } catch (error) {
+    await sql`rollback`
+    throw error
+  }
 }

@@ -130,3 +130,81 @@ export async function listUnreadCountsForUser(
   }
   return out
 }
+
+export async function createMessage(input: {
+  id: string
+  conversationId: string
+  senderId: string
+  content: string
+  attachments: MessageAttachment[]
+  status: Message["status"]
+  sentAt: string
+}): Promise<void> {
+  await sql`
+    insert into chat_messages (
+      id,
+      conversation_id,
+      sender_id,
+      content,
+      attachments,
+      status,
+      sent_at,
+      edited_at,
+      is_deleted,
+      is_system_message
+    )
+    values (
+      ${input.id},
+      ${input.conversationId},
+      ${input.senderId},
+      ${input.content},
+      ${JSON.stringify(input.attachments)}::jsonb,
+      ${input.status},
+      ${input.sentAt},
+      null,
+      false,
+      false
+    )
+  `
+}
+
+export async function updateMessageContent(input: {
+  messageId: string
+  conversationId: string
+  content: string
+  editedAt: string
+}): Promise<void> {
+  await sql`
+    update chat_messages
+    set content = ${input.content}, edited_at = ${input.editedAt}
+    where id = ${input.messageId}
+      and conversation_id = ${input.conversationId}
+      and is_deleted = false
+      and is_system_message = false
+  `
+}
+
+export async function softDeleteMessage(input: {
+  messageId: string
+  conversationId: string
+}): Promise<void> {
+  await sql`
+    update chat_messages
+    set is_deleted = true, attachments = '[]'::jsonb
+    where id = ${input.messageId}
+      and conversation_id = ${input.conversationId}
+      and is_system_message = false
+  `
+}
+
+export async function archiveConversationForUser(input: {
+  conversationId: string
+  userId: string
+}): Promise<void> {
+  await sql`
+    update chat_conversation_members
+    set is_archived = true
+    where conversation_id = ${input.conversationId}
+      and user_id = ${input.userId}
+  `
+}
