@@ -448,13 +448,13 @@ export function DealRoomManager({
         prev.map((conv) =>
           conv.id === activeConversationId
             ? {
-                ...conv,
-                members: conv.members.map((member) =>
-                  member.userId === currentUserId
-                    ? { ...member, isArchived: false }
-                    : member,
-                ),
-              }
+              ...conv,
+              members: conv.members.map((member) =>
+                member.userId === currentUserId
+                  ? { ...member, isArchived: false }
+                  : member,
+              ),
+            }
             : conv,
         ),
       )
@@ -528,11 +528,11 @@ export function DealRoomManager({
         prev.map((c) =>
           c.id === id
             ? {
-                ...c,
-                members: c.members.map((m) =>
-                  m.userId === currentUserId ? { ...m, isArchived: true } : m,
-                ),
-              }
+              ...c,
+              members: c.members.map((m) =>
+                m.userId === currentUserId ? { ...m, isArchived: true } : m,
+              ),
+            }
             : c,
         ),
       )
@@ -794,8 +794,8 @@ export function DealRoomManager({
                     "flex items-end gap-2",
                     isOwn ? "justify-end" : "justify-start",
                     idx > 0 &&
-                      activeMessages[idx - 1].senderId !== msg.senderId &&
-                      "mt-3",
+                    activeMessages[idx - 1].senderId !== msg.senderId &&
+                    "mt-3",
                   )}
                 >
                   {/* Other's avatar */}
@@ -1026,8 +1026,8 @@ export function DealRoomManager({
                   ))}
                 </div>
               )}
-              <div className="flex items-end gap-2">
-                <Button size="icon-sm" variant="ghost" asChild>
+              <div className="flex items-start gap-2">
+                <Button size="icon" variant="ghost" asChild>
                   <label className="cursor-pointer">
                     <input
                       type="file"
@@ -1054,12 +1054,12 @@ export function DealRoomManager({
                   }}
                 />
                 <Button
-                  size="icon-sm"
+                  size="icon"
                   disabled={
                     !composerValue.trim() && pendingAttachments.length === 0
                   }
                   onClick={handleSendMessage}
-                  className="shrink-0"
+                  className="shrink-0 rounded-full"
                 >
                   <SendHorizontalIcon className="size-4" />
                   <span className="sr-only">Send</span>

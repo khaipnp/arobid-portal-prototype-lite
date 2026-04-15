@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  BellIcon,
   BoxIcon,
   Building2Icon,
   CalendarIcon,
@@ -22,11 +23,6 @@ const nav = [
     name: "My Expos",
     url: "/seller/my-expos",
     icon: <CalendarIcon />,
-  },
-  {
-    name: "Checkout Demo (eVoucher)",
-    url: "/seller/checkout-demo",
-    icon: <ShoppingCartIcon />,
   },
 ]
 
@@ -54,9 +50,29 @@ export function NavSeller() {
       <SidebarMenu>
         <SidebarMenuItem>
           <SidebarMenuButton asChild>
+            <Link href="/seller/notification">
+              <BellIcon />
+              <span>Notification</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton asChild>
             <Link href="/seller/deal-room">
               <MessageCircleIcon />
               <span>Deal Room</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton asChild>
+            <Link href="/seller/checkout-demo">
+              <ShoppingCartIcon />
+              <span>Checkout Demo (eVoucher)</span>
             </Link>
           </SidebarMenuButton>
         </SidebarMenuItem>
