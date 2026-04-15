@@ -67,11 +67,6 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  mockVoucherBatches,
-  mockVoucherCodes,
-  mockVoucherTargets,
-} from "@/lib/evoucher/mock-data"
 import type {
   DiscountType,
   VoucherBatch,
@@ -80,6 +75,7 @@ import type {
   VoucherCode,
   VoucherCodeType,
   VoucherScope,
+  VoucherTarget,
 } from "@/lib/evoucher/types"
 import {
   buildVoucherBatchView,
@@ -278,6 +274,8 @@ interface VoucherFormDialogProps {
   editing: VoucherBatchView | null
   existingPrefixes: Set<string>
   existingMultiUseCodes: Set<string>
+  existingCodes: VoucherCode[]
+  targets: VoucherTarget[]
   onSave: (batch: VoucherBatch, deltaCodes: VoucherCode[]) => void
 }
 
@@ -287,6 +285,8 @@ function VoucherFormDialog({
   editing,
   existingPrefixes,
   existingMultiUseCodes,
+  existingCodes,
+  targets,
   onSave,
 }: VoucherFormDialogProps) {
   const isEdit = editing !== null
@@ -317,15 +317,15 @@ function VoucherFormDialog({
   >({})
 
   const filteredTargets = useMemo(
-    () => mockVoucherTargets.filter((t) => t.type === form.applicableTo),
-    [form.applicableTo],
+    () => targets.filter((t) => t.type === form.applicableTo),
+    [form.applicableTo, targets],
   )
   const [targetPickerOpen, setTargetPickerOpen] = useState(false)
   const [targetSearch, setTargetSearch] = useState("")
 
   const selectedTarget = useMemo(
-    () => mockVoucherTargets.find((t) => t.id === form.targetId) ?? null,
-    [form.targetId],
+    () => targets.find((t) => t.id === form.targetId) ?? null,
+    [form.targetId, targets],
   )
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
@@ -423,7 +423,7 @@ function VoucherFormDialog({
               editing.codePrefix,
               delta,
               new Set(
-                mockVoucherCodes
+                existingCodes
                   .filter((c) => c.batchId === editing.id)
                   .map((c) => c.code),
               ),
@@ -432,7 +432,7 @@ function VoucherFormDialog({
       onSave(updatedBatch, deltaCodes)
     } else {
       const id = `batch-${Date.now()}`
-      const target = mockVoucherTargets.find((t) => t.id === form.targetId)
+      const target = targets.find((t) => t.id === form.targetId)
       const codeType = form.codeType as VoucherCodeType
       const prefix =
         codeType === "single-use" ? form.codePrefix.trim().toUpperCase() : ""
@@ -841,12 +841,22 @@ function VoucherFormDialog({
 
 const PAGE_SIZE = 10
 
-export function EVoucherManagement() {
+interface EVoucherManagementProps {
+  initialBatches: VoucherBatch[]
+  initialCodes: VoucherCode[]
+  targets: VoucherTarget[]
+}
+
+export function EVoucherManagement({
+  initialBatches,
+  initialCodes,
+  targets,
+}: EVoucherManagementProps) {
   const [batches, setBatches] = useState<VoucherBatch[]>(() =>
-    mockVoucherBatches.map((b) => ({ ...b })),
+    initialBatches.map((b) => ({ ...b })),
   )
   const [codes, setCodes] = useState<VoucherCode[]>(() =>
-    mockVoucherCodes.map((c) => ({ ...c })),
+    initialCodes.map((c) => ({ ...c })),
   )
 
   // Filters
@@ -1244,6 +1254,8 @@ export function EVoucherManagement() {
                 )
               : existingMultiUseCodes
           }
+          existingCodes={codes}
+          targets={targets}
           onSave={handleSave}
         />
       )}

@@ -12,7 +12,6 @@ import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { mockVoucherBatches, mockVoucherCodes } from "@/lib/evoucher/mock-data"
 import type { VoucherBatch, VoucherCode } from "@/lib/evoucher/types"
 import {
   applyDiscount,
@@ -39,6 +38,8 @@ interface AppliedVoucher {
 }
 
 interface VoucherCheckoutWidgetProps {
+  batches: VoucherBatch[]
+  codes: VoucherCode[]
   orderTotal: number
   orderScopeType: "expo" | "service"
   orderScopeId: string
@@ -47,12 +48,20 @@ interface VoucherCheckoutWidgetProps {
 }
 
 export function VoucherCheckoutWidget({
+  batches,
+  codes,
   orderTotal,
   orderScopeType,
   orderScopeId,
   orderId,
   onApplied,
 }: VoucherCheckoutWidgetProps) {
+  const [voucherBatches, setVoucherBatches] = useState<VoucherBatch[]>(() =>
+    batches.map((batch) => ({ ...batch })),
+  )
+  const [voucherCodes, setVoucherCodes] = useState<VoucherCode[]>(() =>
+    codes.map((code) => ({ ...code })),
+  )
   const [inputCode, setInputCode] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -68,10 +77,10 @@ export function VoucherCheckoutWidget({
       setLoading(false)
 
       // ── Try single-use first ────────────────────────────────────────────────
-      const singleCode = mockVoucherCodes.find((c) => c.code === normalized)
+      const singleCode = voucherCodes.find((c) => c.code === normalized)
 
       // ── Try multi-use ──────────────────────────────────────────────────────
-      const multiUseBatch = mockVoucherBatches.find(
+      const multiUseBatch = voucherBatches.find(
         (b) => b.codeType === "multi-use" && b.multiUseCode === normalized,
       )
 
@@ -81,7 +90,7 @@ export function VoucherCheckoutWidget({
       }
 
       const batch = singleCode
-        ? mockVoucherBatches.find((b) => b.id === singleCode.batchId)
+        ? voucherBatches.find((b) => b.id === singleCode.batchId)
         : multiUseBatch
 
       if (!batch) {
@@ -131,7 +140,7 @@ export function VoucherCheckoutWidget({
         return
       }
 
-      const view = buildVoucherBatchView(batch, mockVoucherCodes)
+      const view = buildVoucherBatchView(batch, voucherCodes)
       if (view.remainingCount <= 0) {
         setError("This voucher has been fully used.")
         return
@@ -146,9 +155,11 @@ export function VoucherCheckoutWidget({
       if (singleCode) {
         singleCode.status = "Locked"
         singleCode.lockedByOrderId = orderId
+        setVoucherCodes((prev) => [...prev])
       } else {
         // Multi-use: increment locked counter directly on batch
         batch.multiUseLockedCount += 1
+        setVoucherBatches((prev) => [...prev])
       }
 
       const finalTotal = applyDiscount(
@@ -175,9 +186,11 @@ export function VoucherCheckoutWidget({
       // Single-use
       v.code.status = "Available"
       v.code.lockedByOrderId = undefined
+      setVoucherCodes((prev) => [...prev])
     } else {
       // Multi-use
       v.batch.multiUseLockedCount = Math.max(0, v.batch.multiUseLockedCount - 1)
+      setVoucherBatches((prev) => [...prev])
     }
   }
 
@@ -263,6 +276,8 @@ export function VoucherCheckoutWidget({
 // ─── Order Summary Panel ───────────────────────────────────────────────────────
 
 interface OrderSummaryProps {
+  batches: VoucherBatch[]
+  codes: VoucherCode[]
   orderLabel: string
   orderTotal: number
   orderScopeType: "expo" | "service"
@@ -273,6 +288,8 @@ interface OrderSummaryProps {
 type PaymentOutcome = "success" | "failure" | "cancel" | null
 
 export function CheckoutOrderSummary({
+  batches,
+  codes,
   orderLabel,
   orderTotal,
   orderScopeType,
@@ -441,6 +458,8 @@ export function CheckoutOrderSummary({
       </div>
 
       <VoucherCheckoutWidget
+        batches={batches}
+        codes={codes}
         orderTotal={orderTotal}
         orderScopeType={orderScopeType}
         orderScopeId={orderScopeId}

@@ -10,7 +10,7 @@
 
 ## 2. Description & Business Value
 
-This is the **core messaging action** that happens inside a conversation thread — both 1-1 Direct ([US-01][CORE]) and Group Deal Room ([US-02][CORE]). It covers:
+This is the **core messaging action** that happens inside a 1-1 conversation thread ([US-01][CORE]). It covers:
 
 - Composing and sending text messages
 - Attaching files (PDFs, images, spreadsheets) relevant to a deal
@@ -25,8 +25,7 @@ This US is intentionally scoped to **in-thread message I/O**. Conversation disco
 - Read receipts eliminate the "did they see it?" ambiguity in B2B negotiations
 
 **Dependencies:**
-- **[US-01][CORE] Initiate 1-1 Direct Conversation** — thread must exist before messages can be sent
-- **[US-02][CORE] Create Group Deal Room** — group thread must exist
+- **[US-01][CORE] Deal Room – 1-1 Private Conversation** — thread must exist before messages can be sent
 - **[US-04][CORE] Conversation Inbox** — unread counts are driven by message receipt events in this US
 
 ---
@@ -48,10 +47,13 @@ This US is intentionally scoped to **in-thread message I/O**. Conversation disco
 
 #### File Attachment
 
-| Field | Type | Constraint |
+| Category | Allowed Types | Preview in thread |
 |---|---|---|
-| File | Upload | Max 5 files per message; max 20 MB per file |
-| Allowed types | PDF, PNG, JPG, JPEG, XLSX, DOCX | Other formats rejected |
+| Images | JPG, JPEG, PNG, WEBP | Inline thumbnail |
+| Videos | MP4 | Inline video player |
+| Documents | PDF, MD, DOC, DOCX, CSV, XLSX | File name + size, downloadable |
+
+> Max **5 attachments per message** (combined across all categories); max **20 MB per file**. Other formats are rejected.
 
 > A message can contain both text and attachments simultaneously.
 
@@ -128,9 +130,9 @@ flowchart TD
 * **Step 1:** User clicks the **paperclip/attach** icon in the message toolbar.
 * **Step 2:** File picker opens. User selects 1–5 files.
 * **Step 3:** System validates file type and size. Invalid files are rejected with an inline error per file.
-* **Step 4:** Valid files appear as previews in the compose area (thumbnail for images, file name + size for documents).
+* **Step 4:** Valid files appear as previews in the compose area: thumbnail for images, video thumbnail for MP4, file name + size for documents.
 * **Step 5:** User optionally adds a text caption and clicks **Send**.
-* **Step 6:** Files are uploaded and message is delivered. Recipients can click to preview images inline or download documents.
+* **Step 6:** Files are uploaded and message is delivered. Recipients can view images and videos inline, or click to download documents.
 
 ### User Flow 3: Edit a message
 
@@ -161,7 +163,7 @@ flowchart TD
 | AC-03 | Recipient opens the thread and message enters their viewport | — | Message status updates to "read"; sender's read receipt indicator reflects this |
 | AC-04 | User attempts to send an empty message (no text, no file) | Send clicked | Inline error: "Message cannot be empty." Message is not sent |
 | AC-05 | User attaches a file exceeding 20 MB | File selected | Inline error: "File too large. Maximum file size is 20 MB." File is not attached |
-| AC-06 | User attaches an unsupported file type (e.g., .exe) | File selected | Inline error: "File type not supported. Allowed: PDF, PNG, JPG, XLSX, DOCX." |
+| AC-06 | User attaches an unsupported file type (e.g., .exe) | File selected | Inline error: "File type not supported. Allowed: JPG, JPEG, PNG, WEBP, MP4, PDF, MD, DOC, DOCX, CSV, XLSX." |
 | AC-07 | User attaches more than 5 files to one message | 6th file selected | Inline error: "Maximum 5 files per message." |
 | AC-08 | User edits their own message within 15 minutes of sending | Edit saved | Message body is updated for all participants; "Edited" label is shown |
 | AC-09 | User attempts to edit their own message after 15 minutes | Edit action clicked | Edit option is disabled or hidden; message cannot be modified |
