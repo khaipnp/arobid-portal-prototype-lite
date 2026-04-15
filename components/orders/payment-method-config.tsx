@@ -3,11 +3,11 @@
 import { CreditCardIcon, InfoIcon, LandmarkIcon } from "lucide-react"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import {
-  mockBankAccounts,
-  mockExpoPaymentConfigs,
-  mockPaymentConfig,
-} from "@/lib/orders/mock-data"
+import type {
+  BankAccount,
+  ExpoPaymentConfig,
+  PaymentConfig,
+} from "@/lib/tradexpo/types"
 
 interface ToggleRowProps {
   icon: React.ReactNode
@@ -56,27 +56,29 @@ function ToggleRow({
   )
 }
 
-export function PaymentMethodConfig() {
+export function PaymentMethodConfig({
+  initialPlatformPayment,
+  bankAccounts,
+  expoPaymentConfigs,
+  totalExpoCount,
+}: {
+  initialPlatformPayment: PaymentConfig
+  bankAccounts: BankAccount[]
+  expoPaymentConfigs: ExpoPaymentConfig[]
+  totalExpoCount: number
+}) {
+  const [platformPayment, setPlatformPayment] = useState(initialPlatformPayment)
   const [vnpayEnabled, setVnpayEnabled] = useState(
-    mockPaymentConfig.vnpayEnabled,
+    initialPlatformPayment.vnpayEnabled,
   )
   const [bankEnabled, setBankEnabled] = useState(
-    mockPaymentConfig.bankTransferEnabled,
+    initialPlatformPayment.bankTransferEnabled,
   )
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
 
-  const _inheritedExpoCount = mockExpoPaymentConfigs.filter(
-    (c) => c.isInherited,
-  ).length
-  // Total expos is a rough count — expos not in mockExpoPaymentConfigs are all inherited
-  // For display, we use: inherited = total mock expos (5+) minus those with isInherited=false
-  const customCount = mockExpoPaymentConfigs.filter(
-    (c) => !c.isInherited,
-  ).length
-  // Approximate total expos in system (from mock-data expos, known to be 6+)
-  const approxTotalExpos = 6
-  const inheritingCount = approxTotalExpos - customCount
+  const customCount = expoPaymentConfigs.filter((c) => !c.isInherited).length
+  const inheritingCount = totalExpoCount - customCount
 
   function showToast(msg: string) {
     setToast(msg)
@@ -100,7 +102,7 @@ export function PaymentMethodConfig() {
       return
     }
     if (next) {
-      const hasActiveAccount = mockBankAccounts.some((b) => b.isActive)
+      const hasActiveAccount = bankAccounts.some((b) => b.isActive)
       if (!hasActiveAccount) {
         setError(
           "No bank accounts configured. Please add a bank account in Bank Account Settings before enabling Bank Transfer.",
@@ -117,14 +119,16 @@ export function PaymentMethodConfig() {
       setError("At least one payment method must be enabled.")
       return
     }
-    mockPaymentConfig.vnpayEnabled = vnpayEnabled
-    mockPaymentConfig.bankTransferEnabled = bankEnabled
-    mockPaymentConfig.updatedAt = new Date().toISOString()
-    mockPaymentConfig.updatedBy = "admin@arobid.com"
+    setPlatformPayment({
+      vnpayEnabled,
+      bankTransferEnabled: bankEnabled,
+      updatedAt: new Date().toISOString(),
+      updatedBy: "admin@arobid.com",
+    })
     showToast("Platform default payment configuration updated.")
   }
 
-  const primaryAccount = mockBankAccounts.find((b) => b.isPrimary && b.isActive)
+  const primaryAccount = bankAccounts.find((b) => b.isPrimary && b.isActive)
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -191,8 +195,8 @@ export function PaymentMethodConfig() {
       <div className="flex items-center justify-between border-t pt-4">
         <p className="text-muted-foreground text-xs">
           Last updated{" "}
-          {new Date(mockPaymentConfig.updatedAt).toLocaleString("vi-VN")} by{" "}
-          {mockPaymentConfig.updatedBy}
+          {new Date(platformPayment.updatedAt).toLocaleString("vi-VN")} by{" "}
+          {platformPayment.updatedBy}
         </p>
         <Button onClick={handleSave}>Save</Button>
       </div>

@@ -25,7 +25,6 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { mockOrders, mockTransactionLog } from "@/lib/orders/mock-data"
 import type {
   Order,
   OrderStatus,
@@ -59,21 +58,23 @@ function statusColor(status: OrderStatus): string {
 
 interface OrderDetailProps {
   orderId: string
+  initialOrder: Order
+  initialTransactionLog: TransactionLogEntry[]
 }
 
-export function OrderDetail({ orderId }: OrderDetailProps) {
+export function OrderDetail({
+  orderId,
+  initialOrder,
+  initialTransactionLog,
+}: OrderDetailProps) {
   const router = useRouter()
 
-  const [order, setOrder] = useState<Order | undefined>(() =>
-    mockOrders.find((o) => o.id === orderId),
-  )
+  const [order, setOrder] = useState<Order>(() => initialOrder)
   const [log, setLog] = useState<TransactionLogEntry[]>(() =>
-    mockTransactionLog
-      .filter((t) => t.orderId === orderId)
-      .sort(
-        (a, b) =>
-          new Date(a.processedAt).getTime() - new Date(b.processedAt).getTime(),
-      ),
+    [...initialTransactionLog].sort(
+      (a, b) =>
+        new Date(a.processedAt).getTime() - new Date(b.processedAt).getTime(),
+    ),
   )
   const [showConfirmDialog, setShowConfirmDialog] = useState(false)
   const [showRejectDialog, setShowRejectDialog] = useState(false)
@@ -90,9 +91,6 @@ export function OrderDetail({ orderId }: OrderDetailProps) {
     const now = new Date().toISOString()
     const updated: Order = { ...order, status: "Paid", updatedAt: now }
     setOrder(updated)
-    // Update mock source so list also reflects change on navigate
-    const idx = mockOrders.findIndex((o) => o.id === orderId)
-    if (idx !== -1) mockOrders[idx] = updated
     setLog((prev) => [
       ...prev,
       {
@@ -122,8 +120,6 @@ export function OrderDetail({ orderId }: OrderDetailProps) {
       updatedAt: now,
     }
     setOrder(updated)
-    const idx = mockOrders.findIndex((o) => o.id === orderId)
-    if (idx !== -1) mockOrders[idx] = updated
     setLog((prev) => [
       ...prev,
       {
@@ -148,17 +144,6 @@ export function OrderDetail({ orderId }: OrderDetailProps) {
     setShowRejectDialog(false)
     setRejectionReason("")
     showToast("Payment rejected. Customer has been notified and can retry.")
-  }
-
-  if (!order) {
-    return (
-      <div className="flex flex-col items-center gap-4 py-20 text-center">
-        <p className="text-muted-foreground">Order not found.</p>
-        <Button variant="outline" onClick={() => router.back()}>
-          Go back
-        </Button>
-      </div>
-    )
   }
 
   return (

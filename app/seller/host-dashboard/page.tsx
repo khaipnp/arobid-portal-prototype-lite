@@ -1,7 +1,18 @@
 import { HostDashboard } from "@/components/streaming/host-dashboard"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
+import {
+  listGoLIVEEvents,
+  listStreamSessions,
+} from "@/lib/tradexpo/db/platform-data"
 
-export default function HostDashboardPage() {
+export const dynamic = "force-dynamic"
+
+export default async function HostDashboardPage() {
+  const [initialStreamSessions, initialGoLIVEEvents] = await Promise.all([
+    listStreamSessions(),
+    listGoLIVEEvents(),
+  ])
+
   return (
     <DashboardShell
       title="Host Dashboard"
@@ -11,7 +22,10 @@ export default function HostDashboardPage() {
         { label: "Host Dashboard" },
       ]}
     >
-      <HostDashboard />
+      <HostDashboard
+        initialStreamSessions={initialStreamSessions}
+        initialGoLIVEEvents={initialGoLIVEEvents}
+      />
     </DashboardShell>
   )
 }

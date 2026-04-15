@@ -1,9 +1,4 @@
 import { sql } from "@/lib/db/neon"
-import {
-  mockVoucherBatches,
-  mockVoucherCodes,
-  mockVoucherTargets,
-} from "@/lib/evoucher/mock-data"
 import type {
   VoucherBatch,
   VoucherCode,
@@ -103,37 +98,25 @@ function mapTarget(row: VoucherTargetRow): VoucherTarget {
 }
 
 export async function listVoucherBatches(): Promise<VoucherBatch[]> {
-  try {
-    const rows = (await sql`
-      select * from voucher_batches
-      order by updated_at desc
-    `) as VoucherBatchRow[]
-    return rows.map(mapBatch)
-  } catch {
-    return mockVoucherBatches.map((item) => ({ ...item }))
-  }
+  const rows = (await sql`
+    select * from voucher_batches
+    order by updated_at desc
+  `) as VoucherBatchRow[]
+  return rows.map(mapBatch)
 }
 
 export async function listVoucherCodes(): Promise<VoucherCode[]> {
-  try {
-    const rows = (await sql`
-      select * from voucher_codes
-      order by id asc
-    `) as VoucherCodeRow[]
-    return rows.map(mapCode)
-  } catch {
-    return mockVoucherCodes.map((item) => ({ ...item }))
-  }
+  const rows = (await sql`
+    select * from voucher_codes
+    order by id asc
+  `) as VoucherCodeRow[]
+  return rows.map(mapCode)
 }
 
 export async function listVoucherTargets(): Promise<VoucherTarget[]> {
-  try {
-    const rows = (await sql`
-      select * from voucher_targets
-      order by type asc, name asc
-    `) as VoucherTargetRow[]
-    return rows.map(mapTarget)
-  } catch {
-    return mockVoucherTargets.map((item) => ({ ...item }))
-  }
+  const rows = (await sql`
+    select * from voucher_targets
+    order by type asc, name asc
+  `) as VoucherTargetRow[]
+  return rows.map(mapTarget)
 }

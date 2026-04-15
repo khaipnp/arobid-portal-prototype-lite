@@ -23,18 +23,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import {
-  mockBoothCustomizations,
-  mockBoothTemplates,
-  mockExpos,
-  mockSellerRegistrations,
-} from "@/lib/tradexpo/mock-data"
 import type {
+  BoothCustomization,
   BoothTemplate,
   Expo,
   ExpoStatus,
+  GoLIVEEvent,
   SellerBoothRegistration,
   SellerBoothStatus,
+  StreamSession,
 } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
 
@@ -78,38 +75,39 @@ function formatDate(iso: string) {
 
 interface Props {
   expoId: string
+  expo: Expo | null
+  registrations: SellerBoothRegistration[]
+  boothTemplates: BoothTemplate[]
+  boothCustomizations: BoothCustomization[]
+  goLiveEvents: GoLIVEEvent[]
+  streamSessions: StreamSession[]
 }
 
-export function SellerExpoDetail({ expoId }: Props) {
-  const expo = React.useMemo<Expo | undefined>(
-    () => mockExpos.find((e) => e.id === expoId),
-    [expoId],
-  )
-
-  const registrations = React.useMemo<SellerBoothRegistration[]>(
-    () =>
-      mockSellerRegistrations
-        .filter((r) => r.expoId === expoId)
-        .map((r) => ({ ...r })),
-    [expoId],
-  )
-
+export function SellerExpoDetail({
+  expoId,
+  expo,
+  registrations,
+  boothTemplates,
+  boothCustomizations,
+  goLiveEvents,
+  streamSessions,
+}: Props) {
   const boothTemplateMap = React.useMemo(() => {
     const m = new Map<string, BoothTemplate>()
-    for (const bt of mockBoothTemplates) m.set(bt.id, bt)
+    for (const bt of boothTemplates) m.set(bt.id, bt)
     return m
-  }, [])
+  }, [boothTemplates])
 
   const customizationMap = React.useMemo(() => {
     const m = new Map<string, { publishStatus: string; hasTemplate: boolean }>()
-    for (const c of mockBoothCustomizations) {
+    for (const c of boothCustomizations) {
       m.set(c.registrationId, {
         publishStatus: c.publishStatus,
         hasTemplate: !!c.selectedBoothTemplateId,
       })
     }
     return m
-  }, [])
+  }, [boothCustomizations])
 
   if (!expo) {
     return (
@@ -160,7 +158,12 @@ export function SellerExpoDetail({ expoId }: Props) {
       </div>
 
       {/* GoLIVE Sessions */}
-      <GoLIVESection expoId={expoId} expoStatus={expo.status} />
+      <GoLIVESection
+        expoId={expoId}
+        expoStatus={expo.status}
+        goLiveEvents={goLiveEvents}
+        streamSessions={streamSessions}
+      />
 
       {/* Booth list */}
       <section>

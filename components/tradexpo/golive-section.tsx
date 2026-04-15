@@ -11,7 +11,6 @@ import Image from "next/image"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { mockGoLIVEEvents, mockStreamSessions } from "@/lib/tradexpo/mock-data"
 import type {
   ExpoStatus,
   GoLIVEEvent,
@@ -217,11 +216,18 @@ function GoLIVECard({ event, session }: CardProps) {
 interface Props {
   expoId: string
   expoStatus: ExpoStatus
+  goLiveEvents: GoLIVEEvent[]
+  streamSessions: StreamSession[]
 }
 
-export function GoLIVESection({ expoId, expoStatus }: Props) {
+export function GoLIVESection({
+  expoId,
+  expoStatus,
+  goLiveEvents,
+  streamSessions,
+}: Props) {
   const visitorStatus = toVisitorStatus(expoStatus)
-  const allEvents = mockGoLIVEEvents.filter(
+  const allEvents = goLiveEvents.filter(
     (e) => e.expoId === expoId && e.status !== "Canceled",
   )
 
@@ -231,7 +237,7 @@ export function GoLIVESection({ expoId, expoStatus }: Props) {
       return event.status === "Scheduled" || event.status === "Ready"
     }
     if (visitorStatus === "Archive") {
-      const session = mockStreamSessions.find(
+      const session = streamSessions.find(
         (s) => s.streamSessionId === event.streamSessionId,
       )
       return (
@@ -258,7 +264,7 @@ export function GoLIVESection({ expoId, expoStatus }: Props) {
 
   const pairs = sorted
     .map((event) => {
-      const session = mockStreamSessions.find(
+      const session = streamSessions.find(
         (s) => s.streamSessionId === event.streamSessionId,
       )
       return session ? { event, session } : null

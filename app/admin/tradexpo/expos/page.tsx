@@ -1,7 +1,15 @@
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import { ExpoListManager } from "@/components/tradexpo/expo-list-manager"
+import { listExpoCategories, listExpos } from "@/lib/tradexpo/db/platform-data"
 
-export default function ExpoListPage() {
+export const dynamic = "force-dynamic"
+
+export default async function ExpoListPage() {
+  const [initialExpos, initialCategories] = await Promise.all([
+    listExpos(),
+    listExpoCategories(),
+  ])
+
   return (
     <DashboardShell
       title="Expo Management"
@@ -12,7 +20,10 @@ export default function ExpoListPage() {
         { label: "Expo List" },
       ]}
     >
-      <ExpoListManager />
+      <ExpoListManager
+        initialExpos={initialExpos}
+        initialCategories={initialCategories}
+      />
     </DashboardShell>
   )
 }

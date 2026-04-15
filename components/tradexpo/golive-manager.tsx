@@ -52,11 +52,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import { mockGoLIVEEvents, mockStreamSessions } from "@/lib/tradexpo/mock-data"
 import type {
   GoLIVEEvent,
   GoLIVEEventStatus,
   GoLIVESessionType,
+  StreamSession,
 } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
 
@@ -134,10 +134,16 @@ const EMPTY_FORM: FormState = {
 
 interface Props {
   expoId: string
+  initialGoLIVEEvents: GoLIVEEvent[]
+  initialStreamSessions: StreamSession[]
 }
 
-export function GoLIVEManager({ expoId }: Props) {
-  const seedEvents = mockGoLIVEEvents.filter((e) => e.expoId === expoId)
+export function GoLIVEManager({
+  expoId,
+  initialGoLIVEEvents,
+  initialStreamSessions,
+}: Props) {
+  const seedEvents = initialGoLIVEEvents.filter((e) => e.expoId === expoId)
   const [events, setEvents] = React.useState<GoLIVEEvent[]>(seedEvents)
   const [formOpen, setFormOpen] = React.useState(false)
   const [editingEvent, setEditingEvent] = React.useState<GoLIVEEvent | null>(
@@ -172,7 +178,7 @@ export function GoLIVEManager({ expoId }: Props) {
         : "",
       broadcasterUserId: event.broadcasterUserId,
       replayEnabled:
-        mockStreamSessions.find(
+        initialStreamSessions.find(
           (s) => s.streamSessionId === event.streamSessionId,
         )?.replayEnabled ?? false,
     })

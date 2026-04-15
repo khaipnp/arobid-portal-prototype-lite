@@ -52,11 +52,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Toggle } from "@/components/ui/toggle"
-import {
-  mockBankAccounts,
-  mockPaymentConfig,
-  VIETNAMESE_BANKS,
-} from "@/lib/orders/mock-data"
+import { VIETNAMESE_BANKS } from "@/lib/orders/bank-directory"
 import type { BankAccount } from "@/lib/tradexpo/types"
 import { Alert, AlertAction, AlertDescription, AlertTitle } from "../ui/alert"
 
@@ -80,9 +76,15 @@ const emptyForm: FormState = {
   isPrimary: false,
 }
 
-export function BankAccountManager() {
+export function BankAccountManager({
+  initialBankAccounts,
+  bankTransferEnabled,
+}: {
+  initialBankAccounts: BankAccount[]
+  bankTransferEnabled: boolean
+}) {
   const [accounts, setAccounts] = useState<BankAccount[]>(() => [
-    ...mockBankAccounts,
+    ...initialBankAccounts,
   ])
   const [form, setForm] = useState<FormState>(emptyForm)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -205,20 +207,7 @@ export function BankAccountManager() {
       showToast("Bank account added successfully.")
     }
 
-    // Sync to mock source
-    syncToMock()
     setShowFormDialog(false)
-  }
-
-  function syncToMock() {
-    // In a real app this would hit an API; here we update the array in place
-    // (this is best-effort for the prototype — the mockBankAccounts array is
-    // used by payment-method-config for the primary account guard)
-    setAccounts((current) => {
-      mockBankAccounts.length = 0
-      for (const a of current) mockBankAccounts.push(a)
-      return current
-    })
   }
 
   function handleSetPrimary(account: BankAccount) {
@@ -232,7 +221,7 @@ export function BankAccountManager() {
   function handleToggleActive(account: BankAccount) {
     if (account.isActive) {
       // Deactivating
-      if (account.isPrimary && mockPaymentConfig.bankTransferEnabled) {
+      if (account.isPrimary && bankTransferEnabled) {
         setError(
           `"${account.bankName} ···${account.accountNumber.slice(-4)}" is the active primary account for Bank Transfer payments. Please set a different primary account before deactivating.`,
         )
@@ -245,7 +234,7 @@ export function BankAccountManager() {
   }
 
   function handleDelete(account: BankAccount) {
-    if (account.isPrimary && mockPaymentConfig.bankTransferEnabled) {
+    if (account.isPrimary && bankTransferEnabled) {
       setError(
         "Cannot delete the primary account while Bank Transfer is enabled.",
       )
@@ -280,9 +269,6 @@ export function BankAccountManager() {
       } else {
         updated = prev.filter((a) => a.id !== account.id)
       }
-      // Sync mock
-      mockBankAccounts.length = 0
-      for (const a of updated) mockBankAccounts.push(a)
       return updated
     })
 

@@ -37,15 +37,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { mockGoLIVEEvents, mockStreamSessions } from "@/lib/tradexpo/mock-data"
 import type {
   GoLIVEEvent,
   StreamSession,
   StreamSessionStatus,
 } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
-
-const CURRENT_USER_ID = "user-khai"
 
 const statusStyles: Record<StreamSessionStatus, string> = {
   Provisioned: "border-amber-300 bg-amber-50 text-amber-700",
@@ -322,11 +319,19 @@ function SessionCard({
   )
 }
 
-export function HostDashboard() {
-  const baseSessionData = mockStreamSessions
-  const events = mockGoLIVEEvents
+export function HostDashboard({
+  initialStreamSessions,
+  initialGoLIVEEvents,
+  currentUserId = "user-khai",
+}: {
+  initialStreamSessions: StreamSession[]
+  initialGoLIVEEvents: GoLIVEEvent[]
+  currentUserId?: string
+}) {
+  const baseSessionData = initialStreamSessions
+  const events = initialGoLIVEEvents
 
-  const myEvents = events.filter((e) => e.broadcasterUserId === CURRENT_USER_ID)
+  const myEvents = events.filter((e) => e.broadcasterUserId === currentUserId)
 
   const initialPairs = myEvents
     .map((event) => {

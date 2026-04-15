@@ -1,7 +1,15 @@
 import { PartnerExpoList } from "@/components/partner/partner-expo-list"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
+import { listExpos, listGoLIVEEvents } from "@/lib/tradexpo/db/platform-data"
 
-export default function PartnerExposPage() {
+export const dynamic = "force-dynamic"
+
+export default async function PartnerExposPage() {
+  const [expos, goLiveEvents] = await Promise.all([
+    listExpos(),
+    listGoLIVEEvents(),
+  ])
+
   return (
     <DashboardShell
       title="My Expos"
@@ -11,7 +19,7 @@ export default function PartnerExposPage() {
         { label: "My Expos" },
       ]}
     >
-      <PartnerExpoList />
+      <PartnerExpoList expos={expos} goLiveEvents={goLiveEvents} />
     </DashboardShell>
   )
 }

@@ -32,15 +32,6 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import {
-  mockBoothCustomizations,
-  mockBoothTemplateCustomizationConfigs,
-  mockBoothTemplates,
-  mockExhibitorCatalogProducts,
-  mockExpoBoothTemplateAssignments,
-  mockExpos,
-  mockSellerRegistrations,
-} from "@/lib/tradexpo/mock-data"
 import type {
   BoothCustomization,
   BoothPublishStatus,
@@ -48,6 +39,7 @@ import type {
   BoothTemplateCustomizationConfig,
   ExhibitorCatalogProduct,
   Expo,
+  ExpoBoothTemplateAssignment,
   ExpoStatus,
   SellerBoothProduct,
   SellerBoothRegistration,
@@ -109,8 +101,11 @@ function buildDefaultCustomization(
   }
 }
 
-function buildInitialCustomization(registrationId: string): BoothCustomization {
-  const existing = mockBoothCustomizations.find(
+function buildInitialCustomization(
+  registrationId: string,
+  boothCustomizations: BoothCustomization[],
+): BoothCustomization {
+  const existing = boothCustomizations.find(
     (c) => c.registrationId === registrationId,
   )
   if (existing) {
@@ -143,36 +138,43 @@ function isValidYouTubeUrl(url: string): boolean {
 interface Props {
   expoId: string
   registrationId: string
+  expo: Expo
+  registration: SellerBoothRegistration
+  boothTemplates: BoothTemplate[]
+  expoBoothTemplateAssignments: ExpoBoothTemplateAssignment[]
+  boothTemplateCustomizationConfigs: BoothTemplateCustomizationConfig[]
+  boothCustomizations: BoothCustomization[]
+  exhibitorCatalogProducts: ExhibitorCatalogProduct[]
 }
 
-export function SellerBoothConfigurator({ expoId, registrationId }: Props) {
-  const expo = React.useMemo<Expo | undefined>(
-    () => mockExpos.find((e) => e.id === expoId),
-    [expoId],
-  )
-
-  const registration = React.useMemo<SellerBoothRegistration | undefined>(
-    () => mockSellerRegistrations.find((r) => r.id === registrationId),
-    [registrationId],
-  )
-
+export function SellerBoothConfigurator({
+  expoId,
+  registrationId,
+  expo,
+  registration,
+  boothTemplates,
+  expoBoothTemplateAssignments,
+  boothTemplateCustomizationConfigs,
+  exhibitorCatalogProducts,
+  boothCustomizations,
+}: Props) {
   const availableTemplates = React.useMemo<BoothTemplate[]>(() => {
-    const assignment = mockExpoBoothTemplateAssignments.find(
+    const assignment = expoBoothTemplateAssignments.find(
       (a) => a.expoId === expoId,
     )
-    if (!assignment) return mockBoothTemplates
-    return mockBoothTemplates.filter((t) =>
+    if (!assignment) return boothTemplates
+    return boothTemplates.filter((t) =>
       assignment.boothTemplateIds.includes(t.id),
     )
-  }, [expoId])
+  }, [expoId, boothTemplates, expoBoothTemplateAssignments])
 
   const [customization, setCustomization] = React.useState<BoothCustomization>(
-    () => buildInitialCustomization(registrationId),
+    () => buildInitialCustomization(registrationId, boothCustomizations),
   )
   const [isDirty, setIsDirty] = React.useState(false)
   const [savedStatus, setSavedStatus] =
     React.useState<BoothPublishStatus | null>(() => {
-      const existing = mockBoothCustomizations.find(
+      const existing = boothCustomizations.find(
         (c) => c.registrationId === registrationId,
       )
       return existing?.publishStatus ?? null
@@ -204,21 +206,21 @@ export function SellerBoothConfigurator({ expoId, registrationId }: Props) {
   const selectedTemplate = React.useMemo<BoothTemplate | undefined>(
     () =>
       customization.selectedBoothTemplateId
-        ? mockBoothTemplates.find(
+        ? boothTemplates.find(
             (t) => t.id === customization.selectedBoothTemplateId,
           )
         : undefined,
-    [customization.selectedBoothTemplateId],
+    [customization.selectedBoothTemplateId, boothTemplates],
   )
 
   const templateConfig = React.useMemo<BoothTemplateCustomizationConfig | null>(
     () =>
       customization.selectedBoothTemplateId
-        ? (mockBoothTemplateCustomizationConfigs.find(
+        ? (boothTemplateCustomizationConfigs.find(
             (c) => c.boothTemplateId === customization.selectedBoothTemplateId,
           ) ?? null)
         : null,
-    [customization.selectedBoothTemplateId],
+    [customization.selectedBoothTemplateId, boothTemplateCustomizationConfigs],
   )
 
   const isReadOnly =
@@ -286,7 +288,7 @@ export function SellerBoothConfigurator({ expoId, registrationId }: Props) {
   function confirmTemplateSelection() {
     if (!pendingTemplate) return
     const config =
-      mockBoothTemplateCustomizationConfigs.find(
+      boothTemplateCustomizationConfigs.find(
         (c) => c.boothTemplateId === pendingTemplate.id,
       ) ?? null
     const fresh = buildDefaultCustomization(
@@ -362,14 +364,6 @@ export function SellerBoothConfigurator({ expoId, registrationId }: Props) {
     !isValidYouTubeUrl(customization.videoUrl)
 
   // ── Render ─────────────────────────────────────────────────────────────────
-
-  if (!registration || !expo) {
-    return (
-      <p className="py-12 text-center text-muted-foreground text-sm">
-        Booth registration not found.
-      </p>
-    )
-  }
 
   const hasNoTemplate = !customization.selectedBoothTemplateId
 
@@ -499,7 +493,7 @@ export function SellerBoothConfigurator({ expoId, registrationId }: Props) {
                     key={t.id}
                     template={t}
                     config={
-                      mockBoothTemplateCustomizationConfigs.find(
+                      boothTemplateCustomizationConfigs.find(
                         (c) => c.boothTemplateId === t.id,
                       ) ?? null
                     }
@@ -514,7 +508,7 @@ export function SellerBoothConfigurator({ expoId, registrationId }: Props) {
               <TemplateDetailView
                 template={galleryHighlight}
                 config={
-                  mockBoothTemplateCustomizationConfigs.find(
+                  boothTemplateCustomizationConfigs.find(
                     (c) => c.boothTemplateId === galleryHighlight.id,
                   ) ?? null
                 }
@@ -627,7 +621,7 @@ export function SellerBoothConfigurator({ expoId, registrationId }: Props) {
             </DialogDescription>
           </DialogHeader>
           <ProductSelectorList
-            catalogProducts={mockExhibitorCatalogProducts}
+            catalogProducts={exhibitorCatalogProducts}
             selectedIds={customization.products.map((p) => p.id)}
             limit={productLimit}
             onToggle={toggleProduct}

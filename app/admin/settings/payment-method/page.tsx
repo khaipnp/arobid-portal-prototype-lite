@@ -1,7 +1,23 @@
 import { PaymentMethodConfig } from "@/components/orders/payment-method-config"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
+import {
+  getPlatformPaymentConfig,
+  listBankAccounts,
+  listExpoPaymentConfigs,
+} from "@/lib/orders/db"
+import { listExpos } from "@/lib/tradexpo/db/platform-data"
 
-export default function PaymentMethodPage() {
+export const dynamic = "force-dynamic"
+
+export default async function PaymentMethodPage() {
+  const [initialPlatformPayment, bankAccounts, expoPaymentConfigs, expos] =
+    await Promise.all([
+      getPlatformPaymentConfig(),
+      listBankAccounts(),
+      listExpoPaymentConfigs(),
+      listExpos(),
+    ])
+
   return (
     <DashboardShell
       title="Platform Default Payment"
@@ -12,7 +28,12 @@ export default function PaymentMethodPage() {
         { label: "Payment Method" },
       ]}
     >
-      <PaymentMethodConfig />
+      <PaymentMethodConfig
+        initialPlatformPayment={initialPlatformPayment}
+        bankAccounts={bankAccounts}
+        expoPaymentConfigs={expoPaymentConfigs}
+        totalExpoCount={expos.length}
+      />
     </DashboardShell>
   )
 }

@@ -3,7 +3,12 @@ import { ExpoPaymentConfigManager } from "@/components/orders/expo-payment-confi
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { mockExpos } from "@/lib/tradexpo/mock-data"
+import {
+  getPlatformPaymentConfig,
+  listBankAccounts,
+  listExpoPaymentConfigs,
+} from "@/lib/orders/db"
+import { listExpos } from "@/lib/tradexpo/db/platform-data"
 import type { ExpoStatus } from "@/lib/tradexpo/types"
 
 const statusStyles: Record<ExpoStatus, string> = {
@@ -23,14 +28,24 @@ function formatDate(iso: string) {
   })
 }
 
+export const dynamic = "force-dynamic"
+
 export default async function ExpoDetailPage({
   params,
 }: {
   params: Promise<{ expoId: string }>
 }) {
   const { expoId } = await params
-  const expo = mockExpos.find((e) => e.id === expoId)
+  const expos = await listExpos()
+  const expo = expos.find((e) => e.id === expoId)
   if (!expo) notFound()
+
+  const [initialExpoPaymentConfigs, platformPayment, bankAccounts] =
+    await Promise.all([
+      listExpoPaymentConfigs(),
+      getPlatformPaymentConfig(),
+      listBankAccounts(),
+    ])
 
   return (
     <DashboardShell
@@ -94,7 +109,13 @@ export default async function ExpoDetailPage({
                   registering booths for this Expo.
                 </p>
               </div>
-              <ExpoPaymentConfigManager expoId={expoId} />
+              <ExpoPaymentConfigManager
+                expoId={expoId}
+                expo={expo}
+                initialConfigs={initialExpoPaymentConfigs}
+                platformPayment={platformPayment}
+                bankAccounts={bankAccounts}
+              />
             </div>
           </TabsContent>
         </Tabs>

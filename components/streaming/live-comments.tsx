@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Textarea } from "@/components/ui/textarea"
-import { mockLiveComments } from "@/lib/tradexpo/mock-data"
 import type { LiveComment, StreamSessionStatus } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
 
@@ -20,6 +19,7 @@ interface GuestIdentity {
 interface Props {
   streamSessionId: string
   sessionStatus: StreamSessionStatus
+  initialComments: LiveComment[]
   isModerator?: boolean
 }
 
@@ -42,16 +42,15 @@ function getInitials(name: string) {
 export function LiveComments({
   streamSessionId,
   sessionStatus,
+  initialComments,
   isModerator = false,
 }: Props) {
-  const initialComments = mockLiveComments
-    .filter((c) => c.streamSessionId === streamSessionId && !c.isDeleted)
-    .sort(
+  const [comments, setComments] = React.useState<LiveComment[]>(() =>
+    [...initialComments].sort(
       (a, b) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-    )
-
-  const [comments, setComments] = React.useState<LiveComment[]>(initialComments)
+    ),
+  )
   const [commentText, setCommentText] = React.useState("")
   const [guestIdentity, setGuestIdentity] =
     React.useState<GuestIdentity | null>(null)

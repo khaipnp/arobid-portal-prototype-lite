@@ -1,3 +1,4 @@
+import { DEAL_ROOM_CURRENT_USER_ID } from "@/lib/deal-room/constants"
 import type { ChatUser, Conversation, Message } from "@/lib/deal-room/types"
 
 const now = new Date()
@@ -8,7 +9,7 @@ function isoOffset(minutes: number): string {
 
 // ─── Current user ─────────────────────────────────────────────────────────────
 
-export const CURRENT_USER_ID = "user-current"
+export const CURRENT_USER_ID = DEAL_ROOM_CURRENT_USER_ID
 
 // ─── Users ────────────────────────────────────────────────────────────────────
 

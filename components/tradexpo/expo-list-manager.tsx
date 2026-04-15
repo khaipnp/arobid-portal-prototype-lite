@@ -44,7 +44,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { mockExpoCategories, mockExpos } from "@/lib/tradexpo/mock-data"
 import type { Expo, ExpoCategory, ExpoStatus } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group"
@@ -73,22 +72,26 @@ function formatDate(iso: string) {
   )
 }
 
-function cloneExpos() {
-  return mockExpos
-    .map((expo) => ({ ...expo }))
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    )
-}
-
 type ConfirmAction =
   | { type: "archive"; expo: Expo }
   | { type: "delete"; expo: Expo }
   | { type: "approve"; expo: Expo }
 
-export function ExpoListManager() {
-  const [expos, setExpos] = React.useState<Expo[]>(cloneExpos)
+export function ExpoListManager({
+  initialExpos,
+  initialCategories,
+}: {
+  initialExpos: Expo[]
+  initialCategories: ExpoCategory[]
+}) {
+  const [expos, setExpos] = React.useState<Expo[]>(() =>
+    initialExpos
+      .map((expo) => ({ ...expo }))
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      ),
+  )
   const [searchInput, setSearchInput] = React.useState("")
   const [debouncedSearch, setDebouncedSearch] = React.useState("")
   const [statusFilter, setStatusFilter] = React.useState<ExpoStatus | "All">(
@@ -105,7 +108,7 @@ export function ExpoListManager() {
     text: string
   } | null>(null)
 
-  const categories: ExpoCategory[] = mockExpoCategories
+  const categories: ExpoCategory[] = initialCategories
 
   React.useEffect(() => {
     const timer = window.setTimeout(() => {

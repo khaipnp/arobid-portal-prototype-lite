@@ -34,13 +34,6 @@ import {
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  CURRENT_USER_ID,
-  mockChatUsers,
-  mockConversations,
-  mockInitialUnreadCounts,
-  mockMessages,
-} from "@/lib/deal-room/mock-data"
 import type { ChatUser, Conversation, Message } from "@/lib/deal-room/types"
 import { cn } from "@/lib/utils"
 
@@ -239,21 +232,31 @@ function UserHoverCard({
 
 export function DealRoomManager({
   initialConversationId,
+  initialUsers,
+  initialConversations,
+  initialMessagesMap,
+  initialUnreadCounts,
+  currentUserId,
 }: {
   initialConversationId?: string
+  initialUsers: ChatUser[]
+  initialConversations: Conversation[]
+  initialMessagesMap: Record<string, Message[]>
+  initialUnreadCounts: Record<string, number>
+  currentUserId: string
 }) {
   const router = useRouter()
 
   // ── State ──
   const [conversations, setConversations] = useState<Conversation[]>(() =>
-    structuredClone(mockConversations),
+    structuredClone(initialConversations),
   )
   const [messagesMap, setMessagesMap] = useState<Record<string, Message[]>>(
-    () => structuredClone(mockMessages),
+    () => structuredClone(initialMessagesMap),
   )
-  const [users] = useState<ChatUser[]>(mockChatUsers)
+  const [users] = useState<ChatUser[]>(initialUsers)
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>(
-    () => ({ ...mockInitialUnreadCounts }),
+    () => ({ ...initialUnreadCounts }),
   )
   const [activeConversationId, setActiveConversationId] = useState<
     string | null
@@ -282,15 +285,13 @@ export function DealRoomManager({
 
   const visibleConversations = conversations
     .filter((c) => {
-      const myMember = c.members.find((m) => m.userId === CURRENT_USER_ID)
+      const myMember = c.members.find((m) => m.userId === currentUserId)
       if (!myMember) return false
       if (inboxFilter === "active" && myMember.isArchived) return false
       if (inboxFilter === "archived" && !myMember.isArchived) return false
       if (!inboxSearch) return true
-      const name = getConversationDisplayName(c, users, CURRENT_USER_ID)
-      const otherId = c.members.find(
-        (m) => m.userId !== CURRENT_USER_ID,
-      )?.userId
+      const name = getConversationDisplayName(c, users, currentUserId)
+      const otherId = c.members.find((m) => m.userId !== currentUserId)?.userId
       const otherUser = users.find((u) => u.id === otherId)
       const query = inboxSearch.toLowerCase()
       return (
@@ -368,7 +369,7 @@ export function DealRoomManager({
     const newMsg: Message = {
       id: `msg-${Date.now()}`,
       conversationId: activeConversationId,
-      senderId: CURRENT_USER_ID,
+      senderId: currentUserId,
       content: text,
       attachments: pendingAttachments.map((file) => ({
         id: file.id,
@@ -404,7 +405,7 @@ export function DealRoomManager({
           ? {
               ...conv,
               members: conv.members.map((member) =>
-                member.userId === CURRENT_USER_ID
+                member.userId === currentUserId
                   ? { ...member, isArchived: false }
                   : member,
               ),
@@ -450,7 +451,7 @@ export function DealRoomManager({
           ? {
               ...c,
               members: c.members.map((m) =>
-                m.userId === CURRENT_USER_ID ? { ...m, isArchived: true } : m,
+                m.userId === currentUserId ? { ...m, isArchived: true } : m,
               ),
             }
           : c,
@@ -528,7 +529,7 @@ export function DealRoomManager({
               const displayName = getConversationDisplayName(
                 conv,
                 users,
-                CURRENT_USER_ID,
+                currentUserId,
               )
               const lastMsg = getLastMessage(messagesMap[conv.id] ?? [])
               const unread = unreadCounts[conv.id] ?? 0
@@ -547,7 +548,7 @@ export function DealRoomManager({
                   <ConversationAvatar
                     conv={conv}
                     users={users}
-                    currentUserId={CURRENT_USER_ID}
+                    currentUserId={currentUserId}
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-1">
@@ -596,7 +597,7 @@ export function DealRoomManager({
               {(() => {
                 if (activeConversation.type === "direct") {
                   const otherId = activeConversation.members.find(
-                    (m) => m.userId !== CURRENT_USER_ID,
+                    (m) => m.userId !== currentUserId,
                   )?.userId
                   const other = users.find((u) => u.id === otherId)
                   if (other) {
@@ -609,7 +610,7 @@ export function DealRoomManager({
                           <ConversationAvatar
                             conv={activeConversation}
                             users={users}
-                            currentUserId={CURRENT_USER_ID}
+                            currentUserId={currentUserId}
                             size="sm"
                           />
                           <div className="text-left">
@@ -630,7 +631,7 @@ export function DealRoomManager({
                     <ConversationAvatar
                       conv={activeConversation}
                       users={users}
-                      currentUserId={CURRENT_USER_ID}
+                      currentUserId={currentUserId}
                       size="sm"
                     />
                     <div>
@@ -638,7 +639,7 @@ export function DealRoomManager({
                         {getConversationDisplayName(
                           activeConversation,
                           users,
-                          CURRENT_USER_ID,
+                          currentUserId,
                         )}
                       </p>
                       <p className="text-muted-foreground text-xs">
@@ -678,7 +679,7 @@ export function DealRoomManager({
               </div>
             )}
             {activeMessages.map((msg, idx) => {
-              const isOwn = msg.senderId === CURRENT_USER_ID
+              const isOwn = msg.senderId === currentUserId
               const sender = users.find((u) => u.id === msg.senderId)
               const prevMsg = activeMessages[idx - 1]
               const showSenderName =
