@@ -362,46 +362,16 @@ export const mockBoothTemplateUsage: BoothTemplateUsage[] = [
 
 export const mockExpoCategories: ExpoCategory[] = [
   { id: "cat-tech", name: "Technology", level: 1 },
-  {
-    id: "cat-ai",
-    name: "Artificial Intelligence",
-    level: 2,
-    parentId: "cat-tech",
-  },
-  {
-    id: "cat-cloud",
-    name: "Cloud & Infrastructure",
-    level: 2,
-    parentId: "cat-tech",
-  },
+  { id: "cat-ai", name: "Artificial Intelligence", level: 1 },
+  { id: "cat-cloud", name: "Cloud & Infrastructure", level: 1 },
   { id: "cat-manufacturing", name: "Manufacturing", level: 1 },
-  {
-    id: "cat-auto",
-    name: "Automotive",
-    level: 2,
-    parentId: "cat-manufacturing",
-  },
+  { id: "cat-auto", name: "Automotive", level: 1 },
   { id: "cat-food", name: "Food & Beverage", level: 1 },
-  {
-    id: "cat-organic",
-    name: "Organic & Natural",
-    level: 2,
-    parentId: "cat-food",
-  },
+  { id: "cat-organic", name: "Organic & Natural", level: 1 },
   { id: "cat-health", name: "Healthcare", level: 1 },
-  {
-    id: "cat-pharma",
-    name: "Pharmaceuticals",
-    level: 2,
-    parentId: "cat-health",
-  },
+  { id: "cat-pharma", name: "Pharmaceuticals", level: 1 },
   { id: "cat-retail", name: "Retail & Commerce", level: 1 },
-  {
-    id: "cat-fashion",
-    name: "Fashion & Apparel",
-    level: 2,
-    parentId: "cat-retail",
-  },
+  { id: "cat-fashion", name: "Fashion & Apparel", level: 1 },
   { id: "cat-energy", name: "Energy & Environment", level: 1 },
 ]
 

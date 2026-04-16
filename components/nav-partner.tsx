@@ -1,6 +1,12 @@
 "use client"
 
-import { BellIcon, CalendarIcon, RadioIcon, Settings2Icon, UsersIcon } from "lucide-react"
+import {
+  BellIcon,
+  CalendarIcon,
+  RadioIcon,
+  Settings2Icon,
+  UsersIcon,
+} from "lucide-react"
 import Link from "next/link"
 import {
   SidebarGroup,

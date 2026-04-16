@@ -270,4 +270,91 @@ export async function ensurePlatformSchema() {
       primary key (user_id, conversation_id)
     )
   `
+
+  await migrateExpoManagementSchema()
+}
+
+/** Idempotent columns/tables for Create Expo + hall configuration (US-02 / US-03). */
+async function migrateExpoManagementSchema() {
+  // Categories are flat now: force single-level taxonomy.
+  await sql`
+    update expo_categories
+    set level = 1, parent_id = null
+    where level <> 1 or parent_id is not null
+  `
+  await sql`
+    alter table expo_categories
+    drop constraint if exists expo_categories_single_level_ck
+  `
+  await sql`
+    alter table expo_categories
+    add constraint expo_categories_single_level_ck
+    check (level = 1 and parent_id is null)
+  `
+
+  await sql`
+    alter table expos add column if not exists description text not null default ''
+  `
+  await sql`
+    alter table expos add column if not exists timezone text not null default 'Asia/Bangkok'
+  `
+  await sql`
+    alter table expos add column if not exists expo_template_id text
+  `
+  await sql`
+    alter table expos add column if not exists owner_user_id text
+  `
+  await sql`
+    alter table expos add column if not exists start_at timestamptz
+  `
+  await sql`
+    alter table expos add column if not exists end_at timestamptz
+  `
+
+  await sql`
+    update expos
+    set start_at = coalesce(start_at, start_date::timestamptz)
+    where start_at is null
+  `
+  await sql`
+    update expos
+    set
+      end_at = coalesce(
+        end_at,
+        (end_date::timestamp + time '23:59:59')::timestamptz
+      )
+    where end_at is null
+  `
+
+  await sql`
+    create table if not exists expo_layout_templates (
+      id text primary key,
+      name text not null
+    )
+  `
+
+  await sql`
+    insert into expo_layout_templates (id, name) values
+      ('layout-standard', 'Standard exhibition layout'),
+      ('layout-multi-hall', 'Multi-hall floor plan'),
+      ('layout-compact', 'Compact single-hall layout')
+    on conflict (id) do nothing
+  `
+
+  await sql`
+    create table if not exists expo_halls (
+      id text primary key,
+      expo_id text not null references expos (id) on delete cascade,
+      sort_order int not null,
+      hall_name text not null,
+      hall_template_id text not null,
+      basic_qty int not null,
+      professional_qty int not null,
+      premium_qty int not null
+    )
+  `
+
+  await sql`
+    create unique index if not exists expos_name_lower_uq on expos (lower(name))
+  `
 }

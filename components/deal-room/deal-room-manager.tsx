@@ -65,7 +65,10 @@ type PendingAttachment = {
   fileType: string
 }
 
-function isImageAttachment(att: { fileType: string; fileUrl: string }): boolean {
+function isImageAttachment(att: {
+  fileType: string
+  fileUrl: string
+}): boolean {
   return IMAGE_FILE_TYPES.has(att.fileType.toLowerCase()) && att.fileUrl !== "#"
 }
 
@@ -335,7 +338,8 @@ export function DealRoomManager({
     async function toDataUrl(file: File): Promise<string> {
       return await new Promise((resolve, reject) => {
         const reader = new FileReader()
-        reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "#")
+        reader.onload = () =>
+          resolve(typeof reader.result === "string" ? reader.result : "#")
         reader.onerror = () => reject(new Error("Failed to read file"))
         reader.readAsDataURL(file)
       })
@@ -355,8 +359,13 @@ export function DealRoomManager({
         setComposerError("File too large. Maximum file size is 20 MB.")
         continue
       }
-      if (IMAGE_FILE_TYPES.has(ext) && file.size > MAX_INLINE_IMAGE_SIZE_BYTES) {
-        setComposerError("Image too large to preview. Maximum preview size is 5 MB.")
+      if (
+        IMAGE_FILE_TYPES.has(ext) &&
+        file.size > MAX_INLINE_IMAGE_SIZE_BYTES
+      ) {
+        setComposerError(
+          "Image too large to preview. Maximum preview size is 5 MB.",
+        )
         continue
       }
       const fileUrl = IMAGE_FILE_TYPES.has(ext) ? await toDataUrl(file) : "#"
@@ -369,7 +378,10 @@ export function DealRoomManager({
       })
     }
     setPendingAttachments((prev) => {
-      const availableSlots = Math.max(MAX_ATTACHMENTS_PER_MESSAGE - prev.length, 0)
+      const availableSlots = Math.max(
+        MAX_ATTACHMENTS_PER_MESSAGE - prev.length,
+        0,
+      )
       if (accepted.length > availableSlots) {
         setComposerError("Maximum 5 files per message.")
       }
@@ -448,13 +460,13 @@ export function DealRoomManager({
         prev.map((conv) =>
           conv.id === activeConversationId
             ? {
-              ...conv,
-              members: conv.members.map((member) =>
-                member.userId === currentUserId
-                  ? { ...member, isArchived: false }
-                  : member,
-              ),
-            }
+                ...conv,
+                members: conv.members.map((member) =>
+                  member.userId === currentUserId
+                    ? { ...member, isArchived: false }
+                    : member,
+                ),
+              }
             : conv,
         ),
       )
@@ -528,11 +540,11 @@ export function DealRoomManager({
         prev.map((c) =>
           c.id === id
             ? {
-              ...c,
-              members: c.members.map((m) =>
-                m.userId === currentUserId ? { ...m, isArchived: true } : m,
-              ),
-            }
+                ...c,
+                members: c.members.map((m) =>
+                  m.userId === currentUserId ? { ...m, isArchived: true } : m,
+                ),
+              }
             : c,
         ),
       )
@@ -794,8 +806,8 @@ export function DealRoomManager({
                     "flex items-end gap-2",
                     isOwn ? "justify-end" : "justify-start",
                     idx > 0 &&
-                    activeMessages[idx - 1].senderId !== msg.senderId &&
-                    "mt-3",
+                      activeMessages[idx - 1].senderId !== msg.senderId &&
+                      "mt-3",
                   )}
                 >
                   {/* Other's avatar */}

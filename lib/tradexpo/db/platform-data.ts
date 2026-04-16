@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto"
 import { sql } from "@/lib/db/neon"
 import type {
   AdminNotification,
@@ -7,6 +8,9 @@ import type {
   Expo,
   ExpoBoothTemplateAssignment,
   ExpoCategory,
+  ExpoHall,
+  ExpoHallDraft,
+  ExpoLayoutTemplate,
   ExpoStatus,
   GoLIVEEvent,
   GoLIVEEventStatus,
@@ -27,13 +31,18 @@ type ExpoRow = {
   status: Expo["status"]
   category_ids: string[]
   created_at: string | Date
+  description?: string
+  timezone?: string
+  expo_template_id?: string | null
+  owner_user_id?: string | null
+  start_at?: string | Date | null
+  end_at?: string | Date | null
 }
 
 type CategoryRow = {
   id: string
   name: string
   level: number
-  parent_id: string | null
 }
 
 type NotifRow = {
@@ -56,31 +65,320 @@ function toDateOnly(value: string | Date) {
 
 export async function listExpoCategories(): Promise<ExpoCategory[]> {
   const rows = (await sql`
-    select * from expo_categories order by level asc, name asc
+    select id, name, level from expo_categories order by name asc
   `) as CategoryRow[]
   return rows.map((r) => ({
     id: r.id,
     name: r.name,
-    level: r.level as ExpoCategory["level"],
-    parentId: r.parent_id ?? undefined,
+    level: 1,
   }))
+}
+
+function rowToExpo(r: ExpoRow): Expo {
+  const startAt = r.start_at ? toIso(r.start_at) : undefined
+  const endAt = r.end_at ? toIso(r.end_at) : undefined
+  return {
+    id: r.id,
+    name: r.name,
+    thumbnailUrl: r.thumbnail_url,
+    ownerEmail: r.owner_email,
+    startDate: startAt
+      ? toDateOnly(r.start_at as string | Date)
+      : toDateOnly(r.start_date),
+    endDate: endAt
+      ? toDateOnly(r.end_at as string | Date)
+      : toDateOnly(r.end_date),
+    startAt,
+    endAt,
+    status: r.status,
+    categoryIds: r.category_ids,
+    createdAt: toIso(r.created_at),
+    description: r.description,
+    timezone: r.timezone,
+    expoTemplateId: r.expo_template_id ?? undefined,
+    ownerUserId: r.owner_user_id ?? undefined,
+  }
 }
 
 export async function listExpos(): Promise<Expo[]> {
   const rows = (await sql`
     select * from expos order by created_at desc
   `) as ExpoRow[]
+  return rows.map(rowToExpo)
+}
+
+export async function listExpoLayoutTemplates(): Promise<ExpoLayoutTemplate[]> {
+  const rows = (await sql`
+    select id, name from expo_layout_templates order by name asc
+  `) as { id: string; name: string }[]
+  return rows
+}
+
+export async function listExpoHalls(expoId: string): Promise<ExpoHall[]> {
+  const rows = (await sql`
+    select *
+    from expo_halls
+    where expo_id = ${expoId}
+    order by sort_order asc
+  `) as {
+    id: string
+    expo_id: string
+    sort_order: number
+    hall_name: string
+    hall_template_id: string
+    basic_qty: number
+    professional_qty: number
+    premium_qty: number
+  }[]
   return rows.map((r) => ({
     id: r.id,
-    name: r.name,
-    thumbnailUrl: r.thumbnail_url,
-    ownerEmail: r.owner_email,
-    startDate: toDateOnly(r.start_date),
-    endDate: toDateOnly(r.end_date),
-    status: r.status,
-    categoryIds: r.category_ids,
-    createdAt: toIso(r.created_at),
+    expoId: r.expo_id,
+    sortOrder: r.sort_order,
+    hallName: r.hall_name,
+    hallTemplateId: r.hall_template_id,
+    basicQty: r.basic_qty,
+    professionalQty: r.professional_qty,
+    premiumQty: r.premium_qty,
   }))
+}
+
+export async function searchExpoOwnersByEmail(
+  query: string,
+): Promise<{ id: string; email: string; name: string }[]> {
+  const q = query.trim()
+  if (q.length < 2) {
+    return []
+  }
+  const pattern = `%${q}%`
+  const rows = (await sql`
+    select id, email, name
+    from chat_users
+    where email ilike ${pattern}
+    order by email asc
+    limit 15
+  `) as { id: string; email: string; name: string }[]
+  return rows
+}
+
+export type CreateExpoWithHallsInput = {
+  name: string
+  description: string
+  thumbnailUrl: string
+  expoTemplateId: string
+  categoryIds: string[]
+  startAt: string
+  endAt: string
+  timezone: string
+  ownerUserId: string
+  ownerEmail: string
+  halls: ExpoHallDraft[]
+}
+
+export async function createExpoWithHalls(
+  input: CreateExpoWithHallsInput,
+): Promise<{ id: string }> {
+  const start = new Date(input.startAt)
+  const end = new Date(input.endAt)
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    throw new Error("Invalid start or end date/time.")
+  }
+  if (end.getTime() <= start.getTime()) {
+    throw new Error("End must be after start.")
+  }
+
+  const dup = (await sql`
+    select id from expos where lower(name) = lower(${input.name}) limit 1
+  `) as { id: string }[]
+  if (dup.length > 0) {
+    throw new Error("An expo with this name already exists.")
+  }
+
+  const expoId = `expo-${randomUUID()}`
+  const createdAt = new Date().toISOString()
+  const startDateStr = start.toISOString().slice(0, 10)
+  const endDateStr = end.toISOString().slice(0, 10)
+  const thumb =
+    input.thumbnailUrl.trim() ||
+    `https://picsum.photos/seed/${encodeURIComponent(expoId)}/640/360`
+
+  await sql`begin`
+  try {
+    await sql`
+      insert into expos (
+        id,
+        name,
+        thumbnail_url,
+        owner_email,
+        start_date,
+        end_date,
+        status,
+        category_ids,
+        created_at,
+        description,
+        timezone,
+        expo_template_id,
+        owner_user_id,
+        start_at,
+        end_at
+      )
+      values (
+        ${expoId},
+        ${input.name},
+        ${thumb},
+        ${input.ownerEmail},
+        ${startDateStr},
+        ${endDateStr},
+        ${"Draft" satisfies ExpoStatus},
+        ${JSON.stringify(input.categoryIds)}::jsonb,
+        ${createdAt},
+        ${input.description},
+        ${input.timezone},
+        ${input.expoTemplateId},
+        ${input.ownerUserId},
+        ${start.toISOString()},
+        ${end.toISOString()}
+      )
+    `
+
+    let order = 0
+    for (const hall of input.halls) {
+      const hallId = `expo-hall-${randomUUID()}`
+      await sql`
+        insert into expo_halls (
+          id,
+          expo_id,
+          sort_order,
+          hall_name,
+          hall_template_id,
+          basic_qty,
+          professional_qty,
+          premium_qty
+        )
+        values (
+          ${hallId},
+          ${expoId},
+          ${order},
+          ${hall.hallName},
+          ${hall.hallTemplateId},
+          ${hall.basicQty},
+          ${hall.professionalQty},
+          ${hall.premiumQty}
+        )
+      `
+      order += 1
+    }
+
+    await sql`commit`
+  } catch (e) {
+    await sql`rollback`
+    throw e
+  }
+
+  return { id: expoId }
+}
+
+export async function getExpoById(expoId: string): Promise<Expo | null> {
+  const rows = (await sql`
+    select * from expos where id = ${expoId} limit 1
+  `) as ExpoRow[]
+  const r = rows[0]
+  return r ? rowToExpo(r) : null
+}
+
+export async function getChatUserById(
+  userId: string,
+): Promise<{ id: string; email: string; name: string } | null> {
+  const rows = (await sql`
+    select id, email, name from chat_users where id = ${userId} limit 1
+  `) as { id: string; email: string; name: string }[]
+  return rows[0] ?? null
+}
+
+export async function updateExpoWithHalls(
+  expoId: string,
+  input: CreateExpoWithHallsInput,
+): Promise<void> {
+  const start = new Date(input.startAt)
+  const end = new Date(input.endAt)
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+    throw new Error("Invalid start or end date/time.")
+  }
+  if (end.getTime() <= start.getTime()) {
+    throw new Error("End must be after start.")
+  }
+
+  const dup = (await sql`
+    select id from expos
+    where lower(name) = lower(${input.name}) and id <> ${expoId}
+    limit 1
+  `) as { id: string }[]
+  if (dup.length > 0) {
+    throw new Error("An expo with this name already exists.")
+  }
+
+  const startDateStr = start.toISOString().slice(0, 10)
+  const endDateStr = end.toISOString().slice(0, 10)
+  const thumb =
+    input.thumbnailUrl.trim() ||
+    `https://picsum.photos/seed/${encodeURIComponent(expoId)}/640/360`
+
+  await sql`begin`
+  try {
+    await sql`
+      update expos
+      set
+        name = ${input.name},
+        thumbnail_url = ${thumb},
+        owner_email = ${input.ownerEmail},
+        start_date = ${startDateStr},
+        end_date = ${endDateStr},
+        category_ids = ${JSON.stringify(input.categoryIds)}::jsonb,
+        description = ${input.description},
+        timezone = ${input.timezone},
+        expo_template_id = ${input.expoTemplateId},
+        owner_user_id = ${input.ownerUserId},
+        start_at = ${start.toISOString()},
+        end_at = ${end.toISOString()}
+      where id = ${expoId}
+    `
+
+    await sql`
+      delete from expo_halls where expo_id = ${expoId}
+    `
+
+    let order = 0
+    for (const hall of input.halls) {
+      const hallId = `expo-hall-${randomUUID()}`
+      await sql`
+        insert into expo_halls (
+          id,
+          expo_id,
+          sort_order,
+          hall_name,
+          hall_template_id,
+          basic_qty,
+          professional_qty,
+          premium_qty
+        )
+        values (
+          ${hallId},
+          ${expoId},
+          ${order},
+          ${hall.hallName},
+          ${hall.hallTemplateId},
+          ${hall.basicQty},
+          ${hall.professionalQty},
+          ${hall.premiumQty}
+        )
+      `
+      order += 1
+    }
+
+    await sql`commit`
+  } catch (e) {
+    await sql`rollback`
+    throw e
+  }
 }
 
 export async function updateExpoStatus(
