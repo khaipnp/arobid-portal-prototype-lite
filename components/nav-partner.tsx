@@ -1,7 +1,8 @@
 "use client"
 
-import { BellIcon, CalendarIcon, RadioIcon, Settings2Icon, UsersIcon } from "lucide-react"
+import { CalendarIcon, RadioIcon, Settings2Icon, UsersIcon } from "lucide-react"
 import Link from "next/link"
+import { NotificationNavLink } from "@/components/notifications/notification-nav-link"
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -37,14 +38,7 @@ export function NavPartner() {
   return (
     <SidebarGroup>
       <SidebarMenu>
-        <SidebarMenuItem>
-          <SidebarMenuButton asChild>
-            <Link href="/partner/notification">
-              <BellIcon />
-              <span>Notification</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
+        <NotificationNavLink userId="partner-1" href="/partner/notifications" />
       </SidebarMenu>
       <SidebarGroupLabel>Expo Management</SidebarGroupLabel>
       <SidebarMenu>
