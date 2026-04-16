@@ -207,8 +207,8 @@ export function SellerBoothConfigurator({
     () =>
       customization.selectedBoothTemplateId
         ? boothTemplates.find(
-          (t) => t.id === customization.selectedBoothTemplateId,
-        )
+            (t) => t.id === customization.selectedBoothTemplateId,
+          )
         : undefined,
     [customization.selectedBoothTemplateId, boothTemplates],
   )
@@ -217,8 +217,8 @@ export function SellerBoothConfigurator({
     () =>
       customization.selectedBoothTemplateId
         ? (boothTemplateCustomizationConfigs.find(
-          (c) => c.boothTemplateId === customization.selectedBoothTemplateId,
-        ) ?? null)
+            (c) => c.boothTemplateId === customization.selectedBoothTemplateId,
+          ) ?? null)
         : null,
     [customization.selectedBoothTemplateId, boothTemplateCustomizationConfigs],
   )
@@ -453,8 +453,6 @@ export function SellerBoothConfigurator({
               Change Template
             </Button>
           )}
-
-
         </div>
       </div>
 
@@ -1051,7 +1049,6 @@ function CustomizationPanel({
               {savedStatus === "Published" ? "Re-Publish" : "Publish"}
             </Button>
           </div>
-
         </div>
       )}
     </div>

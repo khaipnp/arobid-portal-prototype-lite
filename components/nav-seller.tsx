@@ -1,7 +1,6 @@
 "use client"
 
 import {
-  BellIcon,
   BoxIcon,
   Building2Icon,
   CalendarIcon,
@@ -10,6 +9,7 @@ import {
   ShoppingCartIcon,
 } from "lucide-react"
 import Link from "next/link"
+import { NotificationNavLink } from "@/components/notifications/notification-nav-link"
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -48,14 +48,7 @@ export function NavSeller() {
   return (
     <SidebarGroup>
       <SidebarMenu>
-        <SidebarMenuItem>
-          <SidebarMenuButton asChild>
-            <Link href="/seller/notification">
-              <BellIcon />
-              <span>Notification</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
+        <NotificationNavLink userId="seller-1" href="/seller/notifications" />
       </SidebarMenu>
       <SidebarMenu>
         <SidebarMenuItem>
