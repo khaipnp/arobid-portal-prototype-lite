@@ -6,6 +6,8 @@ import {
   listVoucherTargets,
 } from "@/lib/evoucher/db"
 
+export const dynamic = "force-dynamic"
+
 export default async function EVoucherPage() {
   const [batches, codes, targets] = await Promise.all([
     listVoucherBatches(),

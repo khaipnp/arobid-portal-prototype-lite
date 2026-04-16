@@ -6,7 +6,11 @@ import { StreamPlayer } from "@/components/streaming/stream-player"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-import { mockGoLIVEEvents, mockStreamSessions } from "@/lib/tradexpo/mock-data"
+import {
+  listGoLIVEEvents,
+  listLiveComments,
+  listStreamSessions,
+} from "@/lib/tradexpo/db/platform-data"
 
 interface Props {
   params: Promise<{ sessionId: string }>
@@ -21,18 +25,27 @@ const SESSION_TYPE_LABELS: Record<string, string> = {
   Other: "Other",
 }
 
+export const dynamic = "force-dynamic"
+
 export default async function WatchPage({ params }: Props) {
   const { sessionId } = await params
-  const session = mockStreamSessions.find(
-    (s) => s.streamSessionId === sessionId,
-  )
+  const [streamSessions, goLiveEvents, liveComments] = await Promise.all([
+    listStreamSessions(),
+    listGoLIVEEvents(),
+    listLiveComments(),
+  ])
+
+  const session = streamSessions.find((s) => s.streamSessionId === sessionId)
   if (!session) notFound()
 
   // Can't watch Provisioned or Canceled sessions
   if (session.status === "Provisioned" || session.status === "Canceled")
     notFound()
 
-  const event = mockGoLIVEEvents.find((e) => e.streamSessionId === sessionId)
+  const event = goLiveEvents.find((e) => e.streamSessionId === sessionId)
+  const initialComments = liveComments.filter(
+    (c) => c.streamSessionId === sessionId && !c.isDeleted,
+  )
   const title = event?.title ?? "Live Session"
   const sessionType = event?.sessionType ?? "Other"
   const description = event?.description
@@ -51,7 +64,7 @@ export default async function WatchPage({ params }: Props) {
           </Link>
         </Button>
         <Separator orientation="vertical" className="h-5" />
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex min-w-0 items-center gap-2">
           <span className="truncate font-medium text-sm">{title}</span>
           <Badge variant="secondary" className="shrink-0 text-xs">
             {SESSION_TYPE_LABELS[sessionType]}
@@ -73,7 +86,7 @@ export default async function WatchPage({ params }: Props) {
       <div className="flex flex-1 overflow-hidden">
         {/* Player */}
         <div className="flex flex-1 flex-col overflow-auto">
-          <div className="mx-auto w-full max-w-4xl p-4 space-y-4">
+          <div className="mx-auto w-full max-w-4xl space-y-4 p-4">
             <StreamPlayer
               session={session}
               title={title}
@@ -88,7 +101,7 @@ export default async function WatchPage({ params }: Props) {
                 </p>
               )}
               {event && (
-                <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                <div className="flex flex-wrap items-center gap-3 text-muted-foreground text-sm">
                   <span>Broadcaster: {event.broadcasterDisplayName}</span>
                   {session.startedAt && (
                     <span>
@@ -112,6 +125,7 @@ export default async function WatchPage({ params }: Props) {
           <LiveComments
             streamSessionId={sessionId}
             sessionStatus={session.status}
+            initialComments={initialComments}
             isModerator={isModerator}
           />
         </aside>

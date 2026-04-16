@@ -2,6 +2,7 @@ import type {
   AssetKind,
   AssetStatus,
   BoothTemplate,
+  ExpoTimelinePhase,
   HallTemplate,
   ModelAsset,
   TemplateDerivedStatus,
@@ -164,4 +165,17 @@ export function formatDateTime(value: string) {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value))
+}
+
+/** Lazy-evaluated timeline phase from start/end vs current time (US-02). */
+export function getExpoTimelinePhase(
+  nowMs: number,
+  startAtIso: string,
+  endAtIso: string,
+): ExpoTimelinePhase {
+  const start = new Date(startAtIso).getTime()
+  const end = new Date(endAtIso).getTime()
+  if (nowMs < start) return "Upcoming"
+  if (nowMs > end) return "Archived"
+  return "Live"
 }

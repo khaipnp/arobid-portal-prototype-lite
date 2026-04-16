@@ -1,13 +1,14 @@
 import Link from "next/link"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
-import { mockSellerRegistrations } from "@/lib/tradexpo/mock-data"
+import { listSellerBoothRegistrations } from "@/lib/tradexpo/db/platform-data"
 
-export default function SellerDashboardPage() {
-  const myExpoIds = [...new Set(mockSellerRegistrations.map((r) => r.expoId))]
-  const liveCount = mockSellerRegistrations.filter(
-    (r) => r.status === "Live",
-  ).length
-  const pendingCount = mockSellerRegistrations.filter(
+export const dynamic = "force-dynamic"
+
+export default async function SellerDashboardPage() {
+  const registrations = await listSellerBoothRegistrations()
+  const myExpoIds = [...new Set(registrations.map((r) => r.expoId))]
+  const liveCount = registrations.filter((r) => r.status === "Live").length
+  const pendingCount = registrations.filter(
     (r) => r.status === "Pending Setup",
   ).length
 

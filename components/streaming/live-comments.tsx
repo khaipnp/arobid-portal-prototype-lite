@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Textarea } from "@/components/ui/textarea"
-import { mockLiveComments } from "@/lib/tradexpo/mock-data"
 import type { LiveComment, StreamSessionStatus } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
 
@@ -20,6 +19,7 @@ interface GuestIdentity {
 interface Props {
   streamSessionId: string
   sessionStatus: StreamSessionStatus
+  initialComments: LiveComment[]
   isModerator?: boolean
 }
 
@@ -42,18 +42,17 @@ function getInitials(name: string) {
 export function LiveComments({
   streamSessionId,
   sessionStatus,
+  initialComments,
   isModerator = false,
 }: Props) {
-  const initialComments = mockLiveComments
-    .filter((c) => c.streamSessionId === streamSessionId && !c.isDeleted)
-    .sort(
+  const [comments, setComments] = React.useState<LiveComment[]>(() =>
+    [...initialComments].sort(
       (a, b) =>
         new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-    )
-
-  const [comments, setComments] = React.useState<LiveComment[]>(initialComments)
+    ),
+  )
   const [commentText, setCommentText] = React.useState("")
-  const [guestIdentity, setGuestIdentity] =
+  const [_guestIdentity, setGuestIdentity] =
     React.useState<GuestIdentity | null>(null)
   const [showGuestForm, setShowGuestForm] = React.useState(false)
   const [guestName, setGuestName] = React.useState("")
@@ -73,9 +72,41 @@ export function LiveComments({
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
-  }, [comments])
+  }, [])
 
-  function submitComment(text: string, identity?: GuestIdentity) {
+  React.useEffect(() => {
+    const controller = new AbortController()
+    const syncComments = async () => {
+      try {
+        const response = await fetch(
+          `/api/stream/sessions/${streamSessionId}/comments`,
+          {
+            signal: controller.signal,
+            cache: "no-store",
+          },
+        )
+        if (!response.ok) return
+        const payload = (await response.json()) as { comments?: LiveComment[] }
+        if (!payload.comments) return
+        setComments(
+          [...payload.comments].sort(
+            (a, b) =>
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+          ),
+        )
+      } catch {
+        // no-op
+      }
+    }
+    const interval = setInterval(syncComments, 3000)
+    void syncComments()
+    return () => {
+      controller.abort()
+      clearInterval(interval)
+    }
+  }, [streamSessionId])
+
+  async function submitComment(text: string, identity?: GuestIdentity) {
     const trimmed = text.trim()
     if (!trimmed) return
 
@@ -100,17 +131,30 @@ export function LiveComments({
       newComment.guestEmail = identity.email
     }
 
-    setComments((prev) => [...prev, newComment])
-    setCommentText("")
-    setPendingText("")
+    try {
+      const response = await fetch(
+        `/api/stream/sessions/${streamSessionId}/comments`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ comment: newComment }),
+        },
+      )
+      if (!response.ok) return
+      setComments((prev) => [...prev, newComment])
+      setCommentText("")
+      setPendingText("")
+    } catch {
+      // no-op
+    }
   }
 
-  function handlePost() {
+  async function handlePost() {
     if (!commentText.trim()) return
-    submitComment(commentText)
+    await submitComment(commentText)
   }
 
-  function handleGuestPost() {
+  async function handleGuestPost() {
     let hasError = false
     setGuestNameError("")
     setGuestEmailError("")
@@ -131,24 +175,38 @@ export function LiveComments({
     }
     setGuestIdentity(identity)
     setShowGuestForm(false)
-    submitComment(pendingText, identity)
+    await submitComment(pendingText, identity)
     setGuestName("")
     setGuestEmail("")
   }
 
-  function handleDelete(commentId: string) {
-    setComments((prev) =>
-      prev.map((c) =>
-        c.liveCommentId === commentId
-          ? {
-              ...c,
-              isDeleted: true,
-              deletedAt: new Date().toISOString(),
-              deletedByUserId: currentUserId,
-            }
-          : c,
-      ),
-    )
+  async function handleDelete(commentId: string) {
+    const deletedAt = new Date().toISOString()
+    try {
+      const response = await fetch(`/api/stream/comments/${commentId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          deletedByUserId: currentUserId,
+          deletedAt,
+        }),
+      })
+      if (!response.ok) return
+      setComments((prev) =>
+        prev.map((c) =>
+          c.liveCommentId === commentId
+            ? {
+                ...c,
+                isDeleted: true,
+                deletedAt,
+                deletedByUserId: currentUserId,
+              }
+            : c,
+        ),
+      )
+    } catch {
+      // no-op
+    }
   }
 
   const visibleComments = comments.filter((c) => !c.isDeleted)
@@ -204,7 +262,7 @@ export function LiveComments({
                       {formatTime(comment.createdAt)}
                     </span>
                   </div>
-                  <p className="mt-0.5 break-words text-sm">
+                  <p className="wrap-break-word mt-0.5 text-sm">
                     {comment.commentText}
                   </p>
                 </div>
@@ -231,7 +289,7 @@ export function LiveComments({
           </p>
         ) : showGuestForm ? (
           <div className="space-y-3">
-            <p className="text-xs font-medium">Enter your details to comment</p>
+            <p className="font-medium text-xs">Enter your details to comment</p>
             <div className="space-y-1">
               <Label htmlFor="guest-name" className="text-xs">
                 Your name
@@ -316,7 +374,7 @@ export function LiveComments({
         )}
         {isActive && !showGuestForm && (
           <div className="mt-1 flex justify-between">
-            <span className="text-[11px] text-muted-foreground flex items-center gap-1">
+            <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
               <UserIcon className="h-3 w-3" /> Khai Pham
             </span>
             <span className="text-[11px] text-muted-foreground">

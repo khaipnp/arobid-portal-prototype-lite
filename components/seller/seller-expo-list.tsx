@@ -23,7 +23,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { mockExpos, mockSellerRegistrations } from "@/lib/tradexpo/mock-data"
 import type {
   Expo,
   ExpoStatus,
@@ -58,15 +57,18 @@ interface ExpoWithBooths {
   registrations: SellerBoothRegistration[]
 }
 
-function buildData(): ExpoWithBooths[] {
+function buildData(
+  expos: Expo[],
+  registrations: SellerBoothRegistration[],
+): ExpoWithBooths[] {
   const grouped = new Map<string, SellerBoothRegistration[]>()
-  for (const reg of mockSellerRegistrations) {
+  for (const reg of registrations) {
     const list = grouped.get(reg.expoId) ?? []
     list.push({ ...reg })
     grouped.set(reg.expoId, list)
   }
 
-  return mockExpos
+  return expos
     .flatMap((expo) => {
       const registrations = grouped.get(expo.id)
       if (!registrations) {
@@ -89,8 +91,16 @@ function buildData(): ExpoWithBooths[] {
 
 const ALL_STATUSES: SellerExpoViewStatus[] = ["Upcoming", "Live", "Archive"]
 
-export function SellerExpoList() {
-  const [data] = React.useState<ExpoWithBooths[]>(buildData)
+export function SellerExpoList({
+  initialExpos,
+  initialRegistrations,
+}: {
+  initialExpos: Expo[]
+  initialRegistrations: SellerBoothRegistration[]
+}) {
+  const [data] = React.useState<ExpoWithBooths[]>(() =>
+    buildData(initialExpos, initialRegistrations),
+  )
   const [search, setSearch] = React.useState("")
   const [debouncedSearch, setDebouncedSearch] = React.useState("")
   const [statusFilter, setStatusFilter] = React.useState<

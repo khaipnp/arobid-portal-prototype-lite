@@ -27,6 +27,8 @@ import {
   getHallTemplateStatus,
 } from "@/lib/tradexpo/utils"
 
+export const dynamic = "force-dynamic"
+
 export default async function HallTemplateDetailPage({
   params,
 }: {
@@ -137,7 +139,10 @@ export default async function HallTemplateDetailPage({
         </Card>
       </div>
 
-      <HallTemplateDetailManager templateId={templateId} />
+      <HallTemplateDetailManager
+        initialTemplate={template}
+        initialAssets={assets}
+      />
 
       <HallSlotManager
         templateId={templateId}

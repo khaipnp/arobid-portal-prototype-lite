@@ -7,6 +7,8 @@ import {
 } from "@/lib/tradexpo/db/booth-templates"
 import { listHallTemplateAssets } from "@/lib/tradexpo/db/hall-templates"
 
+export const dynamic = "force-dynamic"
+
 export default async function BoothTemplateLibraryPage() {
   const [assets, templates, usages, boothTypes] = await Promise.all([
     listHallTemplateAssets(),

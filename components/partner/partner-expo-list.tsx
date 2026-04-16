@@ -5,8 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { mockExpos, mockGoLIVEEvents } from "@/lib/tradexpo/mock-data"
-import type { ExpoStatus } from "@/lib/tradexpo/types"
+import type { Expo, ExpoStatus, GoLIVEEvent } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
 
 // Partner sở hữu các expo này trong prototype
@@ -29,13 +28,19 @@ function formatDate(iso: string) {
   })
 }
 
-export function PartnerExpoList() {
-  const expos = mockExpos.filter((e) => PARTNER_EXPO_IDS.includes(e.id))
+export function PartnerExpoList({
+  expos: allExpos,
+  goLiveEvents,
+}: {
+  expos: Expo[]
+  goLiveEvents: GoLIVEEvent[]
+}) {
+  const expos = allExpos.filter((e) => PARTNER_EXPO_IDS.includes(e.id))
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {expos.map((expo) => {
-        const goLIVECount = mockGoLIVEEvents.filter(
+        const goLIVECount = goLiveEvents.filter(
           (e) => e.expoId === expo.id && e.status !== "Canceled",
         ).length
 
@@ -55,7 +60,7 @@ export function PartnerExpoList() {
               <Badge
                 variant="outline"
                 className={cn(
-                  "absolute right-2 top-2 border text-xs",
+                  "absolute top-2 right-2 border text-xs",
                   statusStyles[expo.status],
                 )}
               >
@@ -63,9 +68,9 @@ export function PartnerExpoList() {
               </Badge>
             </div>
 
-            <div className="p-4 space-y-3">
+            <div className="space-y-3 p-4">
               <div>
-                <h3 className="font-semibold text-sm leading-snug line-clamp-2">
+                <h3 className="line-clamp-2 font-semibold text-sm leading-snug">
                   {expo.name}
                 </h3>
                 <p className="mt-1 flex items-center gap-1 text-muted-foreground text-xs">
@@ -75,7 +80,7 @@ export function PartnerExpoList() {
               </div>
 
               {goLIVECount > 0 && (
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1.5 text-muted-foreground text-xs">
                   <RadioIcon className="h-3.5 w-3.5" />
                   <span>
                     {goLIVECount} GoLIVE session{goLIVECount !== 1 ? "s" : ""}

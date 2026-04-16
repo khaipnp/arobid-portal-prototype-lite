@@ -205,7 +205,7 @@ export function VoucherCheckoutWidget({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2 text-sm font-medium">
+      <div className="flex items-center gap-2 font-medium text-sm">
         <TagIcon className="size-4" />
         eVoucher Code
       </div>
@@ -215,7 +215,7 @@ export function VoucherCheckoutWidget({
           <div className="flex items-center gap-2">
             <TicketCheckIcon className="size-4 text-green-600 dark:text-green-400" />
             <div>
-              <span className="font-mono text-sm font-semibold text-green-800 dark:text-green-300">
+              <span className="font-mono font-semibold text-green-800 text-sm dark:text-green-300">
                 {applied.inputCode}
               </span>
               {" - "}
@@ -351,9 +351,9 @@ export function CheckoutOrderSummary({
 
   if (outcome) {
     return (
-      <div className="rounded-lg border p-6 space-y-4">
+      <div className="space-y-4 rounded-lg border p-6">
         {outcome === "success" ? (
-          <div className="text-center space-y-2">
+          <div className="space-y-2 text-center">
             <CheckCircle2Icon className="mx-auto size-10 text-green-500" />
             <h3 className="font-semibold text-lg">Payment Successful!</h3>
             <p className="text-muted-foreground text-sm">
@@ -372,7 +372,7 @@ export function CheckoutOrderSummary({
             </p>
           </div>
         ) : outcome === "failure" ? (
-          <div className="text-center space-y-2">
+          <div className="space-y-2 text-center">
             <XCircleIcon className="mx-auto size-10 text-destructive" />
             <h3 className="font-semibold text-lg">Payment Failed</h3>
             <p className="text-muted-foreground text-sm">
@@ -389,7 +389,7 @@ export function CheckoutOrderSummary({
             </p>
           </div>
         ) : (
-          <div className="text-center space-y-2">
+          <div className="space-y-2 text-center">
             <XCircleIcon className="mx-auto size-10 text-muted-foreground" />
             <h3 className="font-semibold text-lg">Payment Cancelled</h3>
             <p className="text-muted-foreground text-sm">
@@ -414,7 +414,7 @@ export function CheckoutOrderSummary({
   }
 
   return (
-    <div className="rounded-lg border p-6 space-y-4">
+    <div className="space-y-4 rounded-lg border p-6">
       <h3 className="font-semibold text-base">Order Summary</h3>
       <div className="space-y-2 text-sm">
         <div className="flex justify-between">

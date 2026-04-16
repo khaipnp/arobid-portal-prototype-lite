@@ -9,6 +9,7 @@ import {
   ShoppingCartIcon,
 } from "lucide-react"
 import Link from "next/link"
+import { NotificationNavLink } from "@/components/notifications/notification-nav-link"
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -22,11 +23,6 @@ const nav = [
     name: "My Expos",
     url: "/seller/my-expos",
     icon: <CalendarIcon />,
-  },
-  {
-    name: "Checkout Demo (eVoucher)",
-    url: "/seller/checkout-demo",
-    icon: <ShoppingCartIcon />,
   },
 ]
 
@@ -52,11 +48,24 @@ export function NavSeller() {
   return (
     <SidebarGroup>
       <SidebarMenu>
+        <NotificationNavLink userId="seller-1" href="/seller/notifications" />
+      </SidebarMenu>
+      <SidebarMenu>
         <SidebarMenuItem>
           <SidebarMenuButton asChild>
             <Link href="/seller/deal-room">
               <MessageCircleIcon />
               <span>Deal Room</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton asChild>
+            <Link href="/seller/checkout-demo">
+              <ShoppingCartIcon />
+              <span>Checkout Demo (eVoucher)</span>
             </Link>
           </SidebarMenuButton>
         </SidebarMenuItem>

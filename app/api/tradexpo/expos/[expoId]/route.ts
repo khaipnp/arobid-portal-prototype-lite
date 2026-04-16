@@ -1,0 +1,140 @@
+import { NextResponse } from "next/server"
+import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
+import {
+  deleteExpo,
+  getExpoById,
+  listExpoLayoutTemplates,
+  updateExpoStatus,
+  updateExpoWithHalls,
+} from "@/lib/tradexpo/db/platform-data"
+import { validateHallBlocks } from "@/lib/tradexpo/expo-create-validation"
+import type { ExpoHallDraft, ExpoStatus } from "@/lib/tradexpo/types"
+
+interface Props {
+  params: Promise<{ expoId: string }>
+}
+
+export async function PATCH(request: Request, { params }: Props) {
+  const { expoId } = await params
+  const body = (await request.json()) as { status?: ExpoStatus }
+  if (!body.status) {
+    return NextResponse.json({ error: "Missing status." }, { status: 400 })
+  }
+  await updateExpoStatus(expoId, body.status)
+  return NextResponse.json({ ok: true })
+}
+
+export async function PUT(request: Request, { params }: Props) {
+  await ensurePlatformSchema()
+  const { expoId } = await params
+
+  const existing = await getExpoById(expoId)
+  if (!existing) {
+    return NextResponse.json({ error: "Expo not found." }, { status: 404 })
+  }
+
+  const body = (await request.json()) as {
+    name?: string
+    description?: string
+    thumbnailUrl?: string
+    expoTemplateId?: string
+    categoryIds?: string[]
+    startAt?: string
+    endAt?: string
+    timezone?: string
+    ownerUserId?: string
+    ownerEmail?: string
+    halls?: ExpoHallDraft[]
+  }
+
+  const name = body.name?.trim() ?? ""
+  if (!name || name.length > 255) {
+    return NextResponse.json(
+      { error: "Expo name is required (max 255 characters)." },
+      { status: 400 },
+    )
+  }
+
+  const description = body.description?.trim() ?? ""
+  if (!description) {
+    return NextResponse.json(
+      { error: "Description is required." },
+      { status: 400 },
+    )
+  }
+
+  const expoTemplateId = body.expoTemplateId?.trim() ?? ""
+  if (!expoTemplateId) {
+    return NextResponse.json(
+      { error: "Select an expo template." },
+      { status: 400 },
+    )
+  }
+
+  const templates = await listExpoLayoutTemplates()
+  if (!templates.some((t) => t.id === expoTemplateId)) {
+    return NextResponse.json(
+      { error: "Invalid expo template." },
+      { status: 400 },
+    )
+  }
+
+  const categoryIds = Array.isArray(body.categoryIds) ? body.categoryIds : []
+  if (categoryIds.length === 0) {
+    return NextResponse.json(
+      { error: "Select at least one category." },
+      { status: 400 },
+    )
+  }
+
+  const startAt = body.startAt?.trim() ?? ""
+  const endAt = body.endAt?.trim() ?? ""
+  if (!startAt || !endAt) {
+    return NextResponse.json(
+      { error: "Start and end date/time are required." },
+      { status: 400 },
+    )
+  }
+
+  const timezone = body.timezone?.trim() || "Asia/Bangkok"
+  const ownerUserId = body.ownerUserId?.trim() ?? ""
+  const ownerEmail = body.ownerEmail?.trim().toLowerCase() ?? ""
+  if (!ownerUserId || !ownerEmail) {
+    return NextResponse.json(
+      { error: "Search and select an expo owner account by email." },
+      { status: 400 },
+    )
+  }
+
+  const halls = Array.isArray(body.halls) ? body.halls : []
+  const hallErr = validateHallBlocks(halls)
+  if (hallErr) {
+    return NextResponse.json({ error: hallErr }, { status: 400 })
+  }
+
+  try {
+    await updateExpoWithHalls(expoId, {
+      name,
+      description,
+      thumbnailUrl: body.thumbnailUrl?.trim() ?? "",
+      expoTemplateId,
+      categoryIds,
+      startAt,
+      endAt,
+      timezone,
+      ownerUserId,
+      ownerEmail,
+      halls,
+    })
+    return NextResponse.json({ ok: true })
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Failed to update expo."
+    return NextResponse.json({ error: message }, { status: 400 })
+  }
+}
+
+export async function DELETE(_: Request, { params }: Props) {
+  const { expoId } = await params
+  await deleteExpo(expoId)
+  return NextResponse.json({ ok: true })
+}

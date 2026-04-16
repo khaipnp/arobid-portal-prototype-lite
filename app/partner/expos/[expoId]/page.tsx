@@ -3,7 +3,11 @@ import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import { GoLIVEManager } from "@/components/tradexpo/golive-manager"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { mockExpos } from "@/lib/tradexpo/mock-data"
+import {
+  listExpos,
+  listGoLIVEEvents,
+  listStreamSessions,
+} from "@/lib/tradexpo/db/platform-data"
 import type { ExpoStatus } from "@/lib/tradexpo/types"
 
 // Partner sở hữu các expo này trong prototype
@@ -26,14 +30,22 @@ function formatDate(iso: string) {
   })
 }
 
+export const dynamic = "force-dynamic"
+
 export default async function PartnerExpoDetailPage({
   params,
 }: {
   params: Promise<{ expoId: string }>
 }) {
   const { expoId } = await params
-  const expo = mockExpos.find((e) => e.id === expoId)
+  const expos = await listExpos()
+  const expo = expos.find((e) => e.id === expoId)
   if (!expo || !PARTNER_EXPO_IDS.includes(expoId)) notFound()
+
+  const [initialGoLIVEEvents, initialStreamSessions] = await Promise.all([
+    listGoLIVEEvents(),
+    listStreamSessions(),
+  ])
 
   return (
     <DashboardShell
@@ -87,7 +99,11 @@ export default async function PartnerExpoDetailPage({
             </div>
           </TabsContent>
           <TabsContent value="golive" className="mt-6">
-            <GoLIVEManager expoId={expoId} />
+            <GoLIVEManager
+              expoId={expoId}
+              initialGoLIVEEvents={initialGoLIVEEvents}
+              initialStreamSessions={initialStreamSessions}
+            />
           </TabsContent>
         </Tabs>
       </div>

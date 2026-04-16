@@ -37,15 +37,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { mockGoLIVEEvents, mockStreamSessions } from "@/lib/tradexpo/mock-data"
 import type {
   GoLIVEEvent,
   StreamSession,
   StreamSessionStatus,
 } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
-
-const CURRENT_USER_ID = "user-khai"
 
 const statusStyles: Record<StreamSessionStatus, string> = {
   Provisioned: "border-amber-300 bg-amber-50 text-amber-700",
@@ -68,7 +65,7 @@ function CredentialField({ label, value }: { label: string; value: string }) {
 
   return (
     <div className="space-y-1.5">
-      <p className="text-xs font-medium text-muted-foreground">{label}</p>
+      <p className="font-medium text-muted-foreground text-xs">{label}</p>
       <div className="flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2">
         <code className="flex-1 truncate font-mono text-xs">
           {isKey && !revealed ? "•".repeat(32) : value}
@@ -132,6 +129,12 @@ function SessionCard({
   const startedAtRef = React.useRef<string | null>(session.startedAt)
 
   React.useEffect(() => {
+    setSession(initialSession)
+    setViewerCount(initialSession.peakViewerCount ?? 0)
+    startedAtRef.current = initialSession.startedAt
+  }, [initialSession])
+
+  React.useEffect(() => {
     if (session.status !== "Active") return
     const interval = setInterval(() => {
       setViewerCount((prev) =>
@@ -147,7 +150,7 @@ function SessionCard({
     return () => clearInterval(interval)
   }, [session.status])
 
-  function handleGoLive() {
+  async function handleGoLive() {
     const now = new Date().toISOString()
     startedAtRef.current = now
     const updatedSession = {
@@ -155,13 +158,33 @@ function SessionCard({
       status: "Active" as const,
       startedAt: now,
     }
-    setSession(updatedSession)
-    onSessionChange?.(updatedSession)
-    setViewerCount(1)
-    setElapsedLabel("0s")
+    try {
+      const response = await fetch(
+        `/api/stream/sessions/${session.streamSessionId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            streamStatus: "Active",
+            goLiveEventStatus: "Live",
+            startedAt: now,
+            endedAt: null,
+            peakViewerCount: null,
+            updatedAt: now,
+          }),
+        },
+      )
+      if (!response.ok) return
+      setSession(updatedSession)
+      onSessionChange?.(updatedSession)
+      setViewerCount(1)
+      setElapsedLabel("0s")
+    } catch {
+      // no-op
+    }
   }
 
-  function handleEndBroadcast() {
+  async function handleEndBroadcast() {
     const now = new Date().toISOString()
     const updatedSession = {
       ...session,
@@ -169,8 +192,28 @@ function SessionCard({
       endedAt: now,
       peakViewerCount: viewerCount,
     }
-    setSession(updatedSession)
-    onSessionChange?.(updatedSession)
+    try {
+      const response = await fetch(
+        `/api/stream/sessions/${session.streamSessionId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            streamStatus: "Ended",
+            goLiveEventStatus: "Ended",
+            startedAt: session.startedAt,
+            endedAt: now,
+            peakViewerCount: viewerCount,
+            updatedAt: now,
+          }),
+        },
+      )
+      if (!response.ok) return
+      setSession(updatedSession)
+      onSessionChange?.(updatedSession)
+    } catch {
+      // no-op
+    }
   }
 
   return (
@@ -190,7 +233,7 @@ function SessionCard({
             className={cn("shrink-0 text-xs", statusStyles[session.status])}
           >
             {session.status === "Active" && (
-              <CircleIcon className="mr-1 h-2 w-2 fill-emerald-500 text-emerald-500 animate-pulse" />
+              <CircleIcon className="mr-1 h-2 w-2 animate-pulse fill-emerald-500 text-emerald-500" />
             )}
             {session.status}
           </Badge>
@@ -213,7 +256,7 @@ function SessionCard({
                 </span>
                 <span className="text-emerald-600/70">watching</span>
               </div>
-              <span className="text-emerald-600/70 font-mono text-xs">
+              <span className="font-mono text-emerald-600/70 text-xs">
                 {elapsedLabel}
               </span>
             </div>
@@ -225,19 +268,19 @@ function SessionCard({
             <p className="mb-3 font-medium text-sm">Session Summary</p>
             <div className="grid grid-cols-2 gap-3 text-sm">
               <div>
-                <p className="text-xs text-muted-foreground">Duration</p>
+                <p className="text-muted-foreground text-xs">Duration</p>
                 <p className="font-medium">
                   {formatDuration(session.startedAt, session.endedAt)}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Peak Viewers</p>
+                <p className="text-muted-foreground text-xs">Peak Viewers</p>
                 <p className="font-medium">
                   {session.peakViewerCount?.toLocaleString() ?? "—"}
                 </p>
               </div>
               <div>
-                <p className="text-xs text-muted-foreground">Replay</p>
+                <p className="text-muted-foreground text-xs">Replay</p>
                 <p className="font-medium">
                   {session.replayEnabled
                     ? session.replayUrl
@@ -269,7 +312,7 @@ function SessionCard({
               <p className="mb-1.5 font-medium text-xs">
                 How to go live with OBS
               </p>
-              <ol className="space-y-1 text-xs text-muted-foreground list-decimal list-inside">
+              <ol className="list-inside list-decimal space-y-1 text-muted-foreground text-xs">
                 <li>Open OBS → Settings → Stream</li>
                 <li>Set Service = "Custom…"</li>
                 <li>Paste the Server URL above</li>
@@ -282,7 +325,7 @@ function SessionCard({
 
         {session.status === "Active" && (
           <div className="space-y-2">
-            <p className="text-xs text-muted-foreground">
+            <p className="text-muted-foreground text-xs">
               OBS is connected. Stop streaming in OBS, or end broadcast below.
             </p>
           </div>
@@ -322,11 +365,19 @@ function SessionCard({
   )
 }
 
-export function HostDashboard() {
-  const baseSessionData = mockStreamSessions
-  const events = mockGoLIVEEvents
+export function HostDashboard({
+  initialStreamSessions,
+  initialGoLIVEEvents,
+  currentUserId = "user-khai",
+}: {
+  initialStreamSessions: StreamSession[]
+  initialGoLIVEEvents: GoLIVEEvent[]
+  currentUserId?: string
+}) {
+  const baseSessionData = initialStreamSessions
+  const events = initialGoLIVEEvents
 
-  const myEvents = events.filter((e) => e.broadcasterUserId === CURRENT_USER_ID)
+  const myEvents = events.filter((e) => e.broadcasterUserId === currentUserId)
 
   const initialPairs = myEvents
     .map((event) => {
@@ -349,6 +400,41 @@ export function HostDashboard() {
     })
     return initial
   })
+
+  React.useEffect(() => {
+    const controller = new AbortController()
+    const syncSessions = async () => {
+      try {
+        const response = await fetch("/api/stream/sessions", {
+          signal: controller.signal,
+          cache: "no-store",
+        })
+        if (!response.ok) return
+        const payload = (await response.json()) as {
+          sessions?: StreamSession[]
+        }
+        if (!payload.sessions) return
+        const sessions = payload.sessions
+        setSessionStates((prev) => {
+          const next = { ...prev }
+          for (const s of sessions) {
+            if (next[s.streamSessionId]) {
+              next[s.streamSessionId] = s
+            }
+          }
+          return next
+        })
+      } catch {
+        // no-op
+      }
+    }
+    const interval = setInterval(syncSessions, 5000)
+    void syncSessions()
+    return () => {
+      controller.abort()
+      clearInterval(interval)
+    }
+  }, [])
 
   const myPairs = initialPairs.map(({ event, session }) => ({
     event,
@@ -396,7 +482,7 @@ export function HostDashboard() {
                 onClick={() => setSelectedSessionId(event.goLiveEventId)}
               >
                 <TableCell className="font-medium">{event.title}</TableCell>
-                <TableCell className="text-sm text-muted-foreground">
+                <TableCell className="text-muted-foreground text-sm">
                   {event.sessionType}
                 </TableCell>
                 <TableCell>
@@ -405,7 +491,7 @@ export function HostDashboard() {
                     className={cn("text-xs", statusStyles[session.status])}
                   >
                     {session.status === "Active" && (
-                      <CircleIcon className="mr-1 h-2 w-2 fill-emerald-500 text-emerald-500 animate-pulse" />
+                      <CircleIcon className="mr-1 h-2 w-2 animate-pulse fill-emerald-500 text-emerald-500" />
                     )}
                     {session.status}
                   </Badge>
@@ -417,7 +503,7 @@ export function HostDashboard() {
                       ? `${session.peakViewerCount ?? 0} peak`
                       : "—"}
                 </TableCell>
-                <TableCell className="text-sm text-muted-foreground">
+                <TableCell className="text-muted-foreground text-sm">
                   {formatDuration(session.startedAt, session.endedAt)}
                 </TableCell>
               </TableRow>

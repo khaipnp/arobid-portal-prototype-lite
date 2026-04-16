@@ -15,6 +15,7 @@ import {
   SendHorizontalIcon,
   TrashIcon,
 } from "lucide-react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useRef, useState } from "react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -34,19 +35,13 @@ import {
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  CURRENT_USER_ID,
-  mockChatUsers,
-  mockConversations,
-  mockInitialUnreadCounts,
-  mockMessages,
-} from "@/lib/deal-room/mock-data"
 import type { ChatUser, Conversation, Message } from "@/lib/deal-room/types"
 import { cn } from "@/lib/utils"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const MAX_ATTACHMENTS_PER_MESSAGE = 5
 const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024
+const MAX_INLINE_IMAGE_SIZE_BYTES = 5 * 1024 * 1024
 const ALLOWED_FILE_TYPES = new Set([
   "jpg",
   "jpeg",
@@ -60,12 +55,21 @@ const ALLOWED_FILE_TYPES = new Set([
   "csv",
   "xlsx",
 ])
+const IMAGE_FILE_TYPES = new Set(["jpg", "jpeg", "png", "webp"])
 
 type PendingAttachment = {
   id: string
   fileName: string
+  fileUrl: string
   fileSize: number
   fileType: string
+}
+
+function isImageAttachment(att: {
+  fileType: string
+  fileUrl: string
+}): boolean {
+  return IMAGE_FILE_TYPES.has(att.fileType.toLowerCase()) && att.fileUrl !== "#"
 }
 
 function formatRelativeTime(isoStr: string): string {
@@ -239,32 +243,44 @@ function UserHoverCard({
 
 export function DealRoomManager({
   initialConversationId,
+  initialUsers,
+  initialConversations,
+  initialMessagesMap,
+  initialUnreadCounts,
+  currentUserId,
 }: {
   initialConversationId?: string
+  initialUsers: ChatUser[]
+  initialConversations: Conversation[]
+  initialMessagesMap: Record<string, Message[]>
+  initialUnreadCounts: Record<string, number>
+  currentUserId: string
 }) {
   const router = useRouter()
 
   // ── State ──
   const [conversations, setConversations] = useState<Conversation[]>(() =>
-    structuredClone(mockConversations),
+    structuredClone(initialConversations),
   )
   const [messagesMap, setMessagesMap] = useState<Record<string, Message[]>>(
-    () => structuredClone(mockMessages),
+    () => structuredClone(initialMessagesMap),
   )
-  const [users] = useState<ChatUser[]>(mockChatUsers)
+  const [users] = useState<ChatUser[]>(initialUsers)
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>(
-    () => ({ ...mockInitialUnreadCounts }),
+    () => ({ ...initialUnreadCounts }),
   )
   const [activeConversationId, setActiveConversationId] = useState<
     string | null
   >(initialConversationId ?? null)
 
   const [inboxSearch, setInboxSearch] = useState("")
-  const [inboxFilter, setInboxFilter] = useState<"active" | "archived">("active")
-  const [composerValue, setComposerValue] = useState("")
-  const [pendingAttachments, setPendingAttachments] = useState<PendingAttachment[]>(
-    [],
+  const [inboxFilter, setInboxFilter] = useState<"active" | "archived">(
+    "active",
   )
+  const [composerValue, setComposerValue] = useState("")
+  const [pendingAttachments, setPendingAttachments] = useState<
+    PendingAttachment[]
+  >([])
   const [composerError, setComposerError] = useState<string | null>(null)
   const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
   const [editingContent, setEditingContent] = useState("")
@@ -280,13 +296,13 @@ export function DealRoomManager({
 
   const visibleConversations = conversations
     .filter((c) => {
-      const myMember = c.members.find((m) => m.userId === CURRENT_USER_ID)
+      const myMember = c.members.find((m) => m.userId === currentUserId)
       if (!myMember) return false
       if (inboxFilter === "active" && myMember.isArchived) return false
       if (inboxFilter === "archived" && !myMember.isArchived) return false
       if (!inboxSearch) return true
-      const name = getConversationDisplayName(c, users, CURRENT_USER_ID)
-      const otherId = c.members.find((m) => m.userId !== CURRENT_USER_ID)?.userId
+      const name = getConversationDisplayName(c, users, currentUserId)
+      const otherId = c.members.find((m) => m.userId !== currentUserId)?.userId
       const otherUser = users.find((u) => u.id === otherId)
       const query = inboxSearch.toLowerCase()
       return (
@@ -313,37 +329,63 @@ export function DealRoomManager({
     router.push(`/seller/deal-room/${id}`, { scroll: false })
   }
 
-  function handleSelectAttachments(event: React.ChangeEvent<HTMLInputElement>) {
+  async function handleSelectAttachments(
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) {
     const files = Array.from(event.target.files ?? [])
     if (files.length === 0) return
 
+    async function toDataUrl(file: File): Promise<string> {
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () =>
+          resolve(typeof reader.result === "string" ? reader.result : "#")
+        reader.onerror = () => reject(new Error("Failed to read file"))
+        reader.readAsDataURL(file)
+      })
+    }
+
     setComposerError(null)
-    setPendingAttachments((prev) => {
-      const next = [...prev]
-      for (const file of files) {
-        const ext = file.name.split(".").pop()?.toLowerCase() ?? ""
-        if (!ALLOWED_FILE_TYPES.has(ext)) {
-          setComposerError(
-            "File type not supported. Allowed: JPG, JPEG, PNG, WEBP, MP4, PDF, MD, DOC, DOCX, CSV, XLSX.",
-          )
-          continue
-        }
-        if (file.size > MAX_FILE_SIZE_BYTES) {
-          setComposerError("File too large. Maximum file size is 20 MB.")
-          continue
-        }
-        if (next.length >= MAX_ATTACHMENTS_PER_MESSAGE) {
-          setComposerError("Maximum 5 files per message.")
-          break
-        }
-        next.push({
-          id: `pending-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-          fileName: file.name,
-          fileSize: file.size,
-          fileType: ext,
-        })
+    const accepted: PendingAttachment[] = []
+    for (const file of files) {
+      const ext = file.name.split(".").pop()?.toLowerCase() ?? ""
+      if (!ALLOWED_FILE_TYPES.has(ext)) {
+        setComposerError(
+          "File type not supported. Allowed: JPG, JPEG, PNG, WEBP, MP4, PDF, MD, DOC, DOCX, CSV, XLSX.",
+        )
+        continue
       }
-      return next
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        setComposerError("File too large. Maximum file size is 20 MB.")
+        continue
+      }
+      if (
+        IMAGE_FILE_TYPES.has(ext) &&
+        file.size > MAX_INLINE_IMAGE_SIZE_BYTES
+      ) {
+        setComposerError(
+          "Image too large to preview. Maximum preview size is 5 MB.",
+        )
+        continue
+      }
+      const fileUrl = IMAGE_FILE_TYPES.has(ext) ? await toDataUrl(file) : "#"
+      accepted.push({
+        id: `pending-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        fileName: file.name,
+        fileUrl,
+        fileSize: file.size,
+        fileType: ext,
+      })
+    }
+    setPendingAttachments((prev) => {
+      const availableSlots = Math.max(
+        MAX_ATTACHMENTS_PER_MESSAGE - prev.length,
+        0,
+      )
+      if (accepted.length > availableSlots) {
+        setComposerError("Maximum 5 files per message.")
+      }
+      return [...prev, ...accepted.slice(0, availableSlots)]
     })
     event.target.value = ""
   }
@@ -352,7 +394,7 @@ export function DealRoomManager({
     setPendingAttachments((prev) => prev.filter((att) => att.id !== id))
   }
 
-  function handleSendMessage() {
+  async function handleSendMessage() {
     const text = composerValue.trim()
     if (!activeConversationId) return
     if (!text && pendingAttachments.length === 0) {
@@ -364,12 +406,12 @@ export function DealRoomManager({
     const newMsg: Message = {
       id: `msg-${Date.now()}`,
       conversationId: activeConversationId,
-      senderId: CURRENT_USER_ID,
+      senderId: currentUserId,
       content: text,
       attachments: pendingAttachments.map((file) => ({
         id: file.id,
         fileName: file.fileName,
-        fileUrl: "#",
+        fileUrl: file.fileUrl,
         fileSize: file.fileSize,
         fileType: file.fileType as
           | "jpg"
@@ -390,71 +432,128 @@ export function DealRoomManager({
       isSystemMessage: false,
     }
 
-    setMessagesMap((prev) => ({
-      ...prev,
-      [activeConversationId]: [...(prev[activeConversationId] ?? []), newMsg],
-    }))
-    setConversations((prev) =>
-      prev.map((conv) =>
-        conv.id === activeConversationId
-          ? {
-              ...conv,
-              members: conv.members.map((member) =>
-                member.userId === CURRENT_USER_ID
-                  ? { ...member, isArchived: false }
-                  : member,
-              ),
-            }
-          : conv,
-      ),
-    )
-    setComposerValue("")
-    setPendingAttachments([])
+    try {
+      const response = await fetch(
+        `/api/deal-room/conversations/${activeConversationId}/messages`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: newMsg.id,
+            senderId: newMsg.senderId,
+            content: newMsg.content,
+            attachments: newMsg.attachments,
+            status: newMsg.status,
+            sentAt: newMsg.sentAt,
+          }),
+        },
+      )
+      if (!response.ok) {
+        setComposerError("Unable to send message.")
+        return
+      }
+      setMessagesMap((prev) => ({
+        ...prev,
+        [activeConversationId]: [...(prev[activeConversationId] ?? []), newMsg],
+      }))
+      setConversations((prev) =>
+        prev.map((conv) =>
+          conv.id === activeConversationId
+            ? {
+                ...conv,
+                members: conv.members.map((member) =>
+                  member.userId === currentUserId
+                    ? { ...member, isArchived: false }
+                    : member,
+                ),
+              }
+            : conv,
+        ),
+      )
+      setComposerValue("")
+      setPendingAttachments([])
+    } catch {
+      setComposerError("Unable to send message.")
+    }
   }
 
-  function handleSaveEdit() {
+  async function handleSaveEdit() {
     if (!activeConversationId || !editingMessageId) return
     const text = editingContent.trim()
     if (!text) return
-    setMessagesMap((prev) => ({
-      ...prev,
-      [activeConversationId]:
-        prev[activeConversationId]?.map((m) =>
-          m.id === editingMessageId
-            ? { ...m, content: text, editedAt: new Date().toISOString() }
-            : m,
-        ) ?? [],
-    }))
-    setEditingMessageId(null)
+    const editedAt = new Date().toISOString()
+    try {
+      const response = await fetch(
+        `/api/deal-room/conversations/${activeConversationId}/messages/${editingMessageId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ content: text, editedAt }),
+        },
+      )
+      if (!response.ok) return
+      setMessagesMap((prev) => ({
+        ...prev,
+        [activeConversationId]:
+          prev[activeConversationId]?.map((m) =>
+            m.id === editingMessageId ? { ...m, content: text, editedAt } : m,
+          ) ?? [],
+      }))
+      setEditingMessageId(null)
+    } catch {
+      // keep editing state to let user retry
+    }
   }
 
-  function handleDeleteMessage(id: string) {
+  async function handleDeleteMessage(id: string) {
     if (!activeConversationId) return
-    setMessagesMap((prev) => ({
-      ...prev,
-      [activeConversationId]:
-        prev[activeConversationId]?.map((m) =>
-          m.id === id ? { ...m, isDeleted: true, attachments: [] } : m,
-        ) ?? [],
-    }))
+    try {
+      const response = await fetch(
+        `/api/deal-room/conversations/${activeConversationId}/messages/${id}`,
+        { method: "DELETE" },
+      )
+      if (!response.ok) return
+      setMessagesMap((prev) => ({
+        ...prev,
+        [activeConversationId]:
+          prev[activeConversationId]?.map((m) =>
+            m.id === id ? { ...m, isDeleted: true, attachments: [] } : m,
+          ) ?? [],
+      }))
+    } catch {
+      // no-op
+    }
   }
 
-  function handleArchiveConversation(id: string) {
-    setConversations((prev) =>
-      prev.map((c) =>
-        c.id === id
-          ? {
-              ...c,
-              members: c.members.map((m) =>
-                m.userId === CURRENT_USER_ID ? { ...m, isArchived: true } : m,
-              ),
-            }
-          : c,
-      ),
-    )
-    if (activeConversationId === id) {
-      setActiveConversationId(null)
-      router.push("/seller/deal-room", { scroll: false })
+  async function handleArchiveConversation(id: string) {
+    try {
+      const response = await fetch(
+        `/api/deal-room/conversations/${id}/archive`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: currentUserId }),
+        },
+      )
+      if (!response.ok) return
+      setConversations((prev) =>
+        prev.map((c) =>
+          c.id === id
+            ? {
+                ...c,
+                members: c.members.map((m) =>
+                  m.userId === currentUserId ? { ...m, isArchived: true } : m,
+                ),
+              }
+            : c,
+        ),
+      )
+      if (activeConversationId === id) {
+        setActiveConversationId(null)
+        router.push("/seller/deal-room", { scroll: false })
+      }
+    } catch {
+      // no-op
     }
   }
 
@@ -524,7 +623,7 @@ export function DealRoomManager({
               const displayName = getConversationDisplayName(
                 conv,
                 users,
-                CURRENT_USER_ID,
+                currentUserId,
               )
               const lastMsg = getLastMessage(messagesMap[conv.id] ?? [])
               const unread = unreadCounts[conv.id] ?? 0
@@ -543,7 +642,7 @@ export function DealRoomManager({
                   <ConversationAvatar
                     conv={conv}
                     users={users}
-                    currentUserId={CURRENT_USER_ID}
+                    currentUserId={currentUserId}
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-1">
@@ -592,7 +691,7 @@ export function DealRoomManager({
               {(() => {
                 if (activeConversation.type === "direct") {
                   const otherId = activeConversation.members.find(
-                    (m) => m.userId !== CURRENT_USER_ID,
+                    (m) => m.userId !== currentUserId,
                   )?.userId
                   const other = users.find((u) => u.id === otherId)
                   if (other) {
@@ -605,7 +704,7 @@ export function DealRoomManager({
                           <ConversationAvatar
                             conv={activeConversation}
                             users={users}
-                            currentUserId={CURRENT_USER_ID}
+                            currentUserId={currentUserId}
                             size="sm"
                           />
                           <div className="text-left">
@@ -626,7 +725,7 @@ export function DealRoomManager({
                     <ConversationAvatar
                       conv={activeConversation}
                       users={users}
-                      currentUserId={CURRENT_USER_ID}
+                      currentUserId={currentUserId}
                       size="sm"
                     />
                     <div>
@@ -634,7 +733,7 @@ export function DealRoomManager({
                         {getConversationDisplayName(
                           activeConversation,
                           users,
-                          CURRENT_USER_ID,
+                          currentUserId,
                         )}
                       </p>
                       <p className="text-muted-foreground text-xs">
@@ -674,7 +773,7 @@ export function DealRoomManager({
               </div>
             )}
             {activeMessages.map((msg, idx) => {
-              const isOwn = msg.senderId === CURRENT_USER_ID
+              const isOwn = msg.senderId === currentUserId
               const sender = users.find((u) => u.id === msg.senderId)
               const prevMsg = activeMessages[idx - 1]
               const showSenderName =
@@ -809,22 +908,46 @@ export function DealRoomManager({
                             {msg.attachments.length > 0 && (
                               <div className="mt-2 flex flex-col gap-1.5">
                                 {msg.attachments.map((att) => (
-                                  <div
-                                    key={att.id}
-                                    className={cn(
-                                      "flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs",
-                                      isOwn
-                                        ? "bg-primary-foreground/20"
-                                        : "bg-background/60",
+                                  <div key={att.id}>
+                                    {isImageAttachment(att) ? (
+                                      <a
+                                        href={att.fileUrl}
+                                        target="_blank"
+                                        rel="noreferrer noopener"
+                                        className={cn(
+                                          "block overflow-hidden rounded-lg border",
+                                          isOwn
+                                            ? "border-primary-foreground/30"
+                                            : "border-border/70",
+                                        )}
+                                      >
+                                        <Image
+                                          src={att.fileUrl}
+                                          alt={att.fileName}
+                                          width={360}
+                                          height={220}
+                                          unoptimized
+                                          className="h-auto max-h-64 w-full max-w-72 object-cover"
+                                        />
+                                      </a>
+                                    ) : (
+                                      <div
+                                        className={cn(
+                                          "flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs",
+                                          isOwn
+                                            ? "bg-primary-foreground/20"
+                                            : "bg-background/60",
+                                        )}
+                                      >
+                                        <PaperclipIcon className="size-3.5 shrink-0" />
+                                        <span className="min-w-0 truncate">
+                                          {att.fileName}
+                                        </span>
+                                        <span className="shrink-0 opacity-70">
+                                          {formatFileSize(att.fileSize)}
+                                        </span>
+                                      </div>
                                     )}
-                                  >
-                                    <PaperclipIcon className="size-3.5 shrink-0" />
-                                    <span className="min-w-0 truncate">
-                                      {att.fileName}
-                                    </span>
-                                    <span className="shrink-0 opacity-70">
-                                      {formatFileSize(att.fileSize)}
-                                    </span>
                                   </div>
                                 ))}
                               </div>
@@ -915,8 +1038,8 @@ export function DealRoomManager({
                   ))}
                 </div>
               )}
-              <div className="flex items-end gap-2">
-                <Button size="icon-sm" variant="ghost" asChild>
+              <div className="flex items-start gap-2">
+                <Button size="icon" variant="ghost" asChild>
                   <label className="cursor-pointer">
                     <input
                       type="file"
@@ -943,10 +1066,12 @@ export function DealRoomManager({
                   }}
                 />
                 <Button
-                  size="icon-sm"
-                  disabled={!composerValue.trim() && pendingAttachments.length === 0}
+                  size="icon"
+                  disabled={
+                    !composerValue.trim() && pendingAttachments.length === 0
+                  }
                   onClick={handleSendMessage}
-                  className="shrink-0"
+                  className="shrink-0 rounded-full"
                 >
                   <SendHorizontalIcon className="size-4" />
                   <span className="sr-only">Send</span>

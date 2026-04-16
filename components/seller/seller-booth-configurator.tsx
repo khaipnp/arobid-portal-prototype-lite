@@ -2,7 +2,6 @@
 
 import {
   AlertTriangleIcon,
-  ArrowLeftIcon,
   CheckCircle2Icon,
   ChevronLeftIcon,
   CuboidIcon,
@@ -32,15 +31,6 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
-import {
-  mockBoothCustomizations,
-  mockBoothTemplateCustomizationConfigs,
-  mockBoothTemplates,
-  mockExhibitorCatalogProducts,
-  mockExpoBoothTemplateAssignments,
-  mockExpos,
-  mockSellerRegistrations,
-} from "@/lib/tradexpo/mock-data"
 import type {
   BoothCustomization,
   BoothPublishStatus,
@@ -48,6 +38,7 @@ import type {
   BoothTemplateCustomizationConfig,
   ExhibitorCatalogProduct,
   Expo,
+  ExpoBoothTemplateAssignment,
   ExpoStatus,
   SellerBoothProduct,
   SellerBoothRegistration,
@@ -109,8 +100,11 @@ function buildDefaultCustomization(
   }
 }
 
-function buildInitialCustomization(registrationId: string): BoothCustomization {
-  const existing = mockBoothCustomizations.find(
+function buildInitialCustomization(
+  registrationId: string,
+  boothCustomizations: BoothCustomization[],
+): BoothCustomization {
+  const existing = boothCustomizations.find(
     (c) => c.registrationId === registrationId,
   )
   if (existing) {
@@ -143,36 +137,43 @@ function isValidYouTubeUrl(url: string): boolean {
 interface Props {
   expoId: string
   registrationId: string
+  expo: Expo
+  registration: SellerBoothRegistration
+  boothTemplates: BoothTemplate[]
+  expoBoothTemplateAssignments: ExpoBoothTemplateAssignment[]
+  boothTemplateCustomizationConfigs: BoothTemplateCustomizationConfig[]
+  boothCustomizations: BoothCustomization[]
+  exhibitorCatalogProducts: ExhibitorCatalogProduct[]
 }
 
-export function SellerBoothConfigurator({ expoId, registrationId }: Props) {
-  const expo = React.useMemo<Expo | undefined>(
-    () => mockExpos.find((e) => e.id === expoId),
-    [expoId],
-  )
-
-  const registration = React.useMemo<SellerBoothRegistration | undefined>(
-    () => mockSellerRegistrations.find((r) => r.id === registrationId),
-    [registrationId],
-  )
-
+export function SellerBoothConfigurator({
+  expoId,
+  registrationId,
+  expo,
+  registration,
+  boothTemplates,
+  expoBoothTemplateAssignments,
+  boothTemplateCustomizationConfigs,
+  exhibitorCatalogProducts,
+  boothCustomizations,
+}: Props) {
   const availableTemplates = React.useMemo<BoothTemplate[]>(() => {
-    const assignment = mockExpoBoothTemplateAssignments.find(
+    const assignment = expoBoothTemplateAssignments.find(
       (a) => a.expoId === expoId,
     )
-    if (!assignment) return mockBoothTemplates
-    return mockBoothTemplates.filter((t) =>
+    if (!assignment) return boothTemplates
+    return boothTemplates.filter((t) =>
       assignment.boothTemplateIds.includes(t.id),
     )
-  }, [expoId])
+  }, [expoId, boothTemplates, expoBoothTemplateAssignments])
 
   const [customization, setCustomization] = React.useState<BoothCustomization>(
-    () => buildInitialCustomization(registrationId),
+    () => buildInitialCustomization(registrationId, boothCustomizations),
   )
   const [isDirty, setIsDirty] = React.useState(false)
   const [savedStatus, setSavedStatus] =
     React.useState<BoothPublishStatus | null>(() => {
-      const existing = mockBoothCustomizations.find(
+      const existing = boothCustomizations.find(
         (c) => c.registrationId === registrationId,
       )
       return existing?.publishStatus ?? null
@@ -200,25 +201,26 @@ export function SellerBoothConfigurator({ expoId, registrationId }: Props) {
 
   // Publish confirm
   const [publishConfirmOpen, setPublishConfirmOpen] = React.useState(false)
+  const [requestError, setRequestError] = React.useState<string | null>(null)
 
   const selectedTemplate = React.useMemo<BoothTemplate | undefined>(
     () =>
       customization.selectedBoothTemplateId
-        ? mockBoothTemplates.find(
+        ? boothTemplates.find(
             (t) => t.id === customization.selectedBoothTemplateId,
           )
         : undefined,
-    [customization.selectedBoothTemplateId],
+    [customization.selectedBoothTemplateId, boothTemplates],
   )
 
   const templateConfig = React.useMemo<BoothTemplateCustomizationConfig | null>(
     () =>
       customization.selectedBoothTemplateId
-        ? (mockBoothTemplateCustomizationConfigs.find(
+        ? (boothTemplateCustomizationConfigs.find(
             (c) => c.boothTemplateId === customization.selectedBoothTemplateId,
           ) ?? null)
         : null,
-    [customization.selectedBoothTemplateId],
+    [customization.selectedBoothTemplateId, boothTemplateCustomizationConfigs],
   )
 
   const isReadOnly =
@@ -286,7 +288,7 @@ export function SellerBoothConfigurator({ expoId, registrationId }: Props) {
   function confirmTemplateSelection() {
     if (!pendingTemplate) return
     const config =
-      mockBoothTemplateCustomizationConfigs.find(
+      boothTemplateCustomizationConfigs.find(
         (c) => c.boothTemplateId === pendingTemplate.id,
       ) ?? null
     const fresh = buildDefaultCustomization(
@@ -304,21 +306,55 @@ export function SellerBoothConfigurator({ expoId, registrationId }: Props) {
 
   // ── Save / Publish ─────────────────────────────────────────────────────────
 
-  function handleSaveDraft() {
-    setCustomization((prev) => ({ ...prev, publishStatus: "Draft" }))
-    setSavedStatus("Draft")
-    setIsDirty(false)
+  async function persistCustomization(next: BoothCustomization) {
+    const response = await fetch(
+      `/api/seller/booth-customizations/${registrationId}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customization: next }),
+      },
+    )
+    if (!response.ok) {
+      throw new Error("Failed to persist customization")
+    }
+  }
+
+  async function handleSaveDraft() {
+    const next: BoothCustomization = {
+      ...customization,
+      publishStatus: "Draft",
+    }
+    try {
+      await persistCustomization(next)
+      setCustomization(next)
+      setSavedStatus("Draft")
+      setIsDirty(false)
+      setRequestError(null)
+    } catch {
+      setRequestError("Unable to save draft.")
+    }
   }
 
   function handlePublish() {
     setPublishConfirmOpen(true)
   }
 
-  function confirmPublish() {
-    setCustomization((prev) => ({ ...prev, publishStatus: "Published" }))
-    setSavedStatus("Published")
-    setIsDirty(false)
-    setPublishConfirmOpen(false)
+  async function confirmPublish() {
+    const next: BoothCustomization = {
+      ...customization,
+      publishStatus: "Published",
+    }
+    try {
+      await persistCustomization(next)
+      setCustomization(next)
+      setSavedStatus("Published")
+      setIsDirty(false)
+      setPublishConfirmOpen(false)
+      setRequestError(null)
+    } catch {
+      setRequestError("Unable to publish booth.")
+    }
   }
 
   // ── Products ───────────────────────────────────────────────────────────────
@@ -363,20 +399,12 @@ export function SellerBoothConfigurator({ expoId, registrationId }: Props) {
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
-  if (!registration || !expo) {
-    return (
-      <p className="py-12 text-center text-muted-foreground text-sm">
-        Booth registration not found.
-      </p>
-    )
-  }
-
   const hasNoTemplate = !customization.selectedBoothTemplateId
 
   return (
     <div className="grid gap-6">
       {/* Header bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3 rounded-xl border bg-card p-4">
         <div className="flex flex-wrap items-center gap-3">
           {selectedTemplate && (
             <Image
@@ -416,40 +444,27 @@ export function SellerBoothConfigurator({ expoId, registrationId }: Props) {
         </div>
 
         <div className="flex items-center gap-2">
-          {!hasNoTemplate && !isReadOnly && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setPreview3DTemplate(selectedTemplate ?? null)
-                setPreview3DOpen(true)
-              }}
-            >
-              <EyeIcon className="h-3.5 w-3.5" />
-              Preview 3D
-            </Button>
-          )}
           {hasNoTemplate ? null : isReadOnly ? null : (
             <Button
-              variant="outline"
+              variant="secondary"
               size="sm"
               onClick={handleChangeTemplateClick}
             >
               Change Template
             </Button>
           )}
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/seller/my-expos/${expoId}`}>
-              <ArrowLeftIcon className="h-3.5 w-3.5" />
-              Back
-            </Link>
-          </Button>
         </div>
       </div>
 
       {isReadOnly && (
         <div className="rounded-md border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-600">
           This expo has ended or is archived. Booth configuration is read-only.
+        </div>
+      )}
+
+      {requestError && (
+        <div className="rounded-md border border-destructive/30 bg-destructive/10 px-4 py-3 text-destructive text-sm">
+          {requestError}
         </div>
       )}
 
@@ -483,7 +498,7 @@ export function SellerBoothConfigurator({ expoId, registrationId }: Props) {
 
       {/* Template gallery (US-01 / US-02) */}
       <Dialog open={galleryOpen} onOpenChange={setGalleryOpen}>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-3xl!">
           {galleryStep === "list" ? (
             <>
               <DialogHeader>
@@ -499,7 +514,7 @@ export function SellerBoothConfigurator({ expoId, registrationId }: Props) {
                     key={t.id}
                     template={t}
                     config={
-                      mockBoothTemplateCustomizationConfigs.find(
+                      boothTemplateCustomizationConfigs.find(
                         (c) => c.boothTemplateId === t.id,
                       ) ?? null
                     }
@@ -514,7 +529,7 @@ export function SellerBoothConfigurator({ expoId, registrationId }: Props) {
               <TemplateDetailView
                 template={galleryHighlight}
                 config={
-                  mockBoothTemplateCustomizationConfigs.find(
+                  boothTemplateCustomizationConfigs.find(
                     (c) => c.boothTemplateId === galleryHighlight.id,
                   ) ?? null
                 }
@@ -627,7 +642,7 @@ export function SellerBoothConfigurator({ expoId, registrationId }: Props) {
             </DialogDescription>
           </DialogHeader>
           <ProductSelectorList
-            catalogProducts={mockExhibitorCatalogProducts}
+            catalogProducts={exhibitorCatalogProducts}
             selectedIds={customization.products.map((p) => p.id)}
             limit={productLimit}
             onToggle={toggleProduct}
@@ -1005,7 +1020,10 @@ function CustomizationPanel({
 
       {/* Bottom action bar */}
       {!isReadOnly && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Button variant="ghost" asChild>
+            <Link href={`/seller/my-expos/${expoId}`}>Cancel</Link>
+          </Button>
           <div className="flex items-center gap-2">
             {!isDirty && savedStatus && (
               <span className="flex items-center gap-1 text-emerald-600 text-sm">
@@ -1020,8 +1038,8 @@ function CustomizationPanel({
             )}
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" asChild>
-              <Link href={`/seller/my-expos/${expoId}`}>Cancel</Link>
+            <Button variant="outline" onClick={onSaveDraft}>
+              Preview 3D
             </Button>
             <Button variant="outline" onClick={onSaveDraft} disabled={!canSave}>
               Save Draft
@@ -1126,12 +1144,11 @@ function TemplateDetailView({
 }) {
   return (
     <div className="grid gap-5">
-      <div className="flex items-center gap-2">
+      <div>
         <Button variant="ghost" size="sm" onClick={onBack}>
-          <ChevronLeftIcon className="h-4 w-4" />
+          <ChevronLeftIcon />
           Back
         </Button>
-        <span className="text-muted-foreground text-sm">Template Gallery</span>
       </div>
       <Image
         src={`https://picsum.photos/seed/${template.id}/800/400`}
@@ -1190,7 +1207,7 @@ function Preview3DViewer({
     <div className="overflow-hidden rounded-xl border bg-zinc-900">
       <div className="relative min-h-64 overflow-hidden">
         {/* Simulated 3D environment */}
-        <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-zinc-950" />
+        <div className="absolute inset-0 bg-linear-to-br from-zinc-800 to-zinc-950" />
         {/* Grid floor */}
         <div
           className="absolute inset-0 opacity-20"

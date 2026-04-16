@@ -1,7 +1,15 @@
 import { BankAccountManager } from "@/components/orders/bank-account-manager"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
+import { getPlatformPaymentConfig, listBankAccounts } from "@/lib/orders/db"
 
-export default function BankAccountsPage() {
+export const dynamic = "force-dynamic"
+
+export default async function BankAccountsPage() {
+  const [initialBankAccounts, payment] = await Promise.all([
+    listBankAccounts(),
+    getPlatformPaymentConfig(),
+  ])
+
   return (
     <DashboardShell
       title="Bank Accounts"
@@ -12,7 +20,10 @@ export default function BankAccountsPage() {
         { label: "Bank Accounts" },
       ]}
     >
-      <BankAccountManager />
+      <BankAccountManager
+        initialBankAccounts={initialBankAccounts}
+        bankTransferEnabled={payment.bankTransferEnabled}
+      />
     </DashboardShell>
   )
 }

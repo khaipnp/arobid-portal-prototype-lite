@@ -27,23 +27,64 @@ export function StreamPlayer({
   sessionType,
   onStreamEnded,
 }: Props) {
-  const isLive = session.status === "Active"
-  const isReplay = session.status === "Ended" && session.replayUrl !== null
+  const [currentSession, setCurrentSession] =
+    React.useState<StreamSession>(session)
+  const isLive = currentSession.status === "Active"
+  const isReplay =
+    currentSession.status === "Ended" && currentSession.replayUrl !== null
   const isProcessing =
-    session.status === "Ended" &&
-    session.replayUrl === null &&
-    session.replayEnabled
+    currentSession.status === "Ended" &&
+    currentSession.replayUrl === null &&
+    currentSession.replayEnabled
 
   const [playing, setPlaying] = React.useState(false)
   const [muted, setMuted] = React.useState(false)
   const [progress, setProgress] = React.useState(0)
   const [viewerCount, setViewerCount] = React.useState(
-    session.peakViewerCount ?? 0,
+    currentSession.peakViewerCount ?? 0,
   )
   const [showControls, setShowControls] = React.useState(true)
   const controlsTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(
     null,
   )
+
+  React.useEffect(() => {
+    setCurrentSession(session)
+  }, [session])
+
+  React.useEffect(() => {
+    setViewerCount(currentSession.peakViewerCount ?? 0)
+  }, [currentSession.peakViewerCount])
+
+  React.useEffect(() => {
+    const controller = new AbortController()
+    const syncSession = async () => {
+      try {
+        const response = await fetch(
+          `/api/stream/sessions/${currentSession.streamSessionId}`,
+          {
+            signal: controller.signal,
+            cache: "no-store",
+          },
+        )
+        if (!response.ok) return
+        const payload = (await response.json()) as { session?: StreamSession }
+        if (!payload.session) return
+        setCurrentSession(payload.session)
+        if (payload.session.status === "Ended") {
+          onStreamEnded?.()
+        }
+      } catch {
+        // no-op
+      }
+    }
+    const interval = setInterval(syncSession, 5000)
+    void syncSession()
+    return () => {
+      controller.abort()
+      clearInterval(interval)
+    }
+  }, [currentSession.streamSessionId, onStreamEnded])
 
   // Simulate live viewer count fluctuation
   React.useEffect(() => {
@@ -96,7 +137,7 @@ export function StreamPlayer({
     // biome-ignore lint/a11y/noStaticElementInteractions: video player container needs mouse events for control visibility
     <div
       className={cn(
-        "relative flex aspect-video w-full select-none overflow-hidden rounded-lg bg-gradient-to-br",
+        "relative flex aspect-video w-full select-none overflow-hidden rounded-lg bg-linear-to-br",
         gradient,
       )}
       onMouseMove={handleMouseMove}
@@ -107,7 +148,7 @@ export function StreamPlayer({
         {isLive && playing && (
           <>
             {/* Animated live bars */}
-            <div className="flex items-end gap-1 h-12">
+            <div className="flex h-12 items-end gap-1">
               {liveBars.map((barKey, i) => (
                 <div
                   key={barKey}
@@ -124,25 +165,25 @@ export function StreamPlayer({
         )}
         {!playing && (
           <div className="text-center">
-            <p className="mb-2 font-semibold text-white/60 text-sm uppercase tracking-widest">
+            <p className="mb-2 font-semibold text-sm text-white/60 uppercase tracking-widest">
               {sessionType}
             </p>
             <p className="max-w-md px-4 text-center font-semibold text-white text-xl leading-snug">
               {title}
             </p>
             {isLive && (
-              <p className="mt-3 text-white/50 text-sm">
+              <p className="mt-3 text-sm text-white/50">
                 Click play to watch live
               </p>
             )}
             {isReplay && (
-              <p className="mt-3 text-white/50 text-sm">
+              <p className="mt-3 text-sm text-white/50">
                 Click play to watch replay
               </p>
             )}
             {isProcessing && (
               <div className="mt-4 rounded-lg bg-black/40 px-6 py-3">
-                <p className="text-amber-300 text-sm font-medium">
+                <p className="font-medium text-amber-300 text-sm">
                   Replay is being prepared…
                 </p>
                 <p className="mt-1 text-white/50 text-xs">
@@ -150,11 +191,12 @@ export function StreamPlayer({
                 </p>
               </div>
             )}
-            {session.status === "Ended" && !session.replayEnabled && (
-              <div className="mt-4 rounded-lg bg-black/40 px-6 py-3">
-                <p className="text-white/60 text-sm">This stream has ended</p>
-              </div>
-            )}
+            {currentSession.status === "Ended" &&
+              !currentSession.replayEnabled && (
+                <div className="mt-4 rounded-lg bg-black/40 px-6 py-3">
+                  <p className="text-sm text-white/60">This stream has ended</p>
+                </div>
+              )}
           </div>
         )}
       </div>
@@ -162,14 +204,14 @@ export function StreamPlayer({
       {/* Top bar */}
       <div
         className={cn(
-          "absolute top-0 left-0 right-0 flex items-center justify-between p-3 bg-gradient-to-b from-black/60 to-transparent transition-opacity duration-200",
+          "absolute top-0 right-0 left-0 flex items-center justify-between bg-linear-to-b from-black/60 to-transparent p-3 transition-opacity duration-200",
           showControls || !playing ? "opacity-100" : "opacity-0",
         )}
       >
         <div className="flex items-center gap-2">
           {isLive && playing && (
             <div className="flex items-center gap-1.5 rounded-md bg-red-600 px-2 py-0.5">
-              <CircleIcon className="h-2 w-2 fill-white text-white animate-pulse" />
+              <CircleIcon className="h-2 w-2 animate-pulse fill-white text-white" />
               <span className="font-bold text-white text-xs">LIVE</span>
             </div>
           )}
@@ -194,8 +236,8 @@ export function StreamPlayer({
           onClick={() => setPlaying(true)}
           className="absolute inset-0 flex items-center justify-center"
         >
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm transition-all hover:bg-white/30 hover:scale-110">
-            <PlayIcon className="h-7 w-7 fill-white text-white ml-1" />
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm transition-all hover:scale-110 hover:bg-white/30">
+            <PlayIcon className="ml-1 h-7 w-7 fill-white text-white" />
           </div>
         </button>
       )}
@@ -204,7 +246,7 @@ export function StreamPlayer({
       {(isLive || isReplay) && (
         <div
           className={cn(
-            "absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 to-transparent transition-opacity duration-200",
+            "absolute right-0 bottom-0 left-0 bg-linear-to-t from-black/70 to-transparent p-3 transition-opacity duration-200",
             showControls || !playing ? "opacity-100" : "opacity-0",
           )}
         >

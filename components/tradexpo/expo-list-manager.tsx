@@ -4,6 +4,7 @@ import {
   CheckIcon,
   ChevronDownIcon,
   MoreHorizontalIcon,
+  PlusIcon,
   SearchIcon,
 } from "lucide-react"
 import Image from "next/image"
@@ -44,7 +45,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { mockExpoCategories, mockExpos } from "@/lib/tradexpo/mock-data"
 import type { Expo, ExpoCategory, ExpoStatus } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group"
@@ -73,22 +73,26 @@ function formatDate(iso: string) {
   )
 }
 
-function cloneExpos() {
-  return mockExpos
-    .map((expo) => ({ ...expo }))
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    )
-}
-
 type ConfirmAction =
   | { type: "archive"; expo: Expo }
   | { type: "delete"; expo: Expo }
   | { type: "approve"; expo: Expo }
 
-export function ExpoListManager() {
-  const [expos, setExpos] = React.useState<Expo[]>(cloneExpos)
+export function ExpoListManager({
+  initialExpos,
+  initialCategories,
+}: {
+  initialExpos: Expo[]
+  initialCategories: ExpoCategory[]
+}) {
+  const [expos, setExpos] = React.useState<Expo[]>(() =>
+    initialExpos
+      .map((expo) => ({ ...expo }))
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      ),
+  )
   const [searchInput, setSearchInput] = React.useState("")
   const [debouncedSearch, setDebouncedSearch] = React.useState("")
   const [statusFilter, setStatusFilter] = React.useState<ExpoStatus | "All">(
@@ -105,7 +109,7 @@ export function ExpoListManager() {
     text: string
   } | null>(null)
 
-  const categories: ExpoCategory[] = mockExpoCategories
+  const categories: ExpoCategory[] = initialCategories
 
   React.useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -177,31 +181,69 @@ export function ExpoListManager() {
     setPage(1)
   }
 
-  function handleConfirm() {
+  async function handleConfirm() {
     if (!confirmAction) return
 
     const { type, expo } = confirmAction
-
-    if (type === "archive") {
-      setExpos((prev) =>
-        prev.map((e) =>
-          e.id === expo.id ? { ...e, status: "Archived" as ExpoStatus } : e,
-        ),
-      )
-      setNotice({ type: "success", text: `"${expo.name}" has been archived.` })
-    } else if (type === "delete") {
-      setExpos((prev) => prev.filter((e) => e.id !== expo.id))
-      setNotice({ type: "success", text: `"${expo.name}" has been deleted.` })
-    } else if (type === "approve") {
-      setExpos((prev) =>
-        prev.map((e) =>
-          e.id === expo.id ? { ...e, status: "Live" as ExpoStatus } : e,
-        ),
-      )
-      setNotice({
-        type: "success",
-        text: `"${expo.name}" is now Live. Approval notification sent to ${expo.ownerEmail}.`,
-      })
+    try {
+      if (type === "archive") {
+        const response = await fetch(`/api/tradexpo/expos/${expo.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "Archived" satisfies ExpoStatus }),
+        })
+        if (!response.ok) {
+          setNotice({
+            type: "error",
+            text: `Failed to archive "${expo.name}".`,
+          })
+          return
+        }
+        setExpos((prev) =>
+          prev.map((e) =>
+            e.id === expo.id ? { ...e, status: "Archived" as ExpoStatus } : e,
+          ),
+        )
+        setNotice({
+          type: "success",
+          text: `"${expo.name}" has been archived.`,
+        })
+      } else if (type === "delete") {
+        const response = await fetch(`/api/tradexpo/expos/${expo.id}`, {
+          method: "DELETE",
+        })
+        if (!response.ok) {
+          setNotice({ type: "error", text: `Failed to delete "${expo.name}".` })
+          return
+        }
+        setExpos((prev) => prev.filter((e) => e.id !== expo.id))
+        setNotice({ type: "success", text: `"${expo.name}" has been deleted.` })
+      } else if (type === "approve") {
+        const response = await fetch(`/api/tradexpo/expos/${expo.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "Live" satisfies ExpoStatus }),
+        })
+        if (!response.ok) {
+          setNotice({
+            type: "error",
+            text: `Failed to approve "${expo.name}".`,
+          })
+          return
+        }
+        setExpos((prev) =>
+          prev.map((e) =>
+            e.id === expo.id ? { ...e, status: "Live" as ExpoStatus } : e,
+          ),
+        )
+        setNotice({
+          type: "success",
+          text: `"${expo.name}" is now Live. Approval notification sent to ${expo.ownerEmail}.`,
+        })
+      }
+    } catch {
+      setNotice({ type: "error", text: "Network error. Please try again." })
+      return
     }
 
     setConfirmAction(null)
@@ -240,6 +282,14 @@ export function ExpoListManager() {
     <div className="grid gap-4">
       <section>
         <div className="grid gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <Button asChild className="w-fit">
+              <Link href="/admin/tradexpo/expos/new">
+                <PlusIcon className="mr-2 size-4" />
+                Create new
+              </Link>
+            </Button>
+          </div>
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
             <InputGroup>
               <InputGroupInput
@@ -291,7 +341,6 @@ export function ExpoListManager() {
                       e.preventDefault()
                       toggleCategory(cat.id)
                     }}
-                    className={cn(cat.level > 1 && "pl-6")}
                   >
                     <span className="mr-2 flex h-4 w-4 items-center justify-center rounded border border-muted-foreground/30">
                       {categoryFilter.includes(cat.id) && (

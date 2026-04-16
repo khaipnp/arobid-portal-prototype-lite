@@ -26,7 +26,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { mockOrders } from "@/lib/orders/mock-data"
 import type {
   Order,
   OrderStatus,
@@ -64,10 +63,14 @@ function formatDate(iso: string) {
   })
 }
 
-export function OrderManagementDashboard() {
+export function OrderManagementDashboard({
+  initialOrders,
+}: {
+  initialOrders: Order[]
+}) {
   const router = useRouter()
   const [orders] = useState<Order[]>(() =>
-    [...mockOrders].sort(
+    [...initialOrders].sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     ),

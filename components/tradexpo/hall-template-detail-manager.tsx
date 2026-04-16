@@ -11,19 +11,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { mockAssets, mockHallTemplates } from "@/lib/tradexpo/mock-data"
+import { reuploadHallTemplateAsset } from "@/lib/tradexpo/actions/hall-templates"
+import { updateModelAssetStatus } from "@/lib/tradexpo/actions/model-assets"
 import type { HallTemplate, ModelAsset } from "@/lib/tradexpo/types"
-import { createMockId, getAssetMap } from "@/lib/tradexpo/utils"
-
-function cloneTemplate(id: string): HallTemplate | undefined {
-  const found = mockHallTemplates.find((t) => t.id === id)
-  if (!found) return undefined
-  return { ...found, translations: found.translations.map((tr) => ({ ...tr })) }
-}
-
-function cloneAssets(): ModelAsset[] {
-  return mockAssets.map((a) => ({ ...a }))
-}
+import { getAssetMap } from "@/lib/tradexpo/utils"
 
 function assetStatusVariant(
   status: string,
@@ -35,14 +26,19 @@ function assetStatusVariant(
 }
 
 export function HallTemplateDetailManager({
-  templateId,
+  initialTemplate,
+  initialAssets,
 }: {
-  templateId: string
+  initialTemplate: HallTemplate
+  initialAssets: ModelAsset[]
 }) {
-  const [assets, setAssets] = React.useState<ModelAsset[]>(cloneAssets)
-  const [template, setTemplate] = React.useState<HallTemplate | undefined>(() =>
-    cloneTemplate(templateId),
+  const [assets, setAssets] = React.useState<ModelAsset[]>(() =>
+    initialAssets.map((a) => ({ ...a })),
   )
+  const [template, setTemplate] = React.useState<HallTemplate>(() => ({
+    ...initialTemplate,
+    translations: initialTemplate.translations.map((tr) => ({ ...tr })),
+  }))
   const [notice, setNotice] = React.useState<{
     type: "success" | "error"
     text: string
@@ -50,57 +46,59 @@ export function HallTemplateDetailManager({
 
   const assetMap = React.useMemo(() => getAssetMap(assets), [assets])
 
-  const scheduleAssetProcessing = React.useCallback((asset: ModelAsset) => {
-    window.setTimeout(() => {
-      setAssets((current) =>
-        current.map((item) =>
-          item.id === asset.id ? { ...item, status: "processing" } : item,
-        ),
-      )
-    }, 600)
-    window.setTimeout(() => {
-      setAssets((current) =>
-        current.map((item) =>
-          item.id === asset.id ? { ...item, status: "ready" } : item,
-        ),
-      )
-    }, 2100)
-  }, [])
+  const scheduleAssetProcessing = React.useCallback(
+    (assetId: string) => {
+      const scope = { type: "hall" as const, templateId: template.id }
+      window.setTimeout(() => {
+        void updateModelAssetStatus(assetId, "processing", scope)
+          .then((updated) => {
+            setAssets((current) =>
+              current.map((item) => (item.id === assetId ? updated : item)),
+            )
+          })
+          .catch(() => {
+            setNotice({
+              type: "error",
+              text: "Could not update asset to processing.",
+            })
+          })
+      }, 600)
+      window.setTimeout(() => {
+        void updateModelAssetStatus(assetId, "ready", scope)
+          .then((updated) => {
+            setAssets((current) =>
+              current.map((item) => (item.id === assetId ? updated : item)),
+            )
+          })
+          .catch(() => {
+            setNotice({
+              type: "error",
+              text: "Could not finalize asset processing.",
+            })
+          })
+      }, 2100)
+    },
+    [template.id],
+  )
 
-  function handleReuploadAsset(kind: "glb" | "thumbnail" | "blend") {
-    if (!template) return
-
-    const newAsset: ModelAsset = {
-      id: createMockId("asset"),
-      fileName: `re-upload-${kind}.${kind === "thumbnail" ? "png" : kind}`,
-      kind,
-      status: "pending",
-      fileUrl: `https://picsum.photos/seed/${createMockId("preview")}/640/360`,
-      createdAt: new Date().toISOString(),
+  async function handleReuploadAsset(kind: "glb" | "thumbnail" | "blend") {
+    try {
+      const { asset, templateFields } = await reuploadHallTemplateAsset(
+        template.id,
+        kind,
+      )
+      setAssets((current) => [asset, ...current])
+      setTemplate((current) => ({ ...current, ...templateFields }))
+      setNotice({
+        type: "success",
+        text: `Re-uploading ${kind} asset. Processing...`,
+      })
+      scheduleAssetProcessing(asset.id)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Re-upload failed"
+      setNotice({ type: "error", text: message })
     }
-
-    setAssets((current) => [newAsset, ...current])
-    scheduleAssetProcessing(newAsset)
-
-    setTemplate((current) => {
-      if (!current) return current
-      return {
-        ...current,
-        ...(kind === "glb" ? { renderGlbAssetId: newAsset.id } : {}),
-        ...(kind === "thumbnail" ? { thumbnailAssetId: newAsset.id } : {}),
-        ...(kind === "blend" ? { sourceBlendAssetId: newAsset.id } : {}),
-        updatedAt: new Date().toISOString(),
-        updatedBy: "Khai Pham",
-      }
-    })
-
-    setNotice({
-      type: "success",
-      text: `Re-uploading ${kind} asset. Processing...`,
-    })
   }
-
-  if (!template) return null
 
   const glbAsset = assetMap[template.renderGlbAssetId]
   const thumbAsset = assetMap[template.thumbnailAssetId]

@@ -25,13 +25,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  mockBankAccounts,
-  mockExpoPaymentConfigs,
-  mockPaymentConfig,
-} from "@/lib/orders/mock-data"
-import { mockExpos } from "@/lib/tradexpo/mock-data"
-import type { ExpoPaymentConfig } from "@/lib/tradexpo/types"
+import type {
+  BankAccount,
+  Expo,
+  ExpoPaymentConfig,
+  PaymentConfig,
+} from "@/lib/tradexpo/types"
 import { Label } from "../ui/label"
 
 // ─── Toggle row ───────────────────────────────────────────────────────────────
@@ -83,14 +82,18 @@ interface ExpoPaymentConfigPanelProps {
   expoId: string
   expoName: string
   configs: ExpoPaymentConfig[]
-  onSave: (saved: ExpoPaymentConfig) => void
-  onReset: () => void
+  platformPayment: PaymentConfig
+  bankAccounts: BankAccount[]
+  onSave: (saved: ExpoPaymentConfig) => Promise<void>
+  onReset: () => Promise<void>
 }
 
 function ExpoPaymentConfigPanel({
   expoId,
   expoName,
   configs,
+  platformPayment,
+  bankAccounts,
   onSave,
   onReset,
 }: ExpoPaymentConfigPanelProps) {
@@ -100,13 +103,13 @@ function ExpoPaymentConfigPanel({
     return {
       expoId,
       isInherited: true,
-      vnpayEnabled: mockPaymentConfig.vnpayEnabled,
-      bankTransferEnabled: mockPaymentConfig.bankTransferEnabled,
+      vnpayEnabled: platformPayment.vnpayEnabled,
+      bankTransferEnabled: platformPayment.bankTransferEnabled,
       bankAccountId: null,
-      updatedAt: mockPaymentConfig.updatedAt,
-      updatedBy: mockPaymentConfig.updatedBy,
+      updatedAt: platformPayment.updatedAt,
+      updatedBy: platformPayment.updatedBy,
     }
-  }, [configs, expoId])
+  }, [configs, expoId, platformPayment])
 
   const [editing, setEditing] = useState<{
     vnpayEnabled: boolean
@@ -120,7 +123,7 @@ function ExpoPaymentConfigPanel({
   const isInherited = !configs.find((c) => c.expoId === expoId)
   const isEditing = !!editing
 
-  const activeAccounts = mockBankAccounts.filter((b) => b.isActive)
+  const activeAccounts = bankAccounts.filter((b) => b.isActive)
   const primaryAccount = activeAccounts.find((b) => b.isPrimary)
 
   function showToastMsg(msg: string) {
@@ -156,7 +159,7 @@ function ExpoPaymentConfigPanel({
       return
     }
     if (next) {
-      const hasActive = mockBankAccounts.some((b) => b.isActive)
+      const hasActive = bankAccounts.some((b) => b.isActive)
       if (!hasActive) {
         setError(
           "No bank accounts configured. Please add one in Bank Account Settings before enabling Bank Transfer.",
@@ -168,7 +171,7 @@ function ExpoPaymentConfigPanel({
     setEditing((e) => e && { ...e, bankTransferEnabled: next })
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!editing) return
     if (!editing.vnpayEnabled && !editing.bankTransferEnabled) {
       setError("At least one payment method must be enabled.")
@@ -183,18 +186,26 @@ function ExpoPaymentConfigPanel({
       updatedAt: new Date().toISOString(),
       updatedBy: "admin@arobid.com",
     }
-    onSave(saved)
-    setEditing(null)
-    setError(null)
-    showToastMsg(`Payment configuration saved for ${expoName}.`)
+    try {
+      await onSave(saved)
+      setEditing(null)
+      setError(null)
+      showToastMsg(`Payment configuration saved for ${expoName}.`)
+    } catch {
+      setError("Unable to save expo payment configuration.")
+    }
   }
 
-  function handleReset() {
+  async function handleReset() {
     setShowResetConfirm(false)
-    onReset()
-    setEditing(null)
-    setError(null)
-    showToastMsg(`Payment config for ${expoName} reset to platform default.`)
+    try {
+      await onReset()
+      setEditing(null)
+      setError(null)
+      showToastMsg(`Payment config for ${expoName} reset to platform default.`)
+    } catch {
+      setError("Unable to reset expo payment configuration.")
+    }
   }
 
   return (
@@ -294,9 +305,7 @@ function ExpoPaymentConfigPanel({
         <div className="rounded-lg border bg-muted/40 px-4 py-3 text-muted-foreground text-xs">
           <strong>Bank Transfer account:</strong> {(() => {
             const acct = currentConfig.bankAccountId
-              ? mockBankAccounts.find(
-                  (b) => b.id === currentConfig.bankAccountId,
-                )
+              ? bankAccounts.find((b) => b.id === currentConfig.bankAccountId)
               : primaryAccount
             return acct
               ? `${acct.bankName} ···${acct.accountNumber.slice(-4)}${!currentConfig.bankAccountId ? " (primary fallback)" : ""}`
@@ -385,107 +394,70 @@ function ExpoPaymentConfigPanel({
   )
 }
 
-// ─── Exported manager — owns configs state, syncs to mock source ──────────────
-
 interface ExpoPaymentConfigManagerProps {
-  /** When provided, renders only the config for this expo (no expo selector). */
-  expoId?: string
+  expoId: string
+  expo: Expo
+  initialConfigs: ExpoPaymentConfig[]
+  platformPayment: PaymentConfig
+  bankAccounts: BankAccount[]
 }
 
 export function ExpoPaymentConfigManager({
-  expoId: fixedExpoId,
+  expoId,
+  expo,
+  initialConfigs,
+  platformPayment,
+  bankAccounts,
 }: ExpoPaymentConfigManagerProps) {
   const [configs, setConfigs] = useState<ExpoPaymentConfig[]>(() => [
-    ...mockExpoPaymentConfigs,
+    ...initialConfigs,
   ])
-  const [selectedExpoId, setSelectedExpoId] = useState<string>(
-    fixedExpoId ?? "",
-  )
 
-  const expoId = fixedExpoId ?? selectedExpoId
-  const expo = mockExpos.find((e) => e.id === expoId)
-
-  function handleSave(saved: ExpoPaymentConfig) {
+  async function handleSave(saved: ExpoPaymentConfig) {
+    const response = await fetch(
+      `/api/orders/expo-payment-configs/${saved.expoId}`,
+      {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          vnpayEnabled: saved.vnpayEnabled,
+          bankTransferEnabled: saved.bankTransferEnabled,
+          bankAccountId: saved.bankAccountId,
+        }),
+      },
+    )
+    if (!response.ok) {
+      throw new Error("Failed to save expo payment config.")
+    }
+    const persisted = (await response.json()) as ExpoPaymentConfig
     setConfigs((prev) => {
-      const idx = prev.findIndex((c) => c.expoId === saved.expoId)
-      const next = idx !== -1 ? [...prev] : [...prev]
-      if (idx !== -1) next[idx] = saved
-      else next.push(saved)
+      const idx = prev.findIndex((c) => c.expoId === persisted.expoId)
+      const next = [...prev]
+      if (idx !== -1) next[idx] = persisted
+      else next.push(persisted)
       return next
     })
-    const idx = mockExpoPaymentConfigs.findIndex(
-      (c) => c.expoId === saved.expoId,
-    )
-    if (idx !== -1) mockExpoPaymentConfigs[idx] = saved
-    else mockExpoPaymentConfigs.push(saved)
   }
 
-  function handleReset() {
+  async function handleReset() {
+    const response = await fetch(`/api/orders/expo-payment-configs/${expoId}`, {
+      method: "DELETE",
+    })
+    if (!response.ok) {
+      throw new Error("Failed to reset expo payment config.")
+    }
     setConfigs((prev) => prev.filter((c) => c.expoId !== expoId))
-    const idx = mockExpoPaymentConfigs.findIndex((c) => c.expoId === expoId)
-    if (idx !== -1) mockExpoPaymentConfigs.splice(idx, 1)
   }
 
-  // Embedded in expo detail — no selector needed
-  if (fixedExpoId) {
-    if (!expo)
-      return <p className="text-muted-foreground text-sm">Expo not found.</p>
-    return (
-      <ExpoPaymentConfigPanel
-        expoId={expo.id}
-        expoName={expo.name}
-        configs={configs}
-        onSave={handleSave}
-        onReset={handleReset}
-      />
-    )
-  }
-
-  // Standalone page with expo selector
   return (
-    <div className="max-w-2xl space-y-6">
-      <div className="space-y-1.5">
-        <label htmlFor="expo-select" className="font-medium text-sm">
-          Select Expo
-        </label>
-        <Select
-          value={selectedExpoId}
-          onValueChange={(v) => setSelectedExpoId(v)}
-        >
-          <SelectTrigger id="expo-select" className="w-full">
-            <SelectValue placeholder="Choose an expo to configure…" />
-          </SelectTrigger>
-          <SelectContent>
-            {mockExpos.map((e) => {
-              const hasCustom = configs.some(
-                (c) => c.expoId === e.id && !c.isInherited,
-              )
-              return (
-                <SelectItem key={e.id} value={e.id}>
-                  {e.name}
-                  {hasCustom ? " · Custom" : ""}
-                </SelectItem>
-              )
-            })}
-          </SelectContent>
-        </Select>
-      </div>
-
-      {!selectedExpoId ? (
-        <div className="rounded-lg border bg-muted/40 py-10 text-center text-muted-foreground text-sm">
-          Select an expo to view or configure its payment methods.
-        </div>
-      ) : (
-        expo && (
-          <ExpoPaymentConfigPanel
-            expoId={expo.id}
-            expoName={expo.name}
-            configs={configs}
-            onSave={handleSave}
-            onReset={handleReset}
-          />
-        )
-      )}
-    </div>
+    <ExpoPaymentConfigPanel
+      expoId={expo.id}
+      expoName={expo.name}
+      configs={configs}
+      platformPayment={platformPayment}
+      bankAccounts={bankAccounts}
+      onSave={handleSave}
+      onReset={handleReset}
+    />
   )
 }

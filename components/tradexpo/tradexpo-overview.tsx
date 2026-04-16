@@ -22,17 +22,13 @@ import * as React from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  mockAssets,
-  mockBoothTemplates,
-  mockExpos,
-  mockHallTemplates,
-  mockNotifications,
-} from "@/lib/tradexpo/mock-data"
 import type {
   AdminNotification,
+  BoothTemplate,
   Expo,
   ExpoStatus,
+  HallTemplate,
+  ModelAsset,
   NotificationKind,
 } from "@/lib/tradexpo/types"
 import {
@@ -277,22 +273,30 @@ function PendingReviewCard({ expos }: { expos: Expo[] }) {
   )
 }
 
-function TemplatesCard() {
-  const assetMap = React.useMemo(() => getAssetMap(mockAssets), [])
+function TemplatesCard({
+  assets,
+  hallTemplates,
+  boothTemplates,
+}: {
+  assets: ModelAsset[]
+  hallTemplates: HallTemplate[]
+  boothTemplates: BoothTemplate[]
+}) {
+  const assetMap = React.useMemo(() => getAssetMap(assets), [assets])
 
-  const hallReady = mockHallTemplates.filter(
+  const hallReady = hallTemplates.filter(
     (t) => getHallTemplateStatus(t, assetMap) === "Published",
   ).length
 
-  const boothReady = mockBoothTemplates.filter(
+  const boothReady = boothTemplates.filter(
     (t) => getBoothTemplateStatus(t, assetMap) === "Published",
   ).length
 
-  const hallFailed = mockHallTemplates.filter(
+  const hallFailed = hallTemplates.filter(
     (t) => getHallTemplateStatus(t, assetMap) === "Failed",
   ).length
 
-  const boothFailed = mockBoothTemplates.filter(
+  const boothFailed = boothTemplates.filter(
     (t) => getBoothTemplateStatus(t, assetMap) === "Failed",
   ).length
 
@@ -313,7 +317,7 @@ function TemplatesCard() {
               <LayoutTemplateIcon className="h-3 w-3" /> Hall
             </p>
             <p className="mt-1 font-semibold text-sm">
-              {hallReady}/{mockHallTemplates.length}{" "}
+              {hallReady}/{hallTemplates.length}{" "}
               <span className="font-normal text-muted-foreground text-xs">
                 published
               </span>
@@ -324,7 +328,7 @@ function TemplatesCard() {
               <ToyBrickIcon className="h-3 w-3" /> Booth
             </p>
             <p className="mt-1 font-semibold text-sm">
-              {boothReady}/{mockBoothTemplates.length}{" "}
+              {boothReady}/{boothTemplates.length}{" "}
               <span className="font-normal text-muted-foreground text-xs">
                 published
               </span>
@@ -344,8 +348,18 @@ function TemplatesCard() {
 
 // ─── reminders ───────────────────────────────────────────────────────────────
 
-function RemindersPanel({ expos }: { expos: Expo[] }) {
-  const assetMap = React.useMemo(() => getAssetMap(mockAssets), [])
+function RemindersPanel({
+  expos,
+  assets,
+  hallTemplates,
+  boothTemplates,
+}: {
+  expos: Expo[]
+  assets: ModelAsset[]
+  hallTemplates: HallTemplate[]
+  boothTemplates: BoothTemplate[]
+}) {
+  const assetMap = React.useMemo(() => getAssetMap(assets), [assets])
 
   const pendingApproval = expos.filter((e) => e.status === "Pending Review")
 
@@ -365,12 +379,12 @@ function RemindersPanel({ expos }: { expos: Expo[] }) {
   )
 
   const failedTemplates = [
-    ...mockHallTemplates
+    ...hallTemplates
       .filter((t) => getHallTemplateStatus(t, assetMap) === "Failed")
-      .map((t) => ({ name: t.name, kind: "Hall Template" })),
-    ...mockBoothTemplates
+      .map((t) => ({ name: t.name, kind: "Hall Template" as const })),
+    ...boothTemplates
       .filter((t) => getBoothTemplateStatus(t, assetMap) === "Failed")
-      .map((t) => ({ name: t.name, kind: "Booth Template" })),
+      .map((t) => ({ name: t.name, kind: "Booth Template" as const })),
   ]
 
   const hasAny =
@@ -480,7 +494,10 @@ function RemindersPanel({ expos }: { expos: Expo[] }) {
               </p>
               <ul className="mt-2 space-y-1">
                 {failedTemplates.map((t) => (
-                  <li key={t.name} className="text-muted-foreground text-xs">
+                  <li
+                    key={`${t.kind}-${t.name}`}
+                    className="text-muted-foreground text-xs"
+                  >
                     {t.name} <span className="opacity-60">({t.kind})</span>
                   </li>
                 ))}
@@ -525,10 +542,14 @@ const KIND_META: Record<
   },
 }
 
-function NotificationFeed() {
+function NotificationFeed({
+  initialNotifications,
+}: {
+  initialNotifications: AdminNotification[]
+}) {
   const [notifications, setNotifications] = React.useState<AdminNotification[]>(
     () =>
-      [...mockNotifications].sort(
+      [...initialNotifications].sort(
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       ),
@@ -537,18 +558,42 @@ function NotificationFeed() {
 
   const unreadCount = notifications.filter((n) => !n.isRead).length
 
-  function markAllRead() {
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
+  async function markAllRead() {
+    try {
+      const response = await fetch("/api/tradexpo/notifications", {
+        method: "PATCH",
+      })
+      if (!response.ok) return
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
+    } catch {
+      // no-op
+    }
   }
 
-  function dismiss(id: string) {
-    setNotifications((prev) => prev.filter((n) => n.id !== id))
+  async function dismiss(id: string) {
+    try {
+      const response = await fetch(`/api/tradexpo/notifications/${id}`, {
+        method: "DELETE",
+      })
+      if (!response.ok) return
+      setNotifications((prev) => prev.filter((n) => n.id !== id))
+    } catch {
+      // no-op
+    }
   }
 
-  function markRead(id: string) {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
-    )
+  async function markRead(id: string) {
+    try {
+      const response = await fetch(`/api/tradexpo/notifications/${id}`, {
+        method: "PATCH",
+      })
+      if (!response.ok) return
+      setNotifications((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
+      )
+    } catch {
+      // no-op
+    }
   }
 
   const visible = showAll ? notifications : notifications.slice(0, 5)
@@ -666,8 +711,23 @@ function NotificationFeed() {
 
 // ─── root ─────────────────────────────────────────────────────────────────────
 
-export function TradeXpoOverview() {
-  const expos = React.useMemo(() => mockExpos.map((e) => ({ ...e })), [])
+export function TradeXpoOverview({
+  initialAssets,
+  initialHallTemplates,
+  initialBoothTemplates,
+  initialExpos,
+  initialNotifications,
+}: {
+  initialAssets: ModelAsset[]
+  initialHallTemplates: HallTemplate[]
+  initialBoothTemplates: BoothTemplate[]
+  initialExpos: Expo[]
+  initialNotifications: AdminNotification[]
+}) {
+  const expos = React.useMemo(
+    () => initialExpos.map((e) => ({ ...e })),
+    [initialExpos],
+  )
 
   return (
     <div className="grid gap-4">
@@ -675,12 +735,21 @@ export function TradeXpoOverview() {
         <ExpoStatsCard expos={expos} />
         <LiveNowCard expos={expos} />
         <PendingReviewCard expos={expos} />
-        <TemplatesCard />
+        <TemplatesCard
+          assets={initialAssets}
+          hallTemplates={initialHallTemplates}
+          boothTemplates={initialBoothTemplates}
+        />
       </div>
 
-      <RemindersPanel expos={expos} />
+      <RemindersPanel
+        expos={expos}
+        assets={initialAssets}
+        hallTemplates={initialHallTemplates}
+        boothTemplates={initialBoothTemplates}
+      />
 
-      <NotificationFeed />
+      <NotificationFeed initialNotifications={initialNotifications} />
     </div>
   )
 }

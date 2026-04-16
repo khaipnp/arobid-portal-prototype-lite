@@ -22,6 +22,8 @@ import {
   getBoothTemplateStatus,
 } from "@/lib/tradexpo/utils"
 
+export const dynamic = "force-dynamic"
+
 export default async function BoothTemplateDetailPage({
   params,
 }: {
@@ -131,7 +133,10 @@ export default async function BoothTemplateDetailPage({
         </Card>
       </div>
 
-      <BoothTemplateDetailManager templateId={templateId} />
+      <BoothTemplateDetailManager
+        initialTemplate={template}
+        initialAssets={assets}
+      />
     </DashboardShell>
   )
 }

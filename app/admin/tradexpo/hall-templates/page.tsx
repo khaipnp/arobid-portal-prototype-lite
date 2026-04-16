@@ -6,6 +6,8 @@ import {
   listHallTemplateUsage,
 } from "@/lib/tradexpo/db/hall-templates"
 
+export const dynamic = "force-dynamic"
+
 export default async function HallTemplateLibraryPage() {
   const [assets, templates, usages] = await Promise.all([
     listHallTemplateAssets(),
