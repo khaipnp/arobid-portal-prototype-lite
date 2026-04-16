@@ -68,7 +68,7 @@ export async function seedPlatform() {
   for (const c of mockExpoCategories) {
     await sql`
       insert into expo_categories (id, name, level, parent_id)
-      values (${c.id}, ${c.name}, ${c.level}, ${c.parentId ?? null})
+      values (${c.id}, ${c.name}, 1, null)
     `
   }
 

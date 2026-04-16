@@ -107,8 +107,8 @@ export type ExpoStatus =
 export interface ExpoCategory {
   id: string
   name: string
-  level: 1 | 2 | 3 | 4
-  parentId?: string
+  /** Categories are flat (single-level taxonomy). */
+  level: 1
 }
 
 export interface Expo {
@@ -116,12 +116,43 @@ export interface Expo {
   name: string
   thumbnailUrl: string
   ownerEmail: string
+  /** ISO date (YYYY-MM-DD), derived from `startAt` when present. */
   startDate: string
+  /** ISO date (YYYY-MM-DD), derived from `endAt` when present. */
   endDate: string
+  /** Full timestamps for lazy timeline phase (US-02). */
+  startAt?: string
+  endAt?: string
   status: ExpoStatus
   categoryIds: string[]
   createdAt: string
+  description?: string
+  timezone?: string
+  expoTemplateId?: string | null
+  ownerUserId?: string | null
 }
+
+/** Booth tier counts per hall block (US-03). */
+export interface ExpoHallDraft {
+  hallName: string
+  hallTemplateId: string
+  basicQty: number
+  professionalQty: number
+  premiumQty: number
+}
+
+export interface ExpoHall extends ExpoHallDraft {
+  id: string
+  expoId: string
+  sortOrder: number
+}
+
+export interface ExpoLayoutTemplate {
+  id: string
+  name: string
+}
+
+export type ExpoTimelinePhase = "Upcoming" | "Live" | "Archived"
 
 export type NotificationKind =
   | "approval_needed"

@@ -4,6 +4,7 @@ import {
   CheckIcon,
   ChevronDownIcon,
   MoreHorizontalIcon,
+  PlusIcon,
   SearchIcon,
 } from "lucide-react"
 import Image from "next/image"
@@ -281,6 +282,14 @@ export function ExpoListManager({
     <div className="grid gap-4">
       <section>
         <div className="grid gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <Button asChild className="w-fit">
+              <Link href="/admin/tradexpo/expos/new">
+                <PlusIcon className="mr-2 size-4" />
+                Create new
+              </Link>
+            </Button>
+          </div>
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
             <InputGroup>
               <InputGroupInput
@@ -332,7 +341,6 @@ export function ExpoListManager({
                       e.preventDefault()
                       toggleCategory(cat.id)
                     }}
-                    className={cn(cat.level > 1 && "pl-6")}
                   >
                     <span className="mr-2 flex h-4 w-4 items-center justify-center rounded border border-muted-foreground/30">
                       {categoryFilter.includes(cat.id) && (

@@ -1,37 +1,14 @@
 import { NextResponse } from "next/server"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 import {
-  deleteExpo,
-  getExpoById,
+  createExpoWithHalls,
   listExpoLayoutTemplates,
-  updateExpoStatus,
-  updateExpoWithHalls,
 } from "@/lib/tradexpo/db/platform-data"
 import { validateHallBlocks } from "@/lib/tradexpo/expo-create-validation"
-import type { ExpoHallDraft, ExpoStatus } from "@/lib/tradexpo/types"
+import type { ExpoHallDraft } from "@/lib/tradexpo/types"
 
-interface Props {
-  params: Promise<{ expoId: string }>
-}
-
-export async function PATCH(request: Request, { params }: Props) {
-  const { expoId } = await params
-  const body = (await request.json()) as { status?: ExpoStatus }
-  if (!body.status) {
-    return NextResponse.json({ error: "Missing status." }, { status: 400 })
-  }
-  await updateExpoStatus(expoId, body.status)
-  return NextResponse.json({ ok: true })
-}
-
-export async function PUT(request: Request, { params }: Props) {
+export async function POST(request: Request) {
   await ensurePlatformSchema()
-  const { expoId } = await params
-
-  const existing = await getExpoById(expoId)
-  if (!existing) {
-    return NextResponse.json({ error: "Expo not found." }, { status: 404 })
-  }
 
   const body = (await request.json()) as {
     name?: string
@@ -96,6 +73,15 @@ export async function PUT(request: Request, { params }: Props) {
     )
   }
 
+  const now = Date.now()
+  const startMs = new Date(startAt).getTime()
+  if (!Number.isNaN(startMs) && startMs < now - 60_000) {
+    return NextResponse.json(
+      { error: "Start date/time cannot be in the past." },
+      { status: 400 },
+    )
+  }
+
   const timezone = body.timezone?.trim() || "Asia/Bangkok"
   const ownerUserId = body.ownerUserId?.trim() ?? ""
   const ownerEmail = body.ownerEmail?.trim().toLowerCase() ?? ""
@@ -113,7 +99,7 @@ export async function PUT(request: Request, { params }: Props) {
   }
 
   try {
-    await updateExpoWithHalls(expoId, {
+    const result = await createExpoWithHalls({
       name,
       description,
       thumbnailUrl: body.thumbnailUrl?.trim() ?? "",
@@ -126,15 +112,9 @@ export async function PUT(request: Request, { params }: Props) {
       ownerEmail,
       halls,
     })
-    return NextResponse.json({ ok: true })
+    return NextResponse.json({ id: result.id })
   } catch (e) {
-    const message = e instanceof Error ? e.message : "Failed to update expo."
+    const message = e instanceof Error ? e.message : "Failed to create expo."
     return NextResponse.json({ error: message }, { status: 400 })
   }
-}
-
-export async function DELETE(_: Request, { params }: Props) {
-  const { expoId } = await params
-  await deleteExpo(expoId)
-  return NextResponse.json({ ok: true })
 }
