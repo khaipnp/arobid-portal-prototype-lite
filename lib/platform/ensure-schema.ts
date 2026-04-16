@@ -271,6 +271,40 @@ export async function ensurePlatformSchema() {
     )
   `
 
+  await sql`
+    create table if not exists notifications (
+      notification_id uuid primary key,
+      user_id text not null,
+      source text not null,
+      type text not null,
+      title varchar(80) not null,
+      body varchar(120) not null,
+      deep_link_path text not null,
+      reference_id text,
+      reference_type text,
+      is_read boolean not null default false,
+      created_at timestamptz not null default now(),
+      read_at timestamptz
+    )
+  `
+
+  await sql`
+    create index if not exists idx_notifications_user_created
+    on notifications (user_id, created_at desc)
+  `
+
+  await sql`
+    create index if not exists idx_notifications_user_unread
+    on notifications (user_id)
+    where is_read = false
+  `
+
+  await sql`
+    create index if not exists idx_notifications_dedupe_lookup
+    on notifications (user_id, source, type, reference_id, created_at desc)
+    where reference_id is not null and reference_type is not null
+  `
+
   await migrateExpoManagementSchema()
 }
 

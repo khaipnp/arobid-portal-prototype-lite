@@ -6,5 +6,6 @@
 
 ## Learned Workspace Facts
 - Chat service product specs are maintained under `wiki/Module/Core/Chat Service` and are used to drive `deal-room` behavior updates.
+- Notification Service product specs are maintained under `wiki/Module/Core/Notification Service` and are used to drive notification API and UI work.
 - The workspace has a Neon DB integration via `lib/db/neon.ts`, and eVoucher is expected to use DB access patterns instead of direct mock imports.
 - TradeXpo Expo Management specs (including expo list, create expo, and hall configuration) live under `wiki/Module/TradeXpo/Expo Management/`.

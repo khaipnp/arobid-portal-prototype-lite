@@ -18,7 +18,8 @@
     "db:studio": "prisma studio",
     "tradexpo:seed": "bun scripts/tradexpo/seed.ts",
     "evoucher:seed": "bun scripts/evoucher/seed.ts",
-    "platform:seed": "bun scripts/platform/seed.ts"
+    "platform:seed": "bun scripts/platform/seed.ts",
+    "notifications:seed": "bun scripts/notifications/seed.ts"
   },
   "prisma": {
     "seed": "bun prisma/seed.ts"
