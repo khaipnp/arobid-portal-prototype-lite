@@ -127,13 +127,55 @@ const customers = [
 ]
 
 const expos = [
-  { name: "Vietnam Tech Summit 2026", ref: "B-A01", tier: "Premium" },
-  { name: "Vietnam Tech Summit 2026", ref: "B-B03", tier: "Standard" },
-  { name: "GreenExpo Hanoi 2026", ref: "B-C02", tier: "Premium" },
-  { name: "GreenExpo Hanoi 2026", ref: "B-D05", tier: "Economy" },
-  { name: "Digital Innovation Fair 2026", ref: "B-A07", tier: "Premium" },
-  { name: "Digital Innovation Fair 2026", ref: "B-B12", tier: "Standard" },
-  { name: "HCMC Trade Expo 2026", ref: "B-E03", tier: "Economy" },
+  {
+    expoId: "expo-001",
+    name: "Vietnam Tech Summit 2026",
+    ref: "B-A01",
+    tier: "Premium",
+    partnerName: "Tech Events Vietnam",
+  },
+  {
+    expoId: "expo-002",
+    name: "Vietnam Tech Summit 2026",
+    ref: "B-B03",
+    tier: "Standard",
+    partnerName: "Tech Events Vietnam",
+  },
+  {
+    expoId: "expo-003",
+    name: "GreenExpo Hanoi 2026",
+    ref: "B-C02",
+    tier: "Premium",
+    partnerName: "GreenLife Organizer",
+  },
+  {
+    expoId: "expo-003",
+    name: "GreenExpo Hanoi 2026",
+    ref: "B-D05",
+    tier: "Economy",
+    partnerName: "GreenLife Organizer",
+  },
+  {
+    expoId: "expo-004",
+    name: "Digital Innovation Fair 2026",
+    ref: "B-A07",
+    tier: "Premium",
+    partnerName: "DIF Management",
+  },
+  {
+    expoId: "expo-004",
+    name: "Digital Innovation Fair 2026",
+    ref: "B-B12",
+    tier: "Standard",
+    partnerName: "DIF Management",
+  },
+  {
+    expoId: "expo-005",
+    name: "HCMC Trade Expo 2026",
+    ref: "B-E03",
+    tier: "Economy",
+    partnerName: "Saigon Expo Hub",
+  },
 ]
 
 function orderId(n: number) {
@@ -151,7 +193,10 @@ function makeOrder(
   const c = customers[cIdx % customers.length]
   const e = expos[eIdx % expos.length]
   const amounts = [15_000_000, 8_500_000, 25_000_000, 5_000_000, 12_000_000]
-  const amount = amounts[(n + eIdx) % amounts.length]
+  const originalAmount = amounts[(n + eIdx) % amounts.length]
+  const hasVoucher = n % 4 === 0
+  const discountAmount = hasVoucher ? 500_000 : 0
+  const amount = originalAmount - discountAmount
   const createdAt = iso(daysAgo)
   const expiresAt =
     status === "Pending Payment" || status === "Awaiting Confirmation"
@@ -163,12 +208,16 @@ function makeOrder(
     customerName: c.name,
     customerEmail: c.email,
     customerCompany: c.company,
+    partnerName: e.partnerName,
     orderType: "booth_registration",
-    referenceId: `booth-${n}`,
+    referenceId: `booth-registration-${String(n).padStart(4, "0")}`,
     expoName: e.name,
     boothRef: e.ref,
     boothTier: e.tier,
+    originalAmount,
+    discountAmount,
     amount,
+    voucherId: hasVoucher ? `VOUCHER-${String(n).padStart(4, "0")}` : undefined,
     paymentMethod: method,
     status,
     expiresAt,
@@ -205,109 +254,124 @@ export const mockOrders: Order[] = [
   makeOrder(25, 3, 0, "vnpay", "Paid", 20),
 ]
 
-export const mockTransactionLog: TransactionLogEntry[] = [
-  // ORD-2026-00001 — Awaiting Confirmation
-  {
-    id: "tx-001-1",
-    orderId: orderId(1),
-    type: "status_change",
-    status: "Pending Payment",
-    actor: "System",
-    note: "Order created",
-    processedAt: iso(0.1),
-  },
-  {
-    id: "tx-001-2",
-    orderId: orderId(1),
+function withOffset(isoString: string, hours: number) {
+  return new Date(new Date(isoString).getTime() + hours * 3600_000).toISOString()
+}
+
+function buildTransactionLogForOrder(order: Order): TransactionLogEntry[] {
+  const entries: TransactionLogEntry[] = [
+    {
+      id: `tx-${order.id}-1`,
+      orderId: order.id,
+      type: "status_change",
+      status: "Pending Payment",
+      actor: "System",
+      note: "Order created",
+      processedAt: order.createdAt,
+    },
+  ]
+
+  if (order.paymentMethod === "vnpay") {
+    if (order.status === "Paid") {
+      entries.push({
+        id: `tx-${order.id}-2`,
+        orderId: order.id,
+        type: "payment",
+        status: "Paid",
+        actor: "VNPay Gateway",
+        note: "VNPay callback: success",
+        processedAt: withOffset(order.createdAt, 0.2),
+      })
+    } else if (order.status === "Failed") {
+      entries.push({
+        id: `tx-${order.id}-2`,
+        orderId: order.id,
+        type: "payment",
+        status: "Failed",
+        actor: "VNPay Gateway",
+        note: "VNPay callback: failed",
+        processedAt: withOffset(order.createdAt, 0.2),
+      })
+    } else if (order.status === "Cancelled") {
+      entries.push({
+        id: `tx-${order.id}-2`,
+        orderId: order.id,
+        type: "payment",
+        status: "Cancelled",
+        actor: "VNPay Gateway",
+        note: "Customer cancelled on VNPay",
+        processedAt: withOffset(order.createdAt, 0.2),
+      })
+    } else if (order.status === "Expired") {
+      entries.push({
+        id: `tx-${order.id}-2`,
+        orderId: order.id,
+        type: "status_change",
+        status: "Expired",
+        actor: "System",
+        note: "VNPay timeout",
+        processedAt: withOffset(order.createdAt, 72),
+      })
+    }
+    return entries
+  }
+
+  if (order.status === "Pending Payment") return entries
+
+  entries.push({
+    id: `tx-${order.id}-2`,
+    orderId: order.id,
     type: "payment",
     status: "Awaiting Confirmation",
-    actor: customers[0].name,
+    actor: order.customerName,
     note: "Customer confirmed bank transfer",
-    processedAt: iso(0.08),
-  },
-  // ORD-2026-00004 — Paid (bank transfer)
-  {
-    id: "tx-004-1",
-    orderId: orderId(4),
-    type: "status_change",
-    status: "Pending Payment",
-    actor: "System",
-    note: "Order created",
-    processedAt: iso(1),
-  },
-  {
-    id: "tx-004-2",
-    orderId: orderId(4),
-    type: "payment",
-    status: "Awaiting Confirmation",
-    actor: customers[3].name,
-    note: "Customer confirmed bank transfer",
-    processedAt: iso(0.9),
-  },
-  {
-    id: "tx-004-3",
-    orderId: orderId(4),
-    type: "payment",
-    status: "Paid",
-    actor: "Admin (admin@arobid.com)",
-    note: "Payment confirmed after bank statement verification",
-    processedAt: iso(0.8),
-  },
-  // ORD-2026-00005 — Paid (VNPay)
-  {
-    id: "tx-005-1",
-    orderId: orderId(5),
-    type: "status_change",
-    status: "Pending Payment",
-    actor: "System",
-    note: "Order created",
-    processedAt: iso(2),
-  },
-  {
-    id: "tx-005-2",
-    orderId: orderId(5),
-    type: "payment",
-    status: "Paid",
-    actor: "VNPay Gateway",
-    note: "VNPay callback: success — ref VNP2026040500123",
-    processedAt: iso(1.9),
-  },
-  // ORD-2026-00014 — Rejected
-  {
-    id: "tx-014-1",
-    orderId: orderId(14),
-    type: "status_change",
-    status: "Pending Payment",
-    actor: "System",
-    note: "Order created",
-    processedAt: iso(3),
-  },
-  {
-    id: "tx-014-2",
-    orderId: orderId(14),
-    type: "payment",
-    status: "Awaiting Confirmation",
-    actor: customers[6].name,
-    note: "Customer confirmed bank transfer",
-    processedAt: iso(2.9),
-  },
-  {
-    id: "tx-014-3",
-    orderId: orderId(14),
-    type: "payment",
-    status: "Rejected",
-    actor: "Admin (admin@arobid.com)",
-    rejectionReason:
-      "No matching transfer found in bank statement for this order ID and amount.",
-    processedAt: iso(2.5),
-  },
-  {
-    id: "tx-014-4",
-    orderId: orderId(14),
-    type: "status_change",
-    status: "Pending Payment",
-    actor: "System",
-    note: "Order reverted to Pending Payment — 72h retry window started",
-    processedAt: iso(2.5),
-  },
-]
+    processedAt: withOffset(order.createdAt, 0.3),
+  })
+
+  if (order.status === "Awaiting Confirmation") return entries
+
+  if (order.status === "Paid") {
+    entries.push({
+      id: `tx-${order.id}-3`,
+      orderId: order.id,
+      type: "payment",
+      status: "Paid",
+      actor: "Admin (admin@arobid.com)",
+      note: "Payment confirmed after bank statement verification",
+      processedAt: withOffset(order.createdAt, 1),
+    })
+    return entries
+  }
+
+  if (order.status === "Rejected") {
+    entries.push({
+      id: `tx-${order.id}-3`,
+      orderId: order.id,
+      type: "payment",
+      status: "Rejected",
+      actor: "Admin (admin@arobid.com)",
+      rejectionReason:
+        "No matching transfer found in bank statement for this order ID and amount.",
+      processedAt: withOffset(order.createdAt, 1),
+    })
+    return entries
+  }
+
+  if (order.status === "Expired") {
+    entries.push({
+      id: `tx-${order.id}-3`,
+      orderId: order.id,
+      type: "status_change",
+      status: "Expired",
+      actor: "System",
+      note: "Payment window expired after 72h",
+      processedAt: withOffset(order.createdAt, 72),
+    })
+  }
+
+  return entries
+}
+
+export const mockTransactionLog: TransactionLogEntry[] = mockOrders.flatMap(
+  (order) => buildTransactionLogForOrder(order),
+)

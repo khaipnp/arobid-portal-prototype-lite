@@ -58,6 +58,7 @@ The Order Management Dashboard is Admin's central view for all orders on the pla
 |--------|-------------|
 | Order ID | Display ID — e.g. `ORD-2026-00001` |
 | Customer | Full name + email |
+| Partner Name | Name of the Expo Owner associated with this order (e.g. Expo Organiser). Blank for order types not linked to an Expo. |
 | Order Type | e.g. Booth Registration |
 | Reference | e.g. Expo name + Booth ref |
 | Amount | Total in VND |
@@ -84,7 +85,7 @@ Accessible via "View" on each row. Shows:
 - Order header: Order ID, status badge, payment method, created date, expiry (if applicable)
 - Customer info: name, email, company
 - Order info: type, reference (expo name, booth ref, tier)
-- Amount breakdown: original amount, discount (if voucher applied), final amount
+- Amount breakdown: original amount, **Số tiền giảm trừ** (eVoucher discount — shown only when a voucher was applied; hidden when no voucher), final amount paid
 - Transaction log: chronological list of status transitions with timestamp and actor (System / Admin name)
 - For `Awaiting Confirmation` orders: **"Confirm Payment"** and **"Reject Payment"** action buttons → triggers [US-04][CORE]
 
@@ -138,10 +139,13 @@ flowchart LR
 | AC-04 | Admin applies multiple filters simultaneously | Filters applied | List shows orders matching all selected filter criteria combined |
 | AC-05 | Admin searches by Order ID | Search submitted | List filters to the matching order; partial match supported |
 | AC-06 | Admin searches by customer name or email | Search submitted | List filters to orders belonging to matching customers |
-| AC-07 | Admin clicks "View" on any order | Detail page / panel opens | Detail shows: Order ID, status, payment method, created date, expiry (if applicable), customer name/email/company, order type, reference (expo + booth), amount breakdown, and transaction log |
+| AC-07 | Admin clicks "View" on any order | Detail page / panel opens | Detail shows: Order ID, status, payment method, created date, expiry (if applicable), customer name/email/company, order type, reference (expo + booth), amount breakdown (original amount, Số tiền giảm trừ if voucher applied, final amount), and transaction log |
 | AC-08 | Admin views detail of an `Awaiting Confirmation` order | Detail page opens | "Confirm Payment" (primary) and "Reject Payment" (secondary) action buttons are visible |
 | AC-09 | Admin views detail of an order in any other status | Detail page opens | No action buttons shown — read-only view |
 | AC-10 | Admin applies a date range filter | Filter applied | Only orders with `createdAt` within the selected range are shown |
+| AC-11 | Order list renders | For `booth_registration` orders | The `Partner Name` column shows the Expo Owner's name; blank for non-Expo order types |
+| AC-12 | Admin views detail of an order where an eVoucher was applied | Detail page opens | Amount breakdown shows: original amount, Số tiền giảm trừ (eVoucher discount amount), and final amount paid |
+| AC-13 | Admin views detail of an order where no eVoucher was applied | Detail page opens | Amount breakdown shows only: original amount = final amount paid; no discount line is shown |
 
 ---
 

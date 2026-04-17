@@ -186,18 +186,36 @@ export async function ensurePlatformSchema() {
       customer_name text not null,
       customer_email text not null,
       customer_company text not null,
+      partner_name text,
       order_type text not null,
       reference_id text not null,
       expo_name text not null,
       booth_ref text not null,
       booth_tier text not null,
+      original_amount numeric not null default 0,
+      discount_amount numeric not null default 0,
       amount numeric not null,
+      voucher_id text,
       payment_method text not null,
       status text not null,
       expires_at timestamptz,
       created_at timestamptz not null,
       updated_at timestamptz not null
     )
+  `
+
+  await sql`alter table orders add column if not exists partner_name text`
+  await sql`
+    alter table orders add column if not exists original_amount numeric not null default 0
+  `
+  await sql`
+    alter table orders add column if not exists discount_amount numeric not null default 0
+  `
+  await sql`alter table orders add column if not exists voucher_id text`
+  await sql`
+    update orders
+    set original_amount = amount
+    where original_amount = 0 and amount <> 0
   `
 
   await sql`

@@ -96,12 +96,16 @@ export async function listOrders(): Promise<Order[]> {
     customer_name: string
     customer_email: string
     customer_company: string
+    partner_name: string | null
     order_type: Order["orderType"]
     reference_id: string
     expo_name: string
     booth_ref: string
     booth_tier: string
+    original_amount: string | number
+    discount_amount: string | number
     amount: string | number
+    voucher_id: string | null
     payment_method: Order["paymentMethod"]
     status: Order["status"]
     expires_at: string | Date | null
@@ -114,12 +118,16 @@ export async function listOrders(): Promise<Order[]> {
     customerName: r.customer_name,
     customerEmail: r.customer_email,
     customerCompany: r.customer_company,
+    partnerName: r.partner_name ?? undefined,
     orderType: r.order_type,
     referenceId: r.reference_id,
     expoName: r.expo_name,
     boothRef: r.booth_ref,
     boothTier: r.booth_tier,
+    originalAmount: Number(r.original_amount),
+    discountAmount: Number(r.discount_amount),
     amount: Number(r.amount),
+    voucherId: r.voucher_id ?? undefined,
     paymentMethod: r.payment_method,
     status: r.status,
     expiresAt: r.expires_at ? toIso(r.expires_at) : undefined,

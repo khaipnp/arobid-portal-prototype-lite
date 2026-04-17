@@ -45,5 +45,6 @@ bun-debug.log*
 *.tsbuildinfo
 next-env.d.ts
 
-.cursor
+.cursor/*
 AGENT.md
+.vscode/*

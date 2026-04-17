@@ -187,6 +187,9 @@ export function OrderDetail({
                 {order.id}
               </span>
               <OrderStatusBadge status={order.status} />
+              <Badge variant="outline" className="text-xs">
+                {order.paymentMethod === "vnpay" ? "VNPay" : "Bank Transfer"}
+              </Badge>
             </div>
             <p className="text-muted-foreground text-sm">
               Created {formatDate(order.createdAt)}
@@ -226,10 +229,12 @@ export function OrderDetail({
           <div className="grid grid-cols-2 gap-y-3 text-sm">
             <span className="text-muted-foreground">Order Type</span>
             <span className="capitalize">
-              {order.orderType.replace("_", " ")}
+              {order.orderType === "booth_registration"
+                ? "Booth Registration"
+                : "B2B Subscription"}
             </span>
 
-            <span className="text-muted-foreground">Expo</span>
+            <span className="text-muted-foreground">Reference</span>
             <span>{order.expoName}</span>
 
             <span className="text-muted-foreground">Booth Reference</span>
@@ -238,13 +243,12 @@ export function OrderDetail({
             <span className="text-muted-foreground">Booth Tier</span>
             <span>{order.boothTier}</span>
 
-            <span className="text-muted-foreground">Payment Method</span>
-            <Badge variant="outline" className="w-fit text-xs">
-              {order.paymentMethod === "vnpay" ? "VNPay" : "Bank Transfer"}
-            </Badge>
-
-            <span className="text-muted-foreground">Amount</span>
-            <span className="font-semibold">{formatVND(order.amount)}</span>
+            {order.partnerName && (
+              <>
+                <span className="text-muted-foreground">Partner Name</span>
+                <span>{order.partnerName}</span>
+              </>
+            )}
           </div>
         </div>
 
@@ -263,6 +267,28 @@ export function OrderDetail({
             <span className="text-muted-foreground">Company</span>
             <span>{order.customerCompany}</span>
           </div>
+        </div>
+      </div>
+
+      <div className="space-y-4 rounded-lg border p-5">
+        <h2 className="font-semibold text-muted-foreground text-sm uppercase tracking-wide">
+          Amount Breakdown
+        </h2>
+        <div className="grid gap-y-3 text-sm sm:grid-cols-2">
+          <span className="text-muted-foreground">Original Amount</span>
+          <span className="font-medium">{formatVND(order.originalAmount)}</span>
+
+          {order.discountAmount > 0 && (
+            <>
+              <span className="text-muted-foreground">Số tiền giảm trừ</span>
+              <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                -{formatVND(order.discountAmount)}
+              </span>
+            </>
+          )}
+
+          <span className="text-muted-foreground">Final Amount Paid</span>
+          <span className="font-semibold">{formatVND(order.amount)}</span>
         </div>
       </div>
 

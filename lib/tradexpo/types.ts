@@ -193,12 +193,16 @@ export interface Order {
   customerName: string
   customerEmail: string
   customerCompany: string
+  partnerName?: string
   orderType: OrderType
   referenceId: string
   expoName: string
   boothRef: string
   boothTier: string
+  originalAmount: number
+  discountAmount: number
   amount: number
+  voucherId?: string
   paymentMethod: PaymentMethod
   status: OrderStatus
   expiresAt?: string

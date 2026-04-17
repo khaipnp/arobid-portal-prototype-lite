@@ -1,16 +1,24 @@
 "use client"
 
-import { AlertCircleIcon, FilterXIcon, SearchIcon } from "lucide-react"
+import {
+  AlertCircleIcon,
+  CheckIcon,
+  ChevronsUpDownIcon,
+  FilterXIcon,
+  SearchIcon,
+} from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { OrderStatusBadge } from "@/components/orders/order-status-badge"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   type DateRange,
   DateRangePicker,
 } from "@/components/ui/date-range-picker"
 import { Input } from "@/components/ui/input"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
   Select,
   SelectContent,
@@ -34,6 +42,7 @@ import type {
 } from "@/lib/tradexpo/types"
 
 const PAGE_SIZE = 20
+const FILTERS_SESSION_KEY = "admin-order-management-filters"
 
 const ALL_STATUSES: OrderStatus[] = [
   "Pending Payment",
@@ -77,11 +86,54 @@ export function OrderManagementDashboard({
   )
 
   const [search, setSearch] = useState("")
-  const [statusFilter, setStatusFilter] = useState<"all" | OrderStatus>("all")
+  const [statusFilters, setStatusFilters] = useState<OrderStatus[]>([])
   const [methodFilter, setMethodFilter] = useState<"all" | PaymentMethod>("all")
   const [typeFilter, setTypeFilter] = useState<"all" | OrderType>("all")
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
   const [page, setPage] = useState(1)
+
+  useEffect(() => {
+    const raw = sessionStorage.getItem(FILTERS_SESSION_KEY)
+    if (!raw) return
+    try {
+      const parsed = JSON.parse(raw) as {
+        search?: string
+        statusFilters?: OrderStatus[]
+        methodFilter?: "all" | PaymentMethod
+        typeFilter?: "all" | OrderType
+        dateFrom?: string
+        dateTo?: string
+      }
+      setSearch(parsed.search ?? "")
+      setStatusFilters(
+        Array.isArray(parsed.statusFilters) ? parsed.statusFilters : [],
+      )
+      setMethodFilter(parsed.methodFilter ?? "all")
+      setTypeFilter(parsed.typeFilter ?? "all")
+      if (parsed.dateFrom || parsed.dateTo) {
+        setDateRange({
+          from: parsed.dateFrom ? new Date(parsed.dateFrom) : undefined,
+          to: parsed.dateTo ? new Date(parsed.dateTo) : undefined,
+        })
+      }
+    } catch {
+      // Ignore invalid stored filters.
+    }
+  }, [])
+
+  useEffect(() => {
+    sessionStorage.setItem(
+      FILTERS_SESSION_KEY,
+      JSON.stringify({
+        search,
+        statusFilters,
+        methodFilter,
+        typeFilter,
+        dateFrom: dateRange?.from?.toISOString(),
+        dateTo: dateRange?.to?.toISOString(),
+      }),
+    )
+  }, [search, statusFilters, methodFilter, typeFilter, dateRange])
 
   const awaitingCount = orders.filter(
     (o) => o.status === "Awaiting Confirmation",
@@ -97,7 +149,8 @@ export function OrderManagementDashboard({
         !o.customerEmail.toLowerCase().includes(q)
       )
         return false
-      if (statusFilter !== "all" && o.status !== statusFilter) return false
+      if (statusFilters.length > 0 && !statusFilters.includes(o.status))
+        return false
       if (methodFilter !== "all" && o.paymentMethod !== methodFilter)
         return false
       if (typeFilter !== "all" && o.orderType !== typeFilter) return false
@@ -110,7 +163,7 @@ export function OrderManagementDashboard({
       }
       return true
     })
-  }, [orders, search, statusFilter, methodFilter, typeFilter, dateRange])
+  }, [orders, search, statusFilters, methodFilter, typeFilter, dateRange])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const currentPage = Math.min(page, totalPages)
@@ -122,6 +175,13 @@ export function OrderManagementDashboard({
   function handleFilterChange() {
     setPage(1)
   }
+
+  const selectedStatusLabel =
+    statusFilters.length === 0
+      ? "All statuses"
+      : statusFilters.length === 1
+        ? statusFilters[0]
+        : `${statusFilters.length} statuses`
 
   return (
     <div className="space-y-4">
@@ -151,25 +211,60 @@ export function OrderManagementDashboard({
           />
         </div>
 
-        <Select
-          value={statusFilter}
-          onValueChange={(v) => {
-            setStatusFilter(v as typeof statusFilter)
-            handleFilterChange()
-          }}
-        >
-          <SelectTrigger className="w-52">
-            <SelectValue placeholder="All statuses" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            {ALL_STATUSES.map((s) => (
-              <SelectItem key={s} value={s}>
-                {s}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              className="w-56 justify-between font-normal"
+            >
+              <span className="truncate">{selectedStatusLabel}</span>
+              <ChevronsUpDownIcon className="size-4 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="start" className="w-64 space-y-2 p-2">
+            <div className="mb-1 flex items-center justify-between">
+              <span className="font-medium text-xs uppercase tracking-wide">
+                Status
+              </span>
+              {statusFilters.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-xs"
+                  onClick={() => {
+                    setStatusFilters([])
+                    handleFilterChange()
+                  }}
+                >
+                  Clear
+                </Button>
+              )}
+            </div>
+            {ALL_STATUSES.map((status) => {
+              const checked = statusFilters.includes(status)
+              return (
+                <label
+                  key={status}
+                  className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted"
+                >
+                  <Checkbox
+                    checked={checked}
+                    onCheckedChange={(nextChecked) => {
+                      setStatusFilters((prev) => {
+                        if (nextChecked) return [...prev, status]
+                        return prev.filter((s) => s !== status)
+                      })
+                      handleFilterChange()
+                    }}
+                  />
+                  <span className="flex-1">{status}</span>
+                  {checked && <CheckIcon className="size-3.5 text-primary" />}
+                </label>
+              )
+            })}
+          </PopoverContent>
+        </Popover>
 
         <Select
           value={methodFilter}
@@ -218,7 +313,7 @@ export function OrderManagementDashboard({
         />
 
         {(search ||
-          statusFilter !== "all" ||
+          statusFilters.length > 0 ||
           methodFilter !== "all" ||
           typeFilter !== "all" ||
           dateRange) && (
@@ -227,7 +322,7 @@ export function OrderManagementDashboard({
             size="icon"
             onClick={() => {
               setSearch("")
-              setStatusFilter("all")
+              setStatusFilters([])
               setMethodFilter("all")
               setTypeFilter("all")
               setDateRange(undefined)
@@ -246,6 +341,8 @@ export function OrderManagementDashboard({
             <TableRow>
               <TableHead>Order ID</TableHead>
               <TableHead>Customer</TableHead>
+              <TableHead>Partner Name</TableHead>
+              <TableHead>Order Type</TableHead>
               <TableHead>Reference</TableHead>
               <TableHead className="text-right">Amount</TableHead>
               <TableHead>Method</TableHead>
@@ -258,7 +355,7 @@ export function OrderManagementDashboard({
             {pageItems.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={8}
+                  colSpan={10}
                   className="py-10 text-center text-muted-foreground"
                 >
                   No orders match the current filters.
@@ -284,6 +381,14 @@ export function OrderManagementDashboard({
                     <div className="text-muted-foreground text-xs">
                       {order.customerEmail}
                     </div>
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {order.partnerName ?? "—"}
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {order.orderType === "booth_registration"
+                      ? "Booth Registration"
+                      : "B2B Subscription"}
                   </TableCell>
                   <TableCell>
                     <div className="text-sm">{order.expoName}</div>

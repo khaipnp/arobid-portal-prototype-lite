@@ -62,9 +62,13 @@ B2B Marketplace purchase:
 |-------|------|-------------|
 | `orderId` | String | Display ID — e.g. `ORD-2026-00001` |
 | `customerId` | FK | User placing the order |
+| `partnerId` | FK (nullable) | Expo Owner linked to this order; populated for `booth_registration`; `null` for other types |
 | `orderType` | Enum | `booth_registration` \| `b2b_subscription` |
 | `referenceId` | FK | e.g. `boothRegistrationId` or `subscriptionId` |
-| `amount` | Decimal | Order total in VND |
+| `originalAmount` | Decimal | Pre-discount total in VND |
+| `discountAmount` | Decimal | Reduction applied from eVoucher; `0` if no voucher used |
+| `amount` | Decimal | Final amount charged (`originalAmount − discountAmount`) |
+| `voucherId` | FK (nullable) | eVoucher applied; `null` if none |
 | `paymentMethod` | Enum | `vnpay` \| `bank_transfer` |
 | `status` | Enum | See state machine below |
 | `expiresAt` | DateTime | 72h from creation — Bank Transfer only |

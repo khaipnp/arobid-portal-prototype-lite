@@ -234,12 +234,13 @@ export async function seedPlatform() {
     await sql`
       insert into orders (
         id, customer_id, customer_name, customer_email, customer_company,
-        order_type, reference_id, expo_name, booth_ref, booth_tier,
-        amount, payment_method, status, expires_at, created_at, updated_at
+        partner_name, order_type, reference_id, expo_name, booth_ref, booth_tier,
+        original_amount, discount_amount, amount, voucher_id, payment_method, status,
+        expires_at, created_at, updated_at
       ) values (
         ${o.id}, ${o.customerId}, ${o.customerName}, ${o.customerEmail}, ${o.customerCompany},
-        ${o.orderType}, ${o.referenceId}, ${o.expoName}, ${o.boothRef}, ${o.boothTier},
-        ${o.amount}, ${o.paymentMethod}, ${o.status},
+        ${o.partnerName ?? null}, ${o.orderType}, ${o.referenceId}, ${o.expoName}, ${o.boothRef}, ${o.boothTier},
+        ${o.originalAmount}, ${o.discountAmount}, ${o.amount}, ${o.voucherId ?? null}, ${o.paymentMethod}, ${o.status},
         ${o.expiresAt ? new Date(o.expiresAt) : null},
         ${new Date(o.createdAt)}, ${new Date(o.updatedAt)}
       )
