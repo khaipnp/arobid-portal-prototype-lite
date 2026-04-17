@@ -3,7 +3,10 @@
 import { ArrowLeftIcon, CheckCircleIcon, XCircleIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { OrderStatusBadge } from "@/components/orders/order-status-badge"
+import {
+  getOrderStatusLabel,
+  OrderStatusBadge,
+} from "@/components/orders/order-status-badge"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -157,7 +160,7 @@ export function OrderDetail({
           type: "status_change",
           status: "Pending Payment",
           actor: "System",
-          note: "Order reverted to Pending Payment — 72h retry window started",
+          note: "Order reverted to Pending — 72h retry window started",
           processedAt: now,
         },
       ])
@@ -325,7 +328,7 @@ export function OrderDetail({
                     <span
                       className={`font-medium text-sm ${statusColor(entry.status)}`}
                     >
-                      {entry.status}
+                      {getOrderStatusLabel(entry.status)}
                     </span>
                     <span className="text-muted-foreground text-xs">
                       · {formatDate(entry.processedAt)}

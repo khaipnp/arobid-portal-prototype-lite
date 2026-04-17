@@ -36,7 +36,7 @@ export async function POST(request: Request, { params }: Props) {
         type: "status_change",
         status: "Pending Payment",
         actor: "System",
-        note: "Order reverted to Pending Payment — 72h retry window started",
+        note: "Order reverted to Pending — 72h retry window started",
         processedAt: now,
       },
     ],

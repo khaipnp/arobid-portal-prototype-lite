@@ -18,13 +18,27 @@ const statusStyles: Record<OrderStatus, string> = {
     "border-rose-300 bg-rose-100 text-rose-700 dark:border-rose-600 dark:bg-rose-900/40 dark:text-rose-400",
 }
 
+const statusLabels: Record<OrderStatus, string> = {
+  "Pending Payment": "Pending",
+  "Awaiting Confirmation": "Awaiting",
+  Paid: "Paid",
+  Failed: "Failed",
+  Cancelled: "Cancelled",
+  Expired: "Expired",
+  Rejected: "Rejected",
+}
+
+export function getOrderStatusLabel(status: OrderStatus): string {
+  return statusLabels[status]
+}
+
 export function OrderStatusBadge({ status }: { status: OrderStatus }) {
   return (
     <Badge
       variant="outline"
       className={cn("h-auto py-0.5 text-xs", statusStyles[status])}
     >
-      {status}
+      {getOrderStatusLabel(status)}
     </Badge>
   )
 }

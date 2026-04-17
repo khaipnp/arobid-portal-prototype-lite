@@ -9,7 +9,10 @@ import {
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
-import { OrderStatusBadge } from "@/components/orders/order-status-badge"
+import {
+  getOrderStatusLabel,
+  OrderStatusBadge,
+} from "@/components/orders/order-status-badge"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -180,7 +183,7 @@ export function OrderManagementDashboard({
     statusFilters.length === 0
       ? "All statuses"
       : statusFilters.length === 1
-        ? statusFilters[0]
+        ? getOrderStatusLabel(statusFilters[0])
         : `${statusFilters.length} statuses`
 
   return (
@@ -190,7 +193,7 @@ export function OrderManagementDashboard({
           <AlertCircleIcon className="size-4 shrink-0" />
           <span>
             <strong>{awaitingCount}</strong>{" "}
-            {awaitingCount === 1 ? "order" : "orders"} awaiting confirmation —
+            {awaitingCount === 1 ? "order" : "orders"} awaiting —
             review and reconcile with your bank statement.
           </span>
         </div>
@@ -258,7 +261,7 @@ export function OrderManagementDashboard({
                       handleFilterChange()
                     }}
                   />
-                  <span className="flex-1">{status}</span>
+                  <span className="flex-1">{getOrderStatusLabel(status)}</span>
                   {checked && <CheckIcon className="size-3.5 text-primary" />}
                 </label>
               )
