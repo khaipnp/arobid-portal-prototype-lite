@@ -125,21 +125,21 @@ function renderRows(entity: EntityType, data: EntityRecord[]) {
 }
 
 function PermissionGroupPreview({ data }: { data: EntityRecord[] }) {
-  const permissionRecords = data.filter(isPermissionRecord)
-  const grouped = useMemo(() => {
-    return permissionRecords.reduce<Record<string, Record<string, number>>>(
-      (acc, permission) => {
-        if (!acc[permission.roleName]) {
-          acc[permission.roleName] = {}
-        }
-        acc[permission.roleName][permission.featureName] =
-          (acc[permission.roleName][permission.featureName] ?? 0) + 1
-        return acc
-      },
-      {},
-    )
-  }, [permissionRecords])
+  const { grouped, permissionRecords } = useMemo(() => {
+    const permissionRecords = data.filter(isPermissionRecord)
+    const grouped = permissionRecords.reduce<
+      Record<string, Record<string, number>>
+    >((acc, permission) => {
+      if (!acc[permission.roleName]) {
+        acc[permission.roleName] = {}
+      }
+      acc[permission.roleName][permission.featureName] =
+        (acc[permission.roleName][permission.featureName] ?? 0) + 1
+      return acc
+    }, {})
 
+    return { grouped, permissionRecords }
+  }, [data])
   if (permissionRecords.length === 0) return null
 
   return (
