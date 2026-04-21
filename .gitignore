@@ -1,4 +1,4 @@
-# dependencies
+# package managers and dependencies
 /node_modules
 /.pnp
 .pnp.*
@@ -7,44 +7,48 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
+.bun
+.bun-install-cache
 
-# testing
-/coverage
-
-# next.js
+# build output and coverage
 /.next/
 /out/
-
-# production
 /build
 /dist
+/coverage
 
-# misc
-.DS_Store
-*.pem
-.vercel
+# environment files
+.env
+.env*.local
+.env.*.local
 
-# debug
+# logs and debug artifacts
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 bun-debug.log*
-*.log
-
-# env files
-.env
-.env*.local
-.env.*.local
-
-# bun
-.bun
-.bun-install-cache
 
 # typescript
 *.tsbuildinfo
 next-env.d.ts
 
+# local tooling and editor settings
 .cursor/*
-AGENT.md
+!.cursor/hooks/
+.cursor/hooks/*
+!.cursor/hooks/state/
+.cursor/hooks/state/*
+!.cursor/hooks/state/continual-learning.json
 .vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+.vercel
+
+# misc
+.DS_Store
+*.pem
+AGENT.md

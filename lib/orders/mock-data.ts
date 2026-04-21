@@ -255,7 +255,9 @@ export const mockOrders: Order[] = [
 ]
 
 function withOffset(isoString: string, hours: number) {
-  return new Date(new Date(isoString).getTime() + hours * 3600_000).toISOString()
+  return new Date(
+    new Date(isoString).getTime() + hours * 3600_000,
+  ).toISOString()
 }
 
 function buildTransactionLogForOrder(order: Order): TransactionLogEntry[] {

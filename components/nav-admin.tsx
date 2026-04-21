@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  BrickWallShieldIcon,
   CreditCardIcon,
   Grid3x2Icon,
   LandmarkIcon,
@@ -10,10 +11,11 @@ import {
   MonitorPlayIcon,
   PieChartIcon,
   ReceiptIcon,
+  ShapesIcon,
   ShieldCheckIcon,
   TicketIcon,
   ToyBrickIcon,
-  UsersIcon,
+  UserRoundKeyIcon,
 } from "lucide-react"
 import Link from "next/link"
 import {
@@ -91,33 +93,23 @@ const servicesLinks = [
 const administrationLinks = [
   {
     name: "Modules",
-    url: "/admin/administration/roles",
+    url: "/admin/administration/modules",
     icon: <ShieldCheckIcon />,
   },
   {
     name: "Roles",
-    url: "/admin/administration/permissions",
-    icon: <UsersIcon />,
+    url: "/admin/administration/roles",
+    icon: <UserRoundKeyIcon />,
   },
   {
     name: "Features",
-    url: "/admin/administration/permissions",
-    icon: <UsersIcon />,
+    url: "/admin/administration/features",
+    icon: <ShapesIcon />,
   },
   {
     name: "Permissions",
     url: "/admin/administration/permissions",
-    icon: <UsersIcon />,
-  },
-  {
-    name: "Plans",
-    url: "/admin/administration/permissions",
-    icon: <UsersIcon />,
-  },
-  {
-    name: "Packages",
-    url: "/admin/administration/permissions",
-    icon: <UsersIcon />,
+    icon: <BrickWallShieldIcon />,
   },
 ]
 

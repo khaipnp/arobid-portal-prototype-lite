@@ -33,8 +33,8 @@ import type {
   ExpoLayoutTemplate,
   HallTemplate,
 } from "@/lib/tradexpo/types"
-import { Spinner } from "../ui/spinner"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group"
+import { Spinner } from "../ui/spinner"
 
 type HallFormRow = {
   key: string
@@ -75,15 +75,15 @@ export type ExpoFormProps = {
   layoutTemplates: ExpoLayoutTemplate[]
   hallTemplates: HallTemplate[]
 } & (
-    | { mode: "create" }
-    | {
+  | { mode: "create" }
+  | {
       mode: "edit"
       expoId: string
       initialExpo: Expo
       initialHalls: ExpoHall[]
       initialOwner: OwnerPick | null
     }
-  )
+)
 
 export function ExpoForm(props: ExpoFormProps) {
   const router = useRouter()
@@ -477,9 +477,9 @@ export function ExpoForm(props: ExpoFormProps) {
             </ul>
           ) : null}
           {ownerQuery.trim().length >= 2 &&
-            !ownerLoading &&
-            ownerResults.length === 0 &&
-            !ownerPick ? (
+          !ownerLoading &&
+          ownerResults.length === 0 &&
+          !ownerPick ? (
             <p className="text-amber-700 text-sm">
               No user found for that search.
             </p>

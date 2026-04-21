@@ -191,7 +191,6 @@ export function NotificationsPageContent({
         <Button
           type="button"
           variant="ghost"
-          
           disabled={!hasUnread || isMarkAllBusy}
           onClick={handleMarkAll}
         >

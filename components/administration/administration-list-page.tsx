@@ -1,0 +1,364 @@
+"use client"
+
+import { AlertCircleIcon, RefreshCwIcon, SearchIcon } from "lucide-react"
+import { useEffect, useMemo, useState } from "react"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group"
+import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { adminModules } from "@/lib/administration/mock-data"
+import type {
+  AdminFeature,
+  AdminModule,
+  AdminPermission,
+  AdminRole,
+  ListResponse,
+  PaginationMeta,
+} from "@/lib/administration/types"
+
+type EntityType = "modules" | "roles" | "features" | "permissions"
+type EntityRecord = AdminModule | AdminRole | AdminFeature | AdminPermission
+
+const PAGE_SIZE = 20
+
+interface AdministrationListPageProps {
+  entity: EntityType
+}
+
+const TITLES: Record<EntityType, string> = {
+  modules: "Modules",
+  roles: "Roles",
+  features: "Features",
+  permissions: "Permissions",
+}
+
+const EMPTY_COPY: Record<EntityType, string> = {
+  modules: "No modules found.",
+  roles: "No roles found.",
+  features: "No features found.",
+  permissions: "No permissions found.",
+}
+
+const TABLE_HEADERS: Record<EntityType, string[]> = {
+  modules: ["Module", "Code", "Description"],
+  roles: ["Role", "Module", "Description"],
+  features: ["Feature", "Module", "Description"],
+  permissions: ["Permission", "Action", "Module", "Role", "Feature"],
+}
+
+function isPermissionRecord(value: EntityRecord): value is AdminPermission {
+  return "action" in value
+}
+
+function isRecordWithModuleName(
+  value: EntityRecord,
+): value is AdminRole | AdminFeature | AdminPermission {
+  return "moduleName" in value
+}
+
+function isRecordWithDescription(
+  value: AdminRole | AdminFeature | AdminPermission,
+): value is AdminRole | AdminFeature {
+  return "description" in value
+}
+
+function renderRows(entity: EntityType, data: EntityRecord[]) {
+  if (entity === "modules") {
+    return data.map((record) => {
+      const moduleRecord = record as AdminModule
+      return (
+        <TableRow key={moduleRecord.id}>
+          <TableCell className="font-medium">{moduleRecord.name}</TableCell>
+          <TableCell className="font-mono text-xs">
+            {moduleRecord.code}
+          </TableCell>
+          <TableCell className="text-muted-foreground">
+            {moduleRecord.description}
+          </TableCell>
+        </TableRow>
+      )
+    })
+  }
+
+  if (entity === "permissions") {
+    const permissionRecords = data.filter(isPermissionRecord)
+    return permissionRecords.map((permission) => (
+      <TableRow key={permission.id}>
+        <TableCell className="font-medium">{permission.name}</TableCell>
+        <TableCell>
+          <Badge variant="outline" className="uppercase">
+            {permission.action}
+          </Badge>
+        </TableCell>
+        <TableCell>{permission.moduleName}</TableCell>
+        <TableCell>{permission.roleName}</TableCell>
+        <TableCell>{permission.featureName}</TableCell>
+      </TableRow>
+    ))
+  }
+
+  const records = data
+    .filter(isRecordWithModuleName)
+    .filter(isRecordWithDescription)
+  return records.map((record) => (
+    <TableRow key={record.id}>
+      <TableCell className="font-medium">{record.name}</TableCell>
+      <TableCell>{record.moduleName}</TableCell>
+      <TableCell className="text-muted-foreground">
+        {record.description}
+      </TableCell>
+    </TableRow>
+  ))
+}
+
+function PermissionGroupPreview({ data }: { data: EntityRecord[] }) {
+  const { grouped, permissionRecords } = useMemo(() => {
+    const permissionRecords = data.filter(isPermissionRecord)
+    const grouped = permissionRecords.reduce<
+      Record<string, Record<string, number>>
+    >((acc, permission) => {
+      if (!acc[permission.roleName]) {
+        acc[permission.roleName] = {}
+      }
+      acc[permission.roleName][permission.featureName] =
+        (acc[permission.roleName][permission.featureName] ?? 0) + 1
+      return acc
+    }, {})
+
+    return { grouped, permissionRecords }
+  }, [data])
+  if (permissionRecords.length === 0) return null
+
+  return (
+    <div className="rounded-lg border bg-card p-4">
+      <h3 className="font-medium text-sm">Grouped by Role - Feature</h3>
+      <div className="mt-3 grid gap-3 md:grid-cols-2">
+        {Object.entries(grouped).map(([role, features]) => (
+          <div key={role} className="rounded-md border p-3">
+            <p className="font-medium text-sm">{role}</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {Object.entries(features).map(([feature, count]) => (
+                <Badge key={`${role}-${feature}`} variant="secondary">
+                  {feature}: {count}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export function AdministrationListPage({
+  entity,
+}: AdministrationListPageProps) {
+  const [rows, setRows] = useState<EntityRecord[]>([])
+  const [meta, setMeta] = useState<PaginationMeta>({
+    page: 1,
+    pageSize: PAGE_SIZE,
+    totalItems: 0,
+    totalPages: 1,
+  })
+  const [search, setSearch] = useState("")
+  const [moduleFilter, setModuleFilter] = useState("all")
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [refreshKey, setRefreshKey] = useState(0)
+
+  useEffect(() => {
+    let cancelled = false
+    const load = async () => {
+      setLoading(true)
+      setError(null)
+      try {
+        const params = new URLSearchParams({
+          page: String(meta.page),
+          pageSize: String(PAGE_SIZE),
+          search,
+          moduleId: moduleFilter,
+          refresh: String(refreshKey),
+        })
+        const response = await fetch(
+          `/api/administration/${entity}?${params}`,
+          {
+            cache: "no-store",
+          },
+        )
+        if (!response.ok) {
+          throw new Error("Unable to load data")
+        }
+        const payload = (await response.json()) as ListResponse<EntityRecord>
+        if (!cancelled) {
+          setRows(payload.data)
+          setMeta(payload.meta)
+        }
+      } catch {
+        if (!cancelled) {
+          setError("Failed to load data. Please try again.")
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      }
+    }
+
+    void load()
+    return () => {
+      cancelled = true
+    }
+  }, [entity, meta.page, moduleFilter, refreshKey, search])
+
+  function handleSearchChange(value: string) {
+    setSearch(value)
+    setMeta((current) => ({ ...current, page: 1 }))
+  }
+
+  function handleModuleFilterChange(value: string) {
+    setModuleFilter(value)
+    setMeta((current) => ({ ...current, page: 1 }))
+  }
+
+  function retry() {
+    setRefreshKey((current) => current + 1)
+  }
+
+  const showTabs = entity !== "modules"
+  const headers = TABLE_HEADERS[entity]
+  const columnCount = headers.length
+  const skeletonRowKeys = [
+    "skeleton-row-1",
+    "skeleton-row-2",
+    "skeleton-row-3",
+    "skeleton-row-4",
+    "skeleton-row-5",
+    "skeleton-row-6",
+  ]
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {showTabs ? (
+          <Tabs value={moduleFilter} onValueChange={handleModuleFilterChange}>
+            <TabsList>
+              <TabsTrigger value="all">All</TabsTrigger>
+              {adminModules.map((moduleItem) => (
+                <TabsTrigger key={moduleItem.id} value={moduleItem.id}>
+                  {moduleItem.name}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        ) : (
+          <div />
+        )}
+        <InputGroup className="w-full md:w-xs">
+          <InputGroupInput
+            value={search}
+            placeholder={`Search ${TITLES[entity].toLowerCase()}...`}
+            onChange={(event) => handleSearchChange(event.target.value)}
+          />
+          <InputGroupAddon>
+            <SearchIcon />
+          </InputGroupAddon>
+        </InputGroup>
+      </div>
+
+      {error ? (
+        <div className="rounded-lg border border-destructive/40 bg-destructive/5 p-4">
+          <p className="text-sm">{error}</p>
+          <Button className="mt-3" variant="outline" onClick={retry}>
+            <RefreshCwIcon />
+            Retry
+          </Button>
+        </div>
+      ) : (
+        <div className="rounded-lg border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {headers.map((header) => (
+                  <TableHead key={header}>{header}</TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {loading ? (
+                skeletonRowKeys.map((rowKey) => (
+                  <TableRow key={rowKey}>
+                    {headers.map((header) => (
+                      <TableCell key={`${rowKey}-${header}`}>
+                        <Skeleton className="h-5 w-full max-w-52" />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : rows.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={columnCount}
+                    className="py-12 text-center text-muted-foreground"
+                  >
+                    <AlertCircleIcon className="mx-auto mb-2 size-8 opacity-40" />
+                    {EMPTY_COPY[entity]}
+                  </TableCell>
+                </TableRow>
+              ) : (
+                renderRows(entity, rows)
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
+
+      {entity === "permissions" && !loading && !error && (
+        <PermissionGroupPreview data={rows} />
+      )}
+
+      <div className="flex items-center justify-between text-muted-foreground text-sm">
+        <span>
+          {meta.totalItems} item{meta.totalItems === 1 ? "" : "s"} total
+        </span>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={meta.page <= 1 || loading}
+            onClick={() =>
+              setMeta((current) => ({ ...current, page: current.page - 1 }))
+            }
+          >
+            Previous
+          </Button>
+          <span>
+            {meta.page} / {meta.totalPages}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={meta.page >= meta.totalPages || loading}
+            onClick={() =>
+              setMeta((current) => ({ ...current, page: current.page + 1 }))
+            }
+          >
+            Next
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}

@@ -21,7 +21,11 @@ import {
   DateRangePicker,
 } from "@/components/ui/date-range-picker"
 import { Input } from "@/components/ui/input"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
 import {
   Select,
   SelectContent,
@@ -193,8 +197,8 @@ export function OrderManagementDashboard({
           <AlertCircleIcon className="size-4 shrink-0" />
           <span>
             <strong>{awaitingCount}</strong>{" "}
-            {awaitingCount === 1 ? "order" : "orders"} awaiting —
-            review and reconcile with your bank statement.
+            {awaitingCount === 1 ? "order" : "orders"} awaiting — review and
+            reconcile with your bank statement.
           </span>
         </div>
       )}

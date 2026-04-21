@@ -1,11 +1,6 @@
 "use client"
 
-import {
-  CalendarIcon,
-  RadioIcon,
-  Settings2Icon,
-  UsersIcon,
-} from "lucide-react"
+import { CalendarIcon, RadioIcon, Settings2Icon, UsersIcon } from "lucide-react"
 import Link from "next/link"
 import { NotificationNavLink } from "@/components/notifications/notification-nav-link"
 import {
