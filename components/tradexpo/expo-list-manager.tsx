@@ -4,8 +4,8 @@ import {
   CheckIcon,
   ChevronDownIcon,
   MoreHorizontalIcon,
-  PlusIcon,
   SearchIcon,
+  XIcon,
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -23,13 +23,16 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
+  DateRangePicker,
+  type DateRange,
+} from "@/components/ui/date-range-picker"
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
@@ -47,7 +50,7 @@ import {
 } from "@/components/ui/table"
 import type { Expo, ExpoCategory, ExpoStatus } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
-import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group"
+import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupButton } from "../ui/input-group"
 
 const ALL_STATUSES: ExpoStatus[] = [
   "Draft",
@@ -71,6 +74,13 @@ function formatDate(iso: string) {
   return new Intl.DateTimeFormat("en-GB", { dateStyle: "short" }).format(
     new Date(iso),
   )
+}
+
+function toLocalIsoDate(date: Date) {
+  const year = date.getFullYear()
+  const month = `${date.getMonth() + 1}`.padStart(2, "0")
+  const day = `${date.getDate()}`.padStart(2, "0")
+  return `${year}-${month}-${day}`
 }
 
 type ConfirmAction =
@@ -99,8 +109,9 @@ export function ExpoListManager({
     "All",
   )
   const [categoryFilter, setCategoryFilter] = React.useState<string[]>([])
-  const [startDateFilter, setStartDateFilter] = React.useState("")
-  const [endDateFilter, setEndDateFilter] = React.useState("")
+  const [dateRangeFilter, setDateRangeFilter] = React.useState<
+    DateRange | undefined
+  >(undefined)
   const [page, setPage] = React.useState(1)
   const [confirmAction, setConfirmAction] =
     React.useState<ConfirmAction | null>(null)
@@ -142,6 +153,13 @@ export function ExpoListManager({
       )
     }
 
+    const startDateFilter = dateRangeFilter?.from
+      ? toLocalIsoDate(dateRangeFilter.from)
+      : ""
+    const endDateFilter = dateRangeFilter?.to
+      ? toLocalIsoDate(dateRangeFilter.to)
+      : ""
+
     if (startDateFilter) {
       result = result.filter((expo) => expo.startDate >= startDateFilter)
     }
@@ -156,8 +174,7 @@ export function ExpoListManager({
     debouncedSearch,
     statusFilter,
     categoryFilter,
-    startDateFilter,
-    endDateFilter,
+    dateRangeFilter,
   ])
 
   const pageSize = 20
@@ -285,13 +302,12 @@ export function ExpoListManager({
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <Button asChild className="w-fit">
               <Link href="/admin/tradexpo/expos/new">
-                <PlusIcon className="mr-2 size-4" />
                 Create new
               </Link>
             </Button>
           </div>
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
-            <InputGroup>
+            <InputGroup className="max-w-xs">
               <InputGroupInput
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
@@ -300,6 +316,12 @@ export function ExpoListManager({
               <InputGroupAddon>
                 <SearchIcon />
               </InputGroupAddon>
+              {searchInput && (
+                <InputGroupButton size="icon-xs" className="rounded-full" variant="ghost" onClick={() => setSearchInput("")}>
+                  <XIcon />
+                  <span className="sr-only">Clear search</span>
+                </InputGroupButton>
+              )}
             </InputGroup>
             <Select
               value={statusFilter}
@@ -369,32 +391,20 @@ export function ExpoListManager({
             </DropdownMenu>
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <div className="flex items-center gap-2">
-                <Input
-                  type="date"
-                  className="w-40"
-                  value={startDateFilter}
-                  onChange={(e) => {
-                    setStartDateFilter(e.target.value)
+                <DateRangePicker
+                  value={dateRangeFilter}
+                  onChange={(range) => {
+                    setDateRangeFilter(range)
                     setPage(1)
                   }}
+                  className="w-76"
                 />
-                <span className="text-muted-foreground">–</span>
-                <Input
-                  type="date"
-                  className="w-40"
-                  value={endDateFilter}
-                  onChange={(e) => {
-                    setEndDateFilter(e.target.value)
-                    setPage(1)
-                  }}
-                />
-                {(startDateFilter || endDateFilter) && (
+                {(dateRangeFilter?.from || dateRangeFilter?.to) && (
                   <Button
                     variant="ghost"
                     size="xs"
                     onClick={() => {
-                      setStartDateFilter("")
-                      setEndDateFilter("")
+                      setDateRangeFilter(undefined)
                       setPage(1)
                     }}
                   >
