@@ -16,8 +16,10 @@ import {
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
@@ -180,7 +182,7 @@ export function HallSlotManager({
     const duplicate = templateSlots.some(
       (slot) =>
         slot.slotCode.toLowerCase() ===
-          formState.slotCode.trim().toLowerCase() && slot.id !== editingSlotId,
+        formState.slotCode.trim().toLowerCase() && slot.id !== editingSlotId,
     )
 
     if (!formState.slotCode.trim()) {
@@ -312,7 +314,7 @@ export function HallSlotManager({
                 : "Configure booth slot coordinates and dimensions for this hall."}
             </p>
           </div>
-          <Button onClick={openCreateForm}>+ Add Slot</Button>
+          <Button size="sm" variant="secondary" onClick={openCreateForm}>Add Slot</Button>
         </div>
 
         {notice ? (
@@ -592,17 +594,13 @@ export function HallSlotManager({
                 placeholder="zone: north\nlighting: warm"
               />
             </div>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="outline">Cancel</Button>
+              </DialogClose>
 
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleFormOpenChange(false)}
-              >
-                Cancel
-              </Button>
               <Button type="submit">Save Slot</Button>
-            </div>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
