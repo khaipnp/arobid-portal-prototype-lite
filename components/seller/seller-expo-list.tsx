@@ -4,6 +4,7 @@ import {
   CalendarIcon,
   ChevronRightIcon,
   SearchIcon,
+  SignpostIcon,
   StoreIcon,
 } from "lucide-react"
 import Image from "next/image"
@@ -29,6 +30,7 @@ import type {
   SellerBoothRegistration,
 } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
+import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from "../ui/empty"
 
 type SellerExpoViewStatus = "Upcoming" | "Live" | "Archive"
 
@@ -160,17 +162,41 @@ export function SellerExpoList({
       </div>
 
       {filtered.length === 0 ? (
-        <p className="rounded-lg border border-dashed py-12 text-center text-muted-foreground text-sm">
-          No expos found.
-        </p>
+        <Empty>
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <SignpostIcon />
+            </EmptyMedia>
+            <EmptyTitle className="font-bold text-lg">No Expo Matches</EmptyTitle>
+            <EmptyDescription>Currently, there are no Expo matches the current filters. Please try again with different filters.</EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent className="flex-row justify-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setSearch("")
+                setDebouncedSearch("")
+                setStatusFilter("All")
+              }}
+            >
+              Clear Filters
+            </Button>
+            <Button>
+              <Link href="/">
+                Explore All Expos
+              </Link>
+            </Button>
+          </EmptyContent>
+        </Empty>
       ) : (
         <div className="grid gap-3">
           {filtered.map(({ expo, registrations }) => (
             <ExpoCard key={expo.id} expo={expo} registrations={registrations} />
           ))}
         </div>
-      )}
-    </div>
+      )
+      }
+    </div >
   )
 }
 
