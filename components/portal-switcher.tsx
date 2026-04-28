@@ -36,6 +36,46 @@ export function PortalSwitcher({
     portals.find((p) => p.name === activePortalName) ?? portals[0],
   )
 
+  const handlePortalSelect = React.useCallback(
+    (portal: (typeof portals)[number]) => {
+      setActivePortal(portal)
+      router.push(portal.url)
+    },
+    [router],
+  )
+
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey) {
+        return
+      }
+
+      const target = event.target
+      if (
+        target instanceof HTMLElement &&
+        (target.isContentEditable ||
+          target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT")
+      ) {
+        return
+      }
+
+      const shortcutIndex = Number.parseInt(event.key, 10) - 1
+      const selectedPortal = portals[shortcutIndex]
+
+      if (!selectedPortal) {
+        return
+      }
+
+      event.preventDefault()
+      handlePortalSelect(selectedPortal)
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [handlePortalSelect, portals])
+
   if (!activePortal) {
     return null
   }
@@ -83,10 +123,7 @@ export function PortalSwitcher({
             {portals.map((portal, index) => (
               <DropdownMenuItem
                 key={portal.name}
-                onClick={() => {
-                  setActivePortal(portal)
-                  router.push(portal.url)
-                }}
+                onClick={() => handlePortalSelect(portal)}
                 className="gap-2 p-2"
               >
                 <div className="flex size-6 items-center justify-center rounded-md border">

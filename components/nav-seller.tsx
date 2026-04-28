@@ -1,12 +1,5 @@
 "use client"
 
-import {
-  DotIcon,
-  ExternalLinkIcon,
-  MessageCircleIcon,
-  ShoppingCartIcon,
-} from "lucide-react"
-import Link from "next/link"
 import { NotificationNavLink } from "@/components/notifications/notification-nav-link"
 import {
   SidebarGroup,
@@ -17,6 +10,13 @@ import {
 } from "@/components/ui/sidebar"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card"
 import { cn } from "@/lib/utils"
+import {
+  DotIcon,
+  ExternalLinkIcon,
+  MessageCircleIcon,
+  ShoppingCartIcon,
+} from "lucide-react"
+import Link from "next/link"
 
 const tradexpo = [
   {
