@@ -15,6 +15,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card"
 
 const tradexpo = [
   {
@@ -141,7 +142,19 @@ export function NavSeller() {
         ))}
       </SidebarMenu>
       {/* Quick Links */}
-      <SidebarGroupLabel>Quick Links</SidebarGroupLabel>
+      <HoverCard>
+        <HoverCardTrigger asChild>
+          <SidebarGroupLabel className="cursor-help underline">Quick Links</SidebarGroupLabel>
+        </HoverCardTrigger>
+        <HoverCardContent align="start" className="text-sm">
+          <span className="font-bold">
+            PO Note: &nbsp;
+          </span>
+          <span>
+            Các quick links khi click vào sẽ mở tab mới dẫn đến các trang liên quan.
+          </span>
+        </HoverCardContent>
+      </HoverCard>
       <SidebarMenu>
         {quickLinks.map((item) => (
           <SidebarMenuItem key={item.name}>

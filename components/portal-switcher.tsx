@@ -7,7 +7,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
@@ -17,6 +16,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card"
 
 export function PortalSwitcher({
   portals,
@@ -44,38 +44,42 @@ export function PortalSwitcher({
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <SidebarMenuButton
-              size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-            >
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                {activePortal.logo}
-              </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">
-                  {activePortal.name}
-                </span>
-                <span className="truncate text-xs">{activePortal.plan}</span>
-              </div>
-              <ChevronsUpDownIcon className="ml-auto" />
-            </SidebarMenuButton>
-          </DropdownMenuTrigger>
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <DropdownMenuTrigger asChild>
+                <SidebarMenuButton
+                  size="lg"
+                  className="cursor-help data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                >
+                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                    {activePortal.logo}
+                  </div>
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-medium">
+                      {activePortal.name}
+                    </span>
+                    <span className="truncate text-xs">{activePortal.plan}</span>
+                  </div>
+                  <ChevronsUpDownIcon className="ml-auto" />
+                </SidebarMenuButton>
+              </DropdownMenuTrigger>
+            </HoverCardTrigger>
+            <HoverCardContent align="start" className="text-sm">
+              <span className="font-bold">
+                PO Note: &nbsp;
+              </span>
+              <span>
+                Đây là action dành cho prototype. Không dùng trong production.
+              </span>
+            </HoverCardContent>
+          </HoverCard>
           <DropdownMenuContent
             className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
             align="start"
             side={isMobile ? "bottom" : "right"}
             sideOffset={4}
           >
-            <DropdownMenuLabel>
-              <p className="font-bold text-foreground text-xs">
-                Portal Switcher
-              </p>
-              <p className="text-muted-foreground text-xs">
-                Switch between portals for prototype only. Don't use this in
-                production.
-              </p>
-            </DropdownMenuLabel>
+
             {portals.map((portal, index) => (
               <DropdownMenuItem
                 key={portal.name}
