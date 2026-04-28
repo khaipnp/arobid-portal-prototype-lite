@@ -51,16 +51,16 @@ const seller = [
     icon: <DotIcon />,
   },
   {
-    name: "Quotation Management",
-    url: "/seller/quotation-management",
+    name: "My Quotations",
+    url: "/seller/my-quotations",
     icon: <DotIcon />,
   }
 ]
 
 const buyer = [
   {
-    name: "RFQ Management",
-    url: "/seller/quotation-management",
+    name: "My RFQs",
+    url: "/seller/my-rfqs",
     icon: <DotIcon />,
   }
 ]
