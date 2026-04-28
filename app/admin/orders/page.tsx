@@ -10,7 +10,7 @@ export default async function OrdersPage() {
   return (
     <DashboardShell
       title="Order Management"
-      description="Monitor all platform orders, filter by status, and reconcile bank transfer payments."
+      description="Monitor VNPay order outcomes, review customer order details, and process invoice requests."
       breadcrumbs={[{ label: "Admin", href: "/admin" }, { label: "Orders" }]}
     >
       <OrderManagementDashboard initialOrders={initialOrders} />

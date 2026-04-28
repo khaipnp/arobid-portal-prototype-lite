@@ -5,7 +5,7 @@ CREATE TABLE "ModelAsset" (
     "fileUrl" TEXT NOT NULL,
     "kind" TEXT NOT NULL,
     "status" TEXT NOT NULL,
-    "createdAt" DATETIME NOT NULL
+    "createdAt" TIMESTAMP(3) NOT NULL
 );
 
 -- CreateTable
@@ -15,7 +15,7 @@ CREATE TABLE "HallTemplate" (
     "isPublic" BOOLEAN NOT NULL,
     "isActive" BOOLEAN NOT NULL,
     "updatedBy" TEXT NOT NULL,
-    "updatedAt" DATETIME NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
     "sourceBlendAssetId" TEXT,
     "renderGlbAssetId" TEXT NOT NULL,
     "thumbnailAssetId" TEXT NOT NULL,
@@ -39,18 +39,18 @@ CREATE TABLE "HallTemplateSlot" (
     "hallTemplateId" TEXT NOT NULL,
     "slotCode" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "posX" REAL NOT NULL,
-    "posY" REAL NOT NULL,
-    "posZ" REAL NOT NULL,
-    "rotX" REAL NOT NULL,
-    "rotY" REAL NOT NULL,
-    "rotZ" REAL NOT NULL,
-    "scaleX" REAL NOT NULL,
-    "scaleY" REAL NOT NULL,
-    "scaleZ" REAL NOT NULL,
-    "width" REAL NOT NULL,
-    "height" REAL NOT NULL,
-    "depth" REAL NOT NULL,
+    "posX" DOUBLE PRECISION NOT NULL,
+    "posY" DOUBLE PRECISION NOT NULL,
+    "posZ" DOUBLE PRECISION NOT NULL,
+    "rotX" DOUBLE PRECISION NOT NULL,
+    "rotY" DOUBLE PRECISION NOT NULL,
+    "rotZ" DOUBLE PRECISION NOT NULL,
+    "scaleX" DOUBLE PRECISION NOT NULL,
+    "scaleY" DOUBLE PRECISION NOT NULL,
+    "scaleZ" DOUBLE PRECISION NOT NULL,
+    "width" DOUBLE PRECISION NOT NULL,
+    "height" DOUBLE PRECISION NOT NULL,
+    "depth" DOUBLE PRECISION NOT NULL,
     "metadata" JSONB NOT NULL,
     CONSTRAINT "HallTemplateSlot_hallTemplateId_fkey" FOREIGN KEY ("hallTemplateId") REFERENCES "HallTemplate" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -86,7 +86,7 @@ CREATE TABLE "BoothTemplate" (
     "isPublic" BOOLEAN NOT NULL,
     "isActive" BOOLEAN NOT NULL,
     "updatedBy" TEXT NOT NULL,
-    "updatedAt" DATETIME NOT NULL,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
     "boothTypeId" TEXT NOT NULL,
     "sourceBlendAssetId" TEXT,
     "renderGlbAssetId" TEXT NOT NULL,

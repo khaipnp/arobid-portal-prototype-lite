@@ -2,9 +2,7 @@
 
 import {
   BrickWallShieldIcon,
-  CreditCardIcon,
   Grid3x2Icon,
-  LandmarkIcon,
   LayoutDashboardIcon,
   LayoutPanelTopIcon,
   LayoutTemplateIcon,
@@ -77,16 +75,6 @@ const servicesLinks = [
     name: "eVoucher",
     url: "/admin/evoucher",
     icon: <TicketIcon />,
-  },
-  {
-    name: "Payment Method",
-    url: "/admin/settings/payment-method",
-    icon: <CreditCardIcon />,
-  },
-  {
-    name: "Bank Accounts",
-    url: "/admin/settings/bank-accounts",
-    icon: <LandmarkIcon />,
   },
 ]
 

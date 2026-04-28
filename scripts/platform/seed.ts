@@ -236,11 +236,17 @@ export async function seedPlatform() {
         id, customer_id, customer_name, customer_email, customer_company,
         partner_name, order_type, reference_id, expo_name, booth_ref, booth_tier,
         original_amount, discount_amount, amount, voucher_id, payment_method, status,
+        invoice_requested, invoice_type, billing_info_snapshot, invoice_status, paid_at,
+        exported_at, exported_by, export_batch_id, issued_at, issued_by, sent_at, sent_by,
         expires_at, created_at, updated_at
       ) values (
         ${o.id}, ${o.customerId}, ${o.customerName}, ${o.customerEmail}, ${o.customerCompany},
         ${o.partnerName ?? null}, ${o.orderType}, ${o.referenceId}, ${o.expoName}, ${o.boothRef}, ${o.boothTier},
         ${o.originalAmount}, ${o.discountAmount}, ${o.amount}, ${o.voucherId ?? null}, ${o.paymentMethod}, ${o.status},
+        ${o.invoiceRequested}, ${o.invoiceType ?? null}, ${JSON.stringify(o.billingInfoSnapshot ?? null)}::jsonb, ${o.invoiceStatus}, ${o.paidAt ? new Date(o.paidAt) : null},
+        ${o.exportedAt ? new Date(o.exportedAt) : null}, ${o.exportedBy ?? null}, ${o.exportBatchId ?? null},
+        ${o.issuedAt ? new Date(o.issuedAt) : null}, ${o.issuedBy ?? null},
+        ${o.sentAt ? new Date(o.sentAt) : null}, ${o.sentBy ?? null},
         ${o.expiresAt ? new Date(o.expiresAt) : null},
         ${new Date(o.createdAt)}, ${new Date(o.updatedAt)}
       )

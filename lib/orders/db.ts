@@ -1,7 +1,10 @@
 import { sql } from "@/lib/db/neon"
 import type {
   BankAccount,
+  BillingInfoSnapshot,
   ExpoPaymentConfig,
+  InvoiceStatus,
+  InvoiceType,
   Order,
   OrderStatus,
   PaymentConfig,
@@ -108,6 +111,18 @@ export async function listOrders(): Promise<Order[]> {
     voucher_id: string | null
     payment_method: Order["paymentMethod"]
     status: Order["status"]
+    invoice_requested: boolean
+    invoice_type: InvoiceType | null
+    billing_info_snapshot: BillingInfoSnapshot | null
+    invoice_status: InvoiceStatus
+    paid_at: string | Date | null
+    exported_at: string | Date | null
+    exported_by: string | null
+    export_batch_id: string | null
+    issued_at: string | Date | null
+    issued_by: string | null
+    sent_at: string | Date | null
+    sent_by: string | null
     expires_at: string | Date | null
     created_at: string | Date
     updated_at: string | Date
@@ -130,6 +145,18 @@ export async function listOrders(): Promise<Order[]> {
     voucherId: r.voucher_id ?? undefined,
     paymentMethod: r.payment_method,
     status: r.status,
+    invoiceRequested: r.invoice_requested,
+    invoiceType: r.invoice_type ?? undefined,
+    billingInfoSnapshot: r.billing_info_snapshot ?? undefined,
+    invoiceStatus: r.invoice_status,
+    paidAt: r.paid_at ? toIso(r.paid_at) : undefined,
+    exportedAt: r.exported_at ? toIso(r.exported_at) : undefined,
+    exportedBy: r.exported_by ?? undefined,
+    exportBatchId: r.export_batch_id ?? undefined,
+    issuedAt: r.issued_at ? toIso(r.issued_at) : undefined,
+    issuedBy: r.issued_by ?? undefined,
+    sentAt: r.sent_at ? toIso(r.sent_at) : undefined,
+    sentBy: r.sent_by ?? undefined,
     expiresAt: r.expires_at ? toIso(r.expires_at) : undefined,
     createdAt: toIso(r.created_at),
     updatedAt: toIso(r.updated_at),
@@ -445,6 +472,71 @@ export async function updateOrderStatusAndAppendLogs(input: {
         )
       `
     }
+    await sql`commit`
+  } catch (error) {
+    await sql`rollback`
+    throw error
+  }
+}
+
+export async function updateInvoiceProcessing(input: {
+  orderId: string
+  invoiceStatus: InvoiceStatus
+  exportedAt?: string
+  exportedBy?: string
+  exportBatchId?: string
+  issuedAt?: string
+  issuedBy?: string
+  sentAt?: string
+  sentBy?: string
+  log: {
+    id: string
+    actor: string
+    note: string
+    processedAt: string
+  }
+}): Promise<void> {
+  await sql`begin`
+  try {
+    await sql`
+      update orders
+      set
+        invoice_status = ${input.invoiceStatus},
+        exported_at = coalesce(${input.exportedAt ?? null}, exported_at),
+        exported_by = coalesce(${input.exportedBy ?? null}, exported_by),
+        export_batch_id = coalesce(${input.exportBatchId ?? null}, export_batch_id),
+        issued_at = coalesce(${input.issuedAt ?? null}, issued_at),
+        issued_by = coalesce(${input.issuedBy ?? null}, issued_by),
+        sent_at = coalesce(${input.sentAt ?? null}, sent_at),
+        sent_by = coalesce(${input.sentBy ?? null}, sent_by),
+        updated_at = now()
+      where id = ${input.orderId}
+    `
+
+    await sql`
+      insert into transaction_log (
+        id,
+        order_id,
+        type,
+        status,
+        actor,
+        note,
+        rejection_reason,
+        processed_at
+      )
+      values (
+        ${input.log.id},
+        ${input.orderId},
+        'status_change',
+        (
+          select status from orders where id = ${input.orderId}
+        ),
+        ${input.log.actor},
+        ${input.log.note},
+        null,
+        ${input.log.processedAt}
+      )
+    `
     await sql`commit`
   } catch (error) {
     await sql`rollback`

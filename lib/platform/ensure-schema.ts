@@ -213,6 +213,24 @@ export async function ensurePlatformSchema() {
   `
   await sql`alter table orders add column if not exists voucher_id text`
   await sql`
+    alter table orders add column if not exists invoice_requested boolean not null default false
+  `
+  await sql`alter table orders add column if not exists invoice_type text`
+  await sql`
+    alter table orders add column if not exists billing_info_snapshot jsonb
+  `
+  await sql`
+    alter table orders add column if not exists invoice_status text not null default 'not_requested'
+  `
+  await sql`alter table orders add column if not exists paid_at timestamptz`
+  await sql`alter table orders add column if not exists exported_at timestamptz`
+  await sql`alter table orders add column if not exists exported_by text`
+  await sql`alter table orders add column if not exists export_batch_id text`
+  await sql`alter table orders add column if not exists issued_at timestamptz`
+  await sql`alter table orders add column if not exists issued_by text`
+  await sql`alter table orders add column if not exists sent_at timestamptz`
+  await sql`alter table orders add column if not exists sent_by text`
+  await sql`
     update orders
     set original_amount = amount
     where original_amount = 0 and amount <> 0

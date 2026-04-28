@@ -1,6 +1,9 @@
 import type {
   BankAccount,
+  BillingInfoSnapshot,
   ExpoPaymentConfig,
+  InvoiceStatus,
+  InvoiceType,
   Order,
   PaymentConfig,
   TransactionLogEntry,
@@ -53,7 +56,7 @@ export const mockBankAccounts: BankAccount[] = [
 
 export const mockPaymentConfig: PaymentConfig = {
   vnpayEnabled: true,
-  bankTransferEnabled: true,
+  bankTransferEnabled: false,
   updatedAt: iso(5),
   updatedBy: "admin@arobid.com",
 }
@@ -64,9 +67,9 @@ export const mockExpoPaymentConfigs: ExpoPaymentConfig[] = [
   {
     expoId: "expo-003",
     isInherited: false,
-    vnpayEnabled: false,
-    bankTransferEnabled: true,
-    bankAccountId: "ba-002",
+    vnpayEnabled: true,
+    bankTransferEnabled: false,
+    bankAccountId: null,
     updatedAt: iso(2),
     updatedBy: "admin@arobid.com",
   },
@@ -74,7 +77,7 @@ export const mockExpoPaymentConfigs: ExpoPaymentConfig[] = [
     expoId: "expo-004",
     isInherited: false,
     vnpayEnabled: true,
-    bankTransferEnabled: true,
+    bankTransferEnabled: false,
     bankAccountId: null,
     updatedAt: iso(10),
     updatedBy: "admin@arobid.com",
@@ -182,11 +185,60 @@ function orderId(n: number) {
   return `ORD-2026-${String(n).padStart(5, "0")}`
 }
 
+function buildBillingSnapshot(
+  n: number,
+  customerName: string,
+  customerCompany: string,
+  customerEmail: string,
+): {
+  invoiceRequested: boolean
+  invoiceType?: InvoiceType
+  billingInfoSnapshot?: BillingInfoSnapshot
+} {
+  if (n % 3 !== 0) {
+    return { invoiceRequested: false }
+  }
+
+  if (n % 2 === 0) {
+    return {
+      invoiceRequested: true,
+      invoiceType: "business",
+      billingInfoSnapshot: {
+        companyName: customerCompany,
+        invoiceEmail: customerEmail,
+        taxCode: `0${100000000 + n}`,
+        address: `${n} Nguyen Hue, District 1, Ho Chi Minh City`,
+        phoneNumber: `090${String(100000 + n).slice(-6)}`,
+      },
+    }
+  }
+
+  return {
+    invoiceRequested: true,
+    invoiceType: "individual",
+    billingInfoSnapshot: {
+      fullName: customerName,
+      invoiceEmail: customerEmail,
+      taxCode: `0${200000000 + n}`,
+      address: `${n} Tran Hung Dao, Hoan Kiem, Hanoi`,
+    },
+  }
+}
+
+function deriveInvoiceStatus(
+  status: Order["status"],
+  invoiceRequested: boolean,
+): InvoiceStatus {
+  if (!invoiceRequested) return "not_requested"
+  if (status === "Pending Payment") return "requested_pending_payment"
+  if (status === "Paid") return "requested_paid"
+  return "requested_pending_payment"
+}
+
 function makeOrder(
   n: number,
   cIdx: number,
   eIdx: number,
-  method: Order["paymentMethod"],
   status: Order["status"],
   daysAgo: number,
 ): Order {
@@ -199,9 +251,20 @@ function makeOrder(
   const amount = originalAmount - discountAmount
   const createdAt = iso(daysAgo)
   const expiresAt =
-    status === "Pending Payment" || status === "Awaiting Confirmation"
+    status === "Pending Payment"
       ? new Date(new Date(createdAt).getTime() + 72 * 3600_000).toISOString()
       : undefined
+  const paidAt = status === "Paid" ? withOffset(createdAt, 0.2) : undefined
+  const billing = buildBillingSnapshot(n, c.name, c.company, c.email)
+  const invoiceStatus = deriveInvoiceStatus(status, billing.invoiceRequested)
+
+  const exportedAt =
+    invoiceStatus === "requested_paid" && n % 5 === 0 && paidAt
+      ? withOffset(paidAt, 24)
+      : undefined
+  const issuedAt = exportedAt && n % 10 === 0 ? withOffset(exportedAt, 8) : undefined
+  const sentAt = issuedAt && n % 15 === 0 ? withOffset(issuedAt, 2) : undefined
+
   return {
     id: orderId(n),
     customerId: c.id,
@@ -218,8 +281,26 @@ function makeOrder(
     discountAmount,
     amount,
     voucherId: hasVoucher ? `VOUCHER-${String(n).padStart(4, "0")}` : undefined,
-    paymentMethod: method,
+    paymentMethod: "vnpay",
     status,
+    invoiceRequested: billing.invoiceRequested,
+    invoiceType: billing.invoiceType,
+    billingInfoSnapshot: billing.billingInfoSnapshot,
+    invoiceStatus: sentAt
+      ? "sent"
+      : issuedAt
+        ? "issued"
+        : exportedAt
+          ? "exported"
+          : invoiceStatus,
+    paidAt,
+    exportedAt,
+    exportedBy: exportedAt ? "admin@arobid.com" : undefined,
+    exportBatchId: exportedAt ? `INV-EXPORT-${String(n).padStart(4, "0")}` : undefined,
+    issuedAt,
+    issuedBy: issuedAt ? "finance@arobid.com" : undefined,
+    sentAt,
+    sentBy: sentAt ? "finance@arobid.com" : undefined,
     expiresAt,
     createdAt,
     updatedAt: iso(daysAgo - 0.1),
@@ -227,31 +308,31 @@ function makeOrder(
 }
 
 export const mockOrders: Order[] = [
-  makeOrder(1, 0, 0, "bank_transfer", "Awaiting Confirmation", 0.1),
-  makeOrder(2, 1, 2, "bank_transfer", "Awaiting Confirmation", 0.3),
-  makeOrder(3, 2, 4, "bank_transfer", "Awaiting Confirmation", 0.5),
-  makeOrder(4, 3, 1, "bank_transfer", "Paid", 1),
-  makeOrder(5, 4, 3, "vnpay", "Paid", 2),
-  makeOrder(6, 5, 5, "vnpay", "Paid", 2),
-  makeOrder(7, 6, 6, "bank_transfer", "Paid", 3),
-  makeOrder(8, 0, 2, "vnpay", "Paid", 4),
-  makeOrder(9, 1, 0, "bank_transfer", "Pending Payment", 0.8),
-  makeOrder(10, 2, 3, "bank_transfer", "Pending Payment", 1.5),
-  makeOrder(11, 3, 5, "vnpay", "Failed", 5),
-  makeOrder(12, 4, 6, "vnpay", "Cancelled", 6),
-  makeOrder(13, 5, 1, "bank_transfer", "Expired", 10),
-  makeOrder(14, 6, 4, "bank_transfer", "Rejected", 3),
-  makeOrder(15, 0, 3, "vnpay", "Paid", 7),
-  makeOrder(16, 1, 5, "bank_transfer", "Paid", 8),
-  makeOrder(17, 2, 6, "vnpay", "Paid", 9),
-  makeOrder(18, 3, 0, "bank_transfer", "Awaiting Confirmation", 0.2),
-  makeOrder(19, 4, 2, "vnpay", "Failed", 12),
-  makeOrder(20, 5, 4, "bank_transfer", "Expired", 15),
-  makeOrder(21, 6, 1, "vnpay", "Paid", 14),
-  makeOrder(22, 0, 3, "bank_transfer", "Paid", 16),
-  makeOrder(23, 1, 5, "vnpay", "Cancelled", 18),
-  makeOrder(24, 2, 6, "bank_transfer", "Rejected", 5),
-  makeOrder(25, 3, 0, "vnpay", "Paid", 20),
+  makeOrder(1, 0, 0, "Pending Payment", 0.1),
+  makeOrder(2, 1, 2, "Pending Payment", 0.3),
+  makeOrder(3, 2, 4, "Paid", 1),
+  makeOrder(4, 3, 1, "Paid", 1),
+  makeOrder(5, 4, 3, "Paid", 2),
+  makeOrder(6, 5, 5, "Paid", 2),
+  makeOrder(7, 6, 6, "Paid", 3),
+  makeOrder(8, 0, 2, "Paid", 4),
+  makeOrder(9, 1, 0, "Pending Payment", 0.8),
+  makeOrder(10, 2, 3, "Pending Payment", 1.5),
+  makeOrder(11, 3, 5, "Failed", 5),
+  makeOrder(12, 4, 6, "Cancelled", 6),
+  makeOrder(13, 5, 1, "Expired", 10),
+  makeOrder(14, 6, 4, "Failed", 3),
+  makeOrder(15, 0, 3, "Paid", 7),
+  makeOrder(16, 1, 5, "Paid", 8),
+  makeOrder(17, 2, 6, "Paid", 9),
+  makeOrder(18, 3, 0, "Pending Payment", 0.2),
+  makeOrder(19, 4, 2, "Failed", 12),
+  makeOrder(20, 5, 4, "Expired", 15),
+  makeOrder(21, 6, 1, "Paid", 14),
+  makeOrder(22, 0, 3, "Paid", 16),
+  makeOrder(23, 1, 5, "Cancelled", 18),
+  makeOrder(24, 2, 6, "Expired", 5),
+  makeOrder(25, 3, 0, "Paid", 20),
 ]
 
 function withOffset(isoString: string, hours: number) {
@@ -315,59 +396,56 @@ function buildTransactionLogForOrder(order: Order): TransactionLogEntry[] {
         processedAt: withOffset(order.createdAt, 72),
       })
     }
-    return entries
   }
 
-  if (order.status === "Pending Payment") return entries
-
-  entries.push({
-    id: `tx-${order.id}-2`,
-    orderId: order.id,
-    type: "payment",
-    status: "Awaiting Confirmation",
-    actor: order.customerName,
-    note: "Customer confirmed bank transfer",
-    processedAt: withOffset(order.createdAt, 0.3),
-  })
-
-  if (order.status === "Awaiting Confirmation") return entries
-
-  if (order.status === "Paid") {
+  if (order.invoiceRequested) {
     entries.push({
-      id: `tx-${order.id}-3`,
-      orderId: order.id,
-      type: "payment",
-      status: "Paid",
-      actor: "Admin (admin@arobid.com)",
-      note: "Payment confirmed after bank statement verification",
-      processedAt: withOffset(order.createdAt, 1),
-    })
-    return entries
-  }
-
-  if (order.status === "Rejected") {
-    entries.push({
-      id: `tx-${order.id}-3`,
-      orderId: order.id,
-      type: "payment",
-      status: "Rejected",
-      actor: "Admin (admin@arobid.com)",
-      rejectionReason:
-        "No matching transfer found in bank statement for this order ID and amount.",
-      processedAt: withOffset(order.createdAt, 1),
-    })
-    return entries
-  }
-
-  if (order.status === "Expired") {
-    entries.push({
-      id: `tx-${order.id}-3`,
+      id: `tx-${order.id}-invoice-request`,
       orderId: order.id,
       type: "status_change",
-      status: "Expired",
+      status: order.status,
       actor: "System",
-      note: "Payment window expired after 72h",
-      processedAt: withOffset(order.createdAt, 72),
+      note:
+        order.status === "Paid"
+          ? "Invoice request eligible for processing"
+          : "Invoice info captured at checkout",
+      processedAt: order.paidAt ?? order.createdAt,
+    })
+  }
+
+  if (order.exportedAt) {
+    entries.push({
+      id: `tx-${order.id}-invoice-exported`,
+      orderId: order.id,
+      type: "status_change",
+      status: order.status,
+      actor: order.exportedBy ?? "Admin",
+      note: `Invoice data exported (${order.exportBatchId})`,
+      processedAt: order.exportedAt,
+    })
+  }
+
+  if (order.issuedAt) {
+    entries.push({
+      id: `tx-${order.id}-invoice-issued`,
+      orderId: order.id,
+      type: "status_change",
+      status: order.status,
+      actor: order.issuedBy ?? "Finance/Admin",
+      note: "Invoice marked as issued",
+      processedAt: order.issuedAt,
+    })
+  }
+
+  if (order.sentAt) {
+    entries.push({
+      id: `tx-${order.id}-invoice-sent`,
+      orderId: order.id,
+      type: "status_change",
+      status: order.status,
+      actor: order.sentBy ?? "Finance/Admin",
+      note: "Invoice marked as sent",
+      processedAt: order.sentAt,
     })
   }
 
