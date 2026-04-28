@@ -16,6 +16,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card"
+import { cn } from "@/lib/utils"
 
 const tradexpo = [
   {
@@ -27,6 +28,7 @@ const tradexpo = [
     name: "My Expos",
     url: "/seller/my-expos",
     icon: <DotIcon />,
+    note: "Danh sách các expo mà user đã và đang tham gia.",
   },
 ]
 
@@ -102,13 +104,28 @@ export function NavSeller() {
       <SidebarMenu>
         {tradexpo.map((item) => (
           <SidebarMenuItem key={item.name}>
-            <SidebarMenuButton asChild>
-              <Link href={item.url}>
-                {item.icon}
-                <span>{item.name}</span>
-              </Link>
-            </SidebarMenuButton>
+            <HoverCard>
+              <HoverCardTrigger asChild>
+                <SidebarMenuButton asChild>
+                  <Link href={item.url} className={cn(item.note && "cursor-help underline")}>
+                    {item.icon}
+                    <span>{item.name}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </HoverCardTrigger>
+              {item.note && (
+                <HoverCardContent align="start" className="text-sm">
+                  <span className="font-bold">
+                    PO Note: &nbsp;
+                  </span>
+                  <span>
+                    {item.note}
+                  </span>
+                </HoverCardContent>
+              )}
+            </HoverCard>
           </SidebarMenuItem>
+
         ))}
       </SidebarMenu>
 
