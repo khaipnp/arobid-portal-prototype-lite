@@ -174,18 +174,35 @@ export interface AdminNotification {
 
 // ─── Orders & Transactions ───────────────────────────────────────────────────
 
-export type PaymentMethod = "vnpay" | "bank_transfer"
+export type PaymentMethod = "vnpay"
 
 export type OrderStatus =
   | "Pending Payment"
-  | "Awaiting Confirmation"
   | "Paid"
   | "Failed"
   | "Cancelled"
   | "Expired"
-  | "Rejected"
 
 export type OrderType = "booth_registration" | "b2b_subscription"
+
+export type InvoiceType = "individual" | "business"
+
+export type InvoiceStatus =
+  | "not_requested"
+  | "requested_pending_payment"
+  | "requested_paid"
+  | "exported"
+  | "issued"
+  | "sent"
+
+export interface BillingInfoSnapshot {
+  fullName?: string
+  companyName?: string
+  invoiceEmail: string
+  taxCode: string
+  address: string
+  phoneNumber?: string
+}
 
 export interface Order {
   id: string
@@ -205,6 +222,18 @@ export interface Order {
   voucherId?: string
   paymentMethod: PaymentMethod
   status: OrderStatus
+  invoiceRequested: boolean
+  invoiceType?: InvoiceType
+  billingInfoSnapshot?: BillingInfoSnapshot
+  invoiceStatus: InvoiceStatus
+  paidAt?: string
+  exportedAt?: string
+  exportedBy?: string
+  exportBatchId?: string
+  issuedAt?: string
+  issuedBy?: string
+  sentAt?: string
+  sentBy?: string
   expiresAt?: string
   createdAt: string
   updatedAt: string

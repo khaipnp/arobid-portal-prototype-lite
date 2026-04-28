@@ -1,7 +1,6 @@
 "use client"
 
 import {
-  AlertCircleIcon,
   CheckIcon,
   ChevronsUpDownIcon,
   FilterXIcon,
@@ -42,10 +41,10 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type {
+  InvoiceStatus,
   Order,
   OrderStatus,
   OrderType,
-  PaymentMethod,
 } from "@/lib/tradexpo/types"
 
 const PAGE_SIZE = 20
@@ -53,13 +52,40 @@ const FILTERS_SESSION_KEY = "admin-order-management-filters"
 
 const ALL_STATUSES: OrderStatus[] = [
   "Pending Payment",
-  "Awaiting Confirmation",
   "Paid",
   "Failed",
   "Cancelled",
   "Expired",
-  "Rejected",
 ]
+
+const INVOICE_STATUS_OPTIONS: Array<"all" | InvoiceStatus> = [
+  "all",
+  "not_requested",
+  "requested_pending_payment",
+  "requested_paid",
+  "exported",
+  "issued",
+  "sent",
+]
+
+function getInvoiceStatusLabel(status: "all" | InvoiceStatus) {
+  switch (status) {
+    case "all":
+      return "All invoice states"
+    case "not_requested":
+      return "Not requested"
+    case "requested_pending_payment":
+      return "Requested, pending payment"
+    case "requested_paid":
+      return "Ready to export"
+    case "exported":
+      return "Exported"
+    case "issued":
+      return "Issued"
+    case "sent":
+      return "Sent"
+  }
+}
 
 function formatVND(amount: number) {
   return new Intl.NumberFormat("vi-VN", {
@@ -94,8 +120,10 @@ export function OrderManagementDashboard({
 
   const [search, setSearch] = useState("")
   const [statusFilters, setStatusFilters] = useState<OrderStatus[]>([])
-  const [methodFilter, setMethodFilter] = useState<"all" | PaymentMethod>("all")
   const [typeFilter, setTypeFilter] = useState<"all" | OrderType>("all")
+  const [invoiceStatusFilter, setInvoiceStatusFilter] = useState<
+    "all" | InvoiceStatus
+  >("all")
   const [dateRange, setDateRange] = useState<DateRange | undefined>()
   const [page, setPage] = useState(1)
 
@@ -106,8 +134,8 @@ export function OrderManagementDashboard({
       const parsed = JSON.parse(raw) as {
         search?: string
         statusFilters?: OrderStatus[]
-        methodFilter?: "all" | PaymentMethod
         typeFilter?: "all" | OrderType
+        invoiceStatusFilter?: "all" | InvoiceStatus
         dateFrom?: string
         dateTo?: string
       }
@@ -115,8 +143,8 @@ export function OrderManagementDashboard({
       setStatusFilters(
         Array.isArray(parsed.statusFilters) ? parsed.statusFilters : [],
       )
-      setMethodFilter(parsed.methodFilter ?? "all")
       setTypeFilter(parsed.typeFilter ?? "all")
+      setInvoiceStatusFilter(parsed.invoiceStatusFilter ?? "all")
       if (parsed.dateFrom || parsed.dateTo) {
         setDateRange({
           from: parsed.dateFrom ? new Date(parsed.dateFrom) : undefined,
@@ -134,17 +162,13 @@ export function OrderManagementDashboard({
       JSON.stringify({
         search,
         statusFilters,
-        methodFilter,
         typeFilter,
+        invoiceStatusFilter,
         dateFrom: dateRange?.from?.toISOString(),
         dateTo: dateRange?.to?.toISOString(),
       }),
     )
-  }, [search, statusFilters, methodFilter, typeFilter, dateRange])
-
-  const awaitingCount = orders.filter(
-    (o) => o.status === "Awaiting Confirmation",
-  ).length
+  }, [search, statusFilters, typeFilter, invoiceStatusFilter, dateRange])
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase()
@@ -153,14 +177,19 @@ export function OrderManagementDashboard({
         q &&
         !o.id.toLowerCase().includes(q) &&
         !o.customerName.toLowerCase().includes(q) &&
-        !o.customerEmail.toLowerCase().includes(q)
+        !o.customerEmail.toLowerCase().includes(q) &&
+        !(o.billingInfoSnapshot?.invoiceEmail ?? "").toLowerCase().includes(q) &&
+        !(o.billingInfoSnapshot?.taxCode ?? "").toLowerCase().includes(q)
       )
         return false
       if (statusFilters.length > 0 && !statusFilters.includes(o.status))
         return false
-      if (methodFilter !== "all" && o.paymentMethod !== methodFilter)
-        return false
       if (typeFilter !== "all" && o.orderType !== typeFilter) return false
+      if (
+        invoiceStatusFilter !== "all" &&
+        o.invoiceStatus !== invoiceStatusFilter
+      )
+        return false
       if (dateRange?.from && o.createdAt < dateRange.from.toISOString())
         return false
       if (dateRange?.to) {
@@ -170,7 +199,7 @@ export function OrderManagementDashboard({
       }
       return true
     })
-  }, [orders, search, statusFilters, methodFilter, typeFilter, dateRange])
+  }, [orders, search, statusFilters, typeFilter, invoiceStatusFilter, dateRange])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const currentPage = Math.min(page, totalPages)
@@ -192,23 +221,12 @@ export function OrderManagementDashboard({
 
   return (
     <div className="space-y-4">
-      {awaitingCount > 0 && (
-        <div className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800 text-sm dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
-          <AlertCircleIcon className="size-4 shrink-0" />
-          <span>
-            <strong>{awaitingCount}</strong>{" "}
-            {awaitingCount === 1 ? "order" : "orders"} awaiting — review and
-            reconcile with your bank statement.
-          </span>
-        </div>
-      )}
-
       {/* Filters */}
       <div className="flex flex-wrap items-end gap-2">
         <div className="relative min-w-56 flex-1">
           <SearchIcon className="absolute top-2.5 left-2.5 size-4 text-muted-foreground" />
           <Input
-            placeholder="Search by Order ID or customer…"
+            placeholder="Search by Order ID, customer, invoice email, or MST…"
             value={search}
             onChange={(e) => {
               setSearch(e.target.value)
@@ -274,23 +292,6 @@ export function OrderManagementDashboard({
         </Popover>
 
         <Select
-          value={methodFilter}
-          onValueChange={(v) => {
-            setMethodFilter(v as typeof methodFilter)
-            handleFilterChange()
-          }}
-        >
-          <SelectTrigger className="w-44">
-            <SelectValue placeholder="All methods" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All methods</SelectItem>
-            <SelectItem value="vnpay">VNPay</SelectItem>
-            <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-          </SelectContent>
-        </Select>
-
-        <Select
           value={typeFilter}
           onValueChange={(v) => {
             setTypeFilter(v as typeof typeFilter)
@@ -309,6 +310,25 @@ export function OrderManagementDashboard({
           </SelectContent>
         </Select>
 
+        <Select
+          value={invoiceStatusFilter}
+          onValueChange={(v) => {
+            setInvoiceStatusFilter(v as typeof invoiceStatusFilter)
+            handleFilterChange()
+          }}
+        >
+          <SelectTrigger className="w-56">
+            <SelectValue placeholder="All invoice states" />
+          </SelectTrigger>
+          <SelectContent>
+            {INVOICE_STATUS_OPTIONS.map((status) => (
+              <SelectItem key={status} value={status}>
+                {getInvoiceStatusLabel(status)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
         <DateRangePicker
           value={dateRange}
           onChange={(r) => {
@@ -321,8 +341,8 @@ export function OrderManagementDashboard({
 
         {(search ||
           statusFilters.length > 0 ||
-          methodFilter !== "all" ||
           typeFilter !== "all" ||
+          invoiceStatusFilter !== "all" ||
           dateRange) && (
           <Button
             variant="ghost"
@@ -330,8 +350,8 @@ export function OrderManagementDashboard({
             onClick={() => {
               setSearch("")
               setStatusFilters([])
-              setMethodFilter("all")
               setTypeFilter("all")
+              setInvoiceStatusFilter("all")
               setDateRange(undefined)
               setPage(1)
             }}
@@ -370,14 +390,7 @@ export function OrderManagementDashboard({
               </TableRow>
             ) : (
               pageItems.map((order) => (
-                <TableRow
-                  key={order.id}
-                  className={
-                    order.status === "Awaiting Confirmation"
-                      ? "bg-amber-50/60 dark:bg-amber-900/10"
-                      : undefined
-                  }
-                >
+                <TableRow key={order.id}>
                   <TableCell className="font-medium font-mono text-xs">
                     {order.id}
                   </TableCell>
@@ -408,9 +421,7 @@ export function OrderManagementDashboard({
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline" className="text-xs">
-                      {order.paymentMethod === "vnpay"
-                        ? "VNPay"
-                        : "Bank Transfer"}
+                      VNPay
                     </Badge>
                   </TableCell>
                   <TableCell>

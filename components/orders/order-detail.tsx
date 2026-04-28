@@ -1,34 +1,16 @@
 "use client"
 
-import { ArrowLeftIcon, CheckCircleIcon, XCircleIcon } from "lucide-react"
+import { ArrowLeftIcon, CopyIcon, DownloadIcon, MailCheckIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import {
   getOrderStatusLabel,
   OrderStatusBadge,
 } from "@/components/orders/order-status-badge"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import type {
+  InvoiceStatus,
   Order,
   OrderStatus,
   TransactionLogEntry,
@@ -54,9 +36,25 @@ function formatDate(iso: string) {
 
 function statusColor(status: OrderStatus): string {
   if (status === "Paid") return "text-emerald-600"
-  if (status === "Awaiting Confirmation") return "text-amber-600"
-  if (status === "Failed" || status === "Rejected") return "text-rose-600"
+  if (status === "Failed") return "text-rose-600"
   return "text-muted-foreground"
+}
+
+function getInvoiceStatusAppearance(status: InvoiceStatus) {
+  switch (status) {
+    case "not_requested":
+      return { label: "Not requested", className: "text-zinc-600" }
+    case "requested_pending_payment":
+      return { label: "Pending payment", className: "text-zinc-600" }
+    case "requested_paid":
+      return { label: "Ready to export", className: "text-amber-700" }
+    case "exported":
+      return { label: "Exported", className: "text-sky-700" }
+    case "issued":
+      return { label: "Issued", className: "text-violet-700" }
+    case "sent":
+      return { label: "Sent", className: "text-emerald-700" }
+  }
 }
 
 interface OrderDetailProps {
@@ -71,7 +69,6 @@ export function OrderDetail({
   initialTransactionLog,
 }: OrderDetailProps) {
   const router = useRouter()
-
   const [order, setOrder] = useState<Order>(() => initialOrder)
   const [log, setLog] = useState<TransactionLogEntry[]>(() =>
     [...initialTransactionLog].sort(
@@ -79,98 +76,67 @@ export function OrderDetail({
         new Date(a.processedAt).getTime() - new Date(b.processedAt).getTime(),
     ),
   )
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
-  const [showRejectDialog, setShowRejectDialog] = useState(false)
-  const [rejectionReason, setRejectionReason] = useState("")
   const [toast, setToast] = useState<string | null>(null)
+  const [isProcessingInvoice, setIsProcessingInvoice] = useState(false)
 
   function showToast(msg: string) {
     setToast(msg)
     setTimeout(() => setToast(null), 4000)
   }
 
-  async function handleConfirm() {
-    const now = new Date().toISOString()
+  async function processInvoiceAction(action: "export" | "issue" | "send") {
     try {
-      const response = await fetch(`/api/orders/${orderId}/payment/confirm`, {
+      setIsProcessingInvoice(true)
+      const response = await fetch(`/api/orders/${orderId}/invoice`, {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
       })
       if (!response.ok) {
-        throw new Error("Unable to confirm payment")
+        throw new Error("Unable to update invoice")
       }
-      const updated: Order = { ...order, status: "Paid", updatedAt: now }
-      setOrder(updated)
-      setLog((prev) => [
-        ...prev,
-        {
-          id: `tx-${orderId}-confirm-${Date.now()}`,
-          orderId,
-          type: "payment",
-          status: "Paid",
-          actor: "Admin (admin@arobid.com)",
-          note: "Payment confirmed after bank statement verification",
-          processedAt: now,
-        },
-      ])
-      setShowConfirmDialog(false)
-      showToast("Payment confirmed. Customer has been notified.")
+      const data = (await response.json()) as {
+        order: Order
+        logEntry: TransactionLogEntry
+      }
+      setOrder(data.order)
+      setLog((prev) =>
+        [...prev, data.logEntry].sort(
+          (a, b) =>
+            new Date(a.processedAt).getTime() - new Date(b.processedAt).getTime(),
+        ),
+      )
+      showToast(
+        action === "export"
+          ? "Invoice data exported."
+          : action === "issue"
+            ? "Invoice marked as issued."
+            : "Invoice marked as sent.",
+      )
     } catch {
-      showToast("Unable to confirm payment.")
+      showToast("Unable to update invoice request.")
+    } finally {
+      setIsProcessingInvoice(false)
     }
   }
 
-  async function handleReject() {
-    if (!rejectionReason.trim()) return
-    const now = new Date().toISOString()
-    const expiresAt = new Date(
-      new Date(now).getTime() + 72 * 3600_000,
-    ).toISOString()
-    try {
-      const response = await fetch(`/api/orders/${orderId}/payment/reject`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          rejectionReason: rejectionReason.trim(),
-        }),
-      })
-      if (!response.ok) {
-        throw new Error("Unable to reject payment")
-      }
-      const updated: Order = {
-        ...order,
-        status: "Pending Payment",
-        expiresAt,
-        updatedAt: now,
-      }
-      setOrder(updated)
-      setLog((prev) => [
-        ...prev,
-        {
-          id: `tx-${orderId}-reject-${Date.now()}`,
-          orderId,
-          type: "payment",
-          status: "Rejected",
-          actor: "Admin (admin@arobid.com)",
-          rejectionReason: rejectionReason.trim(),
-          processedAt: now,
-        },
-        {
-          id: `tx-${orderId}-retry-${Date.now()}`,
-          orderId,
-          type: "status_change",
-          status: "Pending Payment",
-          actor: "System",
-          note: "Order reverted to Pending — 72h retry window started",
-          processedAt: now,
-        },
-      ])
-      setShowRejectDialog(false)
-      setRejectionReason("")
-      showToast("Payment rejected. Customer has been notified and can retry.")
-    } catch {
-      showToast("Unable to reject payment.")
-    }
+  async function copyBillingInfo() {
+    const snapshot = order.billingInfoSnapshot
+    if (!snapshot) return
+    const lines = [
+      snapshot.companyName ? `Company: ${snapshot.companyName}` : null,
+      snapshot.fullName ? `Name: ${snapshot.fullName}` : null,
+      `Invoice email: ${snapshot.invoiceEmail}`,
+      `Tax code: ${snapshot.taxCode}`,
+      `Address: ${snapshot.address}`,
+      snapshot.phoneNumber ? `Phone: ${snapshot.phoneNumber}` : null,
+    ].filter(Boolean)
+
+    await navigator.clipboard.writeText(lines.join("\n"))
+    showToast("Billing information copied.")
   }
+
+  const invoiceAppearance = getInvoiceStatusAppearance(order.invoiceStatus)
 
   return (
     <div className="space-y-6">
@@ -191,36 +157,18 @@ export function OrderDetail({
               </span>
               <OrderStatusBadge status={order.status} />
               <Badge variant="outline" className="text-xs">
-                {order.paymentMethod === "vnpay" ? "VNPay" : "Bank Transfer"}
+                VNPay
               </Badge>
             </div>
             <p className="text-muted-foreground text-sm">
               Created {formatDate(order.createdAt)}
               {order.expiresAt &&
-                (order.status === "Pending Payment" ||
-                  order.status === "Awaiting Confirmation") && (
+                order.status === "Pending Payment" && (
                   <> · Expires {formatDate(order.expiresAt)}</>
                 )}
             </p>
           </div>
         </div>
-
-        {order.status === "Awaiting Confirmation" && (
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              className="border-rose-300 text-rose-600 hover:bg-rose-50 dark:border-rose-700 dark:text-rose-400 dark:hover:bg-rose-900/20"
-              onClick={() => setShowRejectDialog(true)}
-            >
-              <XCircleIcon className="size-4" />
-              Reject Payment
-            </Button>
-            <Button onClick={() => setShowConfirmDialog(true)}>
-              <CheckCircleIcon className="size-4" />
-              Confirm Payment
-            </Button>
-          </div>
-        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
@@ -295,6 +243,119 @@ export function OrderDetail({
         </div>
       </div>
 
+      <div className="space-y-4 rounded-lg border p-5">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="font-semibold text-muted-foreground text-sm uppercase tracking-wide">
+            Invoice Request
+          </h2>
+          <Badge variant="outline" className={`text-xs ${invoiceAppearance.className}`}>
+            {invoiceAppearance.label}
+          </Badge>
+        </div>
+
+        {!order.invoiceRequested || !order.billingInfoSnapshot ? (
+          <p className="text-muted-foreground text-sm">
+            Customer did not request an invoice for this order.
+          </p>
+        ) : (
+          <>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="grid grid-cols-2 gap-y-3 text-sm">
+                <span className="text-muted-foreground">Invoice type</span>
+                <span className="capitalize">{order.invoiceType}</span>
+
+                <span className="text-muted-foreground">Paid date</span>
+                <span>{order.paidAt ? formatDate(order.paidAt) : "—"}</span>
+
+                <span className="text-muted-foreground">Invoice email</span>
+                <span className="break-all">
+                  {order.billingInfoSnapshot.invoiceEmail}
+                </span>
+
+                <span className="text-muted-foreground">Tax code (MST)</span>
+                <span>{order.billingInfoSnapshot.taxCode}</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-y-3 text-sm">
+                <span className="text-muted-foreground">
+                  {order.invoiceType === "business" ? "Company" : "Full name"}
+                </span>
+                <span>
+                  {order.billingInfoSnapshot.companyName ??
+                    order.billingInfoSnapshot.fullName}
+                </span>
+
+                <span className="text-muted-foreground">Address</span>
+                <span>{order.billingInfoSnapshot.address}</span>
+
+                <span className="text-muted-foreground">Phone</span>
+                <span>{order.billingInfoSnapshot.phoneNumber ?? "—"}</span>
+              </div>
+            </div>
+
+            <div className="grid gap-2 rounded-lg border bg-muted/30 p-4 text-sm">
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">Exported</span>
+                <span>
+                  {order.exportedAt
+                    ? `${formatDate(order.exportedAt)} · ${order.exportedBy}`
+                    : "—"}
+                </span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">Issued</span>
+                <span>
+                  {order.issuedAt
+                    ? `${formatDate(order.issuedAt)} · ${order.issuedBy}`
+                    : "—"}
+                </span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-muted-foreground">Sent</span>
+                <span>
+                  {order.sentAt
+                    ? `${formatDate(order.sentAt)} · ${order.sentBy}`
+                    : "—"}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              <Button variant="outline" onClick={copyBillingInfo}>
+                <CopyIcon className="size-4" />
+                Copy billing info
+              </Button>
+              <Button
+                onClick={() => processInvoiceAction("export")}
+                disabled={
+                  isProcessingInvoice ||
+                  order.status !== "Paid" ||
+                  order.invoiceStatus !== "requested_paid"
+                }
+              >
+                <DownloadIcon className="size-4" />
+                Export invoice data
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => processInvoiceAction("issue")}
+                disabled={isProcessingInvoice || order.invoiceStatus !== "exported"}
+              >
+                Mark as issued
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => processInvoiceAction("send")}
+                disabled={isProcessingInvoice || order.invoiceStatus !== "issued"}
+              >
+                <MailCheckIcon className="size-4" />
+                Mark as sent
+              </Button>
+            </div>
+          </>
+        )}
+      </div>
+
       {/* Transaction Log */}
       <div className="rounded-lg border p-5">
         <h2 className="mb-4 font-semibold text-muted-foreground text-sm uppercase tracking-wide">
@@ -311,10 +372,7 @@ export function OrderDetail({
                     className={`mt-1 size-2.5 shrink-0 rounded-full ${
                       entry.status === "Paid"
                         ? "bg-emerald-500"
-                        : entry.status === "Awaiting Confirmation"
-                          ? "bg-amber-400"
-                          : entry.status === "Failed" ||
-                              entry.status === "Rejected"
+                        : entry.status === "Failed"
                             ? "bg-rose-500"
                             : "bg-zinc-400"
                     }`}
@@ -338,83 +396,12 @@ export function OrderDetail({
                     {entry.actor}
                     {entry.note && ` — ${entry.note}`}
                   </p>
-                  {entry.rejectionReason && (
-                    <p className="mt-1 rounded-md border border-rose-200 bg-rose-50 px-2 py-1 text-rose-700 text-xs dark:border-rose-800 dark:bg-rose-900/20 dark:text-rose-400">
-                      Reason: {entry.rejectionReason}
-                    </p>
-                  )}
                 </div>
               </li>
             ))}
           </ol>
         )}
       </div>
-
-      {/* Confirm Payment Dialog */}
-      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirm payment?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Confirm payment of <strong>{formatVND(order.amount)}</strong> for
-              order <strong>{order.id}</strong>? This will mark the order as{" "}
-              <strong>Paid</strong> and notify the customer.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirm}>
-              Confirm
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Reject Payment Dialog */}
-      <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Reject payment</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 py-2">
-            <p className="text-muted-foreground text-sm">
-              Rejecting order <strong>{order.id}</strong> will revert the booth
-              to Available and notify the customer. They can retry within a
-              fresh 72-hour window.
-            </p>
-            <div className="space-y-1.5">
-              <Label htmlFor="rejection-reason">
-                Rejection reason <span className="text-destructive">*</span>
-              </Label>
-              <Textarea
-                id="rejection-reason"
-                placeholder="e.g. No matching transfer found for this order."
-                value={rejectionReason}
-                onChange={(e) => setRejectionReason(e.target.value)}
-                rows={3}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowRejectDialog(false)
-                setRejectionReason("")
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              disabled={!rejectionReason.trim()}
-              onClick={handleReject}
-            >
-              Confirm Rejection
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Toast */}
       {toast && (

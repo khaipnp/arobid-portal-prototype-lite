@@ -1,15 +1,9 @@
 import Image from "next/image"
 import { notFound } from "next/navigation"
-import { ExpoPaymentConfigManager } from "@/components/orders/expo-payment-config"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import { ExpoDetailActions } from "@/components/tradexpo/expo-detail-actions"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import {
-  getPlatformPaymentConfig,
-  listBankAccounts,
-  listExpoPaymentConfigs,
-} from "@/lib/orders/db"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 import { listHallTemplates } from "@/lib/tradexpo/db/hall-templates"
 import {
@@ -59,18 +53,7 @@ export default async function ExpoDetailPage({
   const expo = await getExpoById(expoId)
   if (!expo) notFound()
 
-  const [
-    initialExpoPaymentConfigs,
-    platformPayment,
-    bankAccounts,
-    halls,
-    categories,
-    layoutTemplates,
-    hallTemplates,
-  ] = await Promise.all([
-    listExpoPaymentConfigs(),
-    getPlatformPaymentConfig(),
-    listBankAccounts(),
+  const [halls, categories, layoutTemplates, hallTemplates] = await Promise.all([
     listExpoHalls(expoId),
     listExpoCategories(),
     listExpoLayoutTemplates(),
@@ -146,7 +129,6 @@ export default async function ExpoDetailPage({
         <Tabs defaultValue="overview">
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="payment">Payment Config</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-6">
@@ -244,24 +226,6 @@ export default async function ExpoDetailPage({
             ) : null}
           </TabsContent>
 
-          <TabsContent value="payment" className="mt-6">
-            <div className="max-w-2xl">
-              <div className="mb-4">
-                <h2 className="font-semibold">Payment Methods</h2>
-                <p className="text-muted-foreground text-sm">
-                  Configure which payment methods Exhibitors can use when
-                  registering booths for this Expo.
-                </p>
-              </div>
-              <ExpoPaymentConfigManager
-                expoId={expoId}
-                expo={expo}
-                initialConfigs={initialExpoPaymentConfigs}
-                platformPayment={platformPayment}
-                bankAccounts={bankAccounts}
-              />
-            </div>
-          </TabsContent>
         </Tabs>
       </div>
     </DashboardShell>
