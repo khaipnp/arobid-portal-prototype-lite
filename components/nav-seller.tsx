@@ -4,7 +4,7 @@ import {
   DotIcon,
   ExternalLinkIcon,
   MessageCircleIcon,
-  ShoppingCartIcon
+  ShoppingCartIcon,
 } from "lucide-react"
 import Link from "next/link"
 import { NotificationNavLink } from "@/components/notifications/notification-nav-link"
@@ -54,7 +54,7 @@ const seller = [
     name: "My Quotations",
     url: "/seller/my-quotations",
     icon: <DotIcon />,
-  }
+  },
 ]
 
 const buyer = [
@@ -62,7 +62,7 @@ const buyer = [
     name: "My RFQs",
     url: "/seller/my-rfqs",
     icon: <DotIcon />,
-  }
+  },
 ]
 
 const quickLinks = [
@@ -96,10 +96,7 @@ export function NavSeller() {
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>
-      <SidebarMenu>
-
-        {/* TradeXpo */}
-      </SidebarMenu>
+      <SidebarMenu>{/* TradeXpo */}</SidebarMenu>
       <SidebarGroupLabel>TradeXpo</SidebarGroupLabel>
       <SidebarMenu>
         {tradexpo.map((item) => (

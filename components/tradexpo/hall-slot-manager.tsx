@@ -182,7 +182,7 @@ export function HallSlotManager({
     const duplicate = templateSlots.some(
       (slot) =>
         slot.slotCode.toLowerCase() ===
-        formState.slotCode.trim().toLowerCase() && slot.id !== editingSlotId,
+          formState.slotCode.trim().toLowerCase() && slot.id !== editingSlotId,
     )
 
     if (!formState.slotCode.trim()) {
@@ -314,7 +314,9 @@ export function HallSlotManager({
                 : "Configure booth slot coordinates and dimensions for this hall."}
             </p>
           </div>
-          <Button size="sm" variant="secondary" onClick={openCreateForm}>Add Slot</Button>
+          <Button size="sm" variant="secondary" onClick={openCreateForm}>
+            Add Slot
+          </Button>
         </div>
 
         {notice ? (
@@ -596,7 +598,9 @@ export function HallSlotManager({
             </div>
             <DialogFooter>
               <DialogClose asChild>
-                <Button type="button" variant="outline">Cancel</Button>
+                <Button type="button" variant="outline">
+                  Cancel
+                </Button>
               </DialogClose>
 
               <Button type="submit">Save Slot</Button>

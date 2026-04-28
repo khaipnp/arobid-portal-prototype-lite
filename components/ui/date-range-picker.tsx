@@ -129,26 +129,26 @@ function DateRangePicker({
 
     const from = rangeFrom
       ? mergeDateAndTime(
-        rangeFrom,
-        draft?.from ??
-        (() => {
-          const d = new Date(rangeFrom)
-          d.setHours(0, 0, 0, 0)
-          return d
-        })(),
-      )
+          rangeFrom,
+          draft?.from ??
+            (() => {
+              const d = new Date(rangeFrom)
+              d.setHours(0, 0, 0, 0)
+              return d
+            })(),
+        )
       : undefined
 
     const to = rangeTo
       ? mergeDateAndTime(
-        rangeTo,
-        draft?.to ??
-        (() => {
-          const d = new Date(rangeTo)
-          d.setHours(23, 59, 0, 0)
-          return d
-        })(),
-      )
+          rangeTo,
+          draft?.to ??
+            (() => {
+              const d = new Date(rangeTo)
+              d.setHours(23, 59, 0, 0)
+              return d
+            })(),
+        )
       : undefined
 
     const next: DateRange = { from, to }

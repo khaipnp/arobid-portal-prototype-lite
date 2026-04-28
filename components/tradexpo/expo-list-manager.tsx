@@ -23,8 +23,8 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
-  DateRangePicker,
   type DateRange,
+  DateRangePicker,
 } from "@/components/ui/date-range-picker"
 import {
   DropdownMenu,
@@ -50,7 +50,12 @@ import {
 } from "@/components/ui/table"
 import type { Expo, ExpoCategory, ExpoStatus } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
-import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupButton } from "../ui/input-group"
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "../ui/input-group"
 
 const ALL_STATUSES: ExpoStatus[] = [
   "Draft",
@@ -169,13 +174,7 @@ export function ExpoListManager({
     }
 
     return result
-  }, [
-    expos,
-    debouncedSearch,
-    statusFilter,
-    categoryFilter,
-    dateRangeFilter,
-  ])
+  }, [expos, debouncedSearch, statusFilter, categoryFilter, dateRangeFilter])
 
   const pageSize = 20
   const totalPages = Math.max(1, Math.ceil(filteredExpos.length / pageSize))
@@ -301,9 +300,7 @@ export function ExpoListManager({
         <div className="grid gap-3">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <Button asChild className="w-fit">
-              <Link href="/admin/tradexpo/expos/new">
-                Create new
-              </Link>
+              <Link href="/admin/tradexpo/expos/new">Create new</Link>
             </Button>
           </div>
           <div className="flex flex-col gap-3 md:flex-row md:items-center">
@@ -317,7 +314,12 @@ export function ExpoListManager({
                 <SearchIcon />
               </InputGroupAddon>
               {searchInput && (
-                <InputGroupButton size="icon-xs" className="rounded-full" variant="ghost" onClick={() => setSearchInput("")}>
+                <InputGroupButton
+                  size="icon-xs"
+                  className="rounded-full"
+                  variant="ghost"
+                  onClick={() => setSearchInput("")}
+                >
                   <XIcon />
                   <span className="sr-only">Clear search</span>
                 </InputGroupButton>

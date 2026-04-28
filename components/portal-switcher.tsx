@@ -67,8 +67,14 @@ export function PortalSwitcher({
             side={isMobile ? "bottom" : "right"}
             sideOffset={4}
           >
-            <DropdownMenuLabel className="text-muted-foreground text-xs">
-              Portals
+            <DropdownMenuLabel>
+              <p className="font-bold text-foreground text-xs">
+                Portal Switcher
+              </p>
+              <p className="text-muted-foreground text-xs">
+                Switch between portals for prototype only. Don't use this in
+                production.
+              </p>
             </DropdownMenuLabel>
             {portals.map((portal, index) => (
               <DropdownMenuItem
