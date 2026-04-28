@@ -1,12 +1,10 @@
 "use client"
 
 import {
-  BoxIcon,
-  Building2Icon,
-  CalendarIcon,
+  DotIcon,
+  ExternalLinkIcon,
   MessageCircleIcon,
-  ScrollTextIcon,
-  ShoppingCartIcon,
+  ShoppingCartIcon
 } from "lucide-react"
 import Link from "next/link"
 import { NotificationNavLink } from "@/components/notifications/notification-nav-link"
@@ -18,29 +16,65 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-const nav = [
+const tradexpo = [
+  {
+    name: "Overview",
+    url: "/seller/overview",
+    icon: <DotIcon />,
+  },
   {
     name: "My Expos",
     url: "/seller/my-expos",
-    icon: <CalendarIcon />,
+    icon: <DotIcon />,
   },
 ]
 
-const b2b = [
+const seller = [
   {
-    name: "Supplier Profile",
+    name: "Legal Information",
     url: "/seller/b2b-marketplace",
-    icon: <Building2Icon />,
+    icon: <DotIcon />,
+  },
+  {
+    name: "Company Profile",
+    url: "/seller/product-management",
+    icon: <DotIcon />,
+  },
+  {
+    name: "eProfile",
+    url: "/seller/eprofile",
+    icon: <DotIcon />,
   },
   {
     name: "Product Management",
     url: "/seller/product-management",
-    icon: <BoxIcon />,
+    icon: <DotIcon />,
   },
+  {
+    name: "Quotation Management",
+    url: "/seller/quotation-management",
+    icon: <DotIcon />,
+  }
+]
+
+const buyer = [
+  {
+    name: "RFQ Management",
+    url: "/seller/quotation-management",
+    icon: <DotIcon />,
+  }
+]
+
+const quickLinks = [
   {
     name: "RFQ Hub",
     url: "/seller/rfq-hub",
-    icon: <ScrollTextIcon />,
+    icon: <ExternalLinkIcon />,
+  },
+  {
+    name: "eProfile",
+    url: "/seller/rfq-hub",
+    icon: <ExternalLinkIcon />,
   },
 ]
 
@@ -50,6 +84,8 @@ export function NavSeller() {
       <SidebarMenu>
         <NotificationNavLink userId="seller-1" href="/seller/notifications" />
       </SidebarMenu>
+
+      {/* Deal Room */}
       <SidebarMenu>
         <SidebarMenuItem>
           <SidebarMenuButton asChild>
@@ -61,18 +97,12 @@ export function NavSeller() {
         </SidebarMenuItem>
       </SidebarMenu>
       <SidebarMenu>
-        <SidebarMenuItem>
-          <SidebarMenuButton asChild>
-            <Link href="/seller/checkout-demo">
-              <ShoppingCartIcon />
-              <span>Checkout Demo (eVoucher)</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
+
+        {/* TradeXpo */}
       </SidebarMenu>
       <SidebarGroupLabel>TradeXpo</SidebarGroupLabel>
       <SidebarMenu>
-        {nav.map((item) => (
+        {tradexpo.map((item) => (
           <SidebarMenuItem key={item.name}>
             <SidebarMenuButton asChild>
               <Link href={item.url}>
@@ -83,9 +113,11 @@ export function NavSeller() {
           </SidebarMenuItem>
         ))}
       </SidebarMenu>
-      <SidebarGroupLabel>B2B Marketplace</SidebarGroupLabel>
+
+      {/* Seller */}
+      <SidebarGroupLabel>Seller</SidebarGroupLabel>
       <SidebarMenu>
-        {b2b.map((item) => (
+        {seller.map((item) => (
           <SidebarMenuItem key={item.name}>
             <SidebarMenuButton asChild>
               <Link href={item.url}>
@@ -96,6 +128,46 @@ export function NavSeller() {
           </SidebarMenuItem>
         ))}
       </SidebarMenu>
+
+      {/* Buyer */}
+      <SidebarGroupLabel>Buyer</SidebarGroupLabel>
+      <SidebarMenu>
+        {buyer.map((item) => (
+          <SidebarMenuItem key={item.name}>
+            <SidebarMenuButton asChild>
+              <Link href={item.url}>
+                {item.icon}
+                <span>{item.name}</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ))}
+      </SidebarMenu>
+      {/* Quick Links */}
+      <SidebarGroupLabel>Quick Links</SidebarGroupLabel>
+      <SidebarMenu>
+        {quickLinks.map((item) => (
+          <SidebarMenuItem key={item.name}>
+            <SidebarMenuButton asChild>
+              <Link href={item.url}>
+                {item.icon}
+                <span>{item.name}</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ))}
+      </SidebarMenu>
+
+      {/* Demo */}
+      <SidebarGroupLabel>Demo</SidebarGroupLabel>
+      <SidebarMenuItem>
+        <SidebarMenuButton asChild>
+          <Link href="/seller/checkout-demo">
+            <ShoppingCartIcon />
+            <span>Checkout Demo (eVoucher)</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
     </SidebarGroup>
   )
 }
