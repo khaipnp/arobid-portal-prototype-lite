@@ -8,6 +8,7 @@ import {
   LayoutTemplateIcon,
   MonitorPlayIcon,
   PieChartIcon,
+  Settings2Icon,
   ReceiptIcon,
   ShapesIcon,
   ShieldCheckIcon,
@@ -75,6 +76,11 @@ const servicesLinks = [
     name: "eVoucher",
     url: "/admin/evoucher",
     icon: <TicketIcon />,
+  },
+  {
+    name: "Payment Settings",
+    url: "/admin/settings/payment-method",
+    icon: <Settings2Icon />,
   },
 ]
 

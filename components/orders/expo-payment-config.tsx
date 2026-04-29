@@ -1,11 +1,6 @@
 "use client"
 
-import {
-  CreditCardIcon,
-  InfoIcon,
-  LandmarkIcon,
-  RotateCcwIcon,
-} from "lucide-react"
+import { CreditCardIcon, InfoIcon, RotateCcwIcon } from "lucide-react"
 import { useMemo, useState } from "react"
 import {
   AlertDialog,
@@ -18,20 +13,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import type {
-  BankAccount,
-  Expo,
-  ExpoPaymentConfig,
-  PaymentConfig,
-} from "@/lib/tradexpo/types"
-import { Label } from "../ui/label"
+import type { Expo, ExpoPaymentConfig, PaymentConfig } from "@/lib/tradexpo/types"
 
 // ─── Toggle row ───────────────────────────────────────────────────────────────
 
@@ -83,7 +65,6 @@ interface ExpoPaymentConfigPanelProps {
   expoName: string
   configs: ExpoPaymentConfig[]
   platformPayment: PaymentConfig
-  bankAccounts: BankAccount[]
   onSave: (saved: ExpoPaymentConfig) => Promise<void>
   onReset: () => Promise<void>
 }
@@ -93,7 +74,6 @@ function ExpoPaymentConfigPanel({
   expoName,
   configs,
   platformPayment,
-  bankAccounts,
   onSave,
   onReset,
 }: ExpoPaymentConfigPanelProps) {
@@ -104,7 +84,7 @@ function ExpoPaymentConfigPanel({
       expoId,
       isInherited: true,
       vnpayEnabled: platformPayment.vnpayEnabled,
-      bankTransferEnabled: platformPayment.bankTransferEnabled,
+      bankTransferEnabled: false,
       bankAccountId: null,
       updatedAt: platformPayment.updatedAt,
       updatedBy: platformPayment.updatedBy,
@@ -113,8 +93,6 @@ function ExpoPaymentConfigPanel({
 
   const [editing, setEditing] = useState<{
     vnpayEnabled: boolean
-    bankTransferEnabled: boolean
-    bankAccountId: string | null
   } | null>(null)
   const [showResetConfirm, setShowResetConfirm] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -122,9 +100,6 @@ function ExpoPaymentConfigPanel({
 
   const isInherited = !configs.find((c) => c.expoId === expoId)
   const isEditing = !!editing
-
-  const activeAccounts = bankAccounts.filter((b) => b.isActive)
-  const primaryAccount = activeAccounts.find((b) => b.isPrimary)
 
   function showToastMsg(msg: string) {
     setToast(msg)
@@ -134,8 +109,6 @@ function ExpoPaymentConfigPanel({
   function startOverride() {
     setEditing({
       vnpayEnabled: currentConfig.vnpayEnabled,
-      bankTransferEnabled: currentConfig.bankTransferEnabled,
-      bankAccountId: currentConfig.bankAccountId,
     })
     setError(null)
   }
@@ -143,46 +116,26 @@ function ExpoPaymentConfigPanel({
   function handleToggleVNPay() {
     if (!editing) return
     const next = !editing.vnpayEnabled
-    if (!next && !editing.bankTransferEnabled) {
-      setError("At least one payment method must be enabled.")
+    if (!next) {
+      setError("VNPay is the only active payment method and cannot be disabled.")
       return
     }
     setError(null)
     setEditing((e) => e && { ...e, vnpayEnabled: next })
   }
 
-  function handleToggleBank() {
-    if (!editing) return
-    const next = !editing.bankTransferEnabled
-    if (!next && !editing.vnpayEnabled) {
-      setError("At least one payment method must be enabled.")
-      return
-    }
-    if (next) {
-      const hasActive = bankAccounts.some((b) => b.isActive)
-      if (!hasActive) {
-        setError(
-          "No bank accounts configured. Please add one in Bank Account Settings before enabling Bank Transfer.",
-        )
-        return
-      }
-    }
-    setError(null)
-    setEditing((e) => e && { ...e, bankTransferEnabled: next })
-  }
-
   async function handleSave() {
     if (!editing) return
-    if (!editing.vnpayEnabled && !editing.bankTransferEnabled) {
-      setError("At least one payment method must be enabled.")
+    if (!editing.vnpayEnabled) {
+      setError("VNPay is the only active payment method and cannot be disabled.")
       return
     }
     const saved: ExpoPaymentConfig = {
       expoId,
       isInherited: false,
       vnpayEnabled: editing.vnpayEnabled,
-      bankTransferEnabled: editing.bankTransferEnabled,
-      bankAccountId: editing.bankAccountId,
+      bankTransferEnabled: false,
+      bankAccountId: null,
       updatedAt: new Date().toISOString(),
       updatedBy: "admin@arobid.com",
     }
@@ -242,77 +195,7 @@ function ExpoPaymentConfigPanel({
           disabled={!isEditing}
           onToggle={handleToggleVNPay}
         />
-        <ToggleRow
-          icon={<LandmarkIcon className="size-4" />}
-          label="Bank Transfer (VietQR)"
-          enabled={
-            isEditing
-              ? editing.bankTransferEnabled
-              : currentConfig.bankTransferEnabled
-          }
-          disabled={!isEditing}
-          onToggle={handleToggleBank}
-        />
       </div>
-
-      {/* Bank account selector when editing */}
-      {isEditing && editing.bankTransferEnabled && (
-        <div className="space-y-1.5">
-          <Label htmlFor="bank-account-select" className="font-medium text-sm">
-            Bank Account for this Expo
-          </Label>
-          <Select
-            value={editing.bankAccountId ?? "__primary__"}
-            onValueChange={(v) =>
-              setEditing(
-                (e) =>
-                  e && {
-                    ...e,
-                    bankAccountId: v === "__primary__" ? null : v,
-                  },
-              )
-            }
-          >
-            <SelectTrigger id="bank-account-select" className="w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="__primary__">
-                Use primary account
-                {primaryAccount
-                  ? ` (${primaryAccount.bankName} ···${primaryAccount.accountNumber.slice(-4)})`
-                  : ""}
-              </SelectItem>
-              {activeAccounts.map((a) => (
-                <SelectItem key={a.id} value={a.id}>
-                  {a.bankName} ···{a.accountNumber.slice(-4)}
-                  {a.isPrimary ? " (Primary)" : ""}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {!editing.bankAccountId && primaryAccount && (
-            <p className="text-muted-foreground text-xs">
-              Will use primary account: {primaryAccount.bankName} ···
-              {primaryAccount.accountNumber.slice(-4)}
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Resolved bank account when not editing */}
-      {!isEditing && currentConfig.bankTransferEnabled && (
-        <div className="rounded-lg border bg-muted/40 px-4 py-3 text-muted-foreground text-xs">
-          <strong>Bank Transfer account:</strong> {(() => {
-            const acct = currentConfig.bankAccountId
-              ? bankAccounts.find((b) => b.id === currentConfig.bankAccountId)
-              : primaryAccount
-            return acct
-              ? `${acct.bankName} ···${acct.accountNumber.slice(-4)}${!currentConfig.bankAccountId ? " (primary fallback)" : ""}`
-              : "No primary account configured"
-          })()}
-        </div>
-      )}
 
       {error && (
         <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-destructive text-sm">
@@ -399,7 +282,11 @@ interface ExpoPaymentConfigManagerProps {
   expo: Expo
   initialConfigs: ExpoPaymentConfig[]
   platformPayment: PaymentConfig
-  bankAccounts: BankAccount[]
+  onSaveConfig: (input: {
+    expoId: string
+    vnpayEnabled: boolean
+  }) => Promise<ExpoPaymentConfig>
+  onResetConfig: (expoId: string) => Promise<void>
 }
 
 export function ExpoPaymentConfigManager({
@@ -407,29 +294,18 @@ export function ExpoPaymentConfigManager({
   expo,
   initialConfigs,
   platformPayment,
-  bankAccounts,
+  onSaveConfig,
+  onResetConfig,
 }: ExpoPaymentConfigManagerProps) {
   const [configs, setConfigs] = useState<ExpoPaymentConfig[]>(() => [
     ...initialConfigs,
   ])
 
   async function handleSave(saved: ExpoPaymentConfig) {
-    const response = await fetch(
-      `/api/orders/expo-payment-configs/${saved.expoId}`,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          vnpayEnabled: saved.vnpayEnabled,
-          bankTransferEnabled: saved.bankTransferEnabled,
-          bankAccountId: saved.bankAccountId,
-        }),
-      },
-    )
-    if (!response.ok) {
-      throw new Error("Failed to save expo payment config.")
-    }
-    const persisted = (await response.json()) as ExpoPaymentConfig
+    const persisted = await onSaveConfig({
+      expoId: saved.expoId,
+      vnpayEnabled: saved.vnpayEnabled,
+    })
     setConfigs((prev) => {
       const idx = prev.findIndex((c) => c.expoId === persisted.expoId)
       const next = [...prev]
@@ -440,12 +316,7 @@ export function ExpoPaymentConfigManager({
   }
 
   async function handleReset() {
-    const response = await fetch(`/api/orders/expo-payment-configs/${expoId}`, {
-      method: "DELETE",
-    })
-    if (!response.ok) {
-      throw new Error("Failed to reset expo payment config.")
-    }
+    await onResetConfig(expoId)
     setConfigs((prev) => prev.filter((c) => c.expoId !== expoId))
   }
 
@@ -455,7 +326,6 @@ export function ExpoPaymentConfigManager({
       expoName={expo.name}
       configs={configs}
       platformPayment={platformPayment}
-      bankAccounts={bankAccounts}
       onSave={handleSave}
       onReset={handleReset}
     />

@@ -36,6 +36,7 @@ const PAGE_SIZE = 20
 
 interface AdministrationListPageProps {
   entity: EntityType
+  initialData?: ListResponse<EntityRecord>
 }
 
 const TITLES: Record<EntityType, string> = {
@@ -165,24 +166,37 @@ function PermissionGroupPreview({ data }: { data: EntityRecord[] }) {
 
 export function AdministrationListPage({
   entity,
+  initialData,
 }: AdministrationListPageProps) {
-  const [rows, setRows] = useState<EntityRecord[]>([])
+  const [rows, setRows] = useState<EntityRecord[]>(initialData?.data ?? [])
   const [meta, setMeta] = useState<PaginationMeta>({
-    page: 1,
+    page: initialData?.meta.page ?? 1,
     pageSize: PAGE_SIZE,
-    totalItems: 0,
-    totalPages: 1,
+    totalItems: initialData?.meta.totalItems ?? 0,
+    totalPages: initialData?.meta.totalPages ?? 1,
   })
+  const [searchInput, setSearchInput] = useState("")
   const [search, setSearch] = useState("")
   const [moduleFilter, setModuleFilter] = useState("all")
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(!initialData)
   const [error, setError] = useState<string | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
+    const timeout = setTimeout(() => {
+      setSearch(searchInput)
+      setMeta((current) => ({ ...current, page: 1 }))
+    }, 250)
+    return () => clearTimeout(timeout)
+  }, [searchInput])
+
+  useEffect(() => {
     let cancelled = false
+    const controller = new AbortController()
+
     const load = async () => {
-      setLoading(true)
+      // Keep previous rows while loading the next result.
+      setLoading(rows.length === 0)
       setError(null)
       try {
         const params = new URLSearchParams({
@@ -192,12 +206,10 @@ export function AdministrationListPage({
           moduleId: moduleFilter,
           refresh: String(refreshKey),
         })
-        const response = await fetch(
-          `/api/administration/${entity}?${params}`,
-          {
-            cache: "no-store",
-          },
-        )
+        const response = await fetch(`/api/administration/${entity}?${params}`, {
+          cache: "default",
+          signal: controller.signal,
+        })
         if (!response.ok) {
           throw new Error("Unable to load data")
         }
@@ -206,9 +218,13 @@ export function AdministrationListPage({
           setRows(payload.data)
           setMeta(payload.meta)
         }
-      } catch {
+      } catch (fetchError) {
         if (!cancelled) {
-          setError("Failed to load data. Please try again.")
+          const isAbort =
+            fetchError instanceof DOMException && fetchError.name === "AbortError"
+          if (!isAbort) {
+            setError("Failed to load data. Please try again.")
+          }
         }
       } finally {
         if (!cancelled) {
@@ -220,12 +236,12 @@ export function AdministrationListPage({
     void load()
     return () => {
       cancelled = true
+      controller.abort()
     }
-  }, [entity, meta.page, moduleFilter, refreshKey, search])
+  }, [entity, meta.page, moduleFilter, refreshKey, search, rows.length])
 
   function handleSearchChange(value: string) {
-    setSearch(value)
-    setMeta((current) => ({ ...current, page: 1 }))
+    setSearchInput(value)
   }
 
   function handleModuleFilterChange(value: string) {
@@ -268,7 +284,7 @@ export function AdministrationListPage({
         )}
         <InputGroup className="w-full md:w-xs">
           <InputGroupInput
-            value={search}
+            value={searchInput}
             placeholder={`Search ${TITLES[entity].toLowerCase()}...`}
             onChange={(event) => handleSearchChange(event.target.value)}
           />

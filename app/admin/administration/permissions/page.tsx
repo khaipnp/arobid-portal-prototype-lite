@@ -1,7 +1,9 @@
 import { AdministrationListPage } from "@/components/administration/administration-list-page"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
+import { getAdministrationList } from "@/lib/administration/list"
 
-export default function AdministrationPermissionsPage() {
+export default async function AdministrationPermissionsPage() {
+  const initialData = getAdministrationList({ entity: "permissions" })
   return (
     <DashboardShell
       title="Administration - Permissions"
@@ -12,7 +14,7 @@ export default function AdministrationPermissionsPage() {
         { label: "Permissions" },
       ]}
     >
-      <AdministrationListPage entity="permissions" />
+      <AdministrationListPage entity="permissions" initialData={initialData} />
     </DashboardShell>
   )
 }

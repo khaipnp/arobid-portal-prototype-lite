@@ -107,6 +107,13 @@ export async function listExpos(): Promise<Expo[]> {
   return rows.map(rowToExpo)
 }
 
+export async function countExpos(): Promise<number> {
+  const rows = (await sql`
+    select count(*)::int as total from expos
+  `) as { total: number }[]
+  return rows[0]?.total ?? 0
+}
+
 export async function listExpoLayoutTemplates(): Promise<ExpoLayoutTemplate[]> {
   const rows = (await sql`
     select id, name from expo_layout_templates order by name asc

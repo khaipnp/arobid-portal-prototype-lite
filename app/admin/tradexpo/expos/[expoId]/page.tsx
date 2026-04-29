@@ -1,9 +1,15 @@
 import Image from "next/image"
 import { notFound } from "next/navigation"
+import {
+  resetExpoPaymentConfigToDefault,
+  saveExpoPaymentConfig,
+} from "@/app/admin/tradexpo/expos/[expoId]/payment-actions"
+import { ExpoPaymentConfigManager } from "@/components/orders/expo-payment-config"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import { ExpoDetailActions } from "@/components/tradexpo/expo-detail-actions"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { getPlatformPaymentConfig, listExpoPaymentConfigs } from "@/lib/orders/db"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 import { listHallTemplates } from "@/lib/tradexpo/db/hall-templates"
 import {
@@ -53,11 +59,20 @@ export default async function ExpoDetailPage({
   const expo = await getExpoById(expoId)
   if (!expo) notFound()
 
-  const [halls, categories, layoutTemplates, hallTemplates] = await Promise.all([
+  const [
+    halls,
+    categories,
+    layoutTemplates,
+    hallTemplates,
+    initialConfigs,
+    platformPayment,
+  ] = await Promise.all([
     listExpoHalls(expoId),
     listExpoCategories(),
     listExpoLayoutTemplates(),
     listHallTemplates(),
+    listExpoPaymentConfigs(),
+    getPlatformPaymentConfig(),
   ])
 
   const layoutTemplateName =
@@ -129,6 +144,7 @@ export default async function ExpoDetailPage({
         <Tabs defaultValue="overview">
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="payment">Payment</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-6">
@@ -224,6 +240,17 @@ export default async function ExpoDetailPage({
                 </div>
               </div>
             ) : null}
+          </TabsContent>
+
+          <TabsContent value="payment" className="mt-6 max-w-2xl">
+            <ExpoPaymentConfigManager
+              expoId={expo.id}
+              expo={expo}
+              initialConfigs={initialConfigs}
+              platformPayment={platformPayment}
+              onSaveConfig={saveExpoPaymentConfig}
+              onResetConfig={resetExpoPaymentConfigToDefault}
+            />
           </TabsContent>
 
         </Tabs>
