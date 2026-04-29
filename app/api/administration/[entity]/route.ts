@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import {
-  getAdministrationList,
   type AdministrationEntity,
+  getAdministrationList,
 } from "@/lib/administration/list"
 
 export async function GET(

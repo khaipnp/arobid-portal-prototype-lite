@@ -11,7 +11,9 @@ export async function saveExpoPaymentConfig(input: {
   vnpayEnabled: boolean
 }): Promise<ExpoPaymentConfig> {
   if (!input.vnpayEnabled) {
-    throw new Error("VNPay is the only active payment method and cannot be disabled.")
+    throw new Error(
+      "VNPay is the only active payment method and cannot be disabled.",
+    )
   }
 
   return upsertExpoPaymentConfig({

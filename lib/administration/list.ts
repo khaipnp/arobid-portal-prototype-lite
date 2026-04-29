@@ -58,9 +58,13 @@ export function getAdministrationList(input: {
   const records = listByEntity(input.entity)
     .sort((a, b) => a.name.localeCompare(b.name))
     .filter((item) =>
-      moduleId === "all" || !("moduleId" in item) ? true : item.moduleId === moduleId,
+      moduleId === "all" || !("moduleId" in item)
+        ? true
+        : item.moduleId === moduleId,
     )
-    .filter((item) => (search.length === 0 ? true : item.name.toLowerCase().includes(search)))
+    .filter((item) =>
+      search.length === 0 ? true : item.name.toLowerCase().includes(search),
+    )
 
   const totalItems = records.length
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))

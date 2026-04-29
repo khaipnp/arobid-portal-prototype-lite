@@ -13,7 +13,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
-import type { Expo, ExpoPaymentConfig, PaymentConfig } from "@/lib/tradexpo/types"
+import type {
+  Expo,
+  ExpoPaymentConfig,
+  PaymentConfig,
+} from "@/lib/tradexpo/types"
 
 // ─── Toggle row ───────────────────────────────────────────────────────────────
 
@@ -117,7 +121,9 @@ function ExpoPaymentConfigPanel({
     if (!editing) return
     const next = !editing.vnpayEnabled
     if (!next) {
-      setError("VNPay is the only active payment method and cannot be disabled.")
+      setError(
+        "VNPay is the only active payment method and cannot be disabled.",
+      )
       return
     }
     setError(null)
@@ -127,7 +133,9 @@ function ExpoPaymentConfigPanel({
   async function handleSave() {
     if (!editing) return
     if (!editing.vnpayEnabled) {
-      setError("VNPay is the only active payment method and cannot be disabled.")
+      setError(
+        "VNPay is the only active payment method and cannot be disabled.",
+      )
       return
     }
     const saved: ExpoPaymentConfig = {

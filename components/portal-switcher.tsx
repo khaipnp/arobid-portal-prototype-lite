@@ -98,16 +98,16 @@ export function PortalSwitcher({
                     <span className="truncate font-medium">
                       {activePortal.name}
                     </span>
-                    <span className="truncate text-xs">{activePortal.plan}</span>
+                    <span className="truncate text-xs">
+                      {activePortal.plan}
+                    </span>
                   </div>
                   <ChevronsUpDownIcon className="ml-auto" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
             </HoverCardTrigger>
             <HoverCardContent align="start" className="text-sm">
-              <span className="font-bold">
-                PO Note: &nbsp;
-              </span>
+              <span className="font-bold">PO Note: &nbsp;</span>
               <span>
                 Đây là action dành cho prototype. Không dùng trong production.
               </span>
@@ -119,7 +119,6 @@ export function PortalSwitcher({
             side={isMobile ? "bottom" : "right"}
             sideOffset={4}
           >
-
             {portals.map((portal, index) => (
               <DropdownMenuItem
                 key={portal.name}

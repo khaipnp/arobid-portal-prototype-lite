@@ -1,8 +1,10 @@
 import { PaymentMethodConfig } from "@/components/orders/payment-method-config"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
-import { listExpoPaymentConfigs } from "@/lib/orders/db"
+import {
+  getPlatformPaymentConfig,
+  listExpoPaymentConfigs,
+} from "@/lib/orders/db"
 import { countExpos } from "@/lib/tradexpo/db/platform-data"
-import { getPlatformPaymentConfig } from "@/lib/orders/db"
 
 export const dynamic = "force-dynamic"
 
@@ -16,11 +18,11 @@ export default async function PaymentMethodPage() {
 
   return (
     <DashboardShell
-      title="Payment Settings"
+      title="Payment Management"
       description="Configure platform-level payment methods for marketplace and Expo checkout."
       breadcrumbs={[
         { label: "Admin", href: "/admin" },
-        { label: "Payment Settings" },
+        { label: "Payment Management" },
       ]}
     >
       <PaymentMethodConfig

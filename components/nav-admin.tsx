@@ -8,13 +8,13 @@ import {
   LayoutTemplateIcon,
   MonitorPlayIcon,
   PieChartIcon,
-  Settings2Icon,
   ReceiptIcon,
   ShapesIcon,
   ShieldCheckIcon,
   TicketIcon,
   ToyBrickIcon,
   UserRoundKeyIcon,
+  WalletCardsIcon,
 } from "lucide-react"
 import Link from "next/link"
 import {
@@ -78,9 +78,9 @@ const servicesLinks = [
     icon: <TicketIcon />,
   },
   {
-    name: "Payment Settings",
-    url: "/admin/settings/payment-method",
-    icon: <Settings2Icon />,
+    name: "Payment Management",
+    url: "/admin/settings/payment-management",
+    icon: <WalletCardsIcon />,
   },
 ]
 

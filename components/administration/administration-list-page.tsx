@@ -206,10 +206,13 @@ export function AdministrationListPage({
           moduleId: moduleFilter,
           refresh: String(refreshKey),
         })
-        const response = await fetch(`/api/administration/${entity}?${params}`, {
-          cache: "default",
-          signal: controller.signal,
-        })
+        const response = await fetch(
+          `/api/administration/${entity}?${params}`,
+          {
+            cache: "default",
+            signal: controller.signal,
+          },
+        )
         if (!response.ok) {
           throw new Error("Unable to load data")
         }
@@ -221,7 +224,8 @@ export function AdministrationListPage({
       } catch (fetchError) {
         if (!cancelled) {
           const isAbort =
-            fetchError instanceof DOMException && fetchError.name === "AbortError"
+            fetchError instanceof DOMException &&
+            fetchError.name === "AbortError"
           if (!isAbort) {
             setError("Failed to load data. Please try again.")
           }

@@ -30,7 +30,14 @@ import type {
   SellerBoothRegistration,
 } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
-import { Empty, EmptyHeader, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from "../ui/empty"
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "../ui/empty"
 
 type SellerExpoViewStatus = "Upcoming" | "Live" | "Archive"
 
@@ -167,8 +174,13 @@ export function SellerExpoList({
             <EmptyMedia variant="icon">
               <SignpostIcon />
             </EmptyMedia>
-            <EmptyTitle className="font-bold text-lg">No Expo Matches</EmptyTitle>
-            <EmptyDescription>Currently, there are no Expo matches the current filters. Please try again with different filters.</EmptyDescription>
+            <EmptyTitle className="font-bold text-lg">
+              No Expo Matches
+            </EmptyTitle>
+            <EmptyDescription>
+              Currently, there are no Expo matches the current filters. Please
+              try again with different filters.
+            </EmptyDescription>
           </EmptyHeader>
           <EmptyContent className="flex-row justify-center gap-2">
             <Button
@@ -182,9 +194,7 @@ export function SellerExpoList({
               Clear Filters
             </Button>
             <Button>
-              <Link href="/">
-                Explore All Expos
-              </Link>
+              <Link href="/">Explore All Expos</Link>
             </Button>
           </EmptyContent>
         </Empty>
@@ -194,9 +204,8 @@ export function SellerExpoList({
             <ExpoCard key={expo.id} expo={expo} registrations={registrations} />
           ))}
         </div>
-      )
-      }
-    </div >
+      )}
+    </div>
   )
 }
 

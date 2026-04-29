@@ -9,7 +9,10 @@ import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import { ExpoDetailActions } from "@/components/tradexpo/expo-detail-actions"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { getPlatformPaymentConfig, listExpoPaymentConfigs } from "@/lib/orders/db"
+import {
+  getPlatformPaymentConfig,
+  listExpoPaymentConfigs,
+} from "@/lib/orders/db"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 import { listHallTemplates } from "@/lib/tradexpo/db/hall-templates"
 import {
@@ -252,7 +255,6 @@ export default async function ExpoDetailPage({
               onResetConfig={resetExpoPaymentConfigToDefault}
             />
           </TabsContent>
-
         </Tabs>
       </div>
     </DashboardShell>

@@ -262,7 +262,8 @@ function makeOrder(
     invoiceStatus === "requested_paid" && n % 5 === 0 && paidAt
       ? withOffset(paidAt, 24)
       : undefined
-  const issuedAt = exportedAt && n % 10 === 0 ? withOffset(exportedAt, 8) : undefined
+  const issuedAt =
+    exportedAt && n % 10 === 0 ? withOffset(exportedAt, 8) : undefined
   const sentAt = issuedAt && n % 15 === 0 ? withOffset(issuedAt, 2) : undefined
 
   return {
@@ -296,7 +297,9 @@ function makeOrder(
     paidAt,
     exportedAt,
     exportedBy: exportedAt ? "admin@arobid.com" : undefined,
-    exportBatchId: exportedAt ? `INV-EXPORT-${String(n).padStart(4, "0")}` : undefined,
+    exportBatchId: exportedAt
+      ? `INV-EXPORT-${String(n).padStart(4, "0")}`
+      : undefined,
     issuedAt,
     issuedBy: issuedAt ? "finance@arobid.com" : undefined,
     sentAt,

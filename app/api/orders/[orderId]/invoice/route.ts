@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server"
 import { listOrders, updateInvoiceProcessing } from "@/lib/orders/db"
-import type { InvoiceStatus, Order, TransactionLogEntry } from "@/lib/tradexpo/types"
+import type {
+  InvoiceStatus,
+  Order,
+  TransactionLogEntry,
+} from "@/lib/tradexpo/types"
 
 interface Props {
   params: Promise<{ orderId: string }>
@@ -87,7 +91,9 @@ function applyInvoiceAction(
 
 export async function POST(request: Request, { params }: Props) {
   const { orderId } = await params
-  const body = (await request.json()) as { action?: "export" | "issue" | "send" }
+  const body = (await request.json()) as {
+    action?: "export" | "issue" | "send"
+  }
   if (!body.action) {
     return NextResponse.json({ error: "Action is required." }, { status: 400 })
   }
@@ -100,7 +106,10 @@ export async function POST(request: Request, { params }: Props) {
 
   const update = applyInvoiceAction(order, body.action)
   if (!update) {
-    return NextResponse.json({ error: "Action is not allowed." }, { status: 400 })
+    return NextResponse.json(
+      { error: "Action is not allowed." },
+      { status: 400 },
+    )
   }
 
   await updateInvoiceProcessing({

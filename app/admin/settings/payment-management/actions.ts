@@ -7,7 +7,9 @@ export async function savePlatformPaymentConfig(input: {
   vnpayEnabled: boolean
 }): Promise<PaymentConfig> {
   if (!input.vnpayEnabled) {
-    throw new Error("VNPay is the only active payment method and cannot be disabled.")
+    throw new Error(
+      "VNPay is the only active payment method and cannot be disabled.",
+    )
   }
 
   return updatePlatformPaymentConfig({

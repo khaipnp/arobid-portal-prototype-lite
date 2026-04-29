@@ -178,7 +178,9 @@ export function OrderManagementDashboard({
         !o.id.toLowerCase().includes(q) &&
         !o.customerName.toLowerCase().includes(q) &&
         !o.customerEmail.toLowerCase().includes(q) &&
-        !(o.billingInfoSnapshot?.invoiceEmail ?? "").toLowerCase().includes(q) &&
+        !(o.billingInfoSnapshot?.invoiceEmail ?? "")
+          .toLowerCase()
+          .includes(q) &&
         !(o.billingInfoSnapshot?.taxCode ?? "").toLowerCase().includes(q)
       )
         return false
@@ -199,7 +201,14 @@ export function OrderManagementDashboard({
       }
       return true
     })
-  }, [orders, search, statusFilters, typeFilter, invoiceStatusFilter, dateRange])
+  }, [
+    orders,
+    search,
+    statusFilters,
+    typeFilter,
+    invoiceStatusFilter,
+    dateRange,
+  ])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const currentPage = Math.min(page, totalPages)

@@ -1,6 +1,11 @@
 "use client"
 
-import { ArrowLeftIcon, CopyIcon, DownloadIcon, MailCheckIcon } from "lucide-react"
+import {
+  ArrowLeftIcon,
+  CopyIcon,
+  DownloadIcon,
+  MailCheckIcon,
+} from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import {
@@ -103,7 +108,8 @@ export function OrderDetail({
       setLog((prev) =>
         [...prev, data.logEntry].sort(
           (a, b) =>
-            new Date(a.processedAt).getTime() - new Date(b.processedAt).getTime(),
+            new Date(a.processedAt).getTime() -
+            new Date(b.processedAt).getTime(),
         ),
       )
       showToast(
@@ -162,10 +168,9 @@ export function OrderDetail({
             </div>
             <p className="text-muted-foreground text-sm">
               Created {formatDate(order.createdAt)}
-              {order.expiresAt &&
-                order.status === "Pending Payment" && (
-                  <> · Expires {formatDate(order.expiresAt)}</>
-                )}
+              {order.expiresAt && order.status === "Pending Payment" && (
+                <> · Expires {formatDate(order.expiresAt)}</>
+              )}
             </p>
           </div>
         </div>
@@ -248,7 +253,10 @@ export function OrderDetail({
           <h2 className="font-semibold text-muted-foreground text-sm uppercase tracking-wide">
             Invoice Request
           </h2>
-          <Badge variant="outline" className={`text-xs ${invoiceAppearance.className}`}>
+          <Badge
+            variant="outline"
+            className={`text-xs ${invoiceAppearance.className}`}
+          >
             {invoiceAppearance.label}
           </Badge>
         </div>
@@ -339,14 +347,18 @@ export function OrderDetail({
               <Button
                 variant="outline"
                 onClick={() => processInvoiceAction("issue")}
-                disabled={isProcessingInvoice || order.invoiceStatus !== "exported"}
+                disabled={
+                  isProcessingInvoice || order.invoiceStatus !== "exported"
+                }
               >
                 Mark as issued
               </Button>
               <Button
                 variant="outline"
                 onClick={() => processInvoiceAction("send")}
-                disabled={isProcessingInvoice || order.invoiceStatus !== "issued"}
+                disabled={
+                  isProcessingInvoice || order.invoiceStatus !== "issued"
+                }
               >
                 <MailCheckIcon className="size-4" />
                 Mark as sent
@@ -373,8 +385,8 @@ export function OrderDetail({
                       entry.status === "Paid"
                         ? "bg-emerald-500"
                         : entry.status === "Failed"
-                            ? "bg-rose-500"
-                            : "bg-zinc-400"
+                          ? "bg-rose-500"
+                          : "bg-zinc-400"
                     }`}
                   />
                   {i < log.length - 1 && (

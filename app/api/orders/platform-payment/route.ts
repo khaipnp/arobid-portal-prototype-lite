@@ -22,7 +22,8 @@ export async function PATCH(request: Request) {
     if (!payload.vnpayEnabled) {
       return NextResponse.json(
         {
-          error: "VNPay is the only active payment method and cannot be disabled.",
+          error:
+            "VNPay is the only active payment method and cannot be disabled.",
         },
         { status: 400 },
       )

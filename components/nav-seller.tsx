@@ -1,5 +1,12 @@
 "use client"
 
+import {
+  DotIcon,
+  ExternalLinkIcon,
+  MessageCircleIcon,
+  ShoppingCartIcon,
+} from "lucide-react"
+import Link from "next/link"
 import { NotificationNavLink } from "@/components/notifications/notification-nav-link"
 import {
   SidebarGroup,
@@ -8,15 +15,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card"
 import { cn } from "@/lib/utils"
-import {
-  DotIcon,
-  ExternalLinkIcon,
-  MessageCircleIcon,
-  ShoppingCartIcon,
-} from "lucide-react"
-import Link from "next/link"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card"
 
 const tradexpo = [
   {
@@ -107,7 +107,10 @@ export function NavSeller() {
             <HoverCard>
               <HoverCardTrigger asChild>
                 <SidebarMenuButton asChild>
-                  <Link href={item.url} className={cn(item.note && "cursor-help underline")}>
+                  <Link
+                    href={item.url}
+                    className={cn(item.note && "cursor-help underline")}
+                  >
                     {item.icon}
                     <span>{item.name}</span>
                   </Link>
@@ -115,17 +118,12 @@ export function NavSeller() {
               </HoverCardTrigger>
               {item.note && (
                 <HoverCardContent align="start" className="text-sm">
-                  <span className="font-bold">
-                    PO Note: &nbsp;
-                  </span>
-                  <span>
-                    {item.note}
-                  </span>
+                  <span className="font-bold">PO Note: &nbsp;</span>
+                  <span>{item.note}</span>
                 </HoverCardContent>
               )}
             </HoverCard>
           </SidebarMenuItem>
-
         ))}
       </SidebarMenu>
 
@@ -161,14 +159,15 @@ export function NavSeller() {
       {/* Quick Links */}
       <HoverCard>
         <HoverCardTrigger asChild>
-          <SidebarGroupLabel className="cursor-help underline">Quick Links</SidebarGroupLabel>
+          <SidebarGroupLabel className="cursor-help underline">
+            Quick Links
+          </SidebarGroupLabel>
         </HoverCardTrigger>
         <HoverCardContent align="start" className="text-sm">
-          <span className="font-bold">
-            PO Note: &nbsp;
-          </span>
+          <span className="font-bold">PO Note: &nbsp;</span>
           <span>
-            Các quick links khi click vào sẽ mở tab mới dẫn đến các trang liên quan.
+            Các quick links khi click vào sẽ mở tab mới dẫn đến các trang liên
+            quan.
           </span>
         </HoverCardContent>
       </HoverCard>

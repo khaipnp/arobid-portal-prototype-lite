@@ -30,7 +30,9 @@ export function PaymentMethodConfig({
   expoPaymentConfigs: ExpoPaymentConfig[]
   totalExpoCount: number
 }) {
-  const [platformPayment, setPlatformPayment] = useState(initialPlatformPayment)
+  const [_platformPayment, setPlatformPayment] = useState(
+    initialPlatformPayment,
+  )
   const [vnpayEnabled, setVnpayEnabled] = useState(
     initialPlatformPayment.vnpayEnabled,
   )
@@ -38,7 +40,7 @@ export function PaymentMethodConfig({
   const [toast, setToast] = useState<string | null>(null)
 
   const customCount = expoPaymentConfigs.filter((c) => !c.isInherited).length
-  const inheritingCount = totalExpoCount - customCount
+  const _inheritingCount = totalExpoCount - customCount
   const paymentMethods = [
     {
       id: "vnpay",
@@ -58,7 +60,9 @@ export function PaymentMethodConfig({
 
   async function handleSetVNPayStatus(nextEnabled: boolean) {
     if (!nextEnabled) {
-      setError("VNPay is the only active payment method and cannot be disabled.")
+      setError(
+        "VNPay is the only active payment method and cannot be disabled.",
+      )
       return
     }
     try {
@@ -123,7 +127,11 @@ export function PaymentMethodConfig({
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon-sm" aria-label="Open actions">
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        aria-label="Open actions"
+                      >
                         <MoreHorizontalIcon className="size-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -133,7 +141,9 @@ export function PaymentMethodConfig({
                       >
                         {method.enabled ? "Inactive" : "Active"}
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleEditMethod(method.name)}>
+                      <DropdownMenuItem
+                        onClick={() => handleEditMethod(method.name)}
+                      >
                         Edit
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
