@@ -15,6 +15,118 @@ function toIso(value: string | Date) {
   return new Date(value).toISOString()
 }
 
+type OrderRow = {
+  id: string
+  customer_id: string
+  customer_name: string
+  customer_email: string
+  customer_company: string
+  partner_name: string | null
+  order_type: Order["orderType"]
+  reference_id: string
+  expo_name: string
+  booth_ref: string
+  booth_tier: string
+  original_amount: string | number
+  discount_amount: string | number
+  amount: string | number
+  voucher_id: string | null
+  payment_method: Order["paymentMethod"]
+  status: Order["status"]
+  invoice_requested: boolean
+  invoice_type: InvoiceType | null
+  billing_info_snapshot: BillingInfoSnapshot | null
+  invoice_status: InvoiceStatus
+  paid_at: string | Date | null
+  exported_at: string | Date | null
+  exported_by: string | null
+  export_batch_id: string | null
+  issued_at: string | Date | null
+  issued_by: string | null
+  sent_at: string | Date | null
+  sent_by: string | null
+  expires_at: string | Date | null
+  created_at: string | Date
+  updated_at: string | Date
+}
+
+function rowToOrder(r: OrderRow): Order {
+  return {
+    id: r.id,
+    customerId: r.customer_id,
+    customerName: r.customer_name,
+    customerEmail: r.customer_email,
+    customerCompany: r.customer_company,
+    partnerName: r.partner_name ?? undefined,
+    orderType: r.order_type,
+    referenceId: r.reference_id,
+    expoName: r.expo_name,
+    boothRef: r.booth_ref,
+    boothTier: r.booth_tier,
+    originalAmount: Number(r.original_amount),
+    discountAmount: Number(r.discount_amount),
+    amount: Number(r.amount),
+    voucherId: r.voucher_id ?? undefined,
+    paymentMethod: r.payment_method,
+    status: r.status,
+    invoiceRequested: r.invoice_requested,
+    invoiceType: r.invoice_type ?? undefined,
+    billingInfoSnapshot: r.billing_info_snapshot ?? undefined,
+    invoiceStatus: r.invoice_status,
+    paidAt: r.paid_at ? toIso(r.paid_at) : undefined,
+    exportedAt: r.exported_at ? toIso(r.exported_at) : undefined,
+    exportedBy: r.exported_by ?? undefined,
+    exportBatchId: r.export_batch_id ?? undefined,
+    issuedAt: r.issued_at ? toIso(r.issued_at) : undefined,
+    issuedBy: r.issued_by ?? undefined,
+    sentAt: r.sent_at ? toIso(r.sent_at) : undefined,
+    sentBy: r.sent_by ?? undefined,
+    expiresAt: r.expires_at ? toIso(r.expires_at) : undefined,
+    createdAt: toIso(r.created_at),
+    updatedAt: toIso(r.updated_at),
+  }
+}
+
+async function expirePendingPaymentOrders(): Promise<void> {
+  const expired = (await sql`
+    update orders
+    set
+      status = 'Expired',
+      updated_at = now()
+    where status = 'Pending Payment'
+      and payment_method = 'vnpay'
+      and expires_at is not null
+      and expires_at <= now()
+    returning id, expires_at
+  `) as { id: string; expires_at: string | Date }[]
+
+  for (const order of expired) {
+    await sql`
+      insert into transaction_log (
+        id,
+        order_id,
+        type,
+        status,
+        actor,
+        note,
+        rejection_reason,
+        processed_at
+      )
+      values (
+        ${`tx-${order.id}-expired`},
+        ${order.id},
+        'status_change',
+        'Expired',
+        'System',
+        'VNPay timeout',
+        null,
+        ${order.expires_at}
+      )
+      on conflict (id) do nothing
+    `
+  }
+}
+
 export async function listBankAccounts(): Promise<BankAccount[]> {
   const rows = (await sql`
     select * from bank_accounts order by is_primary desc, created_at desc
@@ -91,76 +203,44 @@ export async function listExpoPaymentConfigs(): Promise<ExpoPaymentConfig[]> {
 }
 
 export async function listOrders(): Promise<Order[]> {
+  await expirePendingPaymentOrders()
+
   const rows = (await sql`
     select * from orders order by created_at desc
-  `) as {
-    id: string
-    customer_id: string
-    customer_name: string
-    customer_email: string
-    customer_company: string
-    partner_name: string | null
-    order_type: Order["orderType"]
-    reference_id: string
-    expo_name: string
-    booth_ref: string
-    booth_tier: string
-    original_amount: string | number
-    discount_amount: string | number
-    amount: string | number
-    voucher_id: string | null
-    payment_method: Order["paymentMethod"]
-    status: Order["status"]
-    invoice_requested: boolean
-    invoice_type: InvoiceType | null
-    billing_info_snapshot: BillingInfoSnapshot | null
-    invoice_status: InvoiceStatus
-    paid_at: string | Date | null
-    exported_at: string | Date | null
-    exported_by: string | null
-    export_batch_id: string | null
-    issued_at: string | Date | null
-    issued_by: string | null
-    sent_at: string | Date | null
-    sent_by: string | null
-    expires_at: string | Date | null
-    created_at: string | Date
-    updated_at: string | Date
-  }[]
-  return rows.map((r) => ({
-    id: r.id,
-    customerId: r.customer_id,
-    customerName: r.customer_name,
-    customerEmail: r.customer_email,
-    customerCompany: r.customer_company,
-    partnerName: r.partner_name ?? undefined,
-    orderType: r.order_type,
-    referenceId: r.reference_id,
-    expoName: r.expo_name,
-    boothRef: r.booth_ref,
-    boothTier: r.booth_tier,
-    originalAmount: Number(r.original_amount),
-    discountAmount: Number(r.discount_amount),
-    amount: Number(r.amount),
-    voucherId: r.voucher_id ?? undefined,
-    paymentMethod: r.payment_method,
-    status: r.status,
-    invoiceRequested: r.invoice_requested,
-    invoiceType: r.invoice_type ?? undefined,
-    billingInfoSnapshot: r.billing_info_snapshot ?? undefined,
-    invoiceStatus: r.invoice_status,
-    paidAt: r.paid_at ? toIso(r.paid_at) : undefined,
-    exportedAt: r.exported_at ? toIso(r.exported_at) : undefined,
-    exportedBy: r.exported_by ?? undefined,
-    exportBatchId: r.export_batch_id ?? undefined,
-    issuedAt: r.issued_at ? toIso(r.issued_at) : undefined,
-    issuedBy: r.issued_by ?? undefined,
-    sentAt: r.sent_at ? toIso(r.sent_at) : undefined,
-    sentBy: r.sent_by ?? undefined,
-    expiresAt: r.expires_at ? toIso(r.expires_at) : undefined,
-    createdAt: toIso(r.created_at),
-    updatedAt: toIso(r.updated_at),
-  }))
+  `) as OrderRow[]
+  return rows.map(rowToOrder)
+}
+
+export async function listCustomerBoothRegistrationOrders(
+  customerId: string,
+): Promise<Order[]> {
+  await expirePendingPaymentOrders()
+
+  const rows = (await sql`
+    select *
+    from orders
+    where customer_id = ${customerId}
+      and order_type = 'booth_registration'
+    order by created_at desc
+  `) as OrderRow[]
+  return rows.map(rowToOrder)
+}
+
+export async function getCustomerBoothRegistrationOrder(
+  orderId: string,
+  customerId: string,
+): Promise<Order | null> {
+  await expirePendingPaymentOrders()
+
+  const rows = (await sql`
+    select *
+    from orders
+    where id = ${orderId}
+      and customer_id = ${customerId}
+      and order_type = 'booth_registration'
+    limit 1
+  `) as OrderRow[]
+  return rows[0] ? rowToOrder(rows[0]) : null
 }
 
 export async function listTransactionLog(): Promise<TransactionLogEntry[]> {

@@ -15,7 +15,7 @@ const statusStyles: Record<OrderStatus, string> = {
 }
 
 const statusLabels: Record<OrderStatus, string> = {
-  "Pending Payment": "Pending",
+  "Pending Payment": "Pending Payment",
   Paid: "Paid",
   Failed: "Failed",
   Cancelled: "Cancelled",

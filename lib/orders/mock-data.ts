@@ -8,6 +8,7 @@ import type {
   PaymentConfig,
   TransactionLogEntry,
 } from "@/lib/tradexpo/types"
+import { CURRENT_USER_PROFILE } from "@/lib/user/current-user"
 
 const now = new Date()
 function iso(daysAgo: number, hoursAgo = 0) {
@@ -86,10 +87,10 @@ export const mockExpoPaymentConfigs: ExpoPaymentConfig[] = [
 
 const customers = [
   {
-    id: "cus-001",
-    name: "Nguyễn Minh Khoa",
-    email: "khoa.nguyen@techviet.com",
-    company: "TechViet Solutions",
+    id: CURRENT_USER_PROFILE.id,
+    name: CURRENT_USER_PROFILE.name,
+    email: CURRENT_USER_PROFILE.email,
+    company: CURRENT_USER_PROFILE.company,
   },
   {
     id: "cus-002",

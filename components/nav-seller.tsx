@@ -4,6 +4,7 @@ import {
   DotIcon,
   ExternalLinkIcon,
   MessageCircleIcon,
+  ReceiptTextIcon,
   ShoppingCartIcon,
 } from "lucide-react"
 import Link from "next/link"
@@ -15,6 +16,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { CURRENT_USER_ID } from "@/lib/user/current-user"
 import { cn } from "@/lib/utils"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card"
 
@@ -29,6 +31,11 @@ const tradexpo = [
     url: "/seller/my-expos",
     icon: <DotIcon />,
     note: "Danh sách các expo mà user đã và đang tham gia.",
+  },
+  {
+    name: "Orders",
+    url: "/seller/orders",
+    icon: <ReceiptTextIcon />,
   },
 ]
 
@@ -85,7 +92,10 @@ export function NavSeller() {
   return (
     <SidebarGroup>
       <SidebarMenu>
-        <NotificationNavLink userId="seller-1" href="/seller/notifications" />
+        <NotificationNavLink
+          userId={CURRENT_USER_ID}
+          href="/seller/notifications"
+        />
       </SidebarMenu>
 
       {/* Deal Room */}

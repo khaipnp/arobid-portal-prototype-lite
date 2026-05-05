@@ -4,7 +4,7 @@
  *
  * Usage:
  *   bun scripts/notifications/seed.ts
- *   NOTIFICATION_SEED_USERS=seller-1 bun scripts/notifications/seed.ts
+ *   NOTIFICATION_SEED_USERS=user-current bun scripts/notifications/seed.ts
  */
 
 import { resolve } from "node:path"
@@ -13,7 +13,7 @@ import { config } from "dotenv"
 config({ path: resolve(process.cwd(), ".env.local") })
 config({ path: resolve(process.cwd(), ".env") })
 
-const DEFAULT_USERS = ["seller-1", "partner-1"] as const
+const DEFAULT_USERS = ["user-current", "partner-1"] as const
 
 function parseUserList(): string[] {
   const raw = process.env.NOTIFICATION_SEED_USERS?.trim()
@@ -36,7 +36,7 @@ type SeedItem = {
   referenceType?: string
 }
 
-const SELLER_SEEDS: SeedItem[] = [
+const USER_WORKSPACE_SEEDS: SeedItem[] = [
   {
     source: "chat",
     type: "dm",
@@ -50,7 +50,7 @@ const SELLER_SEEDS: SeedItem[] = [
     title: "Expo starts in 3 days",
     body: "Check your booth checklist before the hall opens.",
     deepLinkPath: "/seller/my-expos",
-    referenceId: "seed-expo-seller-1",
+    referenceId: "seed-expo-user-current",
     referenceType: "expo",
   },
   {
@@ -58,7 +58,7 @@ const SELLER_SEEDS: SeedItem[] = [
     type: "order_update",
     title: "Order confirmed",
     body: "Your booth add-on order was confirmed. View details anytime.",
-    deepLinkPath: "/seller/checkout-demo",
+    deepLinkPath: "/seller/orders",
     referenceId: "seed-order-1",
     referenceType: "order",
   },
@@ -103,8 +103,8 @@ function seedsForUser(userId: string): SeedItem[] {
   if (userId === "partner-1") {
     return PARTNER_SEEDS
   }
-  if (userId === "seller-1") {
-    return SELLER_SEEDS
+  if (userId === "user-current") {
+    return USER_WORKSPACE_SEEDS
   }
   // Default: small generic set (valid paths)
   return [
