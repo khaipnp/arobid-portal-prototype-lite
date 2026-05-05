@@ -2,7 +2,7 @@
 
 import { ArrowLeftIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useEffect, useMemo, useState } from "react"
+import { Fragment, useEffect, useMemo, useState } from "react"
 import {
   getOrderStatusLabel,
   OrderStatusBadge,
@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button"
 import type {
   Order,
   OrderStatus,
+  OrderType,
   TransactionLogEntry,
 } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
@@ -55,7 +56,7 @@ function bannerForStatus(status: OrderStatus) {
   switch (status) {
     case "Pending Payment":
       return {
-        message: "Your payment session is still in progress.",
+        message: "Your payment is still in progress.",
         className: "border-zinc-300 bg-zinc-50 text-zinc-700",
       }
     case "Paid":
@@ -75,24 +76,26 @@ function bannerForStatus(status: OrderStatus) {
       }
     case "Expired":
       return {
-        message: "Your payment session has expired.",
+        message: "Your payment window has expired.",
         className: "border-zinc-300 bg-zinc-50 text-zinc-700",
       }
   }
 }
 
-function resultMessage(status: OrderStatus) {
-  switch (status) {
+function resultMessage(order: Order) {
+  switch (order.status) {
     case "Pending Payment":
       return "VNPay has not returned a final payment result for this order yet."
     case "Paid":
-      return "VNPay confirmed this payment successfully. Your booth booking is recorded."
+      return order.orderType === "booth_registration"
+        ? "VNPay confirmed this payment successfully. Your booth booking is recorded."
+        : "VNPay confirmed this payment successfully. Your order is recorded."
     case "Failed":
       return "VNPay returned an unsuccessful payment result for this order."
     case "Cancelled":
       return "This payment was cancelled before completion."
     case "Expired":
-      return "The VNPay payment session timed out before completion."
+      return "The VNPay payment window timed out before completion."
   }
 }
 
@@ -100,6 +103,28 @@ function statusDotClass(status: OrderStatus) {
   if (status === "Paid") return "bg-emerald-500"
   if (status === "Failed") return "bg-rose-500"
   return "bg-zinc-400"
+}
+
+function getOrderTypeLabel(orderType: OrderType) {
+  if (orderType === "booth_registration") return "TradeXpo Booth"
+  return "B2B Package"
+}
+
+function referenceRows(order: Order): { label: string; value: string }[] {
+  if (order.orderType === "booth_registration") {
+    return [
+      { label: "Order Type", value: getOrderTypeLabel(order.orderType) },
+      { label: "Expo Name", value: order.expoName },
+      { label: "Booth Reference", value: order.boothRef },
+      { label: "Tier", value: order.boothTier },
+    ]
+  }
+
+  return [
+    { label: "Order Type", value: getOrderTypeLabel(order.orderType) },
+    { label: "Reference", value: order.expoName },
+    { label: "Reference ID", value: order.referenceId },
+  ]
 }
 
 export function CustomerOrderDetail({
@@ -163,7 +188,7 @@ export function CustomerOrderDetail({
         <div className="font-medium">{banner.message}</div>
         {remainingMs !== null ? (
           <div className="mt-1">
-            Remaining time before session expiry: {formatRemaining(remainingMs)}
+            Remaining time before payment expiry: {formatRemaining(remainingMs)}
           </div>
         ) : null}
       </div>
@@ -174,17 +199,12 @@ export function CustomerOrderDetail({
             Reference
           </h2>
           <div className="grid grid-cols-2 gap-y-3 text-sm">
-            <span className="text-muted-foreground">Order Type</span>
-            <span>Booth Registration</span>
-
-            <span className="text-muted-foreground">Expo Name</span>
-            <span>{order.expoName}</span>
-
-            <span className="text-muted-foreground">Booth Reference</span>
-            <span>{order.boothRef}</span>
-
-            <span className="text-muted-foreground">Tier</span>
-            <span>{order.boothTier}</span>
+            {referenceRows(order).map((row) => (
+              <Fragment key={row.label}>
+                <span className="text-muted-foreground">{row.label}</span>
+                <span>{row.value}</span>
+              </Fragment>
+            ))}
           </div>
         </section>
 
@@ -192,7 +212,7 @@ export function CustomerOrderDetail({
           <h2 className="font-semibold text-muted-foreground text-sm uppercase tracking-wide">
             Payment Result
           </h2>
-          <p className="text-sm">{resultMessage(order.status)}</p>
+          <p className="text-sm">{resultMessage(order)}</p>
           <div className="grid grid-cols-2 gap-y-3 text-sm">
             <span className="text-muted-foreground">Payment Method</span>
             <span>VNPay</span>

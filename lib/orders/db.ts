@@ -211,22 +211,19 @@ export async function listOrders(): Promise<Order[]> {
   return rows.map(rowToOrder)
 }
 
-export async function listCustomerBoothRegistrationOrders(
-  customerId: string,
-): Promise<Order[]> {
+export async function listCustomerOrders(customerId: string): Promise<Order[]> {
   await expirePendingPaymentOrders()
 
   const rows = (await sql`
     select *
     from orders
     where customer_id = ${customerId}
-      and order_type = 'booth_registration'
     order by created_at desc
   `) as OrderRow[]
   return rows.map(rowToOrder)
 }
 
-export async function getCustomerBoothRegistrationOrder(
+export async function getCustomerOrder(
   orderId: string,
   customerId: string,
 ): Promise<Order | null> {
@@ -237,7 +234,6 @@ export async function getCustomerBoothRegistrationOrder(
     from orders
     where id = ${orderId}
       and customer_id = ${customerId}
-      and order_type = 'booth_registration'
     limit 1
   `) as OrderRow[]
   return rows[0] ? rowToOrder(rows[0]) : null

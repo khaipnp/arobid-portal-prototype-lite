@@ -24,7 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import type { Order, OrderStatus } from "@/lib/tradexpo/types"
+import type { Order, OrderStatus, OrderType } from "@/lib/tradexpo/types"
 
 const PAGE_SIZE = 20
 const ALL_STATUSES: Array<"All" | OrderStatus> = [
@@ -62,10 +62,10 @@ function formatRemaining(ms: number) {
   const seconds = totalSeconds % 60
 
   if (hours > 0) {
-    return `Expires in ${hours}h ${String(minutes).padStart(2, "0")}m`
+    return `Payment expires in ${hours}h ${String(minutes).padStart(2, "0")}m`
   }
 
-  return `Expires in ${String(minutes).padStart(2, "0")}m ${String(
+  return `Payment expires in ${String(minutes).padStart(2, "0")}m ${String(
     seconds,
   ).padStart(2, "0")}s`
 }
@@ -73,6 +73,25 @@ function formatRemaining(ms: number) {
 function getRemainingMs(order: Order, nowMs: number) {
   if (order.status !== "Pending Payment" || !order.expiresAt) return null
   return new Date(order.expiresAt).getTime() - nowMs
+}
+
+function getOrderTypeLabel(orderType: OrderType) {
+  if (orderType === "booth_registration") return "TradeXpo Booth"
+  return "B2B Package"
+}
+
+function getReferenceText(order: Order) {
+  if (order.orderType === "booth_registration") {
+    return {
+      primary: order.expoName,
+      secondary: `${order.boothRef} · ${order.boothTier}`,
+    }
+  }
+
+  return {
+    primary: order.expoName,
+    secondary: order.referenceId,
+  }
 }
 
 export function CustomerOrderHistory({
@@ -145,7 +164,6 @@ export function CustomerOrderHistory({
               <TableHead>Method</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Created</TableHead>
-              <TableHead>Session</TableHead>
               <TableHead className="w-12" />
             </TableRow>
           </TableHeader>
@@ -153,7 +171,7 @@ export function CustomerOrderHistory({
             {pageItems.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={9}
+                  colSpan={8}
                   className="py-10 text-center text-muted-foreground"
                 >
                   No orders match the selected status.
@@ -162,6 +180,7 @@ export function CustomerOrderHistory({
             ) : (
               pageItems.map((order) => {
                 const remainingMs = getRemainingMs(order, nowMs)
+                const reference = getReferenceText(order)
                 return (
                   <TableRow
                     key={order.id}
@@ -180,12 +199,12 @@ export function CustomerOrderHistory({
                       {order.id}
                     </TableCell>
                     <TableCell className="text-sm">
-                      Booth Registration
+                      {getOrderTypeLabel(order.orderType)}
                     </TableCell>
                     <TableCell>
-                      <div className="text-sm">{order.expoName}</div>
+                      <div className="text-sm">{reference.primary}</div>
                       <div className="text-muted-foreground text-xs">
-                        {order.boothRef} · {order.boothTier}
+                        {reference.secondary}
                       </div>
                     </TableCell>
                     <TableCell className="text-right font-medium text-sm tabular-nums">
@@ -198,14 +217,14 @@ export function CustomerOrderHistory({
                     </TableCell>
                     <TableCell>
                       <OrderStatusBadge status={order.status} />
+                      {remainingMs !== null ? (
+                        <div className="mt-1 whitespace-nowrap text-muted-foreground text-xs">
+                          {formatRemaining(remainingMs)}
+                        </div>
+                      ) : null}
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-muted-foreground text-xs">
                       {formatDate(order.createdAt)}
-                    </TableCell>
-                    <TableCell className="whitespace-nowrap text-muted-foreground text-xs">
-                      {remainingMs === null
-                        ? "—"
-                        : formatRemaining(remainingMs)}
                     </TableCell>
                     <TableCell>
                       <ChevronRightIcon className="size-4 text-muted-foreground" />

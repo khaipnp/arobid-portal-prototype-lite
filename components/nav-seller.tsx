@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   DotIcon,
@@ -6,19 +6,19 @@ import {
   MessageCircleIcon,
   ReceiptTextIcon,
   ShoppingCartIcon,
-} from "lucide-react"
-import Link from "next/link"
-import { NotificationNavLink } from "@/components/notifications/notification-nav-link"
+} from "lucide-react";
+import Link from "next/link";
+import { NotificationNavLink } from "@/components/notifications/notification-nav-link";
 import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
-import { CURRENT_USER_ID } from "@/lib/user/current-user"
-import { cn } from "@/lib/utils"
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card"
+} from "@/components/ui/sidebar";
+import { CURRENT_USER_ID } from "@/lib/user/current-user";
+import { cn } from "@/lib/utils";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
 
 const tradexpo = [
   {
@@ -32,12 +32,7 @@ const tradexpo = [
     icon: <DotIcon />,
     note: "Danh sách các expo mà user đã và đang tham gia.",
   },
-  {
-    name: "Orders",
-    url: "/seller/orders",
-    icon: <ReceiptTextIcon />,
-  },
-]
+];
 
 const seller = [
   {
@@ -65,7 +60,7 @@ const seller = [
     url: "/seller/my-quotations",
     icon: <DotIcon />,
   },
-]
+];
 
 const buyer = [
   {
@@ -73,7 +68,7 @@ const buyer = [
     url: "/seller/my-rfqs",
     icon: <DotIcon />,
   },
-]
+];
 
 const quickLinks = [
   {
@@ -86,7 +81,7 @@ const quickLinks = [
     url: "/seller/rfq-hub",
     icon: <ExternalLinkIcon />,
   },
-]
+];
 
 export function NavSeller() {
   return (
@@ -109,6 +104,19 @@ export function NavSeller() {
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>
+
+      {/* Orders */}
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton asChild>
+            <Link href="/seller/orders">
+              <ReceiptTextIcon />
+              <span>Orders</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+
       <SidebarMenu>{/* TradeXpo */}</SidebarMenu>
       <SidebarGroupLabel>TradeXpo</SidebarGroupLabel>
       <SidebarMenu>
@@ -205,5 +213,5 @@ export function NavSeller() {
         </SidebarMenuButton>
       </SidebarMenuItem>
     </SidebarGroup>
-  )
+  );
 }
