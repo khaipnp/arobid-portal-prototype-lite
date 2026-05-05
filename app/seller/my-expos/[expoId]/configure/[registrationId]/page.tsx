@@ -10,6 +10,7 @@ import {
   listExpos,
   listSellerBoothRegistrations,
 } from "@/lib/tradexpo/db/platform-data"
+import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
 interface Props {
   params: Promise<{ expoId: string; registrationId: string }>
@@ -30,7 +31,7 @@ export default async function SellerBoothConfigurePage({ params }: Props) {
     exhibitorCatalogProducts,
   ] = await Promise.all([
     listExpos(),
-    listSellerBoothRegistrations(),
+    listSellerBoothRegistrations(CURRENT_USER_ID),
     listBoothTemplates(),
     listExpoBoothTemplateAssignments(),
     listBoothTemplateCustomizationConfigs(),
@@ -39,7 +40,9 @@ export default async function SellerBoothConfigurePage({ params }: Props) {
   ])
 
   const expo = expos.find((e) => e.id === expoId)
-  const registration = registrations.find((r) => r.id === registrationId)
+  const registration = registrations.find(
+    (r) => r.id === registrationId && r.expoId === expoId,
+  )
   if (!expo || !registration) notFound()
 
   return (

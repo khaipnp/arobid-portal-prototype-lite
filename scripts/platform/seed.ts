@@ -125,9 +125,9 @@ export async function seedPlatform() {
   for (const r of mockSellerRegistrations) {
     await sql`
       insert into seller_booth_registrations (
-        id, expo_id, slot_id, booth_template_id, booth_ref, booth_tier, status, purchased_at
+        id, user_id, expo_id, slot_id, booth_template_id, booth_ref, booth_tier, status, purchased_at
       ) values (
-        ${r.id}, ${r.expoId}, ${r.slotId ?? null}, ${r.boothTemplateId ?? null},
+        ${r.id}, ${r.userId}, ${r.expoId}, ${r.slotId ?? null}, ${r.boothTemplateId ?? null},
         ${r.boothRef}, ${r.boothTier}, ${r.status}, ${new Date(r.purchasedAt)}
       )
     `
@@ -241,7 +241,7 @@ export async function seedPlatform() {
         expires_at, created_at, updated_at
       ) values (
         ${o.id}, ${o.customerId}, ${o.customerName}, ${o.customerEmail}, ${o.customerCompany},
-        ${o.partnerName ?? null}, ${o.orderType}, ${o.referenceId}, ${o.expoName}, ${o.boothRef}, ${o.boothTier},
+        ${o.partnerName ?? null}, ${o.orderType}, ${o.referenceId}, ${o.expoName ?? null}, ${o.boothRef ?? null}, ${o.boothTier ?? null},
         ${o.originalAmount}, ${o.discountAmount}, ${o.amount}, ${o.voucherId ?? null}, ${o.paymentMethod}, ${o.status},
         ${o.invoiceRequested}, ${o.invoiceType ?? null}, ${JSON.stringify(o.billingInfoSnapshot ?? null)}::jsonb, ${o.invoiceStatus}, ${o.paidAt ? new Date(o.paidAt) : null},
         ${o.exportedAt ? new Date(o.exportedAt) : null}, ${o.exportedBy ?? null}, ${o.exportBatchId ?? null},

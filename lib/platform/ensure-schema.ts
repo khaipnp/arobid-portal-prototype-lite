@@ -1,4 +1,5 @@
 import { sql } from "@/lib/db/neon"
+import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
 /** Creates platform tables (expos, orders, chat, streaming) for Neon. Idempotent. */
 export async function ensurePlatformSchema() {
@@ -66,6 +67,7 @@ export async function ensurePlatformSchema() {
   await sql`
     create table if not exists seller_booth_registrations (
       id text primary key,
+      user_id text not null,
       expo_id text not null references expos(id) on delete cascade,
       slot_id text,
       booth_template_id text,
@@ -189,9 +191,9 @@ export async function ensurePlatformSchema() {
       partner_name text,
       order_type text not null,
       reference_id text not null,
-      expo_name text not null,
-      booth_ref text not null,
-      booth_tier text not null,
+      expo_name text,
+      booth_ref text,
+      booth_tier text,
       original_amount numeric not null default 0,
       discount_amount numeric not null default 0,
       amount numeric not null,
@@ -204,7 +206,24 @@ export async function ensurePlatformSchema() {
     )
   `
 
+  await sql`alter table seller_booth_registrations add column if not exists user_id text`
+  await sql`
+    update seller_booth_registrations
+    set user_id = ${CURRENT_USER_ID}
+    where user_id is null
+  `
+  await sql`
+    alter table seller_booth_registrations alter column user_id set not null
+  `
+  await sql`
+    create index if not exists idx_seller_booth_registrations_user_purchased
+    on seller_booth_registrations (user_id, purchased_at desc)
+  `
+
   await sql`alter table orders add column if not exists partner_name text`
+  await sql`alter table orders alter column expo_name drop not null`
+  await sql`alter table orders alter column booth_ref drop not null`
+  await sql`alter table orders alter column booth_tier drop not null`
   await sql`
     alter table orders add column if not exists original_amount numeric not null default 0
   `
@@ -353,13 +372,14 @@ async function migrateExpoManagementSchema() {
     where level <> 1 or parent_id is not null
   `
   await sql`
-    alter table expo_categories
-    drop constraint if exists expo_categories_single_level_ck
-  `
-  await sql`
-    alter table expo_categories
-    add constraint expo_categories_single_level_ck
-    check (level = 1 and parent_id is null)
+    do $$
+    begin
+      alter table expo_categories
+      add constraint expo_categories_single_level_ck
+      check (level = 1 and parent_id is null);
+    exception
+      when duplicate_object then null;
+    end $$;
   `
 
   await sql`

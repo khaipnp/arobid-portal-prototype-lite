@@ -4,13 +4,14 @@ import {
   listExpos,
   listSellerBoothRegistrations,
 } from "@/lib/tradexpo/db/platform-data"
+import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
 export const dynamic = "force-dynamic"
 
 export default async function SellerMyExposPage() {
   const [initialExpos, initialRegistrations] = await Promise.all([
     listExpos(),
-    listSellerBoothRegistrations(),
+    listSellerBoothRegistrations(CURRENT_USER_ID),
   ])
 
   return (

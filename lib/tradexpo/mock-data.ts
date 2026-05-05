@@ -19,6 +19,7 @@ import type {
   SellerBoothRegistration,
   StreamSession,
 } from "@/lib/tradexpo/types"
+import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
 const now = new Date()
 
@@ -650,6 +651,7 @@ export const mockExhibitorCatalogProducts: ExhibitorCatalogProduct[] = [
 export const mockSellerRegistrations: SellerBoothRegistration[] = [
   {
     id: "reg-001",
+    userId: CURRENT_USER_ID,
     expoId: "expo-003",
     slotId: "slot-1",
     boothTemplateId: "booth-template-1",
@@ -660,6 +662,7 @@ export const mockSellerRegistrations: SellerBoothRegistration[] = [
   },
   {
     id: "reg-002",
+    userId: CURRENT_USER_ID,
     expoId: "expo-003",
     slotId: "slot-2",
     boothTemplateId: "booth-template-2",
@@ -670,6 +673,7 @@ export const mockSellerRegistrations: SellerBoothRegistration[] = [
   },
   {
     id: "reg-003",
+    userId: CURRENT_USER_ID,
     expoId: "expo-009",
     slotId: "slot-3",
     boothTemplateId: "booth-template-1",
@@ -681,6 +685,7 @@ export const mockSellerRegistrations: SellerBoothRegistration[] = [
   {
     // No template selected yet — demonstrates US-01 (Select Booth Template)
     id: "reg-004",
+    userId: CURRENT_USER_ID,
     expoId: "expo-001",
     boothRef: "C05",
     boothTier: "Premium",
@@ -689,6 +694,7 @@ export const mockSellerRegistrations: SellerBoothRegistration[] = [
   },
   {
     id: "reg-005",
+    userId: CURRENT_USER_ID,
     expoId: "expo-004",
     slotId: "slot-4",
     boothTemplateId: "booth-template-1",
@@ -699,6 +705,7 @@ export const mockSellerRegistrations: SellerBoothRegistration[] = [
   },
   {
     id: "reg-006",
+    userId: CURRENT_USER_ID,
     expoId: "expo-011",
     boothTemplateId: "booth-template-2",
     boothRef: "D03",

@@ -420,10 +420,20 @@ export function OrderManagementDashboard({
                       : "B2B Subscription"}
                   </TableCell>
                   <TableCell>
-                    <div className="text-sm">{order.expoName}</div>
-                    <div className="text-muted-foreground text-xs">
-                      {order.boothRef} · {order.boothTier}
+                    <div className="text-sm">
+                      {order.expoName ?? order.referenceId}
                     </div>
+                    {order.orderType === "booth_registration" ? (
+                      <div className="text-muted-foreground text-xs">
+                        {[order.boothRef, order.boothTier]
+                          .filter(Boolean)
+                          .join(" · ") || order.referenceId}
+                      </div>
+                    ) : (
+                      <div className="text-muted-foreground text-xs">
+                        {order.referenceId}
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell className="text-right font-medium text-sm tabular-nums">
                     {formatVND(order.amount)}

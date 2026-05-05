@@ -213,9 +213,9 @@ export interface Order {
   partnerName?: string
   orderType: OrderType
   referenceId: string
-  expoName: string
-  boothRef: string
-  boothTier: string
+  expoName?: string
+  boothRef?: string
+  boothTier?: string
   originalAmount: number
   discountAmount: number
   amount: number
@@ -291,6 +291,7 @@ export type SellerBoothStatus =
 
 export interface SellerBoothRegistration {
   id: string
+  userId: string
   expoId: string
   slotId?: string
   /** Exhibitor-selected booth template. undefined = not yet selected. */

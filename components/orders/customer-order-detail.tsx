@@ -114,15 +114,15 @@ function referenceRows(order: Order): { label: string; value: string }[] {
   if (order.orderType === "booth_registration") {
     return [
       { label: "Order Type", value: getOrderTypeLabel(order.orderType) },
-      { label: "Expo Name", value: order.expoName },
-      { label: "Booth Reference", value: order.boothRef },
-      { label: "Tier", value: order.boothTier },
+      { label: "Expo Name", value: order.expoName ?? order.referenceId },
+      { label: "Booth Reference", value: order.boothRef ?? "Not specified" },
+      { label: "Tier", value: order.boothTier ?? "Not specified" },
     ]
   }
 
   return [
     { label: "Order Type", value: getOrderTypeLabel(order.orderType) },
-    { label: "Reference", value: order.expoName },
+    { label: "Reference", value: order.expoName ?? order.referenceId },
     { label: "Reference ID", value: order.referenceId },
   ]
 }

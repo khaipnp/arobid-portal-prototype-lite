@@ -490,13 +490,17 @@ export async function listExhibitorCatalogProducts(): Promise<
   }))
 }
 
-export async function listSellerBoothRegistrations(): Promise<
-  SellerBoothRegistration[]
-> {
+export async function listSellerBoothRegistrations(
+  userId: string,
+): Promise<SellerBoothRegistration[]> {
   const rows = (await sql`
-    select * from seller_booth_registrations order by purchased_at desc
+    select *
+    from seller_booth_registrations
+    where user_id = ${userId}
+    order by purchased_at desc
   `) as {
     id: string
+    user_id: string
     expo_id: string
     slot_id: string | null
     booth_template_id: string | null
@@ -507,6 +511,7 @@ export async function listSellerBoothRegistrations(): Promise<
   }[]
   return rows.map((r) => ({
     id: r.id,
+    userId: r.user_id,
     expoId: r.expo_id,
     slotId: r.slot_id ?? undefined,
     boothTemplateId: r.booth_template_id ?? undefined,

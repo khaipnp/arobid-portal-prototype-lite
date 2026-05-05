@@ -8,6 +8,7 @@ import {
   listSellerBoothRegistrations,
   listStreamSessions,
 } from "@/lib/tradexpo/db/platform-data"
+import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
 interface Props {
   params: Promise<{ expoId: string }>
@@ -27,7 +28,7 @@ export default async function SellerExpoDetailPage({ params }: Props) {
     streamSessions,
   ] = await Promise.all([
     listExpos(),
-    listSellerBoothRegistrations(),
+    listSellerBoothRegistrations(CURRENT_USER_ID),
     listBoothTemplates(),
     listBoothCustomizations(),
     listGoLIVEEvents(),

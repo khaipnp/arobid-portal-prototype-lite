@@ -82,14 +82,16 @@ function getOrderTypeLabel(orderType: OrderType) {
 
 function getReferenceText(order: Order) {
   if (order.orderType === "booth_registration") {
+    const boothParts = [order.boothRef, order.boothTier].filter(Boolean)
     return {
-      primary: order.expoName,
-      secondary: `${order.boothRef} · ${order.boothTier}`,
+      primary: order.expoName ?? order.referenceId,
+      secondary:
+        boothParts.length > 0 ? boothParts.join(" · ") : order.referenceId,
     }
   }
 
   return {
-    primary: order.expoName,
+    primary: order.expoName ?? getOrderTypeLabel(order.orderType),
     secondary: order.referenceId,
   }
 }

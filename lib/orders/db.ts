@@ -24,9 +24,9 @@ type OrderRow = {
   partner_name: string | null
   order_type: Order["orderType"]
   reference_id: string
-  expo_name: string
-  booth_ref: string
-  booth_tier: string
+  expo_name: string | null
+  booth_ref: string | null
+  booth_tier: string | null
   original_amount: string | number
   discount_amount: string | number
   amount: string | number
@@ -60,9 +60,9 @@ function rowToOrder(r: OrderRow): Order {
     partnerName: r.partner_name ?? undefined,
     orderType: r.order_type,
     referenceId: r.reference_id,
-    expoName: r.expo_name,
-    boothRef: r.booth_ref,
-    boothTier: r.booth_tier,
+    expoName: r.expo_name ?? undefined,
+    boothRef: r.booth_ref ?? undefined,
+    boothTier: r.booth_tier ?? undefined,
     originalAmount: Number(r.original_amount),
     discountAmount: Number(r.discount_amount),
     amount: Number(r.amount),
