@@ -15,6 +15,58 @@ function toIso(value: string | Date) {
   return new Date(value).toISOString()
 }
 
+function normalizeOrderStatusForStorage(status: OrderStatus): OrderStatus {
+  if (status === "Failed" || status === "Expired") {
+    return "Cancelled"
+  }
+  return status
+}
+
+async function normalizeCustomerOrderStatuses(customerId: string): Promise<void> {
+  await sql`
+    update orders
+    set
+      status = 'Cancelled',
+      updated_at = now()
+    where customer_id = ${customerId}
+      and status in ('Failed', 'Expired', 'Cancel')
+  `
+
+  await sql`
+    update transaction_log as log
+    set status = 'Cancelled'
+    from orders as o
+    where log.order_id = o.id
+      and o.customer_id = ${customerId}
+      and log.status in ('Failed', 'Expired', 'Cancel')
+  `
+}
+
+async function normalizeCustomerOrderStatusesForOrder(
+  orderId: string,
+  customerId: string,
+): Promise<void> {
+  await sql`
+    update orders
+    set
+      status = 'Cancelled',
+      updated_at = now()
+    where id = ${orderId}
+      and customer_id = ${customerId}
+      and status in ('Failed', 'Expired', 'Cancel')
+  `
+
+  await sql`
+    update transaction_log as log
+    set status = 'Cancelled'
+    from orders as o
+    where log.order_id = o.id
+      and o.id = ${orderId}
+      and o.customer_id = ${customerId}
+      and log.status in ('Failed', 'Expired', 'Cancel')
+  `
+}
+
 type OrderRow = {
   id: string
   customer_id: string
@@ -91,7 +143,7 @@ async function expirePendingPaymentOrders(): Promise<void> {
   const expired = (await sql`
     update orders
     set
-      status = 'Expired',
+      status = 'Cancelled',
       updated_at = now()
     where status = 'Pending Payment'
       and payment_method = 'vnpay'
@@ -113,12 +165,12 @@ async function expirePendingPaymentOrders(): Promise<void> {
         processed_at
       )
       values (
-        ${`tx-${order.id}-expired`},
+        ${`tx-${order.id}-timeout-cancelled`},
         ${order.id},
         'status_change',
-        'Expired',
+        'Cancelled',
         'System',
-        'VNPay timeout',
+        'VNPay timeout (auto-cancelled)',
         null,
         ${order.expires_at}
       )
@@ -213,6 +265,7 @@ export async function listOrders(): Promise<Order[]> {
 
 export async function listCustomerOrders(customerId: string): Promise<Order[]> {
   await expirePendingPaymentOrders()
+  await normalizeCustomerOrderStatuses(customerId)
 
   const rows = (await sql`
     select *
@@ -228,6 +281,7 @@ export async function getCustomerOrder(
   customerId: string,
 ): Promise<Order | null> {
   await expirePendingPaymentOrders()
+  await normalizeCustomerOrderStatusesForOrder(orderId, customerId)
 
   const rows = (await sql`
     select *
@@ -271,6 +325,41 @@ export async function listTransactionLogForOrder(
     select * from transaction_log
     where order_id = ${orderId}
     order by processed_at asc
+  `) as {
+    id: string
+    order_id: string
+    type: TransactionLogEntry["type"]
+    status: Order["status"]
+    actor: string
+    note: string | null
+    rejection_reason: string | null
+    processed_at: string | Date
+  }[]
+  return rows.map((r) => ({
+    id: r.id,
+    orderId: r.order_id,
+    type: r.type,
+    status: r.status,
+    actor: r.actor,
+    note: r.note ?? undefined,
+    rejectionReason: r.rejection_reason ?? undefined,
+    processedAt: toIso(r.processed_at),
+  }))
+}
+
+export async function listCustomerTransactionLogForOrder(
+  orderId: string,
+  customerId: string,
+): Promise<TransactionLogEntry[]> {
+  await normalizeCustomerOrderStatusesForOrder(orderId, customerId)
+
+  const rows = (await sql`
+    select log.*
+    from transaction_log as log
+    inner join orders as o on o.id = log.order_id
+    where log.order_id = ${orderId}
+      and o.customer_id = ${customerId}
+    order by log.processed_at asc
   `) as {
     id: string
     order_id: string
@@ -514,12 +603,14 @@ export async function updateOrderStatusAndAppendLogs(input: {
     processedAt: string
   }[]
 }): Promise<void> {
+  const normalizedStatus = normalizeOrderStatusForStorage(input.status)
+
   await sql`begin`
   try {
     await sql`
       update orders
       set
-        status = ${input.status},
+        status = ${normalizedStatus},
         expires_at = ${input.expiresAt ?? null},
         updated_at = now()
       where id = ${input.orderId}
@@ -540,7 +631,7 @@ export async function updateOrderStatusAndAppendLogs(input: {
           ${entry.id},
           ${input.orderId},
           ${entry.type},
-          ${entry.status},
+          ${normalizeOrderStatusForStorage(entry.status)},
           ${entry.actor},
           ${entry.note ?? null},
           ${entry.rejectionReason ?? null},

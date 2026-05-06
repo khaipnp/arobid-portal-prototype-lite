@@ -1,7 +1,10 @@
 import { notFound } from "next/navigation"
 import { CustomerOrderDetail } from "@/components/orders/customer-order-detail"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
-import { getCustomerOrder, listTransactionLogForOrder } from "@/lib/orders/db"
+import {
+  getCustomerOrder,
+  listCustomerTransactionLogForOrder,
+} from "@/lib/orders/db"
 import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
 interface Props {
@@ -15,7 +18,10 @@ export default async function CustomerOrderDetailPage({ params }: Props) {
   const order = await getCustomerOrder(id, CURRENT_USER_ID)
   if (!order) notFound()
 
-  const transactionLog = await listTransactionLogForOrder(id)
+  const transactionLog = await listCustomerTransactionLogForOrder(
+    id,
+    CURRENT_USER_ID,
+  )
 
   return (
     <DashboardShell

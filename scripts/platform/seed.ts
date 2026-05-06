@@ -264,6 +264,20 @@ export async function seedPlatform() {
     `
   }
 
+  await sql`
+    update orders
+    set
+      status = 'Cancelled',
+      updated_at = now()
+    where status in ('Failed', 'Expired', 'Cancel')
+  `
+
+  await sql`
+    update transaction_log
+    set status = 'Cancelled'
+    where status in ('Failed', 'Expired', 'Cancel')
+  `
+
   for (const u of mockChatUsers) {
     await sql`
       insert into chat_users (

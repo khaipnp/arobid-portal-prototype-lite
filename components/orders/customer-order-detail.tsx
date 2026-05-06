@@ -4,14 +4,15 @@ import { ArrowLeftIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Fragment, useEffect, useMemo, useState } from "react"
 import {
-  getOrderStatusLabel,
-  OrderStatusBadge,
-} from "@/components/orders/order-status-badge"
+  CustomerOrderStatusBadge,
+  type CustomerOrderStatus,
+  getCustomerOrderStatusLabel,
+  mapOrderStatusForCustomer,
+} from "@/components/orders/customer-order-status"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import type {
   Order,
-  OrderStatus,
   OrderType,
   TransactionLogEntry,
 } from "@/lib/tradexpo/types"
@@ -52,7 +53,7 @@ function formatRemaining(ms: number) {
   )}s`
 }
 
-function bannerForStatus(status: OrderStatus) {
+function bannerForStatus(status: CustomerOrderStatus) {
   switch (status) {
     case "Pending Payment":
       return {
@@ -64,44 +65,29 @@ function bannerForStatus(status: OrderStatus) {
         message: "Payment confirmed.",
         className: "border-emerald-300 bg-emerald-50 text-emerald-800",
       }
-    case "Failed":
-      return {
-        message: "Payment was not completed.",
-        className: "border-rose-300 bg-rose-50 text-rose-800",
-      }
-    case "Cancelled":
+    case "Cancel":
       return {
         message: "Payment was cancelled.",
         className: "border-zinc-300 bg-zinc-50 text-zinc-700",
       }
-    case "Expired":
-      return {
-        message: "Your payment window has expired.",
-        className: "border-zinc-300 bg-zinc-50 text-zinc-700",
-      }
   }
 }
 
-function resultMessage(order: Order) {
-  switch (order.status) {
+function resultMessage(status: CustomerOrderStatus, orderType: OrderType) {
+  switch (status) {
     case "Pending Payment":
       return "VNPay has not returned a final payment result for this order yet."
     case "Paid":
-      return order.orderType === "booth_registration"
+      return orderType === "booth_registration"
         ? "VNPay confirmed this payment successfully. Your booth booking is recorded."
         : "VNPay confirmed this payment successfully. Your order is recorded."
-    case "Failed":
-      return "VNPay returned an unsuccessful payment result for this order."
-    case "Cancelled":
+    case "Cancel":
       return "This payment was cancelled before completion."
-    case "Expired":
-      return "The VNPay payment window timed out before completion."
   }
 }
 
-function statusDotClass(status: OrderStatus) {
+function statusDotClass(status: CustomerOrderStatus) {
   if (status === "Paid") return "bg-emerald-500"
-  if (status === "Failed") return "bg-rose-500"
   return "bg-zinc-400"
 }
 
@@ -136,9 +122,10 @@ export function CustomerOrderDetail({
 }) {
   const router = useRouter()
   const [nowMs, setNowMs] = useState(() => Date.now())
-  const banner = bannerForStatus(order.status)
+  const customerStatus = mapOrderStatusForCustomer(order.status)
+  const banner = bannerForStatus(customerStatus)
   const hasExpiryCountdown =
-    order.status === "Pending Payment" && Boolean(order.expiresAt)
+    customerStatus === "Pending Payment" && Boolean(order.expiresAt)
   const remainingMs = hasExpiryCountdown
     ? new Date(order.expiresAt as string).getTime() - nowMs
     : null
@@ -171,7 +158,7 @@ export function CustomerOrderDetail({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-mono font-semibold text-lg">{order.id}</span>
-            <OrderStatusBadge status={order.status} />
+            <CustomerOrderStatusBadge status={customerStatus} />
             <Badge variant="outline" className="text-xs uppercase">
               {order.paymentMethod}
             </Badge>
@@ -212,13 +199,13 @@ export function CustomerOrderDetail({
           <h2 className="font-semibold text-muted-foreground text-sm uppercase tracking-wide">
             Payment Result
           </h2>
-          <p className="text-sm">{resultMessage(order)}</p>
+          <p className="text-sm">{resultMessage(customerStatus, order.orderType)}</p>
           <div className="grid grid-cols-2 gap-y-3 text-sm">
             <span className="text-muted-foreground">Payment Method</span>
             <span>VNPay</span>
 
             <span className="text-muted-foreground">Current Status</span>
-            <span>{getOrderStatusLabel(order.status)}</span>
+            <span>{getCustomerOrderStatusLabel(customerStatus)}</span>
 
             {order.paidAt ? (
               <>
@@ -260,35 +247,38 @@ export function CustomerOrderDetail({
           </p>
         ) : (
           <ol className="space-y-0">
-            {sortedLog.map((entry, index) => (
-              <li key={entry.id} className="flex gap-4">
-                <div className="flex flex-col items-center">
-                  <div
-                    className={cn(
-                      "mt-1 size-2.5 shrink-0 rounded-full",
-                      statusDotClass(entry.status),
-                    )}
-                  />
-                  {index < sortedLog.length - 1 ? (
-                    <div className="mt-1 w-px grow bg-border" />
-                  ) : null}
-                </div>
-                <div className="pb-5">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-medium text-sm">
-                      {getOrderStatusLabel(entry.status)}
-                    </span>
-                    <span className="text-muted-foreground text-xs">
-                      {formatDate(entry.processedAt)}
-                    </span>
+            {sortedLog.map((entry, index) => {
+              const entryStatus = mapOrderStatusForCustomer(entry.status)
+              return (
+                <li key={entry.id} className="flex gap-4">
+                  <div className="flex flex-col items-center">
+                    <div
+                      className={cn(
+                        "mt-1 size-2.5 shrink-0 rounded-full",
+                        statusDotClass(entryStatus),
+                      )}
+                    />
+                    {index < sortedLog.length - 1 ? (
+                      <div className="mt-1 w-px grow bg-border" />
+                    ) : null}
                   </div>
-                  <p className="text-muted-foreground text-xs">
-                    {entry.actor}
-                    {entry.note ? ` - ${entry.note}` : ""}
-                  </p>
-                </div>
-              </li>
-            ))}
+                  <div className="pb-5">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-medium text-sm">
+                        {getCustomerOrderStatusLabel(entryStatus)}
+                      </span>
+                      <span className="text-muted-foreground text-xs">
+                        {formatDate(entry.processedAt)}
+                      </span>
+                    </div>
+                    <p className="text-muted-foreground text-xs">
+                      {entry.actor}
+                      {entry.note ? ` - ${entry.note}` : ""}
+                    </p>
+                  </div>
+                </li>
+              )
+            })}
           </ol>
         )}
       </section>

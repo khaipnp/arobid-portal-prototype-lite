@@ -2,10 +2,11 @@
 
 import {
   DotIcon,
-  ExternalLinkIcon,
+  LayoutDashboardIcon,
   MessageCircleIcon,
   ReceiptTextIcon,
   ShoppingCartIcon,
+  TvMinimalIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { NotificationNavLink } from "@/components/notifications/notification-nav-link";
@@ -19,20 +20,6 @@ import {
 import { CURRENT_USER_ID } from "@/lib/user/current-user";
 import { cn } from "@/lib/utils";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
-
-const tradexpo = [
-  {
-    name: "Overview",
-    url: "/seller/overview",
-    icon: <DotIcon />,
-  },
-  {
-    name: "My Expos",
-    url: "/seller/my-expos",
-    icon: <DotIcon />,
-    note: "Danh sách các expo mà user đã và đang tham gia.",
-  },
-];
 
 const seller = [
   {
@@ -70,22 +57,17 @@ const buyer = [
   },
 ];
 
-const quickLinks = [
-  {
-    name: "RFQ Hub",
-    url: "/seller/rfq-hub",
-    icon: <ExternalLinkIcon />,
-  },
-  {
-    name: "eProfile",
-    url: "/seller/rfq-hub",
-    icon: <ExternalLinkIcon />,
-  },
-];
-
 export function NavSeller() {
   return (
     <SidebarGroup>
+      <SidebarMenu>
+        <SidebarMenuButton asChild>
+          <Link href="/seller">
+            <LayoutDashboardIcon />
+            <span>Dashboard</span>
+          </Link>
+        </SidebarMenuButton>
+      </SidebarMenu>
       <SidebarMenu>
         <NotificationNavLink
           userId={CURRENT_USER_ID}
@@ -117,32 +99,16 @@ export function NavSeller() {
         </SidebarMenuItem>
       </SidebarMenu>
 
-      <SidebarMenu>{/* TradeXpo */}</SidebarMenu>
-      <SidebarGroupLabel>TradeXpo</SidebarGroupLabel>
+      {/* TradeXpo */}
       <SidebarMenu>
-        {tradexpo.map((item) => (
-          <SidebarMenuItem key={item.name}>
-            <HoverCard>
-              <HoverCardTrigger asChild>
-                <SidebarMenuButton asChild>
-                  <Link
-                    href={item.url}
-                    className={cn(item.note && "cursor-help underline")}
-                  >
-                    {item.icon}
-                    <span>{item.name}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </HoverCardTrigger>
-              {item.note && (
-                <HoverCardContent align="start" className="text-sm">
-                  <span className="font-bold">PO Note: &nbsp;</span>
-                  <span>{item.note}</span>
-                </HoverCardContent>
-              )}
-            </HoverCard>
-          </SidebarMenuItem>
-        ))}
+        <SidebarMenuItem>
+          <SidebarMenuButton asChild>
+            <Link href="/seller/my-expos">
+              <TvMinimalIcon />
+              <span>My Expos</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
       </SidebarMenu>
 
       {/* Seller */}
@@ -174,36 +140,19 @@ export function NavSeller() {
           </SidebarMenuItem>
         ))}
       </SidebarMenu>
-      {/* Quick Links */}
+
+      {/* Demo */}
       <HoverCard>
         <HoverCardTrigger asChild>
           <SidebarGroupLabel className="cursor-help underline">
-            Quick Links
+            Demo
           </SidebarGroupLabel>
         </HoverCardTrigger>
         <HoverCardContent align="start" className="text-sm">
           <span className="font-bold">PO Note: &nbsp;</span>
-          <span>
-            Các quick links khi click vào sẽ mở tab mới dẫn đến các trang liên
-            quan.
-          </span>
+          <span>Chỉ dùng cho mục đích demo không cần coding</span>
         </HoverCardContent>
       </HoverCard>
-      <SidebarMenu>
-        {quickLinks.map((item) => (
-          <SidebarMenuItem key={item.name}>
-            <SidebarMenuButton asChild>
-              <Link href={item.url}>
-                {item.icon}
-                <span>{item.name}</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        ))}
-      </SidebarMenu>
-
-      {/* Demo */}
-      <SidebarGroupLabel>Demo</SidebarGroupLabel>
       <SidebarMenuItem>
         <SidebarMenuButton asChild>
           <Link href="/seller/checkout-demo">

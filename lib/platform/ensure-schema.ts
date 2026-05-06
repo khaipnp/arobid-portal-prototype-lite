@@ -269,6 +269,20 @@ export async function ensurePlatformSchema() {
   `
 
   await sql`
+    update orders
+    set
+      status = 'Cancelled',
+      updated_at = now()
+    where status in ('Failed', 'Expired', 'Cancel')
+  `
+
+  await sql`
+    update transaction_log
+    set status = 'Cancelled'
+    where status in ('Failed', 'Expired', 'Cancel')
+  `
+
+  await sql`
     create table if not exists chat_users (
       id text primary key,
       name text not null,

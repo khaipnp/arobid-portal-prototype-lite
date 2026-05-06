@@ -4,9 +4,11 @@ import { ChevronRightIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import {
-  getOrderStatusLabel,
-  OrderStatusBadge,
-} from "@/components/orders/order-status-badge"
+  CustomerOrderStatusBadge,
+  type CustomerOrderStatus,
+  getCustomerOrderStatusLabel,
+  mapOrderStatusForCustomer,
+} from "@/components/orders/customer-order-status"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -24,16 +26,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import type { Order, OrderStatus, OrderType } from "@/lib/tradexpo/types"
+import type { Order, OrderType } from "@/lib/tradexpo/types"
 
 const PAGE_SIZE = 20
-const ALL_STATUSES: Array<"All" | OrderStatus> = [
+const ALL_STATUSES: Array<"All" | CustomerOrderStatus> = [
   "All",
   "Pending Payment",
   "Paid",
-  "Expired",
-  "Failed",
-  "Cancelled",
+  "Cancel",
 ]
 
 function formatVND(amount: number) {
@@ -102,7 +102,9 @@ export function CustomerOrderHistory({
   initialOrders: Order[]
 }) {
   const router = useRouter()
-  const [statusFilter, setStatusFilter] = useState<"All" | OrderStatus>("All")
+  const [statusFilter, setStatusFilter] = useState<"All" | CustomerOrderStatus>(
+    "All",
+  )
   const [page, setPage] = useState(1)
   const [nowMs, setNowMs] = useState(() => Date.now())
 
@@ -113,7 +115,9 @@ export function CustomerOrderHistory({
 
   const filtered = useMemo(() => {
     if (statusFilter === "All") return initialOrders
-    return initialOrders.filter((order) => order.status === statusFilter)
+    return initialOrders.filter(
+      (order) => mapOrderStatusForCustomer(order.status) === statusFilter,
+    )
   }, [initialOrders, statusFilter])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
@@ -133,7 +137,7 @@ export function CustomerOrderHistory({
         <Select
           value={statusFilter}
           onValueChange={(value) => {
-            setStatusFilter(value as "All" | OrderStatus)
+            setStatusFilter(value as "All" | CustomerOrderStatus)
             setPage(1)
           }}
         >
@@ -145,7 +149,7 @@ export function CustomerOrderHistory({
               <SelectItem key={status} value={status}>
                 {status === "All"
                   ? "All statuses"
-                  : getOrderStatusLabel(status)}
+                  : getCustomerOrderStatusLabel(status)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -218,7 +222,7 @@ export function CustomerOrderHistory({
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <OrderStatusBadge status={order.status} />
+                      <CustomerOrderStatusBadge status={order.status} />
                       {remainingMs !== null ? (
                         <div className="mt-1 whitespace-nowrap text-muted-foreground text-xs">
                           {formatRemaining(remainingMs)}
