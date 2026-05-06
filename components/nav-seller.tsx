@@ -87,18 +87,6 @@ export function NavSeller() {
         </SidebarMenuItem>
       </SidebarMenu>
 
-      {/* Orders */}
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <SidebarMenuButton asChild>
-            <Link href="/seller/orders">
-              <ReceiptTextIcon />
-              <span>Orders</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      </SidebarMenu>
-
       {/* TradeXpo */}
       <SidebarMenu>
         <SidebarMenuItem>
@@ -106,6 +94,18 @@ export function NavSeller() {
             <Link href="/seller/my-expos">
               <TvMinimalIcon />
               <span>My Expos</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+
+      {/* Orders */}
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton asChild>
+            <Link href="/seller/orders">
+              <ReceiptTextIcon />
+              <span>Orders</span>
             </Link>
           </SidebarMenuButton>
         </SidebarMenuItem>

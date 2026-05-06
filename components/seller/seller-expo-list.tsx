@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   CalendarIcon,
@@ -6,30 +6,30 @@ import {
   SearchIcon,
   SignpostIcon,
   StoreIcon,
-} from "lucide-react"
-import Image from "next/image"
-import Link from "next/link"
-import * as React from "react"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import * as React from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
-} from "@/components/ui/input-group"
+} from "@/components/ui/input-group";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import type {
   Expo,
   ExpoStatus,
   SellerBoothRegistration,
-} from "@/lib/tradexpo/types"
-import { cn } from "@/lib/utils"
+} from "@/lib/tradexpo/types";
+import { cn } from "@/lib/utils";
 import {
   Empty,
   EmptyContent,
@@ -37,51 +37,51 @@ import {
   EmptyHeader,
   EmptyMedia,
   EmptyTitle,
-} from "../ui/empty"
+} from "../ui/empty";
 
-type SellerExpoViewStatus = "Upcoming" | "Live" | "Archive"
+type SellerExpoViewStatus = "Upcoming" | "Live" | "Archive";
 
 const statusStyles: Record<SellerExpoViewStatus, string> = {
   Upcoming: "border-amber-300 bg-amber-100 text-amber-700",
   Live: "border-emerald-300 bg-emerald-100 text-emerald-700",
   Archive: "border-zinc-300 bg-zinc-100 text-zinc-700",
-}
+};
 
 function toSellerExpoViewStatus(status: ExpoStatus): SellerExpoViewStatus {
-  if (status === "Live") return "Live"
+  if (status === "Live") return "Live";
   if (status === "Ended" || status === "Archived" || status === "Canceled") {
-    return "Archive"
+    return "Archive";
   }
-  return "Upcoming"
+  return "Upcoming";
 }
 
 function formatDate(iso: string) {
   return new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" }).format(
     new Date(iso),
-  )
+  );
 }
 
 interface ExpoWithBooths {
-  expo: Expo
-  registrations: SellerBoothRegistration[]
+  expo: Expo;
+  registrations: SellerBoothRegistration[];
 }
 
 function buildData(
   expos: Expo[],
   registrations: SellerBoothRegistration[],
 ): ExpoWithBooths[] {
-  const grouped = new Map<string, SellerBoothRegistration[]>()
+  const grouped = new Map<string, SellerBoothRegistration[]>();
   for (const reg of registrations) {
-    const list = grouped.get(reg.expoId) ?? []
-    list.push({ ...reg })
-    grouped.set(reg.expoId, list)
+    const list = grouped.get(reg.expoId) ?? [];
+    list.push({ ...reg });
+    grouped.set(reg.expoId, list);
   }
 
   return expos
     .flatMap((expo) => {
-      const registrations = grouped.get(expo.id)
+      const registrations = grouped.get(expo.id);
       if (!registrations) {
-        return []
+        return [];
       }
 
       return [
@@ -89,51 +89,53 @@ function buildData(
           expo: { ...expo },
           registrations,
         },
-      ]
+      ];
     })
     .sort(
       (a, b) =>
         new Date(b.expo.startDate).getTime() -
         new Date(a.expo.startDate).getTime(),
-    )
+    );
 }
 
-const ALL_STATUSES: SellerExpoViewStatus[] = ["Upcoming", "Live", "Archive"]
+const ALL_STATUSES: SellerExpoViewStatus[] = ["Upcoming", "Live", "Archive"];
 
 export function SellerExpoList({
   initialExpos,
   initialRegistrations,
 }: {
-  initialExpos: Expo[]
-  initialRegistrations: SellerBoothRegistration[]
+  initialExpos: Expo[];
+  initialRegistrations: SellerBoothRegistration[];
 }) {
   const [data] = React.useState<ExpoWithBooths[]>(() =>
     buildData(initialExpos, initialRegistrations),
-  )
-  const [search, setSearch] = React.useState("")
-  const [debouncedSearch, setDebouncedSearch] = React.useState("")
+  );
+  const [search, setSearch] = React.useState("");
+  const [debouncedSearch, setDebouncedSearch] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<
     SellerExpoViewStatus | "All"
-  >("All")
+  >("All");
 
   React.useEffect(() => {
-    const t = window.setTimeout(() => setDebouncedSearch(search), 300)
-    return () => window.clearTimeout(t)
-  }, [search])
+    const t = window.setTimeout(() => setDebouncedSearch(search), 300);
+    return () => window.clearTimeout(t);
+  }, [search]);
 
   const filtered = React.useMemo(() => {
-    let result = data
+    let result = data;
     if (debouncedSearch.trim()) {
-      const kw = debouncedSearch.trim().toLowerCase()
-      result = result.filter(({ expo }) => expo.name.toLowerCase().includes(kw))
+      const kw = debouncedSearch.trim().toLowerCase();
+      result = result.filter(({ expo }) =>
+        expo.name.toLowerCase().includes(kw),
+      );
     }
     if (statusFilter !== "All") {
       result = result.filter(
         ({ expo }) => toSellerExpoViewStatus(expo.status) === statusFilter,
-      )
+      );
     }
-    return result
-  }, [data, debouncedSearch, statusFilter])
+    return result;
+  }, [data, debouncedSearch, statusFilter]);
 
   return (
     <div className="grid gap-4">
@@ -186,9 +188,9 @@ export function SellerExpoList({
             <Button
               variant="outline"
               onClick={() => {
-                setSearch("")
-                setDebouncedSearch("")
-                setStatusFilter("All")
+                setSearch("");
+                setDebouncedSearch("");
+                setStatusFilter("All");
               }}
             >
               Clear Filters
@@ -206,18 +208,18 @@ export function SellerExpoList({
         </div>
       )}
     </div>
-  )
+  );
 }
 
 function ExpoCard({
   expo,
   registrations,
 }: {
-  expo: Expo
-  registrations: SellerBoothRegistration[]
+  expo: Expo;
+  registrations: SellerBoothRegistration[];
 }) {
-  const boothCount = registrations.length
-  const displayStatus = toSellerExpoViewStatus(expo.status)
+  const boothCount = registrations.length;
+  const displayStatus = toSellerExpoViewStatus(expo.status);
 
   return (
     <div className="flex items-start gap-4 rounded-xl border bg-card p-4 transition-colors hover:bg-accent/40">
@@ -274,5 +276,5 @@ function ExpoCard({
         </Button>
       </div>
     </div>
-  )
+  );
 }
