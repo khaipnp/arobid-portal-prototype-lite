@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   BrickWallShieldIcon,
@@ -15,15 +15,15 @@ import {
   ToyBrickIcon,
   UserRoundKeyIcon,
   WalletCardsIcon,
-} from "lucide-react"
-import Link from "next/link"
+} from "lucide-react";
+import Link from "next/link";
 import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
 const b2bMarketplaceLinks = [
   {
@@ -36,7 +36,7 @@ const b2bMarketplaceLinks = [
     url: "/admin/tradexpo/booth-templates",
     icon: <LayoutPanelTopIcon />,
   },
-]
+];
 
 const tradexpoLinks = [
   {
@@ -59,7 +59,7 @@ const tradexpoLinks = [
     url: "/admin/tradexpo/booth-templates",
     icon: <ToyBrickIcon />,
   },
-]
+];
 
 const servicesLinks = [
   {
@@ -82,7 +82,7 @@ const servicesLinks = [
     url: "/admin/settings/payment-management",
     icon: <WalletCardsIcon />,
   },
-]
+];
 
 const administrationLinks = [
   {
@@ -105,13 +105,15 @@ const administrationLinks = [
     url: "/admin/administration/permissions",
     icon: <BrickWallShieldIcon />,
   },
-]
+];
 
 export function NavAdmin() {
   return (
     <>
       <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-        <SidebarGroupLabel>B2B Marketplace</SidebarGroupLabel>
+        <SidebarGroupLabel className="select-none">
+          B2B Marketplace
+        </SidebarGroupLabel>
         <SidebarMenu>
           {b2bMarketplaceLinks.map((item) => (
             <SidebarMenuItem key={item.name}>
@@ -126,7 +128,7 @@ export function NavAdmin() {
         </SidebarMenu>
       </SidebarGroup>
       <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-        <SidebarGroupLabel>TradeXpo</SidebarGroupLabel>
+        <SidebarGroupLabel className="select-none">TradeXpo</SidebarGroupLabel>
         <SidebarMenu>
           {tradexpoLinks.map((item) => (
             <SidebarMenuItem key={item.name}>
@@ -142,7 +144,9 @@ export function NavAdmin() {
       </SidebarGroup>
 
       <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-        <SidebarGroupLabel>Service Management</SidebarGroupLabel>
+        <SidebarGroupLabel className="select-none">
+          Service Management
+        </SidebarGroupLabel>
         <SidebarMenu>
           {servicesLinks.map((item) => (
             <SidebarMenuItem key={item.name}>
@@ -158,7 +162,9 @@ export function NavAdmin() {
       </SidebarGroup>
 
       <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-        <SidebarGroupLabel>Administration</SidebarGroupLabel>
+        <SidebarGroupLabel className="select-none">
+          Administration
+        </SidebarGroupLabel>
         <SidebarMenu>
           {administrationLinks.map((item) => (
             <SidebarMenuItem key={item.name}>
@@ -173,5 +179,5 @@ export function NavAdmin() {
         </SidebarMenu>
       </SidebarGroup>
     </>
-  )
+  );
 }

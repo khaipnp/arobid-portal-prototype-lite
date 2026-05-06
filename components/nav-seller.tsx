@@ -112,7 +112,7 @@ export function NavSeller() {
       </SidebarMenu>
 
       {/* Seller */}
-      <SidebarGroupLabel>Seller</SidebarGroupLabel>
+      <SidebarGroupLabel className="select-none">Seller</SidebarGroupLabel>
       <SidebarMenu>
         {seller.map((item) => (
           <SidebarMenuItem key={item.name}>
@@ -127,7 +127,7 @@ export function NavSeller() {
       </SidebarMenu>
 
       {/* Buyer */}
-      <SidebarGroupLabel>Buyer</SidebarGroupLabel>
+      <SidebarGroupLabel className="select-none">Buyer</SidebarGroupLabel>
       <SidebarMenu>
         {buyer.map((item) => (
           <SidebarMenuItem key={item.name}>

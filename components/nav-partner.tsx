@@ -1,15 +1,21 @@
-"use client"
+"use client";
 
-import { CalendarIcon, RadioIcon, Settings2Icon, UsersIcon } from "lucide-react"
-import Link from "next/link"
-import { NotificationNavLink } from "@/components/notifications/notification-nav-link"
+import {
+  CalendarIcon,
+  LayoutDashboardIcon,
+  RadioIcon,
+  Settings2Icon,
+  UsersIcon,
+} from "lucide-react";
+import Link from "next/link";
+import { NotificationNavLink } from "@/components/notifications/notification-nav-link";
 import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
 const expoOwnerLinks = [
   {
@@ -32,15 +38,27 @@ const expoOwnerLinks = [
     url: "#",
     icon: <Settings2Icon />,
   },
-]
+];
 
 export function NavPartner() {
   return (
     <SidebarGroup>
       <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton asChild>
+            <Link href="/partner">
+              <LayoutDashboardIcon />
+              <span>Dashboard</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+      <SidebarMenu>
         <NotificationNavLink userId="partner-1" href="/partner/notifications" />
       </SidebarMenu>
-      <SidebarGroupLabel>Expo Management</SidebarGroupLabel>
+      <SidebarGroupLabel className="select-none">
+        Expo Management
+      </SidebarGroupLabel>
       <SidebarMenu>
         {expoOwnerLinks.map((item) => (
           <SidebarMenuItem key={item.name}>
@@ -54,5 +72,5 @@ export function NavPartner() {
         ))}
       </SidebarMenu>
     </SidebarGroup>
-  )
+  );
 }
