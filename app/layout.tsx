@@ -1,13 +1,17 @@
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
-import { Geist_Mono, Inter_Tight, Manrope } from "next/font/google"
+import {
+  Geist_Mono,
+  Google_Sans,
+  Google_Sans_Flex,
+} from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import "./globals.css"
 
-const manrope = Manrope({ subsets: ["latin"], variable: "--font-sans" })
-const interTight = Inter_Tight({
+const googleSans = Google_Sans({ subsets: ["latin"], variable: "--font-sans" })
+const googleSansFlex = Google_Sans_Flex({
   subsets: ["latin"],
   variable: "--font-tight",
 })
@@ -30,8 +34,8 @@ export default function RootLayout({
         "antialiased",
         fontMono.variable,
         "font-sans",
-        manrope.variable,
-        interTight.variable,
+        googleSans.variable,
+        googleSansFlex.variable,
       )}
     >
       <body>
