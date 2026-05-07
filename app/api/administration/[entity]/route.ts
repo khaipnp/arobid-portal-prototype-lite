@@ -21,7 +21,7 @@ export async function GET(
   const url = new URL(request.url)
   const search = url.searchParams.get("search") ?? ""
   const moduleId = url.searchParams.get("moduleId") ?? "all"
-  const result = getAdministrationList({
+  const result = await getAdministrationList({
     entity: entity as AdministrationEntity,
     search,
     moduleId,

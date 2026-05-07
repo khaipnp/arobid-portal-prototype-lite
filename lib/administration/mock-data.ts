@@ -84,7 +84,7 @@ export const adminFeatures: AdminFeature[] = [
 
 export const adminPermissions: AdminPermission[] = [
   {
-    id: "perm-order-read",
+    id: "order-read",
     name: "Read Orders",
     moduleId: "module-b2b",
     moduleName: "B2B Marketplace",
@@ -95,7 +95,7 @@ export const adminPermissions: AdminPermission[] = [
     action: "read",
   },
   {
-    id: "perm-order-create",
+    id: "order-create",
     name: "Create Orders",
     moduleId: "module-b2b",
     moduleName: "B2B Marketplace",
@@ -106,7 +106,7 @@ export const adminPermissions: AdminPermission[] = [
     action: "create",
   },
   {
-    id: "perm-catalog-edit",
+    id: "catalog-edit",
     name: "Edit Catalog",
     moduleId: "module-b2b",
     moduleName: "B2B Marketplace",
@@ -117,7 +117,7 @@ export const adminPermissions: AdminPermission[] = [
     action: "update",
   },
   {
-    id: "perm-expo-read",
+    id: "expo-read",
     name: "Read Expo",
     moduleId: "module-tradexpo",
     moduleName: "TradeXpo",
@@ -128,7 +128,7 @@ export const adminPermissions: AdminPermission[] = [
     action: "read",
   },
   {
-    id: "perm-expo-create",
+    id: "expo-create",
     name: "Create Expo",
     moduleId: "module-tradexpo",
     moduleName: "TradeXpo",
@@ -139,7 +139,7 @@ export const adminPermissions: AdminPermission[] = [
     action: "create",
   },
   {
-    id: "perm-booth-read",
+    id: "booth-read",
     name: "Read Booth Templates",
     moduleId: "module-tradexpo",
     moduleName: "TradeXpo",

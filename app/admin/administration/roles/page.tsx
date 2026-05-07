@@ -1,9 +1,15 @@
 import { AdministrationListPage } from "@/components/administration/administration-list-page"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
-import { getAdministrationList } from "@/lib/administration/list"
+import {
+  getAdministrationList,
+  getAdministrationModules,
+} from "@/lib/administration/list"
 
 export default async function AdministrationRolesPage() {
-  const initialData = getAdministrationList({ entity: "roles" })
+  const [initialData, moduleOptions] = await Promise.all([
+    getAdministrationList({ entity: "roles" }),
+    getAdministrationModules(),
+  ])
   return (
     <DashboardShell
       title="Administration - Roles"
@@ -14,7 +20,11 @@ export default async function AdministrationRolesPage() {
         { label: "Roles" },
       ]}
     >
-      <AdministrationListPage entity="roles" initialData={initialData} />
+      <AdministrationListPage
+        entity="roles"
+        initialData={initialData}
+        moduleOptions={moduleOptions}
+      />
     </DashboardShell>
   )
 }

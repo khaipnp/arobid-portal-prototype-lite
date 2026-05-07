@@ -1,20 +1,30 @@
 import { AdministrationListPage } from "@/components/administration/administration-list-page"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
-import { getAdministrationList } from "@/lib/administration/list"
+import {
+  getAdministrationList,
+  getAdministrationModules,
+} from "@/lib/administration/list"
 
 export default async function AdministrationPermissionsPage() {
-  const initialData = getAdministrationList({ entity: "permissions" })
+  const [initialData, moduleOptions] = await Promise.all([
+    getAdministrationList({ entity: "permissions" }),
+    getAdministrationModules(),
+  ])
   return (
     <DashboardShell
       title="Administration - Permissions"
-      description="Inspect permissions with grouping by role and feature."
+      description="Inspect permissions and module-specific assignments."
       breadcrumbs={[
         { label: "Admin", href: "/admin" },
         { label: "Administration", href: "/admin/administration/modules" },
         { label: "Permissions" },
       ]}
     >
-      <AdministrationListPage entity="permissions" initialData={initialData} />
+      <AdministrationListPage
+        entity="permissions"
+        initialData={initialData}
+        moduleOptions={moduleOptions}
+      />
     </DashboardShell>
   )
 }

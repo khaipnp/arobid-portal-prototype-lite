@@ -1,8 +1,7 @@
 "use client"
 
 import { AlertCircleIcon, RefreshCwIcon, SearchIcon } from "lucide-react"
-import { useEffect, useMemo, useState } from "react"
-import { Badge } from "@/components/ui/badge"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
   InputGroup,
@@ -19,7 +18,6 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { adminModules } from "@/lib/administration/mock-data"
 import type {
   AdminFeature,
   AdminModule,
@@ -37,6 +35,7 @@ const PAGE_SIZE = 20
 interface AdministrationListPageProps {
   entity: EntityType
   initialData?: ListResponse<EntityRecord>
+  moduleOptions?: AdminModule[]
 }
 
 const TITLES: Record<EntityType, string> = {
@@ -57,7 +56,7 @@ const TABLE_HEADERS: Record<EntityType, string[]> = {
   modules: ["Module", "Code", "Description"],
   roles: ["Role", "Module", "Description"],
   features: ["Feature", "Module", "Description"],
-  permissions: ["Permission", "Action", "Module", "Role", "Feature"],
+  permissions: ["Permission", "Permission Code", "Description"],
 }
 
 function isPermissionRecord(value: EntityRecord): value is AdminPermission {
@@ -99,14 +98,10 @@ function renderRows(entity: EntityType, data: EntityRecord[]) {
     return permissionRecords.map((permission) => (
       <TableRow key={permission.id}>
         <TableCell className="font-medium">{permission.name}</TableCell>
-        <TableCell>
-          <Badge variant="outline" className="uppercase">
-            {permission.action}
-          </Badge>
+        <TableCell className="font-mono text-xs">{permission.id}</TableCell>
+        <TableCell className="text-muted-foreground">
+          {`${permission.roleName} can ${permission.action} ${permission.featureName} in ${permission.moduleName}.`}
         </TableCell>
-        <TableCell>{permission.moduleName}</TableCell>
-        <TableCell>{permission.roleName}</TableCell>
-        <TableCell>{permission.featureName}</TableCell>
       </TableRow>
     ))
   }
@@ -125,48 +120,10 @@ function renderRows(entity: EntityType, data: EntityRecord[]) {
   ))
 }
 
-function PermissionGroupPreview({ data }: { data: EntityRecord[] }) {
-  const { grouped, permissionRecords } = useMemo(() => {
-    const permissionRecords = data.filter(isPermissionRecord)
-    const grouped = permissionRecords.reduce<
-      Record<string, Record<string, number>>
-    >((acc, permission) => {
-      if (!acc[permission.roleName]) {
-        acc[permission.roleName] = {}
-      }
-      acc[permission.roleName][permission.featureName] =
-        (acc[permission.roleName][permission.featureName] ?? 0) + 1
-      return acc
-    }, {})
-
-    return { grouped, permissionRecords }
-  }, [data])
-  if (permissionRecords.length === 0) return null
-
-  return (
-    <div className="rounded-lg border bg-card p-4">
-      <h3 className="font-medium text-sm">Grouped by Role - Feature</h3>
-      <div className="mt-3 grid gap-3 md:grid-cols-2">
-        {Object.entries(grouped).map(([role, features]) => (
-          <div key={role} className="rounded-md border p-3">
-            <p className="font-medium text-sm">{role}</p>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {Object.entries(features).map(([feature, count]) => (
-                <Badge key={`${role}-${feature}`} variant="secondary">
-                  {feature}: {count}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 export function AdministrationListPage({
   entity,
   initialData,
+  moduleOptions = [],
 }: AdministrationListPageProps) {
   const [rows, setRows] = useState<EntityRecord[]>(initialData?.data ?? [])
   const [meta, setMeta] = useState<PaginationMeta>({
@@ -276,10 +233,10 @@ export function AdministrationListPage({
           <Tabs value={moduleFilter} onValueChange={handleModuleFilterChange}>
             <TabsList>
               <TabsTrigger value="all">All</TabsTrigger>
-              {adminModules.map((moduleItem) => (
-                <TabsTrigger key={moduleItem.id} value={moduleItem.id}>
-                  {moduleItem.name}
-                </TabsTrigger>
+               {moduleOptions.map((moduleItem) => (
+                 <TabsTrigger key={moduleItem.id} value={moduleItem.id}>
+                   {moduleItem.name}
+                 </TabsTrigger>
               ))}
             </TabsList>
           </Tabs>
@@ -343,10 +300,6 @@ export function AdministrationListPage({
             </TableBody>
           </Table>
         </div>
-      )}
-
-      {entity === "permissions" && !loading && !error && (
-        <PermissionGroupPreview data={rows} />
       )}
 
       <div className="flex items-center justify-between text-muted-foreground text-sm">

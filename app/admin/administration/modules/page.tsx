@@ -3,7 +3,7 @@ import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import { getAdministrationList } from "@/lib/administration/list"
 
 export default async function AdministrationModulesPage() {
-  const initialData = getAdministrationList({ entity: "modules" })
+  const initialData = await getAdministrationList({ entity: "modules" })
   return (
     <DashboardShell
       title="Administration - Modules"
