@@ -1,17 +1,17 @@
-import Link from "next/link";
-import { DashboardShell } from "@/components/tradexpo/dashboard-shell";
-import { listSellerBoothRegistrations } from "@/lib/tradexpo/db/platform-data";
-import { CURRENT_USER_ID } from "@/lib/user/current-user";
+import Link from "next/link"
+import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
+import { listSellerBoothRegistrations } from "@/lib/tradexpo/db/platform-data"
+import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"
 
 export default async function SellerDashboardPage() {
-  const registrations = await listSellerBoothRegistrations(CURRENT_USER_ID);
-  const myExpoIds = [...new Set(registrations.map((r) => r.expoId))];
-  const liveCount = registrations.filter((r) => r.status === "Live").length;
+  const registrations = await listSellerBoothRegistrations(CURRENT_USER_ID)
+  const myExpoIds = [...new Set(registrations.map((r) => r.expoId))]
+  const liveCount = registrations.filter((r) => r.status === "Live").length
   const pendingCount = registrations.filter(
     (r) => r.status === "Pending Setup",
-  ).length;
+  ).length
 
   return (
     <DashboardShell
@@ -52,5 +52,5 @@ export default async function SellerDashboardPage() {
         </Link>
       </div>
     </DashboardShell>
-  );
+  )
 }

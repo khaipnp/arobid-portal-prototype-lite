@@ -1,154 +1,29 @@
 import {
   ArrowRight,
-  BadgeCheck,
   Box,
   Check,
   ChevronRight,
-  Gem,
   Home,
-  Rocket,
   Send,
   Video,
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import type { ComponentType } from "react"
 
-import { ExhibitorsSection } from "@/app/expos/vifmw-2026/exhibitors-section"
-import { TxFooter } from "@/components/landing/tx-footer"
-import { TxHeader } from "@/components/landing/tx-header"
-import {
-  listExpoDetailExhibitorsByName,
-} from "@/lib/tradexpo/db/platform-data"
 import { cn } from "@/lib/utils"
 
-const asset = (name: string) => `/landing/${name}`
+import {
+  asset,
+  audiences,
+  boothFeatures,
+  categories,
+  heroStats,
+  productImages,
+  sponsors,
+  valueCards,
+} from "./data"
 
-const heroStats = [
-  ["320+", "Exhibitors"],
-  ["25K", "Visitors"],
-  ["1000+", "Products"],
-  ["80", "RFQs"],
-]
-
-const sponsors = [
-  ["Google", "sponsor-google.svg"],
-  ["Microsoft", "sponsor-microsoft.svg"],
-  ["Dropbox", "sponsor-dropbox.svg"],
-  ["OpenAI", "sponsor-openai.svg"],
-  ["Claude", "sponsor-claude.svg"],
-]
-
-const productImages = [
-  "figma-product-1.png",
-  "figma-product-2.png",
-  "figma-product-3.png",
-  "figma-product-4.png",
-]
-
-const audiences = [
-  {
-    number: "01",
-    title: "The Buyers",
-    body: "Real estate developers, main contractors, and architects seeking high-performance materials and infrastructure solutions.",
-    tags: ["Real Estate", "Construction", "Architects"],
-    offset: "lg:pt-[93px]",
-  },
-  {
-    number: "02",
-    title: "The Suppliers",
-    body: "Material manufacturers and tech providers digitizing their portfolios to reach 12,000+ high-intent buyers globally.",
-    tags: ["Manufacturers", "Tech", "Global"],
-    offset: "lg:pt-0",
-  },
-  {
-    number: "03",
-    title: "The Partners",
-    body: "Trade associations, logistics, and Green Building councils facilitate seamless global construction supply chains.",
-    tags: ["Logistics", "Councils", "Associations"],
-    offset: "lg:pt-[93px]",
-  },
-]
-
-const categories = [
-  "Surface & Interior Finishing",
-  "Structural & Raw Materials",
-  "Roofing & Ceiling Systems",
-  "Sanitary Ware & Plumbing",
-  "HVAC, Lifts & Building MEP",
-  "Doors, Windows & Glass Systems",
-]
-
-const valueCards: Array<{
-  title: string
-  icon: ComponentType<{ className?: string }>
-  tone: string
-  points: string[]
-}> = [
-  {
-    title: "Buyers (Visitors)",
-    icon: BadgeCheck,
-    tone: "bg-[#ecfdf5] text-[#16a34a]",
-    points: [
-      "Direct access to verified supply sources from numerous reputable manufacturers.",
-      "Explore and evaluate products intuitively through advanced 3D/VR technology.",
-      "Connect directly and facilitate trade via integrated video conferencing tools.",
-    ],
-  },
-  {
-    title: "Sellers (Exhibitors)",
-    icon: Rocket,
-    tone: "bg-[#fff7ed] text-[#ed6203]",
-    points: [
-      "Establish a professional digital presence with world-class virtual booths.",
-      "Engage with a vast network of potential global buyers and sourcing specialists.",
-      "Maximize cost-efficiency and operational agility compared to traditional models.",
-    ],
-  },
-  {
-    title: "Partners",
-    icon: Gem,
-    tone: "bg-[#ecfeff] text-[#0ea5e9]",
-    points: [
-      "Enhance brand visibility among high-profile industry audiences and strategic leads.",
-      "Gain exclusive partnership benefits and high-level networking opportunities.",
-      "Access post-event data analytics and in-depth market intelligence reports.",
-    ],
-  },
-]
-
-const boothFeatures = [
-  ["VIP Floor Area", true],
-  ["10 Display Products", true],
-  ["5 Advertising Banners", true],
-  ["4 Standees", true],
-  ["Brand Placement: Full Media Suite", false],
-  ["GoLive: Video, Chat & Webinar", false],
-  ["Product Listings: Unlimited", false],
-  ["Priority Featured Placement", false],
-  ["Dedicated Account Manager", true],
-] as const
-
-export default async function Page() {
-  const exhibitors = await listExpoDetailExhibitorsByName("VIFMW")
-  return (
-    <main className="min-h-screen bg-white text-[#030712] [font-family:var(--font-tight)]">
-      <TxHeader />
-      <Breadcrumb />
-      <Hero />
-      <About />
-      <Sponsors />
-      <ExhibitorsSection initialExhibitors={exhibitors} />
-      <Audience />
-      <Categories />
-      <ParticipantValues />
-      <BoothTier />
-      <TxFooter />
-    </main>
-  )
-}
-
-function Breadcrumb() {
+export function Breadcrumb() {
   return (
     <nav className="mx-auto flex h-[52px] max-w-[1284px] items-center gap-1 px-4 text-[#1f2937] text-sm md:px-0">
       <Home className="size-4" />
@@ -158,7 +33,15 @@ function Breadcrumb() {
   )
 }
 
-function Hero() {
+export function Hero({
+  expoTitle = "Vietnam International Furniture Manufacturing & Wood Expo (VIFMW) #1",
+  startDateLabel = "April 15, 2026",
+  endDateLabel = "April 17, 2026",
+}: {
+  expoTitle?: string
+  startDateLabel?: string
+  endDateLabel?: string
+}) {
   return (
     <section className="bg-linear-to-b from-white via-[#ffe0d2] via-[26%] to-white pb-0">
       <div className="relative mx-auto min-h-[616px] max-w-[1284px] overflow-hidden rounded-2xl">
@@ -203,20 +86,20 @@ function Hero() {
           <div className="mt-[-2px] grid grid-cols-[1fr_auto_1fr] items-end rounded-xl border border-[#f3f4f6] bg-white px-4 py-3 shadow-lg">
             <div>
               <p className="text-[#6b7280] text-xs">Start</p>
-              <p className="font-medium text-sm">April 15, 2026</p>
+              <p className="font-medium text-sm">{startDateLabel}</p>
             </div>
             <span className="grid h-4 w-5 place-items-center rounded-full bg-[#ed6203] text-white">
               <ArrowRight className="size-3" />
             </span>
             <div className="text-right">
               <p className="text-[#6b7280] text-xs">End</p>
-              <p className="font-medium text-sm">April 17, 2026</p>
+              <p className="font-medium text-sm">{endDateLabel}</p>
             </div>
           </div>
         </div>
         <div className="absolute bottom-10 left-7 max-w-[720px] text-white md:left-10">
           <h1 className="max-w-[684px] font-medium text-[32px] leading-[1.18] tracking-normal md:text-[36px] md:leading-[44px]">
-            Vietnam International Furniture Manufacturing & Wood Expo (VIFMW) #1
+            {expoTitle}
           </h1>
           <div className="mt-5 flex flex-wrap gap-4">
             <Link
@@ -247,7 +130,7 @@ function Hero() {
   )
 }
 
-function About() {
+export function About() {
   return (
     <section className="relative mx-auto grid max-w-[1284px] gap-8 px-4 py-16 md:grid-cols-[1fr_1.1fr] md:px-0">
       <h2 className="font-semibold text-[32px] leading-10">About VICONS</h2>
@@ -282,7 +165,7 @@ function About() {
   )
 }
 
-function Sponsors() {
+export function Sponsors() {
   return (
     <section
       id="sponsors"
@@ -310,7 +193,7 @@ function Sponsors() {
   )
 }
 
-function Audience() {
+export function Audience() {
   return (
     <section className="mx-auto max-w-[1284px] px-4 py-16 md:px-0">
       <h2 className="text-center font-semibold text-[32px] leading-10">
@@ -350,7 +233,7 @@ function Audience() {
   )
 }
 
-function Categories() {
+export function Categories() {
   return (
     <section className="mx-auto max-w-[1284px] px-4 pb-16 text-center md:px-0">
       <h2 className="font-semibold text-[32px] leading-10">
@@ -383,7 +266,7 @@ function Categories() {
   )
 }
 
-function ParticipantValues() {
+export function ParticipantValues() {
   return (
     <section className="bg-[#f9fafb] px-4 py-16 md:px-[78px]">
       <div className="mx-auto max-w-[1284px] text-center">
@@ -424,7 +307,7 @@ function ParticipantValues() {
   )
 }
 
-function BoothTier() {
+export function BoothTier() {
   return (
     <section id="booths" className="mx-auto max-w-[1284px] px-4 py-16 md:px-0">
       <h2 className="text-center font-semibold text-[32px] leading-10">

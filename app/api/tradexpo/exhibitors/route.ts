@@ -9,10 +9,7 @@ export async function GET(request: Request) {
   const tier = (url.searchParams.get("tier") ?? "").trim().toLowerCase()
 
   if (!expoName) {
-    return NextResponse.json(
-      { error: "expoName is required" },
-      { status: 400 },
-    )
+    return NextResponse.json({ error: "expoName is required" }, { status: 400 })
   }
 
   const rows = await listExpoDetailExhibitorsByName(expoName)
@@ -27,4 +24,3 @@ export async function GET(request: Request) {
 
   return NextResponse.json({ data: filtered })
 }
-

@@ -1,15 +1,15 @@
-import { AdministrationListPage } from "@/components/administration/administration-list-page";
-import { DashboardShell } from "@/components/tradexpo/dashboard-shell";
+import { AdministrationListPage } from "@/components/administration/administration-list-page"
+import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import {
   getAdministrationList,
   getAdministrationModules,
-} from "@/lib/administration/list";
+} from "@/lib/administration/list"
 
 export default async function AdministrationPermissionsPage() {
   const [initialData, moduleOptions] = await Promise.all([
     getAdministrationList({ entity: "permissions" }),
     getAdministrationModules(),
-  ]);
+  ])
   return (
     <DashboardShell
       title="Permissions"
@@ -26,5 +26,5 @@ export default async function AdministrationPermissionsPage() {
         moduleOptions={moduleOptions}
       />
     </DashboardShell>
-  );
+  )
 }

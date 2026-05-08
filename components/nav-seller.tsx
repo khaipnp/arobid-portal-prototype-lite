@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   DotIcon,
@@ -7,18 +7,18 @@ import {
   ReceiptTextIcon,
   ShoppingCartIcon,
   TvMinimalIcon,
-} from "lucide-react";
-import Link from "next/link";
-import { NotificationNavLink } from "@/components/notifications/notification-nav-link";
+} from "lucide-react"
+import Link from "next/link"
+import { NotificationNavLink } from "@/components/notifications/notification-nav-link"
 import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar";
-import { CURRENT_USER_ID } from "@/lib/user/current-user";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card";
+} from "@/components/ui/sidebar"
+import { CURRENT_USER_ID } from "@/lib/user/current-user"
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card"
 
 const seller = [
   {
@@ -46,7 +46,7 @@ const seller = [
     url: "/seller/my-quotations",
     icon: <DotIcon />,
   },
-];
+]
 
 const buyer = [
   {
@@ -54,7 +54,7 @@ const buyer = [
     url: "/seller/my-rfqs",
     icon: <DotIcon />,
   },
-];
+]
 
 export function NavSeller() {
   return (
@@ -161,5 +161,5 @@ export function NavSeller() {
         </SidebarMenuButton>
       </SidebarMenuItem>
     </SidebarGroup>
-  );
+  )
 }

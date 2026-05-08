@@ -233,10 +233,10 @@ export function AdministrationListPage({
           <Tabs value={moduleFilter} onValueChange={handleModuleFilterChange}>
             <TabsList>
               <TabsTrigger value="all">All</TabsTrigger>
-               {moduleOptions.map((moduleItem) => (
-                 <TabsTrigger key={moduleItem.id} value={moduleItem.id}>
-                   {moduleItem.name}
-                 </TabsTrigger>
+              {moduleOptions.map((moduleItem) => (
+                <TabsTrigger key={moduleItem.id} value={moduleItem.id}>
+                  {moduleItem.name}
+                </TabsTrigger>
               ))}
             </TabsList>
           </Tabs>

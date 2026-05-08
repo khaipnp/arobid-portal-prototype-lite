@@ -1,30 +1,30 @@
-import { AdministrationListPage } from "@/components/administration/administration-list-page";
-import { DashboardShell } from "@/components/tradexpo/dashboard-shell";
+import { AdministrationListPage } from "@/components/administration/administration-list-page"
+import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import {
   getAdministrationList,
   getAdministrationModules,
-} from "@/lib/administration/list";
+} from "@/lib/administration/list"
 
-export default async function AdministrationFeaturesPage() {
+export default async function AdministrationRolesPage() {
   const [initialData, moduleOptions] = await Promise.all([
-    getAdministrationList({ entity: "features" }),
+    getAdministrationList({ entity: "roles" }),
     getAdministrationModules(),
-  ]);
+  ])
   return (
     <DashboardShell
-      title="Features"
-      description="Browse features and module-specific assignments."
+      title="Roles"
+      description="Review roles and filter by module."
       breadcrumbs={[
         { label: "Admin", href: "/admin" },
         { label: "Administration", href: "/admin/administration/modules" },
-        { label: "Features" },
+        { label: "Roles" },
       ]}
     >
       <AdministrationListPage
-        entity="features"
+        entity="roles"
         initialData={initialData}
         moduleOptions={moduleOptions}
       />
     </DashboardShell>
-  );
+  )
 }

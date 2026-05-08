@@ -1,9 +1,5 @@
 import Image from "next/image"
 import { notFound } from "next/navigation"
-import {
-  resetExpoPaymentConfigToDefault,
-  saveExpoPaymentConfig,
-} from "@/app/admin/tradexpo/expos/[expoId]/payment-actions"
 import { ExpoPaymentConfigManager } from "@/components/orders/expo-payment-config"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import { ExpoDetailActions } from "@/components/tradexpo/expo-detail-actions"
@@ -23,6 +19,10 @@ import {
 } from "@/lib/tradexpo/db/platform-data"
 import type { ExpoStatus } from "@/lib/tradexpo/types"
 import { formatDateTime, getExpoTimelinePhase } from "@/lib/tradexpo/utils"
+import {
+  resetExpoPaymentConfigToDefault,
+  saveExpoPaymentConfig,
+} from "./payment-actions"
 
 const statusStyles: Record<ExpoStatus, string> = {
   Draft: "border-zinc-300 bg-zinc-100 text-zinc-600",

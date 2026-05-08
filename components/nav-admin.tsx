@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   BrickWallShieldIcon,
@@ -15,15 +15,15 @@ import {
   ToyBrickIcon,
   UserRoundKeyIcon,
   WalletCardsIcon,
-} from "lucide-react";
-import Link from "next/link";
+} from "lucide-react"
+import Link from "next/link"
 import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar";
+} from "@/components/ui/sidebar"
 
 const b2bMarketplaceLinks = [
   {
@@ -36,7 +36,7 @@ const b2bMarketplaceLinks = [
     url: "/admin/tradexpo/booth-templates",
     icon: <LayoutPanelTopIcon />,
   },
-];
+]
 
 const tradexpoLinks = [
   {
@@ -59,7 +59,7 @@ const tradexpoLinks = [
     url: "/admin/tradexpo/booth-templates",
     icon: <ToyBrickIcon />,
   },
-];
+]
 
 const servicesLinks = [
   {
@@ -82,7 +82,7 @@ const servicesLinks = [
     url: "/admin/settings/payment-management",
     icon: <WalletCardsIcon />,
   },
-];
+]
 
 const administrationLinks = [
   {
@@ -105,7 +105,7 @@ const administrationLinks = [
     url: "/admin/administration/permissions",
     icon: <BrickWallShieldIcon />,
   },
-];
+]
 
 export function NavAdmin() {
   return (
@@ -179,5 +179,5 @@ export function NavAdmin() {
         </SidebarMenu>
       </SidebarGroup>
     </>
-  );
+  )
 }

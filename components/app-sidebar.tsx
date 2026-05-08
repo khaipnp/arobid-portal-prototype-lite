@@ -1,27 +1,27 @@
-"use client";
+"use client"
 
-import { Building2Icon, HandshakeIcon, ShieldUserIcon } from "lucide-react";
-import type * as React from "react";
-import { NavAdmin } from "@/components/nav-admin";
-import { NavPartner } from "@/components/nav-partner";
-import { NavSeller } from "@/components/nav-seller";
-import { NavUser } from "@/components/nav-user";
-import { PortalSwitcher } from "@/components/portal-switcher";
+import { Building2Icon, HandshakeIcon, ShieldUserIcon } from "lucide-react"
+import type * as React from "react"
+import { NavAdmin } from "@/components/nav-admin"
+import { NavPartner } from "@/components/nav-partner"
+import { NavSeller } from "@/components/nav-seller"
+import { NavUser } from "@/components/nav-user"
+import { PortalSwitcher } from "@/components/portal-switcher"
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
   SidebarRail,
-} from "@/components/ui/sidebar";
+} from "@/components/ui/sidebar"
 
-export type PortalType = "admin" | "partner" | "seller";
+export type PortalType = "admin" | "partner" | "seller"
 
 const user = {
   name: "Khai Pham",
   email: "khaipham@arobid.com",
   avatar: "/avatar.webp",
-};
+}
 
 const portals = [
   {
@@ -42,14 +42,14 @@ const portals = [
     plan: "User's Workspace",
     url: "/seller",
   },
-];
+]
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  portal?: PortalType;
+  portal?: PortalType
 }
 
 export function AppSidebar({ portal = "admin", ...props }: AppSidebarProps) {
-  const activePortalName = portals.find((p) => p.url === `/${portal}`)?.name;
+  const activePortalName = portals.find((p) => p.url === `/${portal}`)?.name
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -66,5 +66,5 @@ export function AppSidebar({ portal = "admin", ...props }: AppSidebarProps) {
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
-  );
+  )
 }

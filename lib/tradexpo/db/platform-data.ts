@@ -34,6 +34,7 @@ export type ExpoDetailExhibitor = {
 
 type ExpoRow = {
   id: string
+  slug?: string | null
   name: string
   thumbnail_url: string
   owner_email: string
@@ -74,6 +75,36 @@ function toDateOnly(value: string | Date) {
   return new Date(value).toISOString().slice(0, 10)
 }
 
+function slugifyExpoName(name: string) {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+function normalizedExpoSlugExpression() {
+  return sql`trim(both '-' from regexp_replace(lower(name), '[^a-z0-9]+', '-', 'g'))`
+}
+
+async function uniqueExpoSlug(base: string, excludeExpoId?: string) {
+  const normalized = base || "expo"
+  const rows = (await sql`
+    select id, slug
+    from expos
+    where slug like ${`${normalized}%`}
+  `) as { id: string; slug: string | null }[]
+  const used = new Set(
+    rows
+      .filter((r) => (excludeExpoId ? r.id !== excludeExpoId : true))
+      .map((r) => r.slug)
+      .filter(Boolean),
+  )
+  if (!used.has(normalized)) return normalized
+  let i = 2
+  while (used.has(`${normalized}-${i}`)) i += 1
+  return `${normalized}-${i}`
+}
+
 export async function listExpoCategories(): Promise<ExpoCategory[]> {
   const rows = (await sql`
     select id, name, level from expo_categories order by name asc
@@ -90,6 +121,7 @@ function rowToExpo(r: ExpoRow): Expo {
   const endAt = r.end_at ? toIso(r.end_at) : undefined
   return {
     id: r.id,
+    slug: r.slug ?? undefined,
     name: r.name,
     thumbnailUrl: r.thumbnail_url,
     ownerEmail: r.owner_email,
@@ -118,11 +150,80 @@ export async function listExpos(): Promise<Expo[]> {
   return rows.map(rowToExpo)
 }
 
+export async function getExpoBySlug(slug: string): Promise<Expo | null> {
+  const bySlug = (await sql`
+    select * from expos where slug = ${slug} limit 1
+  `) as ExpoRow[]
+  if (bySlug[0]) return rowToExpo(bySlug[0])
+
+  // Backward-compatible fallback for rows created before slug rollout.
+  const byName = (await sql`
+    select * from expos
+    where ${normalizedExpoSlugExpression()} = ${slug}
+    limit 1
+  `) as ExpoRow[]
+  const row = byName[0]
+  return row ? rowToExpo(row) : null
+}
+
 export async function countExpos(): Promise<number> {
   const rows = (await sql`
     select count(*)::int as total from expos
   `) as { total: number }[]
   return rows[0]?.total ?? 0
+}
+
+export type ExpoCardStats = {
+  expoId: string
+  exhibitors: number
+  visitors: number
+  products: number
+}
+
+export async function listExpoCardStats(): Promise<ExpoCardStats[]> {
+  const rows = (await sql`
+    with exhibitor_stats as (
+      select expo_id, count(*)::int as exhibitors
+      from seller_booth_registrations
+      group by expo_id
+    ),
+    product_stats as (
+      select
+        sbr.expo_id,
+        coalesce(sum(jsonb_array_length(coalesce(bc.products, '[]'::jsonb))), 0)::int as products
+      from seller_booth_registrations sbr
+      left join booth_customizations bc on bc.registration_id = sbr.id
+      group by sbr.expo_id
+    ),
+    visitor_stats as (
+      select expo_name, count(distinct customer_id)::int as visitors
+      from orders
+      where expo_name is not null
+      group by expo_name
+    )
+    select
+      e.id as expo_id,
+      coalesce(es.exhibitors, 0)::int as exhibitors,
+      coalesce(vs.visitors, 0)::int as visitors,
+      coalesce(ps.products, 0)::int as products
+    from expos e
+    left join exhibitor_stats es on es.expo_id = e.id
+    left join product_stats ps on ps.expo_id = e.id
+    left join visitor_stats vs on vs.expo_name = e.name
+    order by e.created_at desc
+  `) as {
+    expo_id: string
+    exhibitors: number
+    visitors: number
+    products: number
+  }[]
+
+  return rows.map((row) => ({
+    expoId: row.expo_id,
+    exhibitors: row.exhibitors,
+    visitors: row.visitors,
+    products: row.products,
+  }))
 }
 
 export async function listExpoLayoutTemplates(): Promise<ExpoLayoutTemplate[]> {
@@ -212,6 +313,7 @@ export async function createExpoWithHalls(
   }
 
   const expoId = `expo-${randomUUID()}`
+  const slug = await uniqueExpoSlug(slugifyExpoName(input.name))
   const createdAt = new Date().toISOString()
   const startDateStr = start.toISOString().slice(0, 10)
   const endDateStr = end.toISOString().slice(0, 10)
@@ -224,6 +326,7 @@ export async function createExpoWithHalls(
     await sql`
       insert into expos (
         id,
+        slug,
         name,
         thumbnail_url,
         owner_email,
@@ -241,6 +344,7 @@ export async function createExpoWithHalls(
       )
       values (
         ${expoId},
+        ${slug},
         ${input.name},
         ${thumb},
         ${input.ownerEmail},
@@ -336,6 +440,7 @@ export async function updateExpoWithHalls(
 
   const startDateStr = start.toISOString().slice(0, 10)
   const endDateStr = end.toISOString().slice(0, 10)
+  const slug = await uniqueExpoSlug(slugifyExpoName(input.name), expoId)
   const thumb =
     input.thumbnailUrl.trim() ||
     `https://picsum.photos/seed/${encodeURIComponent(expoId)}/640/360`
@@ -346,6 +451,7 @@ export async function updateExpoWithHalls(
       update expos
       set
         name = ${input.name},
+        slug = ${slug},
         thumbnail_url = ${thumb},
         owner_email = ${input.ownerEmail},
         start_date = ${startDateStr},

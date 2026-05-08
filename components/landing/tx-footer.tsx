@@ -1,3 +1,5 @@
+import Image from "next/image"
+
 const footerColumns = [
   ["Get to know us", "About Arobid", "Newsroom", "Careers"],
   ["Business Services", "SmartCapital"],
@@ -9,7 +11,7 @@ const footerColumns = [
     "Membership Program",
   ],
   ["Get support", "Help Center", "Contact us"],
-];
+]
 
 export function TxFooter() {
   return (
@@ -36,8 +38,20 @@ export function TxFooter() {
         <span className="grid size-8 place-items-center rounded bg-[#0a66c2] font-bold text-white">
           in
         </span>
+        <span className="ml-4 font-semibold text-sm">Certified</span>
+        <Image
+          src="/landing/bct-certi.png"
+          alt="bct logo"
+          width={100}
+          height={100}
+        />
         <span className="ml-4 font-semibold text-sm">Payment</span>
-        <span className="font-extrabold text-[#e60012] text-xl">VNPAY</span>
+        <Image
+          src="/landing/vnpay.svg"
+          alt="VNPAY logo"
+          width={40}
+          height={40}
+        />
       </div>
       <div className="mt-4 space-y-1 text-center text-[#6b7280] text-xs">
         <p>B2B Marketplace | TradeXpo | Goods for Good | AroUni</p>
@@ -51,5 +65,5 @@ export function TxFooter() {
         </p>
       </div>
     </footer>
-  );
+  )
 }

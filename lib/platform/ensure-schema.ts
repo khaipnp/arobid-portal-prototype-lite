@@ -15,6 +15,7 @@ export async function ensurePlatformSchema() {
   await sql`
     create table if not exists expos (
       id text primary key,
+      slug text,
       name text not null,
       thumbnail_url text not null,
       owner_email text not null,
@@ -24,6 +25,30 @@ export async function ensurePlatformSchema() {
       category_ids jsonb not null,
       created_at timestamptz not null
     )
+  `
+  await sql`alter table expos add column if not exists slug text`
+  await sql`
+    update expos
+    set slug = trim(both '-' from regexp_replace(lower(name), '[^a-z0-9]+', '-', 'g'))
+    where slug is null or length(trim(slug)) = 0
+  `
+  await sql`
+    update expos
+    set slug = slug || '-' || right(id, 6)
+    where id in (
+      select id
+      from (
+        select id, slug, row_number() over (partition by slug order by created_at asc, id asc) as rn
+        from expos
+        where slug is not null
+      ) t
+      where t.rn > 1
+    )
+  `
+  await sql`
+    create unique index if not exists idx_expos_slug_unique
+    on expos (slug)
+    where slug is not null
   `
 
   await sql`

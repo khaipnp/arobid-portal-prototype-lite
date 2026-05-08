@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   CalendarIcon,
@@ -6,16 +6,16 @@ import {
   RadioIcon,
   Settings2Icon,
   UsersIcon,
-} from "lucide-react";
-import Link from "next/link";
-import { NotificationNavLink } from "@/components/notifications/notification-nav-link";
+} from "lucide-react"
+import Link from "next/link"
+import { NotificationNavLink } from "@/components/notifications/notification-nav-link"
 import {
   SidebarGroup,
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar";
+} from "@/components/ui/sidebar"
 
 const expoOwnerLinks = [
   {
@@ -38,7 +38,7 @@ const expoOwnerLinks = [
     url: "#",
     icon: <Settings2Icon />,
   },
-];
+]
 
 export function NavPartner() {
   return (
@@ -72,5 +72,5 @@ export function NavPartner() {
         ))}
       </SidebarMenu>
     </SidebarGroup>
-  );
+  )
 }

@@ -1,9 +1,9 @@
-import { AdministrationListPage } from "@/components/administration/administration-list-page";
-import { DashboardShell } from "@/components/tradexpo/dashboard-shell";
-import { getAdministrationList } from "@/lib/administration/list";
+import { AdministrationListPage } from "@/components/administration/administration-list-page"
+import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
+import { getAdministrationList } from "@/lib/administration/list"
 
 export default async function AdministrationModulesPage() {
-  const initialData = await getAdministrationList({ entity: "modules" });
+  const initialData = await getAdministrationList({ entity: "modules" })
   return (
     <DashboardShell
       title="Modules"
@@ -16,5 +16,5 @@ export default async function AdministrationModulesPage() {
     >
       <AdministrationListPage entity="modules" initialData={initialData} />
     </DashboardShell>
-  );
+  )
 }
