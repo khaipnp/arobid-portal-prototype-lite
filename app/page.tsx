@@ -42,6 +42,21 @@ function slugifyExpoName(name: string) {
     .replace(/^-+|-+$/g, "")
 }
 
+function getHomeStatusRank(status: HomeExpoCard["status"]) {
+  if (status === "Live") return 0
+  if (status === "Upcoming") return 1
+  return 2
+}
+
+function getHomeTimeRank(startDate: string, endDate: string) {
+  const now = Date.now()
+  const start = new Date(startDate).getTime()
+  const end = new Date(endDate).getTime()
+  if (start <= now && now <= end) return 0
+  if (start > now) return 1
+  return 2
+}
+
 function buildHomeExpoCards(
   expos: Awaited<ReturnType<typeof listExpos>>,
   categoryNameById: Map<string, string>,
@@ -50,7 +65,21 @@ function buildHomeExpoCards(
     Awaited<ReturnType<typeof listExpoCardStats>>[number]
   >,
 ): HomeExpoCard[] {
-  return expos.slice(0, 9).map((expo) => {
+  const sortedExpos = [...expos].sort((a, b) => {
+    const statusRankDiff =
+      getHomeStatusRank(toHomeExpoStatus(a.status)) -
+      getHomeStatusRank(toHomeExpoStatus(b.status))
+    if (statusRankDiff !== 0) return statusRankDiff
+
+    const timeRankDiff =
+      getHomeTimeRank(a.startDate, a.endDate) -
+      getHomeTimeRank(b.startDate, b.endDate)
+    if (timeRankDiff !== 0) return timeRankDiff
+
+    return new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+  })
+
+  return sortedExpos.slice(0, 9).map((expo) => {
     const stat = statByExpoId.get(expo.id)
     const status = toHomeExpoStatus(expo.status)
     const isLive = status === "Live"

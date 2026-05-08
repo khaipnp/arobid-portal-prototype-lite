@@ -26,10 +26,20 @@ export type ExpoDetailExhibitor = {
   name: string
   company: string
   avatarUrl?: string
+  category: string
   boothTier: string
   boothRef: string
   country: string
   products: string[]
+}
+
+function normalizeBoothTier(value: string) {
+  const normalized = value.trim().toLowerCase()
+  if (normalized === "pro") return "Professional"
+  if (normalized === "professional") return "Professional"
+  if (normalized === "premium") return "Premium"
+  if (normalized === "basic") return "Basic"
+  return value
 }
 
 type ExpoRow = {
@@ -677,15 +687,25 @@ export async function listExpoDetailExhibitorsByName(
       sbr.booth_ref,
       cu.name,
       cu.company,
+      coalesce(ec.name, nullif(cu.industry, ''), 'Other') as category,
       cu.avatar_url,
       'Vietnam'::text as country,
       coalesce(bc.products, '[]'::jsonb) as products
     from seller_booth_registrations sbr
     join expos e on e.id = sbr.expo_id
     join chat_users cu on cu.id = sbr.user_id
+    left join exhibitor_categories ec on ec.id = cu.industry_category_id
     left join booth_customizations bc on bc.registration_id = sbr.id
     where e.name ilike ${pattern}
-    order by sbr.purchased_at desc
+    order by
+      case lower(trim(sbr.booth_tier))
+        when 'premium' then 1
+        when 'professional' then 2
+        when 'pro' then 2
+        when 'basic' then 3
+        else 4
+      end asc,
+      sbr.purchased_at desc
     limit 36
   `) as {
     id: string
@@ -693,6 +713,7 @@ export async function listExpoDetailExhibitorsByName(
     booth_ref: string
     name: string
     company: string | null
+    category: string
     avatar_url: string | null
     country: string
     products: unknown
@@ -714,7 +735,8 @@ export async function listExpoDetailExhibitorsByName(
       name: row.name,
       company: row.company ?? row.name,
       avatarUrl: row.avatar_url ?? undefined,
-      boothTier: row.booth_tier,
+      category: row.category,
+      boothTier: normalizeBoothTier(row.booth_tier),
       boothRef: row.booth_ref,
       country: row.country,
       products,

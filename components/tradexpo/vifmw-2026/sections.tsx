@@ -6,11 +6,11 @@ import {
   Home,
   Send,
   Video,
-} from "lucide-react"
-import Image from "next/image"
-import Link from "next/link"
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
 import {
   asset,
@@ -21,16 +21,18 @@ import {
   productImages,
   sponsors,
   valueCards,
-} from "./data"
+} from "./data";
 
 export function Breadcrumb() {
   return (
-    <nav className="mx-auto flex h-[52px] max-w-[1284px] items-center gap-1 px-4 text-[#1f2937] text-sm md:px-0">
-      <Home className="size-4" />
-      <ChevronRight className="size-4 text-[#9ca3af]" />
-      <span>Expo Detail</span>
+    <nav className="container mx-auto flex h-14 items-center gap-1 px-4 text-foreground text-sm md:px-0">
+      <Link href="/" className="flex items-center gap-1">
+        <Home className="size-4 text-muted-foreground" />
+      </Link>
+      <ChevronRight className="size-4 text-muted-foreground" />
+      <span className="select-none">Expo Detail</span>
     </nav>
-  )
+  );
 }
 
 export function Hero({
@@ -38,13 +40,13 @@ export function Hero({
   startDateLabel = "April 15, 2026",
   endDateLabel = "April 17, 2026",
 }: {
-  expoTitle?: string
-  startDateLabel?: string
-  endDateLabel?: string
+  expoTitle?: string;
+  startDateLabel?: string;
+  endDateLabel?: string;
 }) {
   return (
-    <section className="bg-linear-to-b from-white via-[#ffe0d2] via-[26%] to-white pb-0">
-      <div className="relative mx-auto min-h-[616px] max-w-[1284px] overflow-hidden rounded-2xl">
+    <section className="bg-linear-to-b from-white via-25% via-[#ffe0d2] to-white pb-0">
+      <div className="container relative mx-auto min-h-[60vh] overflow-hidden rounded-2xl">
         <Image
           src={asset("figma-hero.png")}
           alt=""
@@ -53,8 +55,8 @@ export function Hero({
           sizes="(min-width: 1280px) 1284px, 100vw"
           className="object-cover"
         />
-        <div className="absolute inset-x-0 bottom-0 h-[390px] bg-linear-to-b from-black/0 to-black/80 backdrop-blur-[5px]" />
-        <div className="absolute top-6 left-4 rounded-full bg-[#e4e7ff] px-2 py-1 font-medium text-[#022582] text-xs md:top-[244px] md:left-10">
+        <div className="absolute inset-x-0 bottom-0 h-96 bg-linear-to-b from-black/0 to-black/80 backdrop-blur-[5px]" />
+        <div className="absolute top-6 left-4 rounded-full bg-[#e4e7ff] px-2 py-1 font-medium text-[#022582] text-xs md:top-60 md:left-10">
           Global Strategic Network
         </div>
         <div className="absolute right-7 bottom-6 hidden w-[271px] md:block">
@@ -127,7 +129,7 @@ export function Hero({
         </div>
       </div>
     </section>
-  )
+  );
 }
 
 export function About() {
@@ -162,7 +164,7 @@ export function About() {
         Chat
       </Link>
     </section>
-  )
+  );
 }
 
 export function Sponsors() {
@@ -190,7 +192,7 @@ export function Sponsors() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
 export function Audience() {
@@ -230,7 +232,7 @@ export function Audience() {
         ))}
       </div>
     </section>
-  )
+  );
 }
 
 export function Categories() {
@@ -263,7 +265,7 @@ export function Categories() {
         ))}
       </div>
     </section>
-  )
+  );
 }
 
 export function ParticipantValues() {
@@ -304,7 +306,7 @@ export function ParticipantValues() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
 export function BoothTier() {
@@ -405,5 +407,5 @@ export function BoothTier() {
         </div>
       </div>
     </section>
-  )
+  );
 }

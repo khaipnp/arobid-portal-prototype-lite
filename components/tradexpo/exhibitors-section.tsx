@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowDown, Search } from "lucide-react"
+import { Search } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 
@@ -23,19 +23,33 @@ type Props = {
 
 export function ExhibitorsSection({ expoName, initialExhibitors }: Props) {
   const [search, setSearch] = useState("")
-  const [tier, setTier] = useState("all")
+  const [category, setCategory] = useState("all")
   const [items, setItems] = useState(initialExhibitors)
-  const [visibleCount, setVisibleCount] = useState(9)
 
-  const tiers = useMemo(() => {
-    return Array.from(new Set(initialExhibitors.map((x) => x.boothTier))).sort()
+  const categories = useMemo(() => {
+    return Array.from(new Set(initialExhibitors.map((x) => x.category))).sort()
   }, [initialExhibitors])
+
+  const sortedItems = useMemo(() => {
+    const tierPriority: Record<string, number> = {
+      Premium: 1,
+      Professional: 2,
+      Basic: 3,
+    }
+
+    return [...items].sort(
+      (a, b) =>
+        (tierPriority[a.boothTier] ?? Number.MAX_SAFE_INTEGER) -
+          (tierPriority[b.boothTier] ?? Number.MAX_SAFE_INTEGER) ||
+        a.company.localeCompare(b.company),
+    )
+  }, [items])
 
   useEffect(() => {
     const controller = new AbortController()
     const query = new URLSearchParams({ expoName })
     if (search.trim()) query.set("search", search.trim())
-    if (tier !== "all") query.set("tier", tier)
+    if (category !== "all") query.set("category", category)
 
     fetch(`/api/tradexpo/exhibitors?${query.toString()}`, {
       signal: controller.signal,
@@ -43,12 +57,11 @@ export function ExhibitorsSection({ expoName, initialExhibitors }: Props) {
       .then((res) => res.json())
       .then((payload: { data?: ExpoDetailExhibitor[] }) => {
         setItems(payload.data ?? [])
-        setVisibleCount(9)
       })
       .catch(() => undefined)
 
     return () => controller.abort()
-  }, [expoName, search, tier])
+  }, [expoName, search, category])
 
   return (
     <section className="bg-[#f3f4f6] px-4 py-16 md:px-[78px]">
@@ -65,13 +78,13 @@ export function ExhibitorsSection({ expoName, initialExhibitors }: Props) {
                 className="h-10 rounded-full bg-white pr-3 pl-9"
               />
             </div>
-            <Select value={tier} onValueChange={setTier}>
+            <Select value={category} onValueChange={setCategory}>
               <SelectTrigger className="h-10 w-full rounded-full bg-white text-sm md:w-[170px]">
                 <SelectValue placeholder="All category" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All category</SelectItem>
-                {tiers.map((item) => (
+                {categories.map((item) => (
                   <SelectItem key={item} value={item}>
                     {item}
                   </SelectItem>
@@ -87,23 +100,10 @@ export function ExhibitorsSection({ expoName, initialExhibitors }: Props) {
           </div>
         </div>
         <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {items.slice(0, visibleCount).map((exhibitor) => (
+          {sortedItems.map((exhibitor) => (
             <ExhibitorCard key={exhibitor.id} exhibitor={exhibitor} />
           ))}
         </div>
-        {items.length > visibleCount ? (
-          <div className="mt-8 text-center">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setVisibleCount((v) => v + 9)}
-              className="h-10 rounded-full bg-white px-6 text-sm"
-            >
-              View More
-              <ArrowDown className="size-4" />
-            </Button>
-          </div>
-        ) : null}
       </div>
     </section>
   )

@@ -88,6 +88,20 @@ export async function ensurePlatformSchema() {
       image_url text
     )
   `
+  await sql`
+    create table if not exists exhibitor_categories (
+      id text primary key,
+      name text not null,
+      level int not null check (level between 1 and 3),
+      parent_id text references exhibitor_categories(id) on delete cascade,
+      sort_order int not null default 0,
+      is_active boolean not null default true
+    )
+  `
+  await sql`
+    create index if not exists idx_exhibitor_categories_parent
+    on exhibitor_categories (parent_id, sort_order asc, name asc)
+  `
 
   await sql`
     create table if not exists seller_booth_registrations (
@@ -313,6 +327,8 @@ export async function ensurePlatformSchema() {
       name text not null,
       email text not null,
       company text not null,
+      industry text,
+      industry_category_id text references exhibitor_categories(id) on delete set null,
       job_title text,
       phone text,
       website text,
@@ -320,6 +336,27 @@ export async function ensurePlatformSchema() {
       avatar_url text,
       is_active boolean not null
     )
+  `
+  await sql`alter table chat_users add column if not exists industry text`
+  await sql`
+    alter table chat_users
+    add column if not exists industry_category_id text
+  `
+  await sql`
+    do $$
+    begin
+      alter table chat_users
+      add constraint chat_users_industry_category_fk
+      foreign key (industry_category_id)
+      references exhibitor_categories(id)
+      on delete set null;
+    exception
+      when duplicate_object then null;
+    end $$;
+  `
+  await sql`
+    create index if not exists idx_chat_users_industry_category
+    on chat_users (industry_category_id)
   `
 
   await sql`
