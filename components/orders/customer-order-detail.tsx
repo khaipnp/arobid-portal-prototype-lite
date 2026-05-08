@@ -4,8 +4,8 @@ import { ArrowLeftIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Fragment, useEffect, useMemo, useState } from "react"
 import {
-  CustomerOrderStatusBadge,
   type CustomerOrderStatus,
+  CustomerOrderStatusBadge,
   getCustomerOrderStatusLabel,
   mapOrderStatusForCustomer,
 } from "@/components/orders/customer-order-status"
@@ -199,7 +199,9 @@ export function CustomerOrderDetail({
           <h2 className="font-semibold text-muted-foreground text-sm uppercase tracking-wide">
             Payment Result
           </h2>
-          <p className="text-sm">{resultMessage(customerStatus, order.orderType)}</p>
+          <p className="text-sm">
+            {resultMessage(customerStatus, order.orderType)}
+          </p>
           <div className="grid grid-cols-2 gap-y-3 text-sm">
             <span className="text-muted-foreground">Payment Method</span>
             <span>VNPay</span>

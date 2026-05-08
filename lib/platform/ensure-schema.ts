@@ -15,6 +15,7 @@ export async function ensurePlatformSchema() {
   await sql`
     create table if not exists expos (
       id text primary key,
+      slug text,
       name text not null,
       thumbnail_url text not null,
       owner_email text not null,
@@ -24,6 +25,30 @@ export async function ensurePlatformSchema() {
       category_ids jsonb not null,
       created_at timestamptz not null
     )
+  `
+  await sql`alter table expos add column if not exists slug text`
+  await sql`
+    update expos
+    set slug = trim(both '-' from regexp_replace(lower(name), '[^a-z0-9]+', '-', 'g'))
+    where slug is null or length(trim(slug)) = 0
+  `
+  await sql`
+    update expos
+    set slug = slug || '-' || right(id, 6)
+    where id in (
+      select id
+      from (
+        select id, slug, row_number() over (partition by slug order by created_at asc, id asc) as rn
+        from expos
+        where slug is not null
+      ) t
+      where t.rn > 1
+    )
+  `
+  await sql`
+    create unique index if not exists idx_expos_slug_unique
+    on expos (slug)
+    where slug is not null
   `
 
   await sql`
@@ -62,6 +87,20 @@ export async function ensurePlatformSchema() {
       description text not null,
       image_url text
     )
+  `
+  await sql`
+    create table if not exists exhibitor_categories (
+      id text primary key,
+      name text not null,
+      level int not null check (level between 1 and 3),
+      parent_id text references exhibitor_categories(id) on delete cascade,
+      sort_order int not null default 0,
+      is_active boolean not null default true
+    )
+  `
+  await sql`
+    create index if not exists idx_exhibitor_categories_parent
+    on exhibitor_categories (parent_id, sort_order asc, name asc)
   `
 
   await sql`
@@ -288,6 +327,8 @@ export async function ensurePlatformSchema() {
       name text not null,
       email text not null,
       company text not null,
+      industry text,
+      industry_category_id text references exhibitor_categories(id) on delete set null,
       job_title text,
       phone text,
       website text,
@@ -295,6 +336,27 @@ export async function ensurePlatformSchema() {
       avatar_url text,
       is_active boolean not null
     )
+  `
+  await sql`alter table chat_users add column if not exists industry text`
+  await sql`
+    alter table chat_users
+    add column if not exists industry_category_id text
+  `
+  await sql`
+    do $$
+    begin
+      alter table chat_users
+      add constraint chat_users_industry_category_fk
+      foreign key (industry_category_id)
+      references exhibitor_categories(id)
+      on delete set null;
+    exception
+      when duplicate_object then null;
+    end $$;
+  `
+  await sql`
+    create index if not exists idx_chat_users_industry_category
+    on chat_users (industry_category_id)
   `
 
   await sql`

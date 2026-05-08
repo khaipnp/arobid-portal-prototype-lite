@@ -22,7 +22,9 @@ function normalizeOrderStatusForStorage(status: OrderStatus): OrderStatus {
   return status
 }
 
-async function normalizeCustomerOrderStatuses(customerId: string): Promise<void> {
+async function normalizeCustomerOrderStatuses(
+  customerId: string,
+): Promise<void> {
   await sql`
     update orders
     set

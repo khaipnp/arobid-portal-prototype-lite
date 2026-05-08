@@ -113,6 +113,7 @@ export interface ExpoCategory {
 
 export interface Expo {
   id: string
+  slug?: string
   name: string
   thumbnailUrl: string
   ownerEmail: string

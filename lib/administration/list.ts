@@ -4,7 +4,6 @@ import {
   adminPermissions,
   adminRoles,
 } from "@/lib/administration/mock-data"
-import { sql } from "@/lib/db/neon"
 import type {
   AdminFeature,
   AdminModule,
@@ -12,6 +11,7 @@ import type {
   AdminRole,
   ListResponse,
 } from "@/lib/administration/types"
+import { sql } from "@/lib/db/neon"
 
 export type AdministrationEntity =
   | "modules"

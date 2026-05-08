@@ -4,8 +4,8 @@ import { ChevronRightIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import {
-  CustomerOrderStatusBadge,
   type CustomerOrderStatus,
+  CustomerOrderStatusBadge,
   getCustomerOrderStatusLabel,
   mapOrderStatusForCustomer,
 } from "@/components/orders/customer-order-status"

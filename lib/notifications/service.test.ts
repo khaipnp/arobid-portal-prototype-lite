@@ -272,7 +272,10 @@ describe("NotificationService", () => {
 
     expect(await getUnreadCount("seller-5")).toBe(1)
 
-    const unreadDelete = await deleteNotification("seller-5", unread.notificationId)
+    const unreadDelete = await deleteNotification(
+      "seller-5",
+      unread.notificationId,
+    )
     expect(unreadDelete.found).toBe(true)
     expect(unreadDelete.deleted).toBe(true)
     expect(await getUnreadCount("seller-5")).toBe(0)

@@ -44,7 +44,10 @@ export function CustomerOrderStatusBadge({
   return (
     <Badge
       variant="outline"
-      className={cn("h-auto py-0.5 text-xs", customerOrderStatusStyles[normalizedStatus])}
+      className={cn(
+        "h-auto py-0.5 text-xs",
+        customerOrderStatusStyles[normalizedStatus],
+      )}
     >
       {getCustomerOrderStatusLabel(normalizedStatus)}
     </Badge>
