@@ -144,33 +144,6 @@ export function NotificationsPageContent({
     [markNotificationRead, refreshListAndCount, router],
   )
 
-  const handleMarkSingle = useCallback(
-    async (notification: NotificationRecord) => {
-      if (notification.isRead) {
-        return
-      }
-      setBusyNotificationId(notification.notificationId)
-      try {
-        setNotifications((current) =>
-          current.map((item) =>
-            item.notificationId === notification.notificationId
-              ? { ...item, isRead: true, readAt: new Date().toISOString() }
-              : item,
-          ),
-        )
-        setUnreadCount((current) => Math.max(0, current - 1))
-        const isMarked = await markNotificationRead(notification.notificationId)
-        if (!isMarked) {
-          // Server rejected mark-read; refresh below reconciles optimistic state.
-        }
-      } finally {
-        await refreshListAndCount()
-        setBusyNotificationId(null)
-      }
-    },
-    [markNotificationRead, refreshListAndCount],
-  )
-
   const handleDeleteSingle = useCallback(
     async (notification: NotificationRecord) => {
       setBusyNotificationId(notification.notificationId)
@@ -254,7 +227,6 @@ export function NotificationsPageContent({
               notification={notification}
               isBusy={busyNotificationId === notification.notificationId}
               onRowClick={handleOpenNotification}
-              onMarkAsRead={handleMarkSingle}
               onDelete={handleDeleteSingle}
             />
           ))}

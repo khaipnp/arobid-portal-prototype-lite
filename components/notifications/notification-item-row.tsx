@@ -1,6 +1,6 @@
 "use client"
 
-import { CheckIcon, XIcon } from "lucide-react"
+import { XIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { getNotificationSourceIcon } from "@/lib/notifications/source-icons"
 import type { NotificationRecord } from "@/lib/notifications/types"
@@ -10,7 +10,6 @@ interface NotificationItemRowProps {
   notification: NotificationRecord
   isBusy?: boolean
   onRowClick: (notification: NotificationRecord) => void
-  onMarkAsRead: (notification: NotificationRecord) => void
   onDelete: (notification: NotificationRecord) => void
 }
 
@@ -36,7 +35,6 @@ export function NotificationItemRow({
   notification,
   isBusy = false,
   onRowClick,
-  onMarkAsRead,
   onDelete,
 }: NotificationItemRowProps) {
   const SourceIcon = getNotificationSourceIcon(notification.source)
@@ -99,20 +97,6 @@ export function NotificationItemRow({
             <XIcon />
             <span className="sr-only">Delete notification</span>
           </Button>
-          {!notification.isRead ? (
-            <Button
-              type="button"
-              size="xs"
-              variant="ghost"
-              disabled={isBusy}
-              onClick={() => {
-                void onMarkAsRead(notification)
-              }}
-            >
-              <CheckIcon />
-              Mark as read
-            </Button>
-          ) : null}
         </div>
       </div>
     </div>
