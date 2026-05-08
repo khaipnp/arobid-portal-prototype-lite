@@ -22,6 +22,7 @@ import {
   sponsors,
   valueCards,
 } from "./data";
+import { VirtualLobbyDialog } from "./virtual-lobby-dialog";
 
 export function Breadcrumb() {
   return (
@@ -39,10 +40,12 @@ export function Hero({
   expoTitle = "Vietnam International Furniture Manufacturing & Wood Expo (VIFMW) #1",
   startDateLabel = "April 15, 2026",
   endDateLabel = "April 17, 2026",
+  virtualLobbyUrl,
 }: {
   expoTitle?: string;
   startDateLabel?: string;
   endDateLabel?: string;
+  virtualLobbyUrl?: string;
 }) {
   return (
     <section className="bg-linear-to-b from-white via-25% via-[#ffe0d2] to-white pb-0">
@@ -59,7 +62,7 @@ export function Hero({
         <div className="absolute top-6 left-4 rounded-full bg-[#e4e7ff] px-2 py-1 font-medium text-[#022582] text-xs md:top-60 md:left-10">
           Global Strategic Network
         </div>
-        <div className="absolute right-7 bottom-6 hidden w-[271px] md:block">
+        <div className="absolute right-7 bottom-6 hidden w-2xs md:block">
           <div className="mx-auto flex w-max items-center gap-3 rounded-full bg-[#01175c] py-1.5 pr-5 pl-1.5">
             <span className="inline-flex h-6 items-center gap-1 rounded-full bg-[#16a34a] px-3 font-medium text-white text-xs">
               <Video className="size-3" />
@@ -67,7 +70,7 @@ export function Hero({
             </span>
             <span className="text-sm text-white">Event ends in</span>
           </div>
-          <div className="mt-[-10px] rounded-xl border border-[#f3f4f6] bg-white px-6 pt-7 pb-5 shadow-lg">
+          <div className="-mt-2 rounded-xl border border-[#f3f4f6] bg-white px-6 pt-7 pb-5 shadow-lg">
             <div className="flex items-center justify-between text-center">
               {[
                 ["12", "Days"],
@@ -85,16 +88,16 @@ export function Hero({
               ))}
             </div>
           </div>
-          <div className="mt-[-2px] grid grid-cols-[1fr_auto_1fr] items-end rounded-xl border border-[#f3f4f6] bg-white px-4 py-3 shadow-lg">
+          <div className="-mt-0.5 grid grid-cols-[1fr_auto_1fr] items-end rounded-xl border border-[#f3f4f6] bg-white px-4 py-3 shadow-lg">
             <div>
-              <p className="text-[#6b7280] text-xs">Start</p>
+              <p className="text-muted-foreground text-xs">Start</p>
               <p className="font-medium text-sm">{startDateLabel}</p>
             </div>
-            <span className="grid h-4 w-5 place-items-center rounded-full bg-[#ed6203] text-white">
+            <span className="grid h-4 w-5 place-items-center rounded-full bg-legend text-white">
               <ArrowRight className="size-3" />
             </span>
             <div className="text-right">
-              <p className="text-[#6b7280] text-xs">End</p>
+              <p className="text-muted-foreground text-xs">End</p>
               <p className="font-medium text-sm">{endDateLabel}</p>
             </div>
           </div>
@@ -104,13 +107,7 @@ export function Hero({
             {expoTitle}
           </h1>
           <div className="mt-5 flex flex-wrap gap-4">
-            <Link
-              href="/seller"
-              className="inline-flex h-10 w-[178px] items-center justify-center gap-2 rounded-full bg-[#ed6203] font-medium text-white shadow-[0_1px_2px_rgba(0,0,0,0.2),0_0_0_1px_#f37b42]"
-            >
-              <Box className="size-5" />
-              Virtual Lobby
-            </Link>
+            <VirtualLobbyDialog src={virtualLobbyUrl} expoTitle={expoTitle} />
             <Link
               href="/seller"
               className="inline-flex h-10 w-[178px] items-center justify-center rounded-full border border-white bg-white/10 font-medium text-white backdrop-blur"

@@ -64,7 +64,7 @@ export function ExhibitorCard({ exhibitor }: ExhibitorCardProps) {
           height={50}
           className="size-12 rounded-full object-cover"
         />
-        <h3 className="min-w-0 flex-1 font-semibold text-foreground text-sm">
+        <h3 className="min-w-0 flex-1 select-none font-semibold text-foreground text-sm">
           {exhibitor.company}
         </h3>
         <HeartIcon

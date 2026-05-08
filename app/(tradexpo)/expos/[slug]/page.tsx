@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation"
 import { TxFooter } from "@/components/landing/tx-footer"
 import { TxHeader } from "@/components/landing/tx-header"
-import { ExhibitorsSection } from "@/components/tradexpo/exhibitors-section"
+import { ExhibitorsSection } from "@/components/tradexpo/expo-detail/exhibitors-section"
 import {
   About,
   Audience,
@@ -11,11 +11,17 @@ import {
   Hero,
   ParticipantValues,
   Sponsors,
-} from "@/components/tradexpo/vifmw-2026/sections"
+} from "@/components/tradexpo/expo-detail/sections"
 import {
   getExpoBySlug,
   listExpoDetailExhibitorsByName,
 } from "@/lib/tradexpo/db/platform-data"
+
+const VIRTUAL_LOBBY_URL_BY_EXPO_SLUG: Record<string, string> = {
+  "food-farm-global-fair":
+    "https://arobidglobal.shapespark.com/foodexpo2025_lobby/",
+  "vifmw-2026": "https://arobidglobal.shapespark.com/foodexpo2025_lobby/",
+}
 
 function toLongDate(date: string) {
   return new Intl.DateTimeFormat("en-US", {
@@ -35,15 +41,17 @@ export default async function Page({
   if (!expo) notFound()
 
   const exhibitors = await listExpoDetailExhibitorsByName(expo.name)
+  const virtualLobbyUrl = VIRTUAL_LOBBY_URL_BY_EXPO_SLUG[expo.slug ?? slug]
 
   return (
-    <main className="min-h-screen bg-white text-[#030712] [font-family:var(--font-tight)]">
+    <main className="min-h-screen scroll-smooth bg-white text-[#030712] [font-family:var(--font-tight)]">
       <TxHeader />
       <Breadcrumb />
       <Hero
         expoTitle={expo.name}
         startDateLabel={toLongDate(expo.startDate)}
         endDateLabel={toLongDate(expo.endDate)}
+        virtualLobbyUrl={virtualLobbyUrl}
       />
       <About />
       <Sponsors />
