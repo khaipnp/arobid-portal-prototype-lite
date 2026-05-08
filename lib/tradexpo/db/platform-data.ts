@@ -21,6 +21,17 @@ import type {
   StreamSessionStatus,
 } from "@/lib/tradexpo/types"
 
+export type ExpoDetailExhibitor = {
+  id: string
+  name: string
+  company: string
+  avatarUrl?: string
+  boothTier: string
+  boothRef: string
+  country: string
+  products: string[]
+}
+
 type ExpoRow = {
   id: string
   name: string
@@ -547,6 +558,62 @@ export async function listBoothCustomizations(): Promise<BoothCustomization[]> {
     videoUrl: r.video_url,
     products: r.products,
   }))
+}
+
+export async function listExpoDetailExhibitorsByName(
+  expoName: string,
+): Promise<ExpoDetailExhibitor[]> {
+  const pattern = `%${expoName.trim()}%`
+  const rows = (await sql`
+    select
+      sbr.id,
+      sbr.booth_tier,
+      sbr.booth_ref,
+      cu.name,
+      cu.company,
+      cu.avatar_url,
+      'Vietnam'::text as country,
+      coalesce(bc.products, '[]'::jsonb) as products
+    from seller_booth_registrations sbr
+    join expos e on e.id = sbr.expo_id
+    join chat_users cu on cu.id = sbr.user_id
+    left join booth_customizations bc on bc.registration_id = sbr.id
+    where e.name ilike ${pattern}
+    order by sbr.purchased_at desc
+    limit 36
+  `) as {
+    id: string
+    booth_tier: string
+    booth_ref: string
+    name: string
+    company: string | null
+    avatar_url: string | null
+    country: string
+    products: unknown
+  }[]
+
+  return rows.map((row) => {
+    const rawProducts = Array.isArray(row.products) ? row.products : []
+    const products = rawProducts
+      .map((item) =>
+        typeof item === "object" && item !== null && "name" in item
+          ? String((item as { name: string }).name)
+          : "",
+      )
+      .filter(Boolean)
+      .slice(0, 4)
+
+    return {
+      id: row.id,
+      name: row.name,
+      company: row.company ?? row.name,
+      avatarUrl: row.avatar_url ?? undefined,
+      boothTier: row.booth_tier,
+      boothRef: row.booth_ref,
+      country: row.country,
+      products,
+    }
+  })
 }
 
 export async function listStreamSessions(): Promise<StreamSession[]> {

@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   ArrowRight,
@@ -14,20 +14,25 @@ import {
   Plane,
   Play,
   Plus,
-  Send,
   Sparkles,
   Store,
   Users,
+  Video,
   Zap,
-} from "lucide-react"
-import Image from "next/image"
-import Link from "next/link"
-import type { ReactNode } from "react"
-import { useState } from "react"
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import type { ReactNode } from "react";
+import { useState } from "react";
 
-import { cn } from "@/lib/utils"
+import { TxFooter } from "@/components/landing/tx-footer";
+import { TxHeader } from "@/components/landing/tx-header";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
-const asset = (name: string) => `/landing/${name}`
+const asset = (name: string) => `/landing/${name}`;
 
 const categories = [
   "All Events",
@@ -41,13 +46,13 @@ const categories = [
   "Lighting",
   "Machinery",
   "Materials",
-]
+];
 
 const expos = [
   {
     title:
       "Vietnam International Furniture Manufacturing & Wood Expo (VIFMW) #1",
-    image: "expo-1.jpg",
+    image: "figma-expo-card.png",
     status: "Live",
     tags: ["Hot pick"],
     stats: ["320+", "25K", "800"],
@@ -121,7 +126,7 @@ const expos = [
     stats: ["0", "0", "1000+"],
     action: "Join as Exhibitor",
   },
-]
+];
 
 const plans = [
   {
@@ -175,7 +180,7 @@ const plans = [
       "Product Listing: 50",
     ],
   },
-]
+];
 
 const faqs = [
   {
@@ -199,27 +204,14 @@ const faqs = [
     answer:
       "Yes. Arobid support can guide booth content preparation, publishing, and daily operation so teams can focus on trading activity.",
   },
-]
-
-const footerColumns = [
-  ["Get to know us", "About Arobid", "Newsroom", "Careers"],
-  ["Business Services", "SmartCapital"],
-  ["Source from Arobid", "Request for Quote", "Sourcing Knowledge Center"],
-  [
-    "Sell on Arobid.com",
-    "Start Selling on Arobid",
-    "Seller Central Login",
-    "Membership Program",
-  ],
-  ["Get support", "Help Center", "Contact us"],
-]
+];
 
 export default function Page() {
-  const [openFaq, setOpenFaq] = useState(1)
+  const [openFaq, setOpenFaq] = useState(1);
 
   return (
     <main className="min-h-screen bg-white text-[#030712] [font-family:var(--font-tight)]">
-      <Header />
+      <TxHeader />
       <Hero />
       <Exhibitions />
       <Introduction />
@@ -229,52 +221,9 @@ export default function Page() {
       <Partners />
       <Sponsors />
       <Faqs openFaq={openFaq} setOpenFaq={setOpenFaq} />
-      <Footer />
+      <TxFooter />
     </main>
-  )
-}
-
-function Header() {
-  return (
-    <header className="sticky top-0 z-50 flex h-[68px] items-center gap-8 border-black/5 border-b bg-white/95 px-5 backdrop-blur md:px-[78px]">
-      <Link
-        href="/"
-        className="flex items-center gap-2"
-        aria-label="Arobid TradeXpo homepage"
-      >
-        <span className="relative block size-7">
-          <span className="absolute bottom-0 left-0 h-0 w-0 border-r-[16px] border-r-transparent border-b-[#ed6203] border-b-[26px]" />
-          <span className="absolute right-0 bottom-1 h-0 w-0 border-r-[10px] border-r-transparent border-b-[#ff7a1a] border-b-[16px]" />
-        </span>
-        <span className="leading-none">
-          <span className="block font-extrabold text-xl tracking-tight">
-            arobid.com
-          </span>
-          <span className="block text-right font-semibold text-[#2d2d2d] text-[9px]">
-            TradeXpo
-          </span>
-        </span>
-      </Link>
-      <nav className="hidden flex-1 items-center gap-8 font-medium text-sm md:flex">
-        <a href="#shows" className="hover:text-[#ed6203]">
-          Virtual Shows
-        </a>
-        <a href="#ecosystem" className="hover:text-[#ed6203]">
-          Ecosystem
-        </a>
-        <a href="#pricing" className="hover:text-[#ed6203]">
-          Pricing
-        </a>
-      </nav>
-      <Link
-        href="/seller"
-        className="ml-auto inline-flex h-10 items-center gap-2 rounded-full bg-[#ed6203] px-5 font-medium text-sm text-white shadow-[0_1px_2px_rgba(0,0,0,0.2),0_0_0_1px_#f37b42]"
-      >
-        <Send className="size-[18px]" />
-        <span className="hidden sm:inline">Register Booth Lite</span>
-      </Link>
-    </header>
-  )
+  );
 }
 
 function Hero() {
@@ -305,12 +254,12 @@ function Hero() {
               <Box className="size-5" />
               Virtual Lobby
             </Link>
-            <a
-              href="#shows"
+            <Link
+              href="/expos/vifmw-2026"
               className="inline-flex h-10 w-[178px] items-center justify-center rounded-full border border-white bg-white/10 font-medium text-white backdrop-blur"
             >
               View Detail
-            </a>
+            </Link>
           </div>
           <div className="mt-6 flex items-end gap-4">
             <div className="font-normal text-lg">
@@ -344,12 +293,12 @@ function Hero() {
         </article>
       </div>
     </section>
-  )
+  );
 }
 
 function Exhibitions() {
   return (
-    <section id="shows" className="bg-white px-5 py-16 md:px-[78px]">
+    <section id="shows" className="bg-white px-5 py-16 md:px-20">
       <h2 className="text-center font-semibold text-[32px] leading-10">
         Explore Industry Shows
       </h2>
@@ -385,82 +334,82 @@ function Exhibitions() {
         </button>
       </div>
     </section>
-  )
+  );
 }
 
 function ExpoCard({ expo }: { expo: (typeof expos)[number] }) {
   const statusTone =
     expo.status === "Live"
-      ? "bg-[#00b871]"
+      ? "bg-[#16a34a]"
       : expo.status === "Upcoming"
         ? "bg-[#f59e0b]"
-        : "bg-[#9ca3af]"
+        : "bg-[#9ca3af]";
+  const countdownLabel = expo.status === "Upcoming" ? "Starts in" : "Ends in";
 
   return (
-    <article
-      className={cn(
-        "overflow-hidden rounded-2xl bg-white p-2 shadow-[0_0_12px_rgba(0,0,0,0.08)]",
-        expo.highlighted && "ring-2 ring-[#ed6203]",
-      )}
-    >
+    <Card className="overflow-hidden rounded-2xl bg-white p-2 shadow-[0_0_12px_rgba(0,0,0,0.08)]">
       <div className="relative h-[222px] overflow-hidden rounded-xl">
         <Image
           src={asset(expo.image)}
           alt=""
           fill
           sizes="(min-width: 1280px) 396px, (min-width: 768px) 50vw, 100vw"
-          className="size-full object-cover"
+          className="size-full bg-[#e6edf3] object-contain"
         />
-        <div className="absolute top-3 left-3 flex flex-wrap gap-2">
-          <span
+        <div className="absolute top-3 left-3 flex flex-wrap items-center gap-2">
+          <Badge
             className={cn(
-              "rounded-full px-2 py-1 font-medium text-white text-xs",
+              "h-7 gap-1.5 rounded-full border-0 pr-3 pl-1.5 font-medium text-white text-xs",
               statusTone,
             )}
           >
+            <Video className="size-4" />
             {expo.status}
-          </span>
+          </Badge>
           {expo.tags.map((tag) => (
-            <span
+            <Badge
               key={tag}
-              className="inline-flex items-center gap-1 rounded-full bg-white/80 px-2 py-1 text-xs"
+              variant="secondary"
+              className="h-7 gap-1.5 rounded-full border-0 bg-white/80 pr-3 pl-1.5 font-normal text-[#1f2937] text-xs"
             >
               {tag === "Hot pick" ? (
-                <Heart className="size-3 text-rose-500" />
+                <Heart className="size-5 fill-rose-100 text-rose-300" />
               ) : (
                 <Sparkles className="size-3 text-sky-500" />
               )}
               {tag}
-            </span>
+            </Badge>
           ))}
         </div>
-        <Heart className="absolute top-3 right-3 size-7 fill-white/50 text-white/60" />
-        <div className="absolute inset-x-0 bottom-0 flex items-center gap-3 bg-black/40 px-3 py-2 text-white backdrop-blur-sm">
-          <div className="rounded-lg bg-white/30 p-2">
+        <Heart className="absolute top-3 right-3 size-7 text-white/65" />
+        <div className="absolute inset-x-0 bottom-0 flex items-center gap-3 rounded-b-xl bg-black/40 px-3 py-2 text-white backdrop-blur">
+          <div className="rounded-lg bg-white/30 p-2 text-white">
             <CalendarDays className="size-5" />
           </div>
-          <div className="min-w-0 flex-1 text-xs">
-            <p>Duration</p>
+          <div className="min-w-0 flex-1 text-xs leading-4">
+            <p className="text-white/90">Duration</p>
             <p className="font-medium">20 MAY - 22 MAY, 2026</p>
           </div>
-          <div className="hidden text-right text-xs sm:block">
-            <p>{expo.status === "Upcoming" ? "Starts in" : "Ends in"}</p>
+          <div className="hidden text-right text-xs leading-4 sm:block">
+            <p className="text-white/90">{countdownLabel}</p>
             <p className="font-medium">1d : 20h : 5m</p>
           </div>
         </div>
       </div>
-      <div className="p-5">
-        <h3 className="line-clamp-2 min-h-14 font-medium text-lg leading-7">
-          {expo.title}
-        </h3>
-        <p className="mt-1 text-[#6b7280] text-xs">
-          Healthcare - Biohacking - Retail
-        </p>
-        <div className="mt-4 grid grid-cols-3 border-[#e5e7eb] border-t pt-4 text-center">
+      <CardContent className="flex flex-col gap-4 px-5 py-4">
+        <div>
+          <h3 className="line-clamp-2 min-h-14 font-medium text-lg leading-7">
+            {expo.title}
+          </h3>
+          <p className="mt-1 text-[#6b7280] text-xs">
+            Healtthcare • Biohacking • Retail
+          </p>
+        </div>
+        <div className="grid grid-cols-3 gap-5 border-[#e5e7eb] border-t pt-4 text-center">
           {["Exhibitors", "Visitors", "Products/Services"].map(
             (label, index) => (
               <div key={label}>
-                <p className="font-medium text-[#ed6203]">
+                <p className="font-medium text-[#ed6203] text-base leading-6">
                   {expo.stats[index]}
                 </p>
                 <p className="text-[#6b7280] text-xs">{label}</p>
@@ -468,22 +417,24 @@ function ExpoCard({ expo }: { expo: (typeof expos)[number] }) {
             ),
           )}
         </div>
-        <button
-          type="button"
-          className={cn(
-            "mt-4 h-10 w-full rounded-full font-semibold text-sm",
-            expo.disabled
-              ? "bg-[#d1d5db] text-[#9ca3af]"
-              : expo.action.includes("Join")
-                ? "bg-[#ffe4dc] text-[#ed6203]"
-                : "bg-[#ed6203] text-white",
-          )}
-        >
-          {expo.action}
-        </button>
-      </div>
-    </article>
-  )
+        {expo.disabled ? (
+          <Button
+            disabled
+            className="h-10 w-full bg-[#d1d5db] font-semibold text-[#9ca3af] hover:bg-[#d1d5db]"
+          >
+            {expo.action}
+          </Button>
+        ) : (
+          <Button
+            asChild
+            className="h-10 w-full bg-[#ed6203] font-semibold text-white hover:bg-[#dd5a02]"
+          >
+            <Link href="/expos/vifmw-2026">{expo.action}</Link>
+          </Button>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
 function Introduction() {
@@ -534,7 +485,7 @@ function Introduction() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
 function Pricing() {
@@ -609,7 +560,7 @@ function Pricing() {
         ))}
       </div>
     </section>
-  )
+  );
 }
 
 function BoothSteps() {
@@ -618,7 +569,7 @@ function BoothSteps() {
     [BadgeCheck, "Pick Your Spot"],
     [CircleDollarSign, "Pick Solution Plan"],
     [Plane, "Start Global Trading"],
-  ] as const
+  ] as const;
 
   return (
     <section className="bg-white px-5 py-12 text-center md:px-[78px]">
@@ -656,7 +607,7 @@ function BoothSteps() {
         ))}
       </div>
     </section>
-  )
+  );
 }
 
 function Ecosystem() {
@@ -707,7 +658,7 @@ function Ecosystem() {
         />
       </div>
     </section>
-  )
+  );
 }
 
 function EcosystemCard({
@@ -717,11 +668,11 @@ function EcosystemCard({
   body,
   action,
 }: {
-  className: string
-  icon: ReactNode
-  title: string
-  body: string
-  action: string
+  className: string;
+  icon: ReactNode;
+  title: string;
+  body: string;
+  action: string;
 }) {
   return (
     <article
@@ -743,7 +694,7 @@ function EcosystemCard({
         <ArrowRight className="size-4" />
       </button>
     </article>
-  )
+  );
 }
 
 function Partners() {
@@ -758,7 +709,7 @@ function Partners() {
     "VIFSA",
     "WISA",
     "KORETOVIET",
-  ]
+  ];
   const alliance = [
     "ACCG",
     "OCEAN USA",
@@ -770,7 +721,7 @@ function Partners() {
     "High West",
     "Jardin",
     "Bamboo",
-  ]
+  ];
 
   return (
     <section className="bg-white px-5 py-16 text-center md:px-[78px]">
@@ -793,7 +744,7 @@ function Partners() {
         ))}
       </div>
     </section>
-  )
+  );
 }
 
 function LogoTile({ name, small = false }: { name: string; small?: boolean }) {
@@ -806,7 +757,7 @@ function LogoTile({ name, small = false }: { name: string; small?: boolean }) {
     >
       <span className="text-[#ed6203]">{name}</span>
     </div>
-  )
+  );
 }
 
 function Sponsors() {
@@ -816,7 +767,7 @@ function Sponsors() {
     ["Dropbox", "sponsor-dropbox.svg"],
     ["OpenAI", "sponsor-openai.svg"],
     ["Claude", "sponsor-claude.svg"],
-  ]
+  ];
 
   return (
     <section className="bg-white px-5 pb-10 md:px-[78px]">
@@ -837,15 +788,15 @@ function Sponsors() {
         </div>
       </div>
     </section>
-  )
+  );
 }
 
 function Faqs({
   openFaq,
   setOpenFaq,
 }: {
-  openFaq: number
-  setOpenFaq: (index: number) => void
+  openFaq: number;
+  setOpenFaq: (index: number) => void;
 }) {
   return (
     <section className="bg-[#f9fafb] px-5 py-16 md:px-[78px]">
@@ -869,7 +820,7 @@ function Faqs({
         </div>
         <div className="mt-5 space-y-5">
           {faqs.map((faq, index) => {
-            const open = openFaq === index
+            const open = openFaq === index;
             return (
               <button
                 key={faq.question}
@@ -896,53 +847,10 @@ function Faqs({
                   </span>
                 )}
               </button>
-            )
+            );
           })}
         </div>
       </div>
     </section>
-  )
-}
-
-function Footer() {
-  return (
-    <footer className="border-[#f3f4f6] border-t bg-white px-5 py-11 md:px-[72px]">
-      <div className="grid gap-8 md:grid-cols-5">
-        {footerColumns.map(([title, ...items]) => (
-          <div key={title}>
-            <h3 className="font-semibold text-sm">{title}</h3>
-            <ul className="mt-4 space-y-3 text-[#6b7280] text-sm">
-              {items.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </div>
-      <div className="mt-8 flex flex-wrap items-center justify-center gap-8 border-[#f3f4f6] border-b pb-6">
-        <span className="font-semibold text-sm">Follow us</span>
-        <span className="font-bold text-3xl text-[#1877f2]">f</span>
-        <span className="font-bold text-[#0068ff] text-xl">Zalo</span>
-        <span className="grid h-7 w-9 place-items-center rounded bg-red-600 font-bold text-white text-xs">
-          You
-        </span>
-        <span className="grid size-8 place-items-center rounded bg-[#0a66c2] font-bold text-white">
-          in
-        </span>
-        <span className="ml-4 font-semibold text-sm">Payment</span>
-        <span className="font-extrabold text-[#e60012] text-xl">VNPAY</span>
-      </div>
-      <div className="mt-4 space-y-1 text-center text-[#6b7280] text-xs">
-        <p>B2B Marketplace | TradeXpo | Goods for Good | AroUni</p>
-        <p>
-          Policies and rules: Policy | Legal notice | Terms & conditions |
-          Categories Sitemap
-        </p>
-        <p>
-          (c) 2026 - Arobid Technology Joint Stock Company - Certificate number:
-          0318608079 - Email: support@arobid.com
-        </p>
-      </div>
-    </footer>
-  )
+  );
 }
