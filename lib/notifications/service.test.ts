@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, test } from "bun:test"
 
 import { sql } from "@/lib/db/neon"
 import {
+  deleteNotification,
   getUnreadCount,
   listNotifications,
   markAllNotificationsRead,
@@ -248,6 +249,56 @@ describe("NotificationService", () => {
       markNotificationRead("seller-2b", "not-a-valid-uuid"),
     ).rejects.toThrow("invalid notification id")
     expect(await getUnreadCount("seller-2b")).toBe(1)
+  })
+
+  test("deleteNotification removes the row and updates unread count", async () => {
+    const unread = await publishNotification({
+      userId: "seller-5",
+      source: "orders",
+      type: "payment_confirmed",
+      title: "Unread notification",
+      body: "Order paid",
+      deepLinkPath: "/seller/orders",
+    })
+    const read = await publishNotification({
+      userId: "seller-5",
+      source: "chat",
+      type: "message_received",
+      title: "Read notification",
+      body: "Message received",
+      deepLinkPath: "/seller/deal-room",
+    })
+    await markNotificationRead("seller-5", read.notificationId)
+
+    expect(await getUnreadCount("seller-5")).toBe(1)
+
+    const unreadDelete = await deleteNotification("seller-5", unread.notificationId)
+    expect(unreadDelete.found).toBe(true)
+    expect(unreadDelete.deleted).toBe(true)
+    expect(await getUnreadCount("seller-5")).toBe(0)
+
+    const readDelete = await deleteNotification("seller-5", read.notificationId)
+    expect(readDelete.found).toBe(true)
+    expect(readDelete.deleted).toBe(true)
+
+    const listed = await listNotifications("seller-5", { limit: 20 })
+    expect(listed).toHaveLength(0)
+  })
+
+  test("deleteNotification rejects invalid UUID values", async () => {
+    await publishNotification({
+      userId: "seller-6",
+      source: "orders",
+      type: "payment_confirmed",
+      title: "Payment confirmed",
+      body: "Order paid",
+      deepLinkPath: "/seller/orders",
+    })
+
+    await expect(
+      deleteNotification("seller-6", "not-a-valid-uuid"),
+    ).rejects.toThrow("invalid notification id")
+    expect(await getUnreadCount("seller-6")).toBe(1)
   })
 
   test("listNotifications uses stable tie-breaker for matching timestamps", async () => {

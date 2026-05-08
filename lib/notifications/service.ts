@@ -344,3 +344,34 @@ export async function markAllNotificationsRead(userId: string): Promise<void> {
       and is_read = false
   `
 }
+
+export async function deleteNotification(
+  userId: string,
+  notificationId: string,
+): Promise<{ found: boolean; deleted: boolean }> {
+  const normalizedNotificationId = notificationId.trim()
+  if (!isUuid(normalizedNotificationId)) {
+    throw new Error("invalid notification id")
+  }
+
+  const rows = (await sql`
+    with target as (
+      select notification_id
+      from notifications
+      where user_id = ${userId}
+        and notification_id = ${normalizedNotificationId}::uuid
+      limit 1
+    ),
+    deleted as (
+      delete from notifications
+      where user_id = ${userId}
+        and notification_id = ${normalizedNotificationId}::uuid
+      returning notification_id
+    )
+    select
+      exists(select 1 from target) as found,
+      exists(select 1 from deleted) as deleted
+  `) as { found: boolean; deleted: boolean }[]
+
+  return rows[0] ?? { found: false, deleted: false }
+}

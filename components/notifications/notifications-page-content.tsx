@@ -92,6 +92,22 @@ export function NotificationsPageContent({
     [encodedUserId],
   )
 
+  const deleteNotification = useCallback(
+    async (notificationId: string) => {
+      const response = await fetch(
+        `/api/notifications/${notificationId}?userId=${encodedUserId}`,
+        {
+          method: "DELETE",
+        },
+      )
+      if (!response.ok) {
+        return false
+      }
+      return true
+    },
+    [encodedUserId],
+  )
+
   useEffect(() => {
     void refreshListAndCount()
     const timer = window.setInterval(() => {
@@ -155,6 +171,30 @@ export function NotificationsPageContent({
     [markNotificationRead, refreshListAndCount],
   )
 
+  const handleDeleteSingle = useCallback(
+    async (notification: NotificationRecord) => {
+      setBusyNotificationId(notification.notificationId)
+      try {
+        setNotifications((current) =>
+          current.filter(
+            (item) => item.notificationId !== notification.notificationId,
+          ),
+        )
+        if (!notification.isRead) {
+          setUnreadCount((current) => Math.max(0, current - 1))
+        }
+        const isDeleted = await deleteNotification(notification.notificationId)
+        if (!isDeleted) {
+          // Server rejected deletion; refresh below reconciles optimistic state.
+        }
+      } finally {
+        await refreshListAndCount()
+        setBusyNotificationId(null)
+      }
+    },
+    [deleteNotification, refreshListAndCount],
+  )
+
   const handleMarkAll = useCallback(async () => {
     if (!hasUnread || isMarkAllBusy) {
       return
@@ -215,6 +255,7 @@ export function NotificationsPageContent({
               isBusy={busyNotificationId === notification.notificationId}
               onRowClick={handleOpenNotification}
               onMarkAsRead={handleMarkSingle}
+              onDelete={handleDeleteSingle}
             />
           ))}
         </div>
