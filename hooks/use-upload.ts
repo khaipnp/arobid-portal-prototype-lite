@@ -1,15 +1,15 @@
-import { useState } from "react";
-import { toast } from "sonner";
+import { useState } from "react"
+import { toast } from "sonner"
 
-export type UploadKind = "thumbnail" | "avatar" | "glb" | "image";
+export type UploadKind = "thumbnail" | "avatar" | "glb" | "image"
 
 export function useUpload() {
-  const [isUploading, setIsUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false)
+  const [progress, setProgress] = useState(0)
 
   const uploadFile = async (file: File, kind: UploadKind) => {
-    setIsUploading(true);
-    setProgress(0);
+    setIsUploading(true)
+    setProgress(0)
 
     try {
       // 1. Lấy Presigned URL từ API
@@ -21,11 +21,11 @@ export function useUpload() {
           contentType: file.type,
           kind,
         }),
-      });
+      })
 
-      if (!presignedRes.ok) throw new Error("Failed to get upload URL");
+      if (!presignedRes.ok) throw new Error("Failed to get upload URL")
 
-      const { uploadUrl, fileUrl, assetId } = await presignedRes.json();
+      const { uploadUrl, fileUrl, assetId } = await presignedRes.json()
 
       // 2. Upload trực tiếp lên R2
       // Lưu ý: R2 Presigned URL yêu cầu phương thức PUT
@@ -35,9 +35,9 @@ export function useUpload() {
         headers: {
           "Content-Type": file.type,
         },
-      });
+      })
 
-      if (!uploadRes.ok) throw new Error("Failed to upload to R2");
+      if (!uploadRes.ok) throw new Error("Failed to upload to R2")
 
       // 3. Lưu metadata vào Neon DB
       const assetRes = await fetch("/api/platform/assets", {
@@ -54,21 +54,21 @@ export function useUpload() {
             lastModified: file.lastModified,
           },
         }),
-      });
+      })
 
-      if (!assetRes.ok) throw new Error("Failed to save asset metadata");
+      if (!assetRes.ok) throw new Error("Failed to save asset metadata")
 
-      toast.success("Upload successful");
-      return { assetId, fileUrl };
+      toast.success("Upload successful")
+      return { assetId, fileUrl }
     } catch (error) {
-      console.error("Upload error:", error);
-      toast.error(error instanceof Error ? error.message : "Upload failed");
-      return null;
+      console.error("Upload error:", error)
+      toast.error(error instanceof Error ? error.message : "Upload failed")
+      return null
     } finally {
-      setIsUploading(false);
-      setProgress(100);
+      setIsUploading(false)
+      setProgress(100)
     }
-  };
+  }
 
-  return { uploadFile, isUploading, progress };
+  return { uploadFile, isUploading, progress }
 }

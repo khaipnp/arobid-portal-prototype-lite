@@ -4,8 +4,8 @@ import { ExpoForm } from "@/components/tradexpo/expo-form"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 import { listHallTemplates } from "@/lib/tradexpo/db/hall-templates"
 import {
-  getUserById,
   getExpoById,
+  getUserById,
   listExpoCategories,
   listExpoHalls,
   listExpoLayoutTemplates,

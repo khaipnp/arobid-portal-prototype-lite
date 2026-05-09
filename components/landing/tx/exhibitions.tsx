@@ -1,25 +1,28 @@
+"use client";
+
 import {
   ArrowRight,
   CalendarDays,
   Grid2X2,
   Heart,
+  RadioIcon,
   Sparkles,
-  Video,
-} from "lucide-react"
-import Image from "next/image"
-import Link from "next/link"
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
-import { asset, type HomeExpoCard } from "./data"
+import { asset, type HomeExpoCard } from "./data";
+import { toast } from "sonner";
 
 type ExhibitionsProps = {
-  categories: string[]
-  expos: HomeExpoCard[]
-}
+  categories: string[];
+  expos: HomeExpoCard[];
+};
 
 export function Exhibitions({ categories, expos }: ExhibitionsProps) {
   return (
@@ -59,7 +62,7 @@ export function Exhibitions({ categories, expos }: ExhibitionsProps) {
         </button>
       </div>
     </section>
-  )
+  );
 }
 
 function ExpoCard({ expo }: { expo: HomeExpoCard }) {
@@ -68,11 +71,11 @@ function ExpoCard({ expo }: { expo: HomeExpoCard }) {
       ? "bg-[#16a34a]"
       : expo.status === "Upcoming"
         ? "bg-[#f59e0b]"
-        : "bg-[#9ca3af]"
-  const countdownLabel = expo.status === "Upcoming" ? "Starts in" : "Ends in"
+        : "bg-[#9ca3af]";
+  const countdownLabel = expo.status === "Upcoming" ? "Starts in" : "Ends in";
 
   return (
-    <Card className="overflow-hidden rounded-2xl bg-white p-2 shadow-[0_0_12px_rgba(0,0,0,0.08)]">
+    <Card className="overflow-hidden rounded-3xl bg-white p-2 shadow-[0_0_12px_rgba(0,0,0,0.08)]">
       <div className="relative h-56 overflow-hidden rounded-xl">
         <Link href={expo.detailHref}>
           <Image
@@ -85,22 +88,19 @@ function ExpoCard({ expo }: { expo: HomeExpoCard }) {
         </Link>
         <div className="absolute top-3 left-3 flex flex-wrap items-center gap-2">
           <Badge
-            className={cn(
-              "h-7 gap-1.5 rounded-full border-0 pr-3 pl-1.5 font-medium text-white text-xs",
-              statusTone,
-            )}
+            className={cn("h-6 font-medium text-white text-xs", statusTone)}
           >
-            <Video className="size-4" />
+            <RadioIcon className="size-4" />
             {expo.status}
           </Badge>
           {expo.tags.map((tag) => (
             <Badge
               key={tag}
               variant="secondary"
-              className="h-7 gap-1.5 rounded-full border-0 bg-white/80 pr-3 pl-1.5 font-normal text-foreground text-xs"
+              className="h-6 bg-white/80 font-medium"
             >
               {tag === "Hot pick" ? (
-                <Heart className="size-5 fill-rose-100 text-rose-300" />
+                <Heart className="size-5 fill-rose-200 text-rose-400" />
               ) : (
                 <Sparkles className="size-3 text-sky-500" />
               )}
@@ -108,7 +108,10 @@ function ExpoCard({ expo }: { expo: HomeExpoCard }) {
             </Badge>
           ))}
         </div>
-        <Heart className="absolute top-3 right-3 size-7 text-white/65" />
+        <Heart
+          className="absolute top-3 right-3 size-7 text-muted"
+          onClick={() => toast("Add to Favorites!")}
+        />
         <div className="absolute inset-x-0 bottom-0 flex items-center gap-3 rounded-b-xl bg-black/40 px-3 py-2 text-white backdrop-blur">
           <div className="rounded-lg bg-white/30 p-2 text-white">
             <CalendarDays className="size-5" />
@@ -131,9 +134,9 @@ function ExpoCard({ expo }: { expo: HomeExpoCard }) {
           >
             {expo.title}
           </Link>
-          <p className="mt-1 text-[#6b7280] text-xs">{expo.segment}</p>
+          <p className="mt-1 text-muted-foreground text-xs">{expo.segment}</p>
         </div>
-        <div className="grid grid-cols-3 gap-5 border-[#e5e7eb] border-t pt-4 text-center">
+        <div className="grid grid-cols-3 gap-5 border-t pt-4 text-center">
           {["Exhibitors", "Visitors", "Products/Services"].map(
             (label, index) => (
               <div key={label}>
@@ -148,19 +151,16 @@ function ExpoCard({ expo }: { expo: HomeExpoCard }) {
         {expo.disabled ? (
           <Button
             disabled
-            className="h-10 w-full bg-[#d1d5db] font-semibold text-[#9ca3af] hover:bg-[#d1d5db]"
+            className="w-full bg-muted font-semibold text-muted-foreground hover:bg-muted"
           >
             {expo.action}
           </Button>
         ) : (
-          <Button
-            asChild
-            className="h-10 w-full bg-[#ed6203] font-semibold text-white hover:bg-[#dd5a02]"
-          >
+          <Button asChild className="w-full bg-legend hover:bg-legend-600">
             <Link href={expo.href}>{expo.action}</Link>
           </Button>
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

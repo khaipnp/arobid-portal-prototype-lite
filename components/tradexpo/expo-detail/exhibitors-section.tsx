@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import type { ExpoDetailExhibitor } from "@/lib/tradexpo/db/platform-data"
+import { FloatingChat } from "../chat/floating-chat"
 import { ExhibitorCard } from "./exhibitor-card"
 
 type Props = {
@@ -28,6 +29,8 @@ export function ExhibitorsSection({ expoName, initialExhibitors }: Props) {
   const [search, setSearch] = useState("")
   const [category, setCategory] = useState("all")
   const [items, setItems] = useState(initialExhibitors)
+  const [activeChatExhibitor, setActiveChatExhibitor] =
+    useState<ExpoDetailExhibitor | null>(null)
 
   const categories = useMemo(() => {
     return Array.from(new Set(initialExhibitors.map((x) => x.category))).sort()
@@ -106,10 +109,21 @@ export function ExhibitorsSection({ expoName, initialExhibitors }: Props) {
         </div>
         <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {sortedItems.map((exhibitor) => (
-            <ExhibitorCard key={exhibitor.id} exhibitor={exhibitor} />
+            <ExhibitorCard
+              key={exhibitor.id}
+              exhibitor={exhibitor}
+              onChatClick={() => setActiveChatExhibitor(exhibitor)}
+            />
           ))}
         </div>
       </div>
+
+      {activeChatExhibitor && (
+        <FloatingChat
+          exhibitor={activeChatExhibitor}
+          onClose={() => setActiveChatExhibitor(null)}
+        />
+      )}
     </section>
   )
 }
