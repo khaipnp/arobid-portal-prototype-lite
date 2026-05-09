@@ -1,5 +1,5 @@
-import { sql } from "@/lib/db/neon";
-import { CURRENT_USER_ID } from "@/lib/user/current-user";
+import { sql } from "@/lib/db/neon"
+import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
 /** Creates platform tables (expos, orders, chat, streaming) for Neon. Idempotent. */
 export async function ensurePlatformSchema() {
@@ -10,7 +10,7 @@ export async function ensurePlatformSchema() {
       level int not null,
       parent_id text references expo_categories(id) on delete set null
     )
-  `;
+  `
 
   await sql`
     create table if not exists expos (
@@ -25,13 +25,13 @@ export async function ensurePlatformSchema() {
       category_ids jsonb not null,
       created_at timestamptz not null
     )
-  `;
-  await sql`alter table expos add column if not exists slug text`;
+  `
+  await sql`alter table expos add column if not exists slug text`
   await sql`
     update expos
     set slug = trim(both '-' from regexp_replace(lower(name), '[^a-z0-9]+', '-', 'g'))
     where slug is null or length(trim(slug)) = 0
-  `;
+  `
   await sql`
     update expos
     set slug = slug || '-' || right(id, 6)
@@ -44,12 +44,12 @@ export async function ensurePlatformSchema() {
       ) t
       where t.rn > 1
     )
-  `;
+  `
   await sql`
     create unique index if not exists idx_expos_slug_unique
     on expos (slug)
     where slug is not null
-  `;
+  `
 
   await sql`
     create table if not exists admin_notifications (
@@ -61,14 +61,14 @@ export async function ensurePlatformSchema() {
       created_at timestamptz not null,
       is_read boolean not null
     )
-  `;
+  `
 
   await sql`
     create table if not exists expo_booth_template_assignments (
       expo_id text primary key references expos(id) on delete cascade,
       booth_template_ids jsonb not null
     )
-  `;
+  `
 
   await sql`
     create table if not exists booth_template_customization_configs (
@@ -78,7 +78,7 @@ export async function ensurePlatformSchema() {
       product_limit int not null,
       has_video boolean not null
     )
-  `;
+  `
 
   await sql`
     create table if not exists exhibitor_catalog_products (
@@ -87,7 +87,7 @@ export async function ensurePlatformSchema() {
       description text not null,
       image_url text
     )
-  `;
+  `
   await sql`
     create table if not exists exhibitor_categories (
       id text primary key,
@@ -97,11 +97,11 @@ export async function ensurePlatformSchema() {
       sort_order int not null default 0,
       is_active boolean not null default true
     )
-  `;
+  `
   await sql`
     create index if not exists idx_exhibitor_categories_parent
     on exhibitor_categories (parent_id, sort_order asc, name asc)
-  `;
+  `
 
   await sql`
     create table if not exists seller_booth_registrations (
@@ -115,7 +115,7 @@ export async function ensurePlatformSchema() {
       status text not null,
       purchased_at timestamptz not null
     )
-  `;
+  `
 
   await sql`
     create table if not exists booth_customizations (
@@ -129,7 +129,7 @@ export async function ensurePlatformSchema() {
       video_url text not null,
       products jsonb not null
     )
-  `;
+  `
 
   await sql`
     create table if not exists stream_sessions (
@@ -147,7 +147,7 @@ export async function ensurePlatformSchema() {
       created_at timestamptz not null,
       updated_at timestamptz not null
     )
-  `;
+  `
 
   await sql`
     create table if not exists live_comments (
@@ -163,7 +163,7 @@ export async function ensurePlatformSchema() {
       deleted_at timestamptz,
       deleted_by_user_id text
     )
-  `;
+  `
 
   await sql`
     create table if not exists go_live_events (
@@ -181,7 +181,7 @@ export async function ensurePlatformSchema() {
       created_at timestamptz not null,
       updated_at timestamptz not null
     )
-  `;
+  `
 
   await sql`
     create table if not exists bank_accounts (
@@ -196,7 +196,7 @@ export async function ensurePlatformSchema() {
       created_at timestamptz not null,
       updated_at timestamptz not null
     )
-  `;
+  `
 
   await sql`
     create table if not exists platform_payment_config (
@@ -206,7 +206,7 @@ export async function ensurePlatformSchema() {
       updated_at timestamptz not null,
       updated_by text not null
     )
-  `;
+  `
 
   await sql`
     create table if not exists expo_payment_configs (
@@ -218,7 +218,7 @@ export async function ensurePlatformSchema() {
       updated_at timestamptz not null,
       updated_by text not null
     )
-  `;
+  `
 
   await sql`
     create table if not exists orders (
@@ -243,14 +243,14 @@ export async function ensurePlatformSchema() {
       created_at timestamptz not null,
       updated_at timestamptz not null
     )
-  `;
+  `
 
-  await sql`alter table seller_booth_registrations add column if not exists user_id text`;
+  await sql`alter table seller_booth_registrations add column if not exists user_id text`
   await sql`
     update seller_booth_registrations
     set user_id = ${CURRENT_USER_ID}
     where user_id is null
-  `;
+  `
   await sql`
     insert into users (id, name, email, company, is_active)
     select distinct
@@ -262,10 +262,10 @@ export async function ensurePlatformSchema() {
     from seller_booth_registrations sbr
     left join users u on u.id = sbr.user_id
     where u.id is null
-  `;
+  `
   await sql`
     alter table seller_booth_registrations alter column user_id set not null
-  `;
+  `
   await sql`
     do $$
     begin
@@ -277,46 +277,46 @@ export async function ensurePlatformSchema() {
     exception
       when duplicate_object then null;
     end $$;
-  `;
+  `
   await sql`
     create index if not exists idx_seller_booth_registrations_user_purchased
     on seller_booth_registrations (user_id, purchased_at desc)
-  `;
+  `
 
-  await sql`alter table orders add column if not exists partner_name text`;
-  await sql`alter table orders alter column expo_name drop not null`;
-  await sql`alter table orders alter column booth_ref drop not null`;
-  await sql`alter table orders alter column booth_tier drop not null`;
+  await sql`alter table orders add column if not exists partner_name text`
+  await sql`alter table orders alter column expo_name drop not null`
+  await sql`alter table orders alter column booth_ref drop not null`
+  await sql`alter table orders alter column booth_tier drop not null`
   await sql`
     alter table orders add column if not exists original_amount numeric not null default 0
-  `;
+  `
   await sql`
     alter table orders add column if not exists discount_amount numeric not null default 0
-  `;
-  await sql`alter table orders add column if not exists voucher_id text`;
+  `
+  await sql`alter table orders add column if not exists voucher_id text`
   await sql`
     alter table orders add column if not exists invoice_requested boolean not null default false
-  `;
-  await sql`alter table orders add column if not exists invoice_type text`;
+  `
+  await sql`alter table orders add column if not exists invoice_type text`
   await sql`
     alter table orders add column if not exists billing_info_snapshot jsonb
-  `;
+  `
   await sql`
     alter table orders add column if not exists invoice_status text not null default 'not_requested'
-  `;
-  await sql`alter table orders add column if not exists paid_at timestamptz`;
-  await sql`alter table orders add column if not exists exported_at timestamptz`;
-  await sql`alter table orders add column if not exists exported_by text`;
-  await sql`alter table orders add column if not exists export_batch_id text`;
-  await sql`alter table orders add column if not exists issued_at timestamptz`;
-  await sql`alter table orders add column if not exists issued_by text`;
-  await sql`alter table orders add column if not exists sent_at timestamptz`;
-  await sql`alter table orders add column if not exists sent_by text`;
+  `
+  await sql`alter table orders add column if not exists paid_at timestamptz`
+  await sql`alter table orders add column if not exists exported_at timestamptz`
+  await sql`alter table orders add column if not exists exported_by text`
+  await sql`alter table orders add column if not exists export_batch_id text`
+  await sql`alter table orders add column if not exists issued_at timestamptz`
+  await sql`alter table orders add column if not exists issued_by text`
+  await sql`alter table orders add column if not exists sent_at timestamptz`
+  await sql`alter table orders add column if not exists sent_by text`
   await sql`
     update orders
     set original_amount = amount
     where original_amount = 0 and amount <> 0
-  `;
+  `
 
   await sql`
     create table if not exists transaction_log (
@@ -329,7 +329,7 @@ export async function ensurePlatformSchema() {
       rejection_reason text,
       processed_at timestamptz not null
     )
-  `;
+  `
 
   await sql`
     update orders
@@ -337,13 +337,13 @@ export async function ensurePlatformSchema() {
       status = 'Cancelled',
       updated_at = now()
     where status in ('Failed', 'Expired', 'Cancel')
-  `;
+  `
 
   await sql`
     update transaction_log
     set status = 'Cancelled'
     where status in ('Failed', 'Expired', 'Cancel')
-  `;
+  `
 
   await sql`
     create table if not exists users (
@@ -360,12 +360,12 @@ export async function ensurePlatformSchema() {
       avatar_url text,
       is_active boolean not null
     )
-  `;
-  await sql`alter table users add column if not exists industry text`;
+  `
+  await sql`alter table users add column if not exists industry text`
   await sql`
     alter table users
     add column if not exists industry_category_id text
-  `;
+  `
   await sql`
     do $$
     begin
@@ -377,11 +377,43 @@ export async function ensurePlatformSchema() {
     exception
       when duplicate_object then null;
     end $$;
-  `;
+  `
   await sql`
     create index if not exists idx_users_industry_category
     on users (industry_category_id)
-  `;
+  `
+  await sql`
+    create table if not exists roles (
+      id text primary key,
+      name text not null unique
+    )
+  `
+  await sql`
+    create table if not exists user_roles (
+      user_id text not null references users(id) on delete cascade,
+      role_id text not null references roles(id) on delete cascade,
+      expo_id text references expos(id) on delete cascade,
+      created_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    create unique index if not exists uq_user_roles_scope
+    on user_roles (user_id, role_id, coalesce(expo_id, 'global'))
+  `
+  await sql`
+    create index if not exists idx_user_roles_user
+    on user_roles (user_id)
+  `
+  await sql`
+    insert into roles (id, name)
+    values
+      ('admin', 'Admin'),
+      ('seller', 'Seller'),
+      ('buyer', 'Buyer'),
+      ('exhibitor', 'Exhibitor')
+    on conflict (id) do update
+    set name = excluded.name
+  `
 
   await sql`
     create table if not exists chat_users (
@@ -398,12 +430,12 @@ export async function ensurePlatformSchema() {
       avatar_url text,
       is_active boolean not null
     )
-  `;
-  await sql`alter table chat_users add column if not exists industry text`;
+  `
+  await sql`alter table chat_users add column if not exists industry text`
   await sql`
     alter table chat_users
     add column if not exists industry_category_id text
-  `;
+  `
   await sql`
     do $$
     begin
@@ -415,11 +447,11 @@ export async function ensurePlatformSchema() {
     exception
       when duplicate_object then null;
     end $$;
-  `;
+  `
   await sql`
     create index if not exists idx_chat_users_industry_category
     on chat_users (industry_category_id)
-  `;
+  `
   await sql`
     insert into users (
       id,
@@ -462,7 +494,7 @@ export async function ensurePlatformSchema() {
       location = excluded.location,
       avatar_url = excluded.avatar_url,
       is_active = excluded.is_active
-  `;
+  `
   await sql`
     insert into users (id, name, email, company, is_active)
     values (
@@ -473,7 +505,16 @@ export async function ensurePlatformSchema() {
       true
     )
     on conflict (id) do nothing
-  `;
+  `
+  await sql`
+    insert into user_roles (user_id, role_id, expo_id)
+    values
+      (${CURRENT_USER_ID}, 'admin', null),
+      (${CURRENT_USER_ID}, 'seller', null),
+      (${CURRENT_USER_ID}, 'buyer', null),
+      (${CURRENT_USER_ID}, 'exhibitor', null)
+    on conflict do nothing
+  `
   await sql`
     insert into chat_users (
       id,
@@ -504,7 +545,7 @@ export async function ensurePlatformSchema() {
       is_active
     from users
     on conflict (id) do nothing
-  `;
+  `
 
   await sql`
     create table if not exists chat_conversations (
@@ -513,7 +554,7 @@ export async function ensurePlatformSchema() {
       created_at timestamptz not null,
       is_read_only boolean not null
     )
-  `;
+  `
 
   await sql`
     create table if not exists chat_conversation_members (
@@ -523,7 +564,7 @@ export async function ensurePlatformSchema() {
       is_archived boolean not null,
       primary key (conversation_id, user_id)
     )
-  `;
+  `
 
   await sql`
     create table if not exists chat_messages (
@@ -538,7 +579,7 @@ export async function ensurePlatformSchema() {
       is_deleted boolean not null,
       is_system_message boolean not null
     )
-  `;
+  `
 
   await sql`
     create table if not exists chat_unread_counts (
@@ -547,7 +588,7 @@ export async function ensurePlatformSchema() {
       unread_count int not null,
       primary key (user_id, conversation_id)
     )
-  `;
+  `
   await sql`
     do $$
     begin
@@ -559,7 +600,7 @@ export async function ensurePlatformSchema() {
     exception
       when duplicate_object then null;
     end $$;
-  `;
+  `
   await sql`
     do $$
     begin
@@ -571,7 +612,7 @@ export async function ensurePlatformSchema() {
     exception
       when duplicate_object then null;
     end $$;
-  `;
+  `
 
   await sql`
     create table if not exists notifications (
@@ -588,7 +629,7 @@ export async function ensurePlatformSchema() {
       created_at timestamptz not null default now(),
       read_at timestamptz
     )
-  `;
+  `
   await sql`
     insert into users (id, name, email, company, is_active)
     select distinct
@@ -600,7 +641,7 @@ export async function ensurePlatformSchema() {
     from notifications n
     left join users u on u.id = n.user_id
     where u.id is null
-  `;
+  `
   await sql`
     do $$
     begin
@@ -612,26 +653,26 @@ export async function ensurePlatformSchema() {
     exception
       when duplicate_object then null;
     end $$;
-  `;
+  `
 
   await sql`
     create index if not exists idx_notifications_user_created
     on notifications (user_id, created_at desc)
-  `;
+  `
 
   await sql`
     create index if not exists idx_notifications_user_unread
     on notifications (user_id)
     where is_read = false
-  `;
+  `
 
   await sql`
     create index if not exists idx_notifications_dedupe_lookup
     on notifications (user_id, source, type, reference_id, created_at desc)
     where reference_id is not null and reference_type is not null
-  `;
+  `
 
-  await migrateExpoManagementSchema();
+  await migrateExpoManagementSchema()
 }
 
 /** Idempotent columns/tables for Create Expo + hall configuration (US-02 / US-03). */
@@ -641,7 +682,7 @@ async function migrateExpoManagementSchema() {
     update expo_categories
     set level = 1, parent_id = null
     where level <> 1 or parent_id is not null
-  `;
+  `
   await sql`
     do $$
     begin
@@ -651,32 +692,32 @@ async function migrateExpoManagementSchema() {
     exception
       when duplicate_object then null;
     end $$;
-  `;
+  `
 
   await sql`
     alter table expos add column if not exists description text not null default ''
-  `;
+  `
   await sql`
     alter table expos add column if not exists timezone text not null default 'Asia/Bangkok'
-  `;
+  `
   await sql`
     alter table expos add column if not exists expo_template_id text
-  `;
+  `
   await sql`
     alter table expos add column if not exists owner_user_id text
-  `;
+  `
   await sql`
     alter table expos add column if not exists start_at timestamptz
-  `;
+  `
   await sql`
     alter table expos add column if not exists end_at timestamptz
-  `;
+  `
 
   await sql`
     update expos
     set start_at = coalesce(start_at, start_date::timestamptz)
     where start_at is null
-  `;
+  `
   await sql`
     update expos
     set
@@ -685,14 +726,14 @@ async function migrateExpoManagementSchema() {
         (end_date::timestamp + time '23:59:59')::timestamptz
       )
     where end_at is null
-  `;
+  `
 
   await sql`
     create table if not exists expo_layout_templates (
       id text primary key,
       name text not null
     )
-  `;
+  `
 
   await sql`
     insert into expo_layout_templates (id, name) values
@@ -700,7 +741,7 @@ async function migrateExpoManagementSchema() {
       ('layout-multi-hall', 'Multi-hall floor plan'),
       ('layout-compact', 'Compact single-hall layout')
     on conflict (id) do nothing
-  `;
+  `
 
   await sql`
     create table if not exists expo_halls (
@@ -713,11 +754,11 @@ async function migrateExpoManagementSchema() {
       professional_qty int not null,
       premium_qty int not null
     )
-  `;
+  `
 
   await sql`
     create index if not exists expos_name_lower_uq on expos (lower(name))
-  `;
+  `
 
   await sql`
     create table if not exists assets (
@@ -729,5 +770,5 @@ async function migrateExpoManagementSchema() {
       metadata jsonb not null default '{}',
       created_at timestamptz not null default now()
     )
-  `;
+  `
 }

@@ -1,6 +1,12 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import {
+  createContext,
+  type ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react"
 
-type Theme = 'dark' | 'light' | 'system'
+type Theme = "dark" | "light" | "system"
 
 type ThemeProviderProps = {
   children: ReactNode
@@ -14,7 +20,7 @@ type ThemeProviderState = {
 }
 
 const initialState: ThemeProviderState = {
-  theme: 'system',
+  theme: "system",
   setTheme: () => null,
 }
 
@@ -22,17 +28,19 @@ const ThemeProviderContext = createContext<ThemeProviderState>(initialState)
 
 export function ThemeProvider({
   children,
-  defaultTheme = 'system',
-  storageKey = 'vite-ui-theme',
+  defaultTheme = "system",
+  storageKey = "vite-ui-theme",
   ...props
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(() => {
     // Try localStorage first, fall back to sessionStorage, then default
     try {
-      return (localStorage.getItem(storageKey) as Theme) ||
-             (sessionStorage.getItem(storageKey) as Theme) ||
-             defaultTheme
-    } catch (e) {
+      return (
+        (localStorage.getItem(storageKey) as Theme) ||
+        (sessionStorage.getItem(storageKey) as Theme) ||
+        defaultTheme
+      )
+    } catch (_e) {
       // Storage unavailable (incognito/privacy mode) - use default
       return defaultTheme
     }
@@ -41,13 +49,13 @@ export function ThemeProvider({
   useEffect(() => {
     const root = window.document.documentElement
 
-    root.classList.remove('light', 'dark')
+    root.classList.remove("light", "dark")
 
-    if (theme === 'system') {
-      const systemTheme = window.matchMedia('(prefers-color-scheme: dark)')
+    if (theme === "system") {
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
         .matches
-        ? 'dark'
-        : 'light'
+        ? "dark"
+        : "light"
 
       root.classList.add(systemTheme)
       return
@@ -62,13 +70,13 @@ export function ThemeProvider({
       // Try to persist to localStorage, fall back to sessionStorage
       try {
         localStorage.setItem(storageKey, theme)
-      } catch (e) {
+      } catch (_e) {
         // localStorage unavailable (incognito) - use sessionStorage
         try {
           sessionStorage.setItem(storageKey, theme)
-        } catch (err) {
+        } catch (_err) {
           // Both unavailable - just update state without persistence
-          console.warn('Storage unavailable, theme preference will not persist')
+          console.warn("Storage unavailable, theme preference will not persist")
         }
       }
       setTheme(theme)
@@ -86,7 +94,7 @@ export const useTheme = () => {
   const context = useContext(ThemeProviderContext)
 
   if (context === undefined)
-    throw new Error('useTheme must be used within a ThemeProvider')
+    throw new Error("useTheme must be used within a ThemeProvider")
 
   return context
 }
