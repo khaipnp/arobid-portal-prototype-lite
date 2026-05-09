@@ -13,7 +13,7 @@ function toIso(value: string | Date) {
 
 export async function listChatUsers(): Promise<ChatUser[]> {
   const rows = (await sql`
-    select * from chat_users order by name asc
+    select * from users order by name asc
   `) as {
     id: string
     name: string

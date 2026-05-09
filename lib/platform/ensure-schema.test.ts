@@ -103,9 +103,18 @@ describe("platform schema consistency", () => {
 
     await sql`delete from booth_customizations where registration_id like 'test-reg-%'`
     await sql`delete from seller_booth_registrations where id like 'test-reg-%'`
+    await sql`delete from users where id in ('test-user-a', 'test-user-b')`
     await sql`delete from expos where id = 'test-expo-scope'`
 
     try {
+      await sql`
+        insert into users (id, name, email, company, is_active)
+        values
+          ('test-user-a', 'Test User A', 'test-user-a@example.com', 'Arobid', true),
+          ('test-user-b', 'Test User B', 'test-user-b@example.com', 'Arobid', true)
+        on conflict (id) do nothing
+      `
+
       await sql`
         insert into expos (
           id,
@@ -154,6 +163,7 @@ describe("platform schema consistency", () => {
     } finally {
       await sql`delete from booth_customizations where registration_id like 'test-reg-%'`
       await sql`delete from seller_booth_registrations where id like 'test-reg-%'`
+      await sql`delete from users where id in ('test-user-a', 'test-user-b')`
       await sql`delete from expos where id = 'test-expo-scope'`
     }
   })
