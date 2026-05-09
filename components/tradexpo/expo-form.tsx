@@ -1,56 +1,52 @@
-"use client";
+"use client"
 
-import { ImagePlusIcon, PlusIcon, SearchIcon, Trash2Icon } from "lucide-react";
-import { useRouter } from "next/navigation";
-import * as React from "react";
-import { Button } from "@/components/ui/button";
+import { ImagePlusIcon, PlusIcon, SearchIcon, Trash2Icon } from "lucide-react"
+import { useRouter } from "next/navigation"
+import * as React from "react"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { useUpload } from "@/hooks/use-upload";
+} from "@/components/ui/select"
+import { Textarea } from "@/components/ui/textarea"
+import { useUpload } from "@/hooks/use-upload"
 import {
   EXPO_FORM_TIMEZONES,
   toDatetimeLocalValue,
-} from "@/lib/tradexpo/expo-form-utils";
+} from "@/lib/tradexpo/expo-form-utils"
 import type {
   Expo,
   ExpoCategory,
   ExpoHall,
   ExpoLayoutTemplate,
   HallTemplate,
-} from "@/lib/tradexpo/types";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "../ui/input-group";
-import { Spinner } from "../ui/spinner";
+} from "@/lib/tradexpo/types"
+import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group"
+import { Spinner } from "../ui/spinner"
 
 type HallFormRow = {
-  key: string;
-  hallName: string;
-  hallTemplateId: string;
-  basicQty: number;
-  professionalQty: number;
-  premiumQty: number;
-};
+  key: string
+  hallName: string
+  hallTemplateId: string
+  basicQty: number
+  professionalQty: number
+  premiumQty: number
+}
 
-type OwnerPick = { id: string; email: string; name: string };
+type OwnerPick = { id: string; email: string; name: string }
 
 function newHallRow(index: number): HallFormRow {
   return {
@@ -60,11 +56,11 @@ function newHallRow(index: number): HallFormRow {
     basicQty: 0,
     professionalQty: 0,
     premiumQty: 0,
-  };
+  }
 }
 
 function hallsToRows(halls: ExpoHall[]): HallFormRow[] {
-  if (halls.length === 0) return [newHallRow(0)];
+  if (halls.length === 0) return [newHallRow(0)]
   return halls.map((h) => ({
     key: h.id,
     hallName: h.hallName,
@@ -72,157 +68,157 @@ function hallsToRows(halls: ExpoHall[]): HallFormRow[] {
     basicQty: h.basicQty,
     professionalQty: h.professionalQty,
     premiumQty: h.premiumQty,
-  }));
+  }))
 }
 
 export type ExpoFormProps = {
-  categories: ExpoCategory[];
-  layoutTemplates: ExpoLayoutTemplate[];
-  hallTemplates: HallTemplate[];
+  categories: ExpoCategory[]
+  layoutTemplates: ExpoLayoutTemplate[]
+  hallTemplates: HallTemplate[]
 } & (
   | { mode: "create" }
   | {
-      mode: "edit";
-      expoId: string;
-      initialExpo: Expo;
-      initialHalls: ExpoHall[];
-      initialOwner: OwnerPick | null;
+      mode: "edit"
+      expoId: string
+      initialExpo: Expo
+      initialHalls: ExpoHall[]
+      initialOwner: OwnerPick | null
     }
-);
+)
 
 export function ExpoForm(props: ExpoFormProps) {
-  const router = useRouter();
-  const isEdit = props.mode === "edit";
+  const router = useRouter()
+  const isEdit = props.mode === "edit"
 
   const [name, setName] = React.useState(() =>
     isEdit ? props.initialExpo.name : "",
-  );
+  )
   const [description, setDescription] = React.useState(() =>
     isEdit ? (props.initialExpo.description ?? "") : "",
-  );
+  )
   const [thumbnailUrl, setThumbnailUrl] = React.useState(() =>
     isEdit ? props.initialExpo.thumbnailUrl : "",
-  );
+  )
   const [expoTemplateId, setExpoTemplateId] = React.useState(() =>
     isEdit ? (props.initialExpo.expoTemplateId ?? "") : "",
-  );
+  )
   const [categoryIds, setCategoryIds] = React.useState<string[]>(() =>
     isEdit ? props.initialExpo.categoryIds : [],
-  );
-  const [categoryQuery, setCategoryQuery] = React.useState("");
+  )
+  const [categoryQuery, setCategoryQuery] = React.useState("")
   const [timezone, setTimezone] = React.useState(() =>
     isEdit ? (props.initialExpo.timezone ?? "Asia/Bangkok") : "Asia/Bangkok",
-  );
+  )
 
   const [startLocal, setStartLocal] = React.useState(() => {
     if (isEdit) {
       if (props.initialExpo.startAt) {
-        return toDatetimeLocalValue(new Date(props.initialExpo.startAt));
+        return toDatetimeLocalValue(new Date(props.initialExpo.startAt))
       }
       return toDatetimeLocalValue(
         new Date(`${props.initialExpo.startDate}T12:00:00`),
-      );
+      )
     }
-    return toDatetimeLocalValue(new Date());
-  });
+    return toDatetimeLocalValue(new Date())
+  })
   const [endLocal, setEndLocal] = React.useState(() => {
     if (isEdit) {
       if (props.initialExpo.endAt) {
-        return toDatetimeLocalValue(new Date(props.initialExpo.endAt));
+        return toDatetimeLocalValue(new Date(props.initialExpo.endAt))
       }
       return toDatetimeLocalValue(
         new Date(`${props.initialExpo.endDate}T12:00:00`),
-      );
+      )
     }
-    const d = new Date();
-    d.setDate(d.getDate() + 3);
-    return toDatetimeLocalValue(d);
-  });
+    const d = new Date()
+    d.setDate(d.getDate() + 3)
+    return toDatetimeLocalValue(d)
+  })
 
   const [ownerQuery, setOwnerQuery] = React.useState(() =>
     isEdit
       ? (props.initialOwner?.email ?? props.initialExpo.ownerEmail ?? "")
       : "",
-  );
-  const [ownerResults, setOwnerResults] = React.useState<OwnerPick[]>([]);
+  )
+  const [ownerResults, setOwnerResults] = React.useState<OwnerPick[]>([])
   const [ownerPick, setOwnerPick] = React.useState<OwnerPick | null>(() =>
     isEdit ? props.initialOwner : null,
-  );
-  const [ownerLoading, setOwnerLoading] = React.useState(false);
+  )
+  const [ownerLoading, setOwnerLoading] = React.useState(false)
 
   const [halls, setHalls] = React.useState<HallFormRow[]>(() =>
     isEdit ? hallsToRows(props.initialHalls) : [newHallRow(0)],
-  );
+  )
 
-  const { uploadFile, isUploading } = useUpload();
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const { uploadFile, isUploading } = useUpload()
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
 
-  const [submitting, setSubmitting] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
+  const [submitting, setSubmitting] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const file = e.target.files?.[0]
+    if (!file) return
 
-    const result = await uploadFile(file, "thumbnail");
+    const result = await uploadFile(file, "thumbnail")
     if (result) {
-      setThumbnailUrl(result.fileUrl);
+      setThumbnailUrl(result.fileUrl)
     }
-  };
+  }
 
   React.useEffect(() => {
-    const q = ownerQuery.trim();
+    const q = ownerQuery.trim()
     if (q.length < 2) {
-      setOwnerResults([]);
-      return;
+      setOwnerResults([])
+      return
     }
     const t = window.setTimeout(async () => {
-      setOwnerLoading(true);
+      setOwnerLoading(true)
       try {
         const res = await fetch(
           `/api/tradexpo/expo-owners/search?q=${encodeURIComponent(q)}`,
-        );
-        const data = (await res.json()) as { users?: OwnerPick[] };
-        setOwnerResults(data.users ?? []);
+        )
+        const data = (await res.json()) as { users?: OwnerPick[] }
+        setOwnerResults(data.users ?? [])
       } catch {
-        setOwnerResults([]);
+        setOwnerResults([])
       } finally {
-        setOwnerLoading(false);
+        setOwnerLoading(false)
       }
-    }, 400);
-    return () => window.clearTimeout(t);
-  }, [ownerQuery]);
+    }, 400)
+    return () => window.clearTimeout(t)
+  }, [ownerQuery])
 
   function toggleCategory(id: string) {
     setCategoryIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
+    )
   }
 
   function addHall() {
-    setHalls((prev) => [...prev, newHallRow(prev.length)]);
+    setHalls((prev) => [...prev, newHallRow(prev.length)])
   }
 
   function removeHall(index: number) {
-    setHalls((prev) => prev.filter((_, i) => i !== index));
+    setHalls((prev) => prev.filter((_, i) => i !== index))
   }
 
   function updateHall(index: number, patch: Partial<HallFormRow>) {
     setHalls((prev) =>
       prev.map((h, i) => (i === index ? { ...h, ...patch } : h)),
-    );
+    )
   }
 
   async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
+    e.preventDefault()
+    setError(null)
     if (!ownerPick) {
-      setError("Search and select an expo owner by email.");
-      return;
+      setError("Search and select an expo owner by email.")
+      return
     }
 
-    const startAt = new Date(startLocal).toISOString();
-    const endAt = new Date(endLocal).toISOString();
+    const startAt = new Date(startLocal).toISOString()
+    const endAt = new Date(endLocal).toISOString()
 
     const payload = {
       name,
@@ -242,43 +238,43 @@ export function ExpoForm(props: ExpoFormProps) {
         professionalQty: h.professionalQty,
         premiumQty: h.premiumQty,
       })),
-    };
+    }
 
-    setSubmitting(true);
+    setSubmitting(true)
     try {
       if (isEdit) {
         const res = await fetch(`/api/tradexpo/expos/${props.expoId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
-        });
-        const data = (await res.json()) as { ok?: boolean; error?: string };
+        })
+        const data = (await res.json()) as { ok?: boolean; error?: string }
         if (!res.ok) {
-          setError(data.error ?? "Could not save expo.");
-          return;
+          setError(data.error ?? "Could not save expo.")
+          return
         }
-        router.push(`/admin/tradexpo/expos/${props.expoId}`);
-        router.refresh();
+        router.push(`/admin/tradexpo/expos/${props.expoId}`)
+        router.refresh()
       } else {
         const res = await fetch("/api/tradexpo/expos", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
-        });
-        const data = (await res.json()) as { id?: string; error?: string };
+        })
+        const data = (await res.json()) as { id?: string; error?: string }
         if (!res.ok) {
-          setError(data.error ?? "Could not create expo.");
-          return;
+          setError(data.error ?? "Could not create expo.")
+          return
         }
         if (data.id) {
-          router.push(`/admin/tradexpo/expos/${data.id}`);
-          router.refresh();
+          router.push(`/admin/tradexpo/expos/${data.id}`)
+          router.refresh()
         }
       }
     } catch {
-      setError("Network error. Please try again.");
+      setError("Network error. Please try again.")
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
   }
 
@@ -287,16 +283,16 @@ export function ExpoForm(props: ExpoFormProps) {
     description.trim().length > 0 &&
     expoTemplateId &&
     categoryIds.length > 0 &&
-    ownerPick !== null;
+    ownerPick !== null
 
   const cancelHref = isEdit
     ? `/admin/tradexpo/expos/${props.expoId}`
-    : "/admin/tradexpo/expos";
+    : "/admin/tradexpo/expos"
   const filteredCategories = React.useMemo(() => {
-    const q = categoryQuery.trim().toLowerCase();
-    if (!q) return props.categories;
-    return props.categories.filter((cat) => cat.name.toLowerCase().includes(q));
-  }, [categoryQuery, props.categories]);
+    const q = categoryQuery.trim().toLowerCase()
+    if (!q) return props.categories
+    return props.categories.filter((cat) => cat.name.toLowerCase().includes(q))
+  }, [categoryQuery, props.categories])
 
   return (
     <form className="space-y-3" onSubmit={onSubmit}>
@@ -367,7 +363,7 @@ export function ExpoForm(props: ExpoFormProps) {
                   onClick={() => fileInputRef.current?.click()}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
-                      fileInputRef.current?.click();
+                      fileInputRef.current?.click()
                     }
                   }}
                 >
@@ -506,8 +502,8 @@ export function ExpoForm(props: ExpoFormProps) {
               id="owner-q"
               value={ownerQuery}
               onChange={(e) => {
-                setOwnerQuery(e.target.value);
-                setOwnerPick(null);
+                setOwnerQuery(e.target.value)
+                setOwnerPick(null)
               }}
               placeholder="Type at least 2 characters…"
               autoComplete="off"
@@ -523,8 +519,8 @@ export function ExpoForm(props: ExpoFormProps) {
                   <button
                     type="button"
                     onClick={() => {
-                      setOwnerPick(u);
-                      setOwnerQuery(u.email);
+                      setOwnerPick(u)
+                      setOwnerQuery(u.email)
                     }}
                     className="w-full rounded-lg border bg-card px-3 py-2 text-left text-sm hover:bg-muted/50"
                   >
@@ -554,8 +550,8 @@ export function ExpoForm(props: ExpoFormProps) {
                 size="sm"
                 className="ml-2 h-7"
                 onClick={() => {
-                  setOwnerPick(null);
-                  setOwnerQuery("");
+                  setOwnerPick(null)
+                  setOwnerQuery("")
                 }}
               >
                 Change
@@ -704,5 +700,5 @@ export function ExpoForm(props: ExpoFormProps) {
         </Button>
       </div>
     </form>
-  );
+  )
 }

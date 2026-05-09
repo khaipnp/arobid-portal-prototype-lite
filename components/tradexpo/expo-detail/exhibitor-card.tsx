@@ -23,6 +23,7 @@ const productFallbackImages = [
 
 type ExhibitorCardProps = {
   exhibitor: ExpoDetailExhibitor
+  onChatClick?: () => void
 }
 
 function Dot() {
@@ -48,7 +49,7 @@ function MetaBadge({
   )
 }
 
-export function ExhibitorCard({ exhibitor }: ExhibitorCardProps) {
+export function ExhibitorCard({ exhibitor, onChatClick }: ExhibitorCardProps) {
   const productImages = productFallbackImages.map((image, index) => ({
     image,
     label: exhibitor.products[index] ?? `Featured product ${index + 1}`,
@@ -68,7 +69,7 @@ export function ExhibitorCard({ exhibitor }: ExhibitorCardProps) {
           {exhibitor.company}
         </h3>
         <HeartIcon
-          className="size-7 fill-[#d1d5db] text-[#d1d5db]"
+          className="size-7 fill-muted text-muted"
           onClick={() => toast("You added the exhibitor to your favorites!")}
         />
       </div>
@@ -138,13 +139,14 @@ export function ExhibitorCard({ exhibitor }: ExhibitorCardProps) {
         <Button
           type="button"
           variant="secondary"
-          className="rounded-full text-foreground text-sm hover:bg-[#eceff3]"
+          className="rounded-full"
+          onClick={onChatClick}
         >
           Chat Now
         </Button>
         <Button
           type="button"
-          className="rounded-full bg-legend text-sm text-white hover:bg-legend-600"
+          className="rounded-full bg-legend text-white hover:bg-legend-600"
         >
           Send RFQ
         </Button>

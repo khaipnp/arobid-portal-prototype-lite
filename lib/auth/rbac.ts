@@ -47,4 +47,3 @@ export async function requireRole(role: AppRole): Promise<string> {
   }
   return userId
 }
-

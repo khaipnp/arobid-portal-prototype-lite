@@ -1,15 +1,15 @@
-import { DEAL_ROOM_CURRENT_USER_ID } from "@/lib/deal-room/constants"
-import type { ChatUser, Conversation, Message } from "@/lib/deal-room/types"
+import { DEAL_ROOM_CURRENT_USER_ID } from "@/lib/deal-room/constants";
+import type { ChatUser, Conversation, Message } from "@/lib/deal-room/types";
 
-const now = new Date()
+const now = new Date();
 
 function isoOffset(minutes: number): string {
-  return new Date(now.getTime() - minutes * 60 * 1000).toISOString()
+  return new Date(now.getTime() - minutes * 60 * 1000).toISOString();
 }
 
 // ─── Current user ─────────────────────────────────────────────────────────────
 
-export const CURRENT_USER_ID = DEAL_ROOM_CURRENT_USER_ID
+export const CURRENT_USER_ID = DEAL_ROOM_CURRENT_USER_ID;
 
 // ─── Users ────────────────────────────────────────────────────────────────────
 
@@ -79,7 +79,7 @@ export const mockChatUsers: ChatUser[] = [
     location: "Da Nang, Vietnam",
     isActive: true,
   },
-]
+];
 
 // ─── Conversations ─────────────────────────────────────────────────────────────
 
@@ -114,7 +114,27 @@ export const mockConversations: Conversation[] = [
     createdAt: isoOffset(1500),
     isReadOnly: false,
   },
-]
+  {
+    id: "conv-004",
+    type: "direct",
+    members: [
+      { userId: "user-current", joinedAt: isoOffset(500), isArchived: false },
+      { userId: "user-sarah", joinedAt: isoOffset(500), isArchived: false },
+    ],
+    createdAt: isoOffset(500),
+    isReadOnly: false,
+  },
+  {
+    id: "conv-005",
+    type: "direct",
+    members: [
+      { userId: "user-current", joinedAt: isoOffset(1000), isArchived: false },
+      { userId: "user-tommy", joinedAt: isoOffset(1000), isArchived: false },
+    ],
+    createdAt: isoOffset(1000),
+    isReadOnly: false,
+  },
+];
 
 // ─── Messages ─────────────────────────────────────────────────────────────────
 
@@ -303,7 +323,37 @@ export const mockMessages: Record<string, Message[]> = {
       isSystemMessage: false,
     },
   ],
-}
+
+  "conv-004": [
+    {
+      id: "msg-004-1",
+      conversationId: "conv-004",
+      senderId: "user-sarah",
+      content:
+        "Hello Khai, I am Sarah from AutoDrive SEA. We are interested in your fleet management AI.",
+      attachments: [],
+      status: "read",
+      sentAt: isoOffset(490),
+      isDeleted: false,
+      isSystemMessage: false,
+    },
+  ],
+
+  "conv-005": [
+    {
+      id: "msg-005-1",
+      conversationId: "conv-005",
+      senderId: "user-tommy",
+      content:
+        "Hey! Tommy from Cloud Connect here. Can we discuss the infrastructure requirements?",
+      attachments: [],
+      status: "read",
+      sentAt: isoOffset(990),
+      isDeleted: false,
+      isSystemMessage: false,
+    },
+  ],
+};
 
 // ─── Initial unread counts (per current user) ─────────────────────────────────
 
@@ -311,4 +361,6 @@ export const mockInitialUnreadCounts: Record<string, number> = {
   "conv-001": 0,
   "conv-002": 2, // msg-002-4 and msg-002-5
   "conv-003": 0,
-}
+  "conv-004": 1,
+  "conv-005": 0,
+};
