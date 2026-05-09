@@ -281,7 +281,7 @@ export async function searchExpoOwnersByEmail(
   const pattern = `%${q}%`
   const rows = (await sql`
     select id, email, name
-    from chat_users
+    from users
     where email ilike ${pattern}
     order by email asc
     limit 15
@@ -417,11 +417,11 @@ export async function getExpoById(expoId: string): Promise<Expo | null> {
   return r ? rowToExpo(r) : null
 }
 
-export async function getChatUserById(
+export async function getUserById(
   userId: string,
 ): Promise<{ id: string; email: string; name: string } | null> {
   const rows = (await sql`
-    select id, email, name from chat_users where id = ${userId} limit 1
+    select id, email, name from users where id = ${userId} limit 1
   `) as { id: string; email: string; name: string }[]
   return rows[0] ?? null
 }
@@ -693,7 +693,7 @@ export async function listExpoDetailExhibitorsByName(
       coalesce(bc.products, '[]'::jsonb) as products
     from seller_booth_registrations sbr
     join expos e on e.id = sbr.expo_id
-    join chat_users cu on cu.id = sbr.user_id
+    join users cu on cu.id = sbr.user_id
     left join exhibitor_categories ec on ec.id = cu.industry_category_id
     left join booth_customizations bc on bc.registration_id = sbr.id
     where e.name ilike ${pattern}

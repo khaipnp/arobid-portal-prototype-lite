@@ -252,7 +252,31 @@ export async function ensurePlatformSchema() {
     where user_id is null
   `;
   await sql`
+    insert into users (id, name, email, company, is_active)
+    select distinct
+      sbr.user_id,
+      sbr.user_id,
+      sbr.user_id || '@placeholder.local',
+      'Unknown',
+      true
+    from seller_booth_registrations sbr
+    left join users u on u.id = sbr.user_id
+    where u.id is null
+  `;
+  await sql`
     alter table seller_booth_registrations alter column user_id set not null
+  `;
+  await sql`
+    do $$
+    begin
+      alter table seller_booth_registrations
+      drop constraint if exists seller_booth_registrations_user_id_fkey;
+      alter table seller_booth_registrations
+      add constraint seller_booth_registrations_user_id_fkey
+      foreign key (user_id) references users(id) on delete cascade;
+    exception
+      when duplicate_object then null;
+    end $$;
   `;
   await sql`
     create index if not exists idx_seller_booth_registrations_user_purchased
@@ -322,6 +346,44 @@ export async function ensurePlatformSchema() {
   `;
 
   await sql`
+    create table if not exists users (
+      id text primary key,
+      name text not null,
+      email text not null,
+      company text not null,
+      industry text,
+      industry_category_id text references exhibitor_categories(id) on delete set null,
+      job_title text,
+      phone text,
+      website text,
+      location text,
+      avatar_url text,
+      is_active boolean not null
+    )
+  `;
+  await sql`alter table users add column if not exists industry text`;
+  await sql`
+    alter table users
+    add column if not exists industry_category_id text
+  `;
+  await sql`
+    do $$
+    begin
+      alter table users
+      add constraint users_industry_category_fk
+      foreign key (industry_category_id)
+      references exhibitor_categories(id)
+      on delete set null;
+    exception
+      when duplicate_object then null;
+    end $$;
+  `;
+  await sql`
+    create index if not exists idx_users_industry_category
+    on users (industry_category_id)
+  `;
+
+  await sql`
     create table if not exists chat_users (
       id text primary key,
       name text not null,
@@ -357,6 +419,91 @@ export async function ensurePlatformSchema() {
   await sql`
     create index if not exists idx_chat_users_industry_category
     on chat_users (industry_category_id)
+  `;
+  await sql`
+    insert into users (
+      id,
+      name,
+      email,
+      company,
+      industry,
+      industry_category_id,
+      job_title,
+      phone,
+      website,
+      location,
+      avatar_url,
+      is_active
+    )
+    select
+      id,
+      name,
+      email,
+      company,
+      industry,
+      industry_category_id,
+      job_title,
+      phone,
+      website,
+      location,
+      avatar_url,
+      is_active
+    from chat_users
+    on conflict (id) do update
+    set
+      name = excluded.name,
+      email = excluded.email,
+      company = excluded.company,
+      industry = excluded.industry,
+      industry_category_id = excluded.industry_category_id,
+      job_title = excluded.job_title,
+      phone = excluded.phone,
+      website = excluded.website,
+      location = excluded.location,
+      avatar_url = excluded.avatar_url,
+      is_active = excluded.is_active
+  `;
+  await sql`
+    insert into users (id, name, email, company, is_active)
+    values (
+      ${CURRENT_USER_ID},
+      'Khai Pham',
+      'khaipham@arobid.com',
+      'Arobid',
+      true
+    )
+    on conflict (id) do nothing
+  `;
+  await sql`
+    insert into chat_users (
+      id,
+      name,
+      email,
+      company,
+      industry,
+      industry_category_id,
+      job_title,
+      phone,
+      website,
+      location,
+      avatar_url,
+      is_active
+    )
+    select
+      id,
+      name,
+      email,
+      company,
+      industry,
+      industry_category_id,
+      job_title,
+      phone,
+      website,
+      location,
+      avatar_url,
+      is_active
+    from users
+    on conflict (id) do nothing
   `;
 
   await sql`
@@ -401,6 +548,30 @@ export async function ensurePlatformSchema() {
       primary key (user_id, conversation_id)
     )
   `;
+  await sql`
+    do $$
+    begin
+      alter table chat_conversation_members
+      drop constraint if exists chat_conversation_members_user_id_fkey;
+      alter table chat_conversation_members
+      add constraint chat_conversation_members_user_id_fkey
+      foreign key (user_id) references users(id) on delete cascade;
+    exception
+      when duplicate_object then null;
+    end $$;
+  `;
+  await sql`
+    do $$
+    begin
+      alter table chat_unread_counts
+      drop constraint if exists chat_unread_counts_user_id_fkey;
+      alter table chat_unread_counts
+      add constraint chat_unread_counts_user_id_fkey
+      foreign key (user_id) references users(id) on delete cascade;
+    exception
+      when duplicate_object then null;
+    end $$;
+  `;
 
   await sql`
     create table if not exists notifications (
@@ -417,6 +588,30 @@ export async function ensurePlatformSchema() {
       created_at timestamptz not null default now(),
       read_at timestamptz
     )
+  `;
+  await sql`
+    insert into users (id, name, email, company, is_active)
+    select distinct
+      n.user_id,
+      n.user_id,
+      n.user_id || '@placeholder.local',
+      'Unknown',
+      true
+    from notifications n
+    left join users u on u.id = n.user_id
+    where u.id is null
+  `;
+  await sql`
+    do $$
+    begin
+      alter table notifications
+      drop constraint if exists notifications_user_id_fkey;
+      alter table notifications
+      add constraint notifications_user_id_fkey
+      foreign key (user_id) references users(id) on delete cascade;
+    exception
+      when duplicate_object then null;
+    end $$;
   `;
 
   await sql`

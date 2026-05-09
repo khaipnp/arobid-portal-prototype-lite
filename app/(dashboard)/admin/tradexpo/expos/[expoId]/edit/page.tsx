@@ -4,7 +4,7 @@ import { ExpoForm } from "@/components/tradexpo/expo-form"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 import { listHallTemplates } from "@/lib/tradexpo/db/hall-templates"
 import {
-  getChatUserById,
+  getUserById,
   getExpoById,
   listExpoCategories,
   listExpoHalls,
@@ -34,7 +34,7 @@ export default async function EditExpoPage({
   )
 
   const initialOwner =
-    expo.ownerUserId != null ? await getChatUserById(expo.ownerUserId) : null
+    expo.ownerUserId != null ? await getUserById(expo.ownerUserId) : null
 
   return (
     <DashboardShell
