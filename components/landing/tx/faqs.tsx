@@ -1,18 +1,18 @@
-"use client";
+"use client"
 
-import { Minus, Plus } from "lucide-react";
-import { useState } from "react";
+import { Minus, Plus } from "lucide-react"
+import { useState } from "react"
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
 
-import { faqs } from "./data";
+import { faqs } from "./data"
 
 type FaqsProps = {
-  defaultOpenFaq?: number;
-};
+  defaultOpenFaq?: number
+}
 
 export function Faqs({ defaultOpenFaq = 1 }: FaqsProps) {
-  const [openFaq, setOpenFaq] = useState(defaultOpenFaq);
+  const [openFaq, setOpenFaq] = useState(defaultOpenFaq)
 
   return (
     <section className="bg-[#f9fafb] px-5 py-16">
@@ -36,7 +36,7 @@ export function Faqs({ defaultOpenFaq = 1 }: FaqsProps) {
         </div>
         <div className="mt-5 space-y-5">
           {faqs.map((faq, index) => {
-            const open = openFaq === index;
+            const open = openFaq === index
             return (
               <button
                 key={faq.question}
@@ -63,10 +63,10 @@ export function Faqs({ defaultOpenFaq = 1 }: FaqsProps) {
                   </span>
                 )}
               </button>
-            );
+            )
           })}
         </div>
       </div>
     </section>
-  );
+  )
 }

@@ -4,29 +4,29 @@ import {
   HeartIcon,
   RocketIcon,
   StarIcon,
-} from "lucide-react";
-import Image from "next/image";
-import type { ReactNode } from "react";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import type { ExpoDetailExhibitor } from "@/lib/tradexpo/db/platform-data";
+} from "lucide-react"
+import Image from "next/image"
+import type { ReactNode } from "react"
+import { toast } from "sonner"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import type { ExpoDetailExhibitor } from "@/lib/tradexpo/db/platform-data"
 
-const asset = (name: string) => `/landing/${name}`;
+const asset = (name: string) => `/landing/${name}`
 
 const productFallbackImages = [
   asset("figma-product-1.png"),
   asset("figma-product-2.png"),
   asset("figma-product-3.png"),
   asset("figma-product-4.png"),
-];
+]
 
 type ExhibitorCardProps = {
-  exhibitor: ExpoDetailExhibitor;
-};
+  exhibitor: ExpoDetailExhibitor
+}
 
 function Dot() {
-  return <span className="text-[#d1d5db]">·</span>;
+  return <span className="text-[#d1d5db]">·</span>
 }
 
 function MetaBadge({
@@ -34,9 +34,9 @@ function MetaBadge({
   icon,
   label,
 }: {
-  className: string;
-  icon?: ReactNode;
-  label: string;
+  className: string
+  icon?: ReactNode
+  label: string
 }) {
   return (
     <span
@@ -45,14 +45,14 @@ function MetaBadge({
       {icon}
       {label}
     </span>
-  );
+  )
 }
 
 export function ExhibitorCard({ exhibitor }: ExhibitorCardProps) {
   const productImages = productFallbackImages.map((image, index) => ({
     image,
     label: exhibitor.products[index] ?? `Featured product ${index + 1}`,
-  }));
+  }))
 
   return (
     <Card className="rounded-xl border-0 bg-white px-5 py-4 shadow-none">
@@ -150,5 +150,5 @@ export function ExhibitorCard({ exhibitor }: ExhibitorCardProps) {
         </Button>
       </div>
     </Card>
-  );
+  )
 }

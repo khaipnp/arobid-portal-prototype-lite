@@ -1,7 +1,7 @@
-import { Play } from "lucide-react";
-import Image from "next/image";
+import { Play } from "lucide-react"
+import Image from "next/image"
 
-import { asset } from "./data";
+import { asset } from "./data"
 
 export function Introduction() {
   return (
@@ -51,5 +51,5 @@ export function Introduction() {
         </div>
       </div>
     </section>
-  );
+  )
 }
