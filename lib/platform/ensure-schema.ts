@@ -382,6 +382,38 @@ export async function ensurePlatformSchema() {
     create index if not exists idx_users_industry_category
     on users (industry_category_id)
   `;
+  await sql`
+    create table if not exists roles (
+      id text primary key,
+      name text not null unique
+    )
+  `;
+  await sql`
+    create table if not exists user_roles (
+      user_id text not null references users(id) on delete cascade,
+      role_id text not null references roles(id) on delete cascade,
+      expo_id text references expos(id) on delete cascade,
+      created_at timestamptz not null default now()
+    )
+  `;
+  await sql`
+    create unique index if not exists uq_user_roles_scope
+    on user_roles (user_id, role_id, coalesce(expo_id, 'global'))
+  `;
+  await sql`
+    create index if not exists idx_user_roles_user
+    on user_roles (user_id)
+  `;
+  await sql`
+    insert into roles (id, name)
+    values
+      ('admin', 'Admin'),
+      ('seller', 'Seller'),
+      ('buyer', 'Buyer'),
+      ('exhibitor', 'Exhibitor')
+    on conflict (id) do update
+    set name = excluded.name
+  `;
 
   await sql`
     create table if not exists chat_users (
@@ -473,6 +505,15 @@ export async function ensurePlatformSchema() {
       true
     )
     on conflict (id) do nothing
+  `;
+  await sql`
+    insert into user_roles (user_id, role_id, expo_id)
+    values
+      (${CURRENT_USER_ID}, 'admin', null),
+      (${CURRENT_USER_ID}, 'seller', null),
+      (${CURRENT_USER_ID}, 'buyer', null),
+      (${CURRENT_USER_ID}, 'exhibitor', null)
+    on conflict do nothing
   `;
   await sql`
     insert into chat_users (
