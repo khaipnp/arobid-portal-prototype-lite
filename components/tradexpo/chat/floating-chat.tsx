@@ -11,10 +11,9 @@ import {
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   InputGroup,
   InputGroupAddon,
@@ -24,6 +23,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import type { ExpoDetailExhibitor } from "@/lib/tradexpo/db/platform-data";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { Spinner } from "@/components/ui/spinner";
 
 type Message = {
   id: string;
@@ -54,6 +54,7 @@ type Props = {
 
 export function FloatingChat({ exhibitor, onClose }: Props) {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [activeExhibitor, setActiveExhibitor] = useState<ChatPartner>({
     id: exhibitor.id,
     name: exhibitor.name,
@@ -71,6 +72,11 @@ export function FloatingChat({ exhibitor, onClose }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const activeMessages = messagesMap[activeExhibitor.id] || [];
+
+  // Prefetch the deal room route to speed up redirection
+  useEffect(() => {
+    router.prefetch("/seller/deal-room");
+  }, [router]);
 
   useEffect(() => {
     setActiveExhibitor({
@@ -235,12 +241,15 @@ export function FloatingChat({ exhibitor, onClose }: Props) {
             variant="ghost"
             size="icon-sm"
             className="rounded-full"
+            disabled={isPending}
             onClick={(e) => {
               e.stopPropagation();
-              router.push("/seller/deal-room");
+              startTransition(() => {
+                router.push("/seller/deal-room");
+              });
             }}
           >
-            <Maximize2Icon className="size-4" />
+            {isPending ? <Spinner /> : <Maximize2Icon className="size-4" />}
           </Button>
           <Button
             variant="ghost"

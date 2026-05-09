@@ -1,9 +1,10 @@
-"use client"
+"use client";
 
 import {
   ArchiveIcon,
   BuildingIcon,
   GlobeIcon,
+  Loader2Icon,
   MailIcon,
   MapPinIcon,
   MessageCircleIcon,
@@ -14,34 +15,35 @@ import {
   SearchIcon,
   SendHorizontalIcon,
   TrashIcon,
-} from "lucide-react"
-import Image from "next/image"
-import { useRouter } from "next/navigation"
-import { useRef, useState } from "react"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+} from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
-} from "@/components/ui/hover-card"
-import { Input } from "@/components/ui/input"
-import { Separator } from "@/components/ui/separator"
-import { Textarea } from "@/components/ui/textarea"
-import type { ChatUser, Conversation, Message } from "@/lib/deal-room/types"
-import { cn } from "@/lib/utils"
+} from "@/components/ui/hover-card";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import type { ChatUser, Conversation, Message } from "@/lib/deal-room/types";
+import { cn } from "@/lib/utils";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-const MAX_ATTACHMENTS_PER_MESSAGE = 5
-const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024
-const MAX_INLINE_IMAGE_SIZE_BYTES = 5 * 1024 * 1024
+const MAX_ATTACHMENTS_PER_MESSAGE = 5;
+const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024;
+const MAX_INLINE_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_FILE_TYPES = new Set([
   "jpg",
   "jpeg",
@@ -54,41 +56,43 @@ const ALLOWED_FILE_TYPES = new Set([
   "docx",
   "csv",
   "xlsx",
-])
-const IMAGE_FILE_TYPES = new Set(["jpg", "jpeg", "png", "webp"])
+]);
+const IMAGE_FILE_TYPES = new Set(["jpg", "jpeg", "png", "webp"]);
 
 type PendingAttachment = {
-  id: string
-  fileName: string
-  fileUrl: string
-  fileSize: number
-  fileType: string
-}
+  id: string;
+  fileName: string;
+  fileUrl: string;
+  fileSize: number;
+  fileType: string;
+};
 
 function isImageAttachment(att: {
-  fileType: string
-  fileUrl: string
+  fileType: string;
+  fileUrl: string;
 }): boolean {
-  return IMAGE_FILE_TYPES.has(att.fileType.toLowerCase()) && att.fileUrl !== "#"
+  return (
+    IMAGE_FILE_TYPES.has(att.fileType.toLowerCase()) && att.fileUrl !== "#"
+  );
 }
 
 function formatRelativeTime(isoStr: string): string {
-  const diffMs = Date.now() - new Date(isoStr).getTime()
-  const diffMin = Math.floor(diffMs / 60_000)
-  const diffHr = Math.floor(diffMin / 60)
-  const diffDay = Math.floor(diffHr / 24)
+  const diffMs = Date.now() - new Date(isoStr).getTime();
+  const diffMin = Math.floor(diffMs / 60_000);
+  const diffHr = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHr / 24);
 
-  if (diffMin < 1) return "just now"
-  if (diffMin < 60) return `${diffMin}m ago`
-  if (diffHr < 24) return `${diffHr}h ago`
-  if (diffDay < 7) return `${diffDay}d ago`
-  return new Date(isoStr).toLocaleDateString()
+  if (diffMin < 1) return "just now";
+  if (diffMin < 60) return `${diffMin}m ago`;
+  if (diffHr < 24) return `${diffHr}h ago`;
+  if (diffDay < 7) return `${diffDay}d ago`;
+  return new Date(isoStr).toLocaleDateString();
 }
 
 function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function getConversationDisplayName(
@@ -96,26 +100,26 @@ function getConversationDisplayName(
   users: ChatUser[],
   currentUserId: string,
 ): string {
-  const otherId = conv.members.find((m) => m.userId !== currentUserId)?.userId
-  return users.find((u) => u.id === otherId)?.name ?? "Unknown User"
+  const otherId = conv.members.find((m) => m.userId !== currentUserId)?.userId;
+  return users.find((u) => u.id === otherId)?.name ?? "Unknown User";
 }
 
 function getLastMessage(
   messages: Message[],
 ): { preview: string; sentAt: string } | null {
-  const last = messages.at(-1)
-  if (!last) return null
-  let preview: string
+  const last = messages.at(-1);
+  if (!last) return null;
+  let preview: string;
   if (last.isDeleted) {
-    preview = "This message was deleted."
+    preview = "This message was deleted.";
   } else if (last.isSystemMessage) {
-    preview = last.content
+    preview = last.content;
   } else if (last.attachments.length > 0 && !last.content) {
-    preview = `📎 ${last.attachments[0].fileName}`
+    preview = `📎 ${last.attachments[0].fileName}`;
   } else {
-    preview = last.content
+    preview = last.content;
   }
-  return { preview, sentAt: last.sentAt }
+  return { preview, sentAt: last.sentAt };
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -126,25 +130,25 @@ function ConversationAvatar({
   currentUserId,
   size = "default",
 }: {
-  conv: Conversation
-  users: ChatUser[]
-  currentUserId: string
-  size?: "sm" | "default"
+  conv: Conversation;
+  users: ChatUser[];
+  currentUserId: string;
+  size?: "sm" | "default";
 }) {
-  const otherId = conv.members.find((m) => m.userId !== currentUserId)?.userId
-  const other = users.find((u) => u.id === otherId)
+  const otherId = conv.members.find((m) => m.userId !== currentUserId)?.userId;
+  const other = users.find((u) => u.id === otherId);
   const initials = other?.name
     .split(" ")
     .map((w) => w[0])
     .slice(0, 2)
     .join("")
-    .toUpperCase()
+    .toUpperCase();
 
   return (
     <Avatar size={size === "sm" ? "sm" : "default"}>
       <AvatarFallback>{initials ?? "?"}</AvatarFallback>
     </Avatar>
-  )
+  );
 }
 
 function UserHoverCard({
@@ -153,17 +157,17 @@ function UserHoverCard({
   children,
   onMessageClick,
 }: {
-  user: ChatUser
-  side?: "top" | "right" | "bottom" | "left"
-  children: React.ReactNode
-  onMessageClick?: () => void
+  user: ChatUser;
+  side?: "top" | "right" | "bottom" | "left";
+  children: React.ReactNode;
+  onMessageClick?: () => void;
 }) {
   const initials = user.name
     .split(" ")
     .map((w) => w[0])
     .slice(0, 2)
     .join("")
-    .toUpperCase()
+    .toUpperCase();
 
   return (
     <HoverCard openDelay={400} closeDelay={150}>
@@ -236,7 +240,7 @@ function UserHoverCard({
         )}
       </HoverCardContent>
     </HoverCard>
-  )
+  );
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -249,115 +253,144 @@ export function DealRoomManager({
   initialUnreadCounts,
   currentUserId,
 }: {
-  initialConversationId?: string
-  initialUsers: ChatUser[]
-  initialConversations: Conversation[]
-  initialMessagesMap: Record<string, Message[]>
-  initialUnreadCounts: Record<string, number>
-  currentUserId: string
+  initialConversationId?: string;
+  initialUsers: ChatUser[];
+  initialConversations: Conversation[];
+  initialMessagesMap: Record<string, Message[]>;
+  initialUnreadCounts: Record<string, number>;
+  currentUserId: string;
 }) {
-  const router = useRouter()
+  const router = useRouter();
 
   // ── State ──
   const [conversations, setConversations] = useState<Conversation[]>(() =>
     structuredClone(initialConversations),
-  )
+  );
   const [messagesMap, setMessagesMap] = useState<Record<string, Message[]>>(
     () => structuredClone(initialMessagesMap),
-  )
-  const [users] = useState<ChatUser[]>(initialUsers)
+  );
+  const [users] = useState<ChatUser[]>(initialUsers);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>(
     () => ({ ...initialUnreadCounts }),
-  )
+  );
   const [activeConversationId, setActiveConversationId] = useState<
     string | null
-  >(initialConversationId ?? null)
+  >(initialConversationId ?? null);
 
-  const [inboxSearch, setInboxSearch] = useState("")
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+
+  const [inboxSearch, setInboxSearch] = useState("");
   const [inboxFilter, setInboxFilter] = useState<"active" | "archived">(
     "active",
-  )
-  const [composerValue, setComposerValue] = useState("")
+  );
+  const [composerValue, setComposerValue] = useState("");
   const [pendingAttachments, setPendingAttachments] = useState<
     PendingAttachment[]
-  >([])
-  const [composerError, setComposerError] = useState<string | null>(null)
-  const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
-  const [editingContent, setEditingContent] = useState("")
+  >([]);
+  const [composerError, setComposerError] = useState<string | null>(null);
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editingContent, setEditingContent] = useState("");
 
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // ── Derived ──
   const activeConversation =
-    conversations.find((c) => c.id === activeConversationId) ?? null
+    conversations.find((c) => c.id === activeConversationId) ?? null;
   const activeMessages = activeConversationId
     ? (messagesMap[activeConversationId] ?? [])
-    : []
+    : [];
+
+  useEffect(() => {
+    async function fetchMessages() {
+      if (!activeConversationId) return;
+      if (messagesMap[activeConversationId]) return; // Already loaded
+
+      setIsLoadingMessages(true);
+      try {
+        const res = await fetch(
+          `/api/deal-room/conversations/${activeConversationId}/messages`,
+        );
+        const payload = await res.json();
+        if (payload.messages) {
+          setMessagesMap((prev) => ({
+            ...prev,
+            [activeConversationId]: payload.messages,
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to fetch messages", err);
+      } finally {
+        setIsLoadingMessages(false);
+      }
+    }
+    fetchMessages();
+  }, [activeConversationId, messagesMap]);
 
   const visibleConversations = conversations
+
     .filter((c) => {
-      const myMember = c.members.find((m) => m.userId === currentUserId)
-      if (!myMember) return false
-      if (inboxFilter === "active" && myMember.isArchived) return false
-      if (inboxFilter === "archived" && !myMember.isArchived) return false
-      if (!inboxSearch) return true
-      const name = getConversationDisplayName(c, users, currentUserId)
-      const otherId = c.members.find((m) => m.userId !== currentUserId)?.userId
-      const otherUser = users.find((u) => u.id === otherId)
-      const query = inboxSearch.toLowerCase()
+      const myMember = c.members.find((m) => m.userId === currentUserId);
+      if (!myMember) return false;
+      if (inboxFilter === "active" && myMember.isArchived) return false;
+      if (inboxFilter === "archived" && !myMember.isArchived) return false;
+      if (!inboxSearch) return true;
+      const name = getConversationDisplayName(c, users, currentUserId);
+      const otherId = c.members.find((m) => m.userId !== currentUserId)?.userId;
+      const otherUser = users.find((u) => u.id === otherId);
+      const query = inboxSearch.toLowerCase();
       return (
         name.toLowerCase().includes(query) ||
         (otherUser?.company.toLowerCase().includes(query) ?? false)
-      )
+      );
     })
     .sort((a, b) => {
-      const aTime = messagesMap[a.id]?.at(-1)?.sentAt ?? a.createdAt
-      const bTime = messagesMap[b.id]?.at(-1)?.sentAt ?? b.createdAt
-      return new Date(bTime).getTime() - new Date(aTime).getTime()
-    })
+      const aTime = a.lastMessageAt ?? a.createdAt;
+      const bTime = b.lastMessageAt ?? b.createdAt;
+      return new Date(bTime).getTime() - new Date(aTime).getTime();
+    });
 
-  const totalUnread = Object.values(unreadCounts).reduce((s, n) => s + n, 0)
+  const totalUnread = Object.values(unreadCounts).reduce((s, n) => s + n, 0);
 
   // ── Handlers ──
   function selectConversation(id: string) {
-    setActiveConversationId(id)
-    setUnreadCounts((prev) => ({ ...prev, [id]: 0 }))
-    setComposerValue("")
-    setPendingAttachments([])
-    setComposerError(null)
-    setEditingMessageId(null)
-    router.push(`/seller/deal-room/${id}`, { scroll: false })
+    setActiveConversationId(id);
+    setUnreadCounts((prev) => ({ ...prev, [id]: 0 }));
+    setComposerValue("");
+    setPendingAttachments([]);
+    setComposerError(null);
+    setEditingMessageId(null);
+    router.push(`/seller/deal-room/${id}`, { scroll: false });
   }
 
   async function handleSelectAttachments(
     event: React.ChangeEvent<HTMLInputElement>,
   ) {
-    const files = Array.from(event.target.files ?? [])
-    if (files.length === 0) return
+    const files = Array.from(event.target.files ?? []);
+    if (files.length === 0) return;
 
     async function toDataUrl(file: File): Promise<string> {
       return await new Promise((resolve, reject) => {
-        const reader = new FileReader()
+        const reader = new FileReader();
         reader.onload = () =>
-          resolve(typeof reader.result === "string" ? reader.result : "#")
-        reader.onerror = () => reject(new Error("Failed to read file"))
-        reader.readAsDataURL(file)
-      })
+          resolve(typeof reader.result === "string" ? reader.result : "#");
+        reader.onerror = () => reject(new Error("Failed to read file"));
+        reader.readAsDataURL(file);
+      });
     }
 
-    setComposerError(null)
-    const accepted: PendingAttachment[] = []
+    setComposerError(null);
+    const accepted: PendingAttachment[] = [];
     for (const file of files) {
-      const ext = file.name.split(".").pop()?.toLowerCase() ?? ""
+      const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
       if (!ALLOWED_FILE_TYPES.has(ext)) {
         setComposerError(
           "File type not supported. Allowed: JPG, JPEG, PNG, WEBP, MP4, PDF, MD, DOC, DOCX, CSV, XLSX.",
-        )
-        continue
+        );
+        continue;
       }
       if (file.size > MAX_FILE_SIZE_BYTES) {
-        setComposerError("File too large. Maximum file size is 20 MB.")
-        continue
+        setComposerError("File too large. Maximum file size is 20 MB.");
+        continue;
       }
       if (
         IMAGE_FILE_TYPES.has(ext) &&
@@ -365,43 +398,43 @@ export function DealRoomManager({
       ) {
         setComposerError(
           "Image too large to preview. Maximum preview size is 5 MB.",
-        )
-        continue
+        );
+        continue;
       }
-      const fileUrl = IMAGE_FILE_TYPES.has(ext) ? await toDataUrl(file) : "#"
+      const fileUrl = IMAGE_FILE_TYPES.has(ext) ? await toDataUrl(file) : "#";
       accepted.push({
         id: `pending-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         fileName: file.name,
         fileUrl,
         fileSize: file.size,
         fileType: ext,
-      })
+      });
     }
     setPendingAttachments((prev) => {
       const availableSlots = Math.max(
         MAX_ATTACHMENTS_PER_MESSAGE - prev.length,
         0,
-      )
+      );
       if (accepted.length > availableSlots) {
-        setComposerError("Maximum 5 files per message.")
+        setComposerError("Maximum 5 files per message.");
       }
-      return [...prev, ...accepted.slice(0, availableSlots)]
-    })
-    event.target.value = ""
+      return [...prev, ...accepted.slice(0, availableSlots)];
+    });
+    event.target.value = "";
   }
 
   function handleRemovePendingAttachment(id: string) {
-    setPendingAttachments((prev) => prev.filter((att) => att.id !== id))
+    setPendingAttachments((prev) => prev.filter((att) => att.id !== id));
   }
 
   async function handleSendMessage() {
-    const text = composerValue.trim()
-    if (!activeConversationId) return
+    const text = composerValue.trim();
+    if (!activeConversationId) return;
     if (!text && pendingAttachments.length === 0) {
-      setComposerError("Message cannot be empty.")
-      return
+      setComposerError("Message cannot be empty.");
+      return;
     }
-    setComposerError(null)
+    setComposerError(null);
 
     const newMsg: Message = {
       id: `msg-${Date.now()}`,
@@ -430,7 +463,7 @@ export function DealRoomManager({
       sentAt: new Date().toISOString(),
       isDeleted: false,
       isSystemMessage: false,
-    }
+    };
 
     try {
       const response = await fetch(
@@ -447,15 +480,15 @@ export function DealRoomManager({
             sentAt: newMsg.sentAt,
           }),
         },
-      )
+      );
       if (!response.ok) {
-        setComposerError("Unable to send message.")
-        return
+        setComposerError("Unable to send message.");
+        return;
       }
       setMessagesMap((prev) => ({
         ...prev,
         [activeConversationId]: [...(prev[activeConversationId] ?? []), newMsg],
-      }))
+      }));
       setConversations((prev) =>
         prev.map((conv) =>
           conv.id === activeConversationId
@@ -469,19 +502,19 @@ export function DealRoomManager({
               }
             : conv,
         ),
-      )
-      setComposerValue("")
-      setPendingAttachments([])
+      );
+      setComposerValue("");
+      setPendingAttachments([]);
     } catch {
-      setComposerError("Unable to send message.")
+      setComposerError("Unable to send message.");
     }
   }
 
   async function handleSaveEdit() {
-    if (!activeConversationId || !editingMessageId) return
-    const text = editingContent.trim()
-    if (!text) return
-    const editedAt = new Date().toISOString()
+    if (!activeConversationId || !editingMessageId) return;
+    const text = editingContent.trim();
+    if (!text) return;
+    const editedAt = new Date().toISOString();
     try {
       const response = await fetch(
         `/api/deal-room/conversations/${activeConversationId}/messages/${editingMessageId}`,
@@ -490,36 +523,36 @@ export function DealRoomManager({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ content: text, editedAt }),
         },
-      )
-      if (!response.ok) return
+      );
+      if (!response.ok) return;
       setMessagesMap((prev) => ({
         ...prev,
         [activeConversationId]:
           prev[activeConversationId]?.map((m) =>
             m.id === editingMessageId ? { ...m, content: text, editedAt } : m,
           ) ?? [],
-      }))
-      setEditingMessageId(null)
+      }));
+      setEditingMessageId(null);
     } catch {
       // keep editing state to let user retry
     }
   }
 
   async function handleDeleteMessage(id: string) {
-    if (!activeConversationId) return
+    if (!activeConversationId) return;
     try {
       const response = await fetch(
         `/api/deal-room/conversations/${activeConversationId}/messages/${id}`,
         { method: "DELETE" },
-      )
-      if (!response.ok) return
+      );
+      if (!response.ok) return;
       setMessagesMap((prev) => ({
         ...prev,
         [activeConversationId]:
           prev[activeConversationId]?.map((m) =>
             m.id === id ? { ...m, isDeleted: true, attachments: [] } : m,
           ) ?? [],
-      }))
+      }));
     } catch {
       // no-op
     }
@@ -534,8 +567,8 @@ export function DealRoomManager({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ userId: currentUserId }),
         },
-      )
-      if (!response.ok) return
+      );
+      if (!response.ok) return;
       setConversations((prev) =>
         prev.map((c) =>
           c.id === id
@@ -547,10 +580,10 @@ export function DealRoomManager({
               }
             : c,
         ),
-      )
+      );
       if (activeConversationId === id) {
-        setActiveConversationId(null)
-        router.push("/seller/deal-room", { scroll: false })
+        setActiveConversationId(null);
+        router.push("/seller/deal-room", { scroll: false });
       }
     } catch {
       // no-op
@@ -624,10 +657,9 @@ export function DealRoomManager({
                 conv,
                 users,
                 currentUserId,
-              )
-              const lastMsg = getLastMessage(messagesMap[conv.id] ?? [])
-              const unread = unreadCounts[conv.id] ?? 0
-              const isActive = conv.id === activeConversationId
+              );
+              const unread = unreadCounts[conv.id] ?? 0;
+              const isActive = conv.id === activeConversationId;
 
               return (
                 <button
@@ -656,17 +688,15 @@ export function DealRoomManager({
                       >
                         {displayName}
                       </span>
-                      {lastMsg && (
+                      {conv.lastMessageAt && (
                         <span className="shrink-0 text-muted-foreground text-xs">
-                          {formatRelativeTime(lastMsg.sentAt)}
+                          {formatRelativeTime(conv.lastMessageAt)}
                         </span>
                       )}
                     </div>
                     <div className="mt-0.5 flex items-center justify-between gap-1">
                       <span className="truncate text-muted-foreground text-xs">
-                        {lastMsg
-                          ? lastMsg.preview.slice(0, 60)
-                          : "No messages yet"}
+                        {conv.lastMessage || "No messages yet"}
                       </span>
                       {unread > 0 && (
                         <Badge className="h-4 min-w-4 shrink-0 rounded-full px-1 text-xs">
@@ -676,7 +706,7 @@ export function DealRoomManager({
                     </div>
                   </div>
                 </button>
-              )
+              );
             })
           )}
         </div>
@@ -692,8 +722,8 @@ export function DealRoomManager({
                 if (activeConversation.type === "direct") {
                   const otherId = activeConversation.members.find(
                     (m) => m.userId !== currentUserId,
-                  )?.userId
-                  const other = users.find((u) => u.id === otherId)
+                  )?.userId;
+                  const other = users.find((u) => u.id === otherId);
                   if (other) {
                     return (
                       <UserHoverCard user={other} side="bottom">
@@ -717,7 +747,7 @@ export function DealRoomManager({
                           </div>
                         </button>
                       </UserHoverCard>
-                    )
+                    );
                   }
                 }
                 return (
@@ -741,7 +771,7 @@ export function DealRoomManager({
                       </p>
                     </div>
                   </div>
-                )
+                );
               })()}
             </div>
             <DropdownMenu>
@@ -765,255 +795,260 @@ export function DealRoomManager({
 
           {/* Messages area */}
           <div className="flex-1 space-y-1 overflow-y-auto px-4 py-4">
-            {activeMessages.length === 0 && (
+            {isLoadingMessages ? (
+              <div className="flex h-full items-center justify-center">
+                <Loader2Icon className="size-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : activeMessages.length === 0 ? (
               <div className="flex h-full items-center justify-center">
                 <p className="text-muted-foreground text-sm">
                   No messages yet. Say hello!
                 </p>
               </div>
-            )}
-            {activeMessages.map((msg, idx) => {
-              const isOwn = msg.senderId === currentUserId
-              const sender = users.find((u) => u.id === msg.senderId)
-              const prevMsg = activeMessages[idx - 1]
-              const showSenderName =
-                !isOwn &&
-                !msg.isSystemMessage &&
-                msg.senderId !== prevMsg?.senderId
+            ) : (
+              activeMessages.map((msg, idx) => {
+                const isOwn = msg.senderId === currentUserId;
+                const sender = users.find((u) => u.id === msg.senderId);
+                const prevMsg = activeMessages[idx - 1];
+                const showSenderName =
+                  !isOwn &&
+                  !msg.isSystemMessage &&
+                  msg.senderId !== prevMsg?.senderId;
 
-              const sentMs = new Date(msg.sentAt).getTime()
-              const isEditable =
-                isOwn &&
-                !msg.isDeleted &&
-                !msg.isSystemMessage &&
-                Date.now() - sentMs < 15 * 60 * 1000
+                const sentMs = new Date(msg.sentAt).getTime();
+                const isEditable =
+                  isOwn &&
+                  !msg.isDeleted &&
+                  !msg.isSystemMessage &&
+                  Date.now() - sentMs < 15 * 60 * 1000;
 
-              // System message
-              if (msg.isSystemMessage) {
-                return (
-                  <div key={msg.id} className="flex justify-center py-1">
-                    <span className="rounded-full bg-muted/60 px-3 py-0.5 text-muted-foreground text-xs italic">
-                      {msg.content}
-                    </span>
-                  </div>
-                )
-              }
-
-              return (
-                <div
-                  key={msg.id}
-                  className={cn(
-                    "flex items-end gap-2",
-                    isOwn ? "justify-end" : "justify-start",
-                    idx > 0 &&
-                      activeMessages[idx - 1].senderId !== msg.senderId &&
-                      "mt-3",
-                  )}
-                >
-                  {/* Other's avatar */}
-                  {!isOwn && (
-                    <div className="mb-4 shrink-0">
-                      {sender ? (
-                        <UserHoverCard user={sender} side="right">
-                          <button type="button" className="cursor-pointer">
-                            <Avatar size="sm">
-                              <AvatarFallback>
-                                {sender.name
-                                  .split(" ")
-                                  .map((w) => w[0])
-                                  .slice(0, 2)
-                                  .join("")
-                                  .toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                          </button>
-                        </UserHoverCard>
-                      ) : (
-                        <Avatar size="sm">
-                          <AvatarFallback>?</AvatarFallback>
-                        </Avatar>
-                      )}
+                // System message
+                if (msg.isSystemMessage) {
+                  return (
+                    <div key={msg.id} className="flex justify-center py-1">
+                      <span className="rounded-full bg-muted/60 px-3 py-0.5 text-muted-foreground text-xs italic">
+                        {msg.content}
+                      </span>
                     </div>
-                  )}
+                  );
+                }
 
+                return (
                   <div
+                    key={msg.id}
                     className={cn(
-                      "flex max-w-[60%] flex-col gap-0.5",
-                      isOwn ? "items-end" : "items-start",
+                      "flex items-end gap-2",
+                      isOwn ? "justify-end" : "justify-start",
+                      idx > 0 &&
+                        activeMessages[idx - 1].senderId !== msg.senderId &&
+                        "mt-3",
                     )}
                   >
-                    {showSenderName && sender && (
-                      <UserHoverCard user={sender} side="right">
-                        <button
-                          type="button"
-                          className="ml-1 cursor-pointer text-muted-foreground text-xs hover:text-foreground hover:underline"
-                        >
-                          {sender.name}
-                        </button>
-                      </UserHoverCard>
+                    {/* Other's avatar */}
+                    {!isOwn && (
+                      <div className="mb-4 shrink-0">
+                        {sender ? (
+                          <UserHoverCard user={sender} side="right">
+                            <button type="button" className="cursor-pointer">
+                              <Avatar size="sm">
+                                <AvatarFallback>
+                                  {sender.name
+                                    .split(" ")
+                                    .map((w) => w[0])
+                                    .slice(0, 2)
+                                    .join("")
+                                    .toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                            </button>
+                          </UserHoverCard>
+                        ) : (
+                          <Avatar size="sm">
+                            <AvatarFallback>?</AvatarFallback>
+                          </Avatar>
+                        )}
+                      </div>
                     )}
 
-                    {/* Editing state */}
-                    {editingMessageId === msg.id ? (
-                      <div className="flex w-72 flex-col gap-2">
-                        <Textarea
-                          value={editingContent}
-                          onChange={(e) => setEditingContent(e.target.value)}
-                          className="min-h-0 resize-none py-1.5 text-sm"
-                          rows={3}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" && !e.shiftKey) {
-                              e.preventDefault()
-                              handleSaveEdit()
-                            }
-                            if (e.key === "Escape") setEditingMessageId(null)
-                          }}
-                          autoFocus
-                        />
-                        <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="h-7 text-xs"
-                            onClick={() => setEditingMessageId(null)}
+                    <div
+                      className={cn(
+                        "flex max-w-[60%] flex-col gap-0.5",
+                        isOwn ? "items-end" : "items-start",
+                      )}
+                    >
+                      {showSenderName && sender && (
+                        <UserHoverCard user={sender} side="right">
+                          <button
+                            type="button"
+                            className="ml-1 cursor-pointer text-muted-foreground text-xs hover:text-foreground hover:underline"
                           >
-                            Cancel
-                          </Button>
-                          <Button
-                            size="sm"
-                            className="h-7 text-xs"
-                            onClick={handleSaveEdit}
-                          >
-                            Save
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div
-                        className={cn(
-                          "group relative rounded-2xl px-3 py-2 text-sm",
-                          isOwn
-                            ? "rounded-br-sm bg-primary text-primary-foreground"
-                            : "rounded-bl-sm bg-muted text-foreground",
-                          msg.isDeleted && "italic opacity-60",
-                        )}
-                      >
-                        {msg.isDeleted ? (
-                          <span>This message was deleted.</span>
-                        ) : (
-                          <>
-                            <p className="whitespace-pre-wrap leading-relaxed">
-                              {msg.content}
-                            </p>
-                            {msg.attachments.length > 0 && (
-                              <div className="mt-2 flex flex-col gap-1.5">
-                                {msg.attachments.map((att) => (
-                                  <div key={att.id}>
-                                    {isImageAttachment(att) ? (
-                                      <a
-                                        href={att.fileUrl}
-                                        target="_blank"
-                                        rel="noreferrer noopener"
-                                        className={cn(
-                                          "block overflow-hidden rounded-lg border",
-                                          isOwn
-                                            ? "border-primary-foreground/30"
-                                            : "border-border/70",
-                                        )}
-                                      >
-                                        <Image
-                                          src={att.fileUrl}
-                                          alt={att.fileName}
-                                          width={360}
-                                          height={220}
-                                          unoptimized
-                                          className="h-auto max-h-64 w-full max-w-72 object-cover"
-                                        />
-                                      </a>
-                                    ) : (
-                                      <div
-                                        className={cn(
-                                          "flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs",
-                                          isOwn
-                                            ? "bg-primary-foreground/20"
-                                            : "bg-background/60",
-                                        )}
-                                      >
-                                        <PaperclipIcon className="size-3.5 shrink-0" />
-                                        <span className="min-w-0 truncate">
-                                          {att.fileName}
-                                        </span>
-                                        <span className="shrink-0 opacity-70">
-                                          {formatFileSize(att.fileSize)}
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                          </>
-                        )}
+                            {sender.name}
+                          </button>
+                        </UserHoverCard>
+                      )}
 
-                        {/* Hover actions (own messages only) */}
-                        {isOwn && !msg.isDeleted && (
-                          <div className="absolute -top-7 right-0 hidden items-center gap-0.5 rounded-full border bg-popover px-1 py-0.5 shadow-xs group-hover:flex">
-                            {isEditable && (
+                      {/* Editing state */}
+                      {editingMessageId === msg.id ? (
+                        <div className="flex w-72 flex-col gap-2">
+                          <Textarea
+                            value={editingContent}
+                            onChange={(e) => setEditingContent(e.target.value)}
+                            className="min-h-0 resize-none py-1.5 text-sm"
+                            rows={3}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" && !e.shiftKey) {
+                                e.preventDefault();
+                                handleSaveEdit();
+                              }
+                              if (e.key === "Escape") setEditingMessageId(null);
+                            }}
+                            autoFocus
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 text-xs"
+                              onClick={() => setEditingMessageId(null)}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="h-7 text-xs"
+                              onClick={handleSaveEdit}
+                            >
+                              Save
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div
+                          className={cn(
+                            "group relative rounded-2xl px-3 py-2 text-sm",
+                            isOwn
+                              ? "rounded-br-sm bg-primary text-primary-foreground"
+                              : "rounded-bl-sm bg-muted text-foreground",
+                            msg.isDeleted && "italic opacity-60",
+                          )}
+                        >
+                          {msg.isDeleted ? (
+                            <span>This message was deleted.</span>
+                          ) : (
+                            <>
+                              <p className="whitespace-pre-wrap leading-relaxed">
+                                {msg.content}
+                              </p>
+                              {msg.attachments.length > 0 && (
+                                <div className="mt-2 flex flex-col gap-1.5">
+                                  {msg.attachments.map((att) => (
+                                    <div key={att.id}>
+                                      {isImageAttachment(att) ? (
+                                        <a
+                                          href={att.fileUrl}
+                                          target="_blank"
+                                          rel="noreferrer noopener"
+                                          className={cn(
+                                            "block overflow-hidden rounded-lg border",
+                                            isOwn
+                                              ? "border-primary-foreground/30"
+                                              : "border-border/70",
+                                          )}
+                                        >
+                                          <Image
+                                            src={att.fileUrl}
+                                            alt={att.fileName}
+                                            width={360}
+                                            height={220}
+                                            unoptimized
+                                            className="h-auto max-h-64 w-full max-w-72 object-cover"
+                                          />
+                                        </a>
+                                      ) : (
+                                        <div
+                                          className={cn(
+                                            "flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs",
+                                            isOwn
+                                              ? "bg-primary-foreground/20"
+                                              : "bg-background/60",
+                                          )}
+                                        >
+                                          <PaperclipIcon className="size-3.5 shrink-0" />
+                                          <span className="min-w-0 truncate">
+                                            {att.fileName}
+                                          </span>
+                                          <span className="shrink-0 opacity-70">
+                                            {formatFileSize(att.fileSize)}
+                                          </span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </>
+                          )}
+
+                          {/* Hover actions (own messages only) */}
+                          {isOwn && !msg.isDeleted && (
+                            <div className="absolute -top-7 right-0 hidden items-center gap-0.5 rounded-full border bg-popover px-1 py-0.5 shadow-xs group-hover:flex">
+                              {isEditable && (
+                                <Button
+                                  size="icon-sm"
+                                  variant="ghost"
+                                  className="size-6"
+                                  onClick={() => {
+                                    setEditingMessageId(msg.id);
+                                    setEditingContent(msg.content);
+                                  }}
+                                >
+                                  <PencilIcon className="size-3" />
+                                  <span className="sr-only">Edit</span>
+                                </Button>
+                              )}
                               <Button
                                 size="icon-sm"
                                 variant="ghost"
-                                className="size-6"
-                                onClick={() => {
-                                  setEditingMessageId(msg.id)
-                                  setEditingContent(msg.content)
-                                }}
+                                className="size-6 text-destructive hover:text-destructive"
+                                onClick={() => handleDeleteMessage(msg.id)}
                               >
-                                <PencilIcon className="size-3" />
-                                <span className="sr-only">Edit</span>
+                                <TrashIcon className="size-3" />
+                                <span className="sr-only">Delete</span>
                               </Button>
-                            )}
-                            <Button
-                              size="icon-sm"
-                              variant="ghost"
-                              className="size-6 text-destructive hover:text-destructive"
-                              onClick={() => handleDeleteMessage(msg.id)}
-                            >
-                              <TrashIcon className="size-3" />
-                              <span className="sr-only">Delete</span>
-                            </Button>
-                          </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Timestamp + meta */}
+                      <div className="flex items-center gap-1 px-1">
+                        <span className="text-muted-foreground text-xs">
+                          {formatRelativeTime(msg.sentAt)}
+                        </span>
+                        {msg.editedAt && (
+                          <span className="text-muted-foreground text-xs">
+                            · Edited
+                          </span>
+                        )}
+                        {isOwn && !msg.isDeleted && (
+                          <span className="text-muted-foreground text-xs">
+                            ·{" "}
+                            {msg.status === "read"
+                              ? "Read"
+                              : msg.status === "delivered"
+                                ? "Delivered"
+                                : "Sent"}
+                          </span>
                         )}
                       </div>
-                    )}
-
-                    {/* Timestamp + meta */}
-                    <div className="flex items-center gap-1 px-1">
-                      <span className="text-muted-foreground text-xs">
-                        {formatRelativeTime(msg.sentAt)}
-                      </span>
-                      {msg.editedAt && (
-                        <span className="text-muted-foreground text-xs">
-                          · Edited
-                        </span>
-                      )}
-                      {isOwn && !msg.isDeleted && (
-                        <span className="text-muted-foreground text-xs">
-                          ·{" "}
-                          {msg.status === "read"
-                            ? "Read"
-                            : msg.status === "delivered"
-                              ? "Delivered"
-                              : "Sent"}
-                        </span>
-                      )}
                     </div>
-                  </div>
 
-                  {/* Own avatar placeholder for alignment */}
-                  {isOwn && <div className="mb-4 size-7 shrink-0" />}
-                </div>
-              )
-            })}
+                    {/* Own avatar placeholder for alignment */}
+                    {isOwn && <div className="mb-4 size-7 shrink-0" />}
+                  </div>
+                );
+              })
+            )}
             <div ref={messagesEndRef} />
           </div>
 
@@ -1060,8 +1095,8 @@ export function DealRoomManager({
                   onChange={(e) => setComposerValue(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault()
-                      handleSendMessage()
+                      e.preventDefault();
+                      handleSendMessage();
                     }
                   }}
                 />
@@ -1100,5 +1135,5 @@ export function DealRoomManager({
         </div>
       )}
     </div>
-  )
+  );
 }
