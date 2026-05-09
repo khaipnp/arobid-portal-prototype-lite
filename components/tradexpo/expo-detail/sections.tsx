@@ -6,11 +6,11 @@ import {
   HomeIcon,
   RadioIcon,
   SendIcon,
-} from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
+} from "lucide-react"
+import Image from "next/image"
+import Link from "next/link"
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
 
 import {
   asset,
@@ -21,8 +21,8 @@ import {
   productImages,
   sponsors,
   valueCards,
-} from "./data";
-import { VirtualLobbyDialog } from "./virtual-lobby-dialog";
+} from "./data"
+import { VirtualLobbyDialog } from "./virtual-lobby-dialog"
 
 export function Breadcrumb() {
   return (
@@ -33,7 +33,7 @@ export function Breadcrumb() {
       <ChevronRightIcon className="size-4 text-muted-foreground" />
       <span className="select-none">Expo Detail</span>
     </nav>
-  );
+  )
 }
 
 export function Hero({
@@ -42,10 +42,10 @@ export function Hero({
   endDateLabel = "April 17, 2026",
   virtualLobbyUrl,
 }: {
-  expoTitle?: string;
-  startDateLabel?: string;
-  endDateLabel?: string;
-  virtualLobbyUrl?: string;
+  expoTitle?: string
+  startDateLabel?: string
+  endDateLabel?: string
+  virtualLobbyUrl?: string
 }) {
   return (
     <section className="bg-linear-to-b from-white via-25% via-[#ffe0d2] to-white pb-0">
@@ -126,7 +126,7 @@ export function Hero({
         </div>
       </div>
     </section>
-  );
+  )
 }
 
 export function About() {
@@ -152,7 +152,7 @@ export function About() {
         </a>
       </div>
     </section>
-  );
+  )
 }
 
 export function Sponsors() {
@@ -177,7 +177,7 @@ export function Sponsors() {
         </div>
       </div>
     </section>
-  );
+  )
 }
 
 export function Audience() {
@@ -217,7 +217,7 @@ export function Audience() {
         ))}
       </div>
     </section>
-  );
+  )
 }
 
 export function Categories() {
@@ -250,7 +250,7 @@ export function Categories() {
         ))}
       </div>
     </section>
-  );
+  )
 }
 
 export function ParticipantValues() {
@@ -291,7 +291,7 @@ export function ParticipantValues() {
         </div>
       </div>
     </section>
-  );
+  )
 }
 
 export function BoothTier() {
@@ -392,5 +392,5 @@ export function BoothTier() {
         </div>
       </div>
     </section>
-  );
+  )
 }

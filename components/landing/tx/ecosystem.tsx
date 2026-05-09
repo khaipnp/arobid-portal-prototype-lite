@@ -1,7 +1,7 @@
-import { ArrowRight, Building2, Store, Users } from "lucide-react";
-import type { ReactNode } from "react";
+import { ArrowRight, Building2, Store, Users } from "lucide-react"
+import type { ReactNode } from "react"
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
 
 export function Ecosystem() {
   return (
@@ -51,7 +51,7 @@ export function Ecosystem() {
         />
       </div>
     </section>
-  );
+  )
 }
 
 function EcosystemCard({
@@ -61,11 +61,11 @@ function EcosystemCard({
   body,
   action,
 }: {
-  className: string;
-  icon: ReactNode;
-  title: string;
-  body: string;
-  action: string;
+  className: string
+  icon: ReactNode
+  title: string
+  body: string
+  action: string
 }) {
   return (
     <article
@@ -87,5 +87,5 @@ function EcosystemCard({
         <ArrowRight className="size-4" />
       </button>
     </article>
-  );
+  )
 }

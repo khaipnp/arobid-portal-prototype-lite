@@ -1,71 +1,70 @@
-"use client";
+"use client"
 
-import { SearchIcon } from "lucide-react";
-import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
-
-import { ExhibitorCard } from "./exhibitor-card";
-import { Button } from "@/components/ui/button";
+import { SearchIcon } from "lucide-react"
+import Link from "next/link"
+import { useEffect, useMemo, useState } from "react"
+import { Button } from "@/components/ui/button"
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import type { ExpoDetailExhibitor } from "@/lib/tradexpo/db/platform-data";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@/components/ui/input-group";
+} from "@/components/ui/select"
+import type { ExpoDetailExhibitor } from "@/lib/tradexpo/db/platform-data"
+import { ExhibitorCard } from "./exhibitor-card"
 
 type Props = {
-  expoName: string;
-  initialExhibitors: ExpoDetailExhibitor[];
-};
+  expoName: string
+  initialExhibitors: ExpoDetailExhibitor[]
+}
 
 export function ExhibitorsSection({ expoName, initialExhibitors }: Props) {
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("all");
-  const [items, setItems] = useState(initialExhibitors);
+  const [search, setSearch] = useState("")
+  const [category, setCategory] = useState("all")
+  const [items, setItems] = useState(initialExhibitors)
 
   const categories = useMemo(() => {
-    return Array.from(new Set(initialExhibitors.map((x) => x.category))).sort();
-  }, [initialExhibitors]);
+    return Array.from(new Set(initialExhibitors.map((x) => x.category))).sort()
+  }, [initialExhibitors])
 
   const sortedItems = useMemo(() => {
     const tierPriority: Record<string, number> = {
       Premium: 1,
       Professional: 2,
       Basic: 3,
-    };
+    }
 
     return [...items].sort(
       (a, b) =>
         (tierPriority[a.boothTier] ?? Number.MAX_SAFE_INTEGER) -
           (tierPriority[b.boothTier] ?? Number.MAX_SAFE_INTEGER) ||
         a.company.localeCompare(b.company),
-    );
-  }, [items]);
+    )
+  }, [items])
 
   useEffect(() => {
-    const controller = new AbortController();
-    const query = new URLSearchParams({ expoName });
-    if (search.trim()) query.set("search", search.trim());
-    if (category !== "all") query.set("category", category);
+    const controller = new AbortController()
+    const query = new URLSearchParams({ expoName })
+    if (search.trim()) query.set("search", search.trim())
+    if (category !== "all") query.set("category", category)
 
     fetch(`/api/tradexpo/exhibitors?${query.toString()}`, {
       signal: controller.signal,
     })
       .then((res) => res.json())
       .then((payload: { data?: ExpoDetailExhibitor[] }) => {
-        setItems(payload.data ?? []);
+        setItems(payload.data ?? [])
       })
-      .catch(() => undefined);
+      .catch(() => undefined)
 
-    return () => controller.abort();
-  }, [expoName, search, category]);
+    return () => controller.abort()
+  }, [expoName, search, category])
 
   return (
     <section className="bg-muted px-4 py-16">
@@ -112,5 +111,5 @@ export function ExhibitorsSection({ expoName, initialExhibitors }: Props) {
         </div>
       </div>
     </section>
-  );
+  )
 }
