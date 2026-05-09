@@ -5,21 +5,21 @@ import {
   Heart,
   Sparkles,
   Video,
-} from "lucide-react"
-import Image from "next/image"
-import Link from "next/link"
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
-import { asset, type HomeExpoCard } from "./data"
+import { asset, type HomeExpoCard } from "./data";
 
 type ExhibitionsProps = {
-  categories: string[]
-  expos: HomeExpoCard[]
-}
+  categories: string[];
+  expos: HomeExpoCard[];
+};
 
 export function Exhibitions({ categories, expos }: ExhibitionsProps) {
   return (
@@ -35,8 +35,8 @@ export function Exhibitions({ categories, expos }: ExhibitionsProps) {
             className={cn(
               "inline-flex h-10 shrink-0 items-center gap-1 rounded-full px-3 text-sm",
               index === 0
-                ? "border border-[#ed6203] bg-[#ffeae1] text-[#ed6203]"
-                : "bg-[#f9fafb] text-[#1f2937]",
+                ? "border border-legend bg-[#ffeae1] text-legend"
+                : "bg-[#f9fafb] text-foreground",
             )}
           >
             <Grid2X2 className="size-4" />
@@ -59,7 +59,7 @@ export function Exhibitions({ categories, expos }: ExhibitionsProps) {
         </button>
       </div>
     </section>
-  )
+  );
 }
 
 function ExpoCard({ expo }: { expo: HomeExpoCard }) {
@@ -68,8 +68,8 @@ function ExpoCard({ expo }: { expo: HomeExpoCard }) {
       ? "bg-[#16a34a]"
       : expo.status === "Upcoming"
         ? "bg-[#f59e0b]"
-        : "bg-[#9ca3af]"
-  const countdownLabel = expo.status === "Upcoming" ? "Starts in" : "Ends in"
+        : "bg-[#9ca3af]";
+  const countdownLabel = expo.status === "Upcoming" ? "Starts in" : "Ends in";
 
   return (
     <Card className="overflow-hidden rounded-2xl bg-white p-2 shadow-[0_0_12px_rgba(0,0,0,0.08)]">
@@ -97,7 +97,7 @@ function ExpoCard({ expo }: { expo: HomeExpoCard }) {
             <Badge
               key={tag}
               variant="secondary"
-              className="h-7 gap-1.5 rounded-full border-0 bg-white/80 pr-3 pl-1.5 font-normal text-[#1f2937] text-xs"
+              className="h-7 gap-1.5 rounded-full border-0 bg-white/80 pr-3 pl-1.5 font-normal text-foreground text-xs"
             >
               {tag === "Hot pick" ? (
                 <Heart className="size-5 fill-rose-100 text-rose-300" />
@@ -162,5 +162,5 @@ function ExpoCard({ expo }: { expo: HomeExpoCard }) {
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

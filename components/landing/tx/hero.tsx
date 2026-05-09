@@ -1,8 +1,8 @@
-import { Box } from "lucide-react"
-import Image from "next/image"
-import Link from "next/link"
+import { Box } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
-import { asset } from "./data"
+import { asset } from "./data";
 
 export function Hero() {
   return (
@@ -17,7 +17,7 @@ export function Hero() {
       />
       <div className="absolute inset-x-0 bottom-0 h-[350px] bg-linear-to-b from-black/0 to-black/80 backdrop-blur-[2px]" />
       <div className="container relative mx-auto flex min-h-[617px] items-end justify-between gap-8 px-5 pb-10 md:pb-14">
-        <div className="max-w-[720px] pb-8 text-white">
+        <div className="max-w-3xl pb-8 text-white">
           <p className="font-medium text-sm drop-shadow-lg">
             20 MAY - 22 MAY, 2026
           </p>
@@ -71,5 +71,5 @@ export function Hero() {
         </article>
       </div>
     </section>
-  )
+  );
 }

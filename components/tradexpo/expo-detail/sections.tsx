@@ -4,6 +4,7 @@ import {
   Check,
   ChevronRight,
   Home,
+  RadioIcon,
   Send,
   Video,
 } from "lucide-react";
@@ -63,9 +64,9 @@ export function Hero({
           Global Strategic Network
         </div>
         <div className="absolute right-7 bottom-6 hidden w-2xs md:block">
-          <div className="mx-auto flex w-max items-center gap-3 rounded-full bg-[#01175c] py-1.5 pr-5 pl-1.5">
-            <span className="inline-flex h-6 items-center gap-1 rounded-full bg-[#16a34a] px-3 font-medium text-white text-xs">
-              <Video className="size-3" />
+          <div className="z-10 mx-auto flex w-max items-center gap-3 rounded-full bg-[#01175c] py-1.5 pr-5 pl-1.5">
+            <span className="inline-flex h-6 items-center gap-1 rounded-full bg-green-600 px-3 font-medium text-white text-xs">
+              <RadioIcon className="size-3" />
               Live
             </span>
             <span className="text-sm text-white">Event ends in</span>
@@ -131,10 +132,10 @@ export function Hero({
 
 export function About() {
   return (
-    <section className="relative mx-auto grid max-w-[1284px] gap-8 px-4 py-16 md:grid-cols-[1fr_1.1fr] md:px-0">
+    <section className="container relative mx-auto grid gap-8 px-4 py-16 md:grid-cols-[1fr_1.1fr] md:px-0">
       <h2 className="font-semibold text-[32px] leading-10">About VICONS</h2>
       <div>
-        <p className="max-w-[519px] text-[#1f2937] text-sm leading-6">
+        <p className="text-foreground text-sm leading-6">
           At the 1st Vietnam International Construction & Building Materials
           Expo, businesses can demonstrate their large-scale production capacity
           and compliance with rigorous technical standards such as ISO 9001, CE,
@@ -151,15 +152,6 @@ export function About() {
           <ArrowRight className="size-4" />
         </a>
       </div>
-      <Link
-        href="/seller/deal-room"
-        className="absolute right-3 bottom-6 hidden flex-col items-center gap-1 rounded-full bg-white p-2 text-center text-[#ed6203] text-xs shadow-md lg:flex"
-      >
-        <span className="grid size-10 place-items-center rounded-full bg-[#ffefe6]">
-          <Send className="size-5" />
-        </span>
-        Chat
-      </Link>
     </section>
   );
 }
@@ -171,7 +163,7 @@ export function Sponsors() {
       className="mx-auto max-w-[1284px] px-4 pb-10 md:px-0"
     >
       <div className="border-[#e5e7eb] border-t pt-10 text-center">
-        <p className="font-medium text-[#1f2937]">
+        <p className="font-medium text-foreground">
           Get sponsored by companies such as:
         </p>
         <div className="mt-7 flex flex-wrap items-center justify-center gap-8 md:gap-14">
@@ -211,14 +203,14 @@ export function Audience() {
               <h3 className="font-semibold text-xl leading-7">
                 {audience.title}
               </h3>
-              <p className="mt-1 text-[#1f2937] text-sm leading-5">
+              <p className="mt-1 text-foreground text-sm leading-5">
                 {audience.body}
               </p>
               <div className="mt-6 flex flex-wrap gap-1">
                 {audience.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="rounded-full bg-[#f3f4f6] px-2 py-1 text-[#1f2937] text-xs"
+                    className="rounded-full bg-[#f3f4f6] px-2 py-1 text-foreground text-xs"
                   >
                     {tag}
                   </span>
@@ -238,7 +230,7 @@ export function Categories() {
       <h2 className="font-semibold text-[32px] leading-10">
         Exhibited Categories
       </h2>
-      <p className="mt-2 text-[#1f2937]">
+      <p className="mt-2 text-foreground">
         Navigating the complete spectrum of construction materials and
         architectural solutions.
       </p>
@@ -272,7 +264,7 @@ export function ParticipantValues() {
         <h2 className="font-semibold text-[32px] leading-10">
           Exclusive Values for Each Participant
         </h2>
-        <p className="mt-2 text-[#1f2937]">
+        <p className="mt-2 text-foreground">
           Specialized digital solutions to maximize trade efficiency and
           technical connectivity for all participants.
         </p>
@@ -312,7 +304,7 @@ export function BoothTier() {
       <h2 className="text-center font-semibold text-[32px] leading-10">
         Type of 3D Booths
       </h2>
-      <p className="mt-2 text-center text-[#1f2937]">
+      <p className="mt-2 text-center text-foreground">
         Choose a professional exhibition space tailored to your business scale.
       </p>
       <div className="mt-10 grid border-[#e5e7eb] border-b text-center md:grid-cols-3">
@@ -352,7 +344,7 @@ export function BoothTier() {
           <div className="mt-7 flex flex-wrap gap-3">
             <button
               type="button"
-              className="h-10 rounded-full bg-[#f3f4f6] px-6 font-medium text-[#1f2937] text-sm"
+              className="h-10 rounded-full bg-[#f3f4f6] px-6 font-medium text-foreground text-sm"
             >
               Explore Exhibitions
             </button>
