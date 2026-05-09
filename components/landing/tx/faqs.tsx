@@ -58,7 +58,7 @@ export function Faqs({ defaultOpenFaq = 1 }: FaqsProps) {
                   )}
                 </span>
                 {open && (
-                  <span className="mt-3 block text-[#1f2937] leading-5">
+                  <span className="mt-3 block text-foreground leading-5">
                     {faq.answer}
                   </span>
                 )}

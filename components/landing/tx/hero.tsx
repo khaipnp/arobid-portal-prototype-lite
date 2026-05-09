@@ -15,9 +15,9 @@ export function Hero() {
         sizes="100vw"
         className="absolute inset-0 size-full object-cover"
       />
-      <div className="absolute inset-x-0 bottom-0 h-[350px] bg-linear-to-b from-black/0 to-black/80 backdrop-blur-[2px]" />
+      <div className="absolute inset-x-0 bottom-0 h-80 bg-linear-to-b from-black/0 to-black/80 backdrop-blur-[2px]" />
       <div className="container relative mx-auto flex min-h-[617px] items-end justify-between gap-8 px-5 pb-10 md:pb-14">
-        <div className="max-w-[720px] pb-8 text-white">
+        <div className="max-w-3xl pb-8 text-white">
           <p className="font-medium text-sm drop-shadow-lg">
             20 MAY - 22 MAY, 2026
           </p>
@@ -27,7 +27,7 @@ export function Hero() {
           <div className="mt-8 flex flex-wrap gap-4">
             <Link
               href="/seller"
-              className="inline-flex h-10 w-[178px] items-center justify-center gap-2 rounded-full bg-[#ed6203] font-medium text-white shadow-[0_1px_2px_rgba(0,0,0,0.2),0_0_0_1px_#f37b42]"
+              className="inline-flex h-10 w-44 items-center justify-center gap-2 rounded-full bg-legend font-medium text-white shadow-[0_1px_2px_rgba(0,0,0,0.2),0_0_0_1px_#f37b42]"
             >
               <Box className="size-5" />
               Virtual Lobby

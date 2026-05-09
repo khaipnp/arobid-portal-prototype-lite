@@ -35,8 +35,8 @@ export function Exhibitions({ categories, expos }: ExhibitionsProps) {
             className={cn(
               "inline-flex h-10 shrink-0 items-center gap-1 rounded-full px-3 text-sm",
               index === 0
-                ? "border border-[#ed6203] bg-[#ffeae1] text-[#ed6203]"
-                : "bg-[#f9fafb] text-[#1f2937]",
+                ? "border border-legend bg-[#ffeae1] text-legend"
+                : "bg-[#f9fafb] text-foreground",
             )}
           >
             <Grid2X2 className="size-4" />
@@ -97,7 +97,7 @@ function ExpoCard({ expo }: { expo: HomeExpoCard }) {
             <Badge
               key={tag}
               variant="secondary"
-              className="h-7 gap-1.5 rounded-full border-0 bg-white/80 pr-3 pl-1.5 font-normal text-[#1f2937] text-xs"
+              className="h-7 gap-1.5 rounded-full border-0 bg-white/80 pr-3 pl-1.5 font-normal text-foreground text-xs"
             >
               {tag === "Hot pick" ? (
                 <Heart className="size-5 fill-rose-100 text-rose-300" />

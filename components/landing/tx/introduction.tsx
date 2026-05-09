@@ -12,7 +12,7 @@ export function Introduction() {
         <p className="font-semibold text-[#ed6203] text-[32px] leading-10">
           Virtual Trade Ecosystem
         </p>
-        <p className="mt-2 text-[#1f2937]">
+        <p className="mt-2 text-foreground">
           Delivering qualified leads for Sellers, smart sourcing for Buyers, and
           custom event solutions for Partners.
         </p>

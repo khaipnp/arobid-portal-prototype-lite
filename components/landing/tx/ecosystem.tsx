@@ -13,7 +13,7 @@ export function Ecosystem() {
         <h2 className="font-bold text-[#2d2d2d] text-[32px] leading-10">
           Comprehensive Trade Ecosystem
         </h2>
-        <p className="mt-6 text-[#1f2937] leading-6">
+        <p className="mt-6 text-foreground leading-6">
           Bridging the gap between Sellers, Buyers, and Partners on one seamless
           platform.
         </p>
