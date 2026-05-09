@@ -1,12 +1,11 @@
 import {
-  ArrowRight,
-  Box,
-  Check,
-  ChevronRight,
-  Home,
+  ArrowRightIcon,
+  BoxIcon,
+  CheckIcon,
+  ChevronRightIcon,
+  HomeIcon,
   RadioIcon,
-  Send,
-  Video,
+  SendIcon,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -29,9 +28,9 @@ export function Breadcrumb() {
   return (
     <nav className="container mx-auto flex h-14 items-center gap-1 px-4 text-foreground text-sm md:px-0">
       <Link href="/" className="flex items-center gap-1">
-        <Home className="size-4 text-muted-foreground" />
+        <HomeIcon className="size-4 text-muted-foreground" />
       </Link>
-      <ChevronRight className="size-4 text-muted-foreground" />
+      <ChevronRightIcon className="size-4 text-muted-foreground" />
       <span className="select-none">Expo Detail</span>
     </nav>
   );
@@ -95,7 +94,7 @@ export function Hero({
               <p className="font-medium text-sm">{startDateLabel}</p>
             </div>
             <span className="grid h-4 w-5 place-items-center rounded-full bg-legend text-white">
-              <ArrowRight className="size-3" />
+              <ArrowRightIcon className="size-3" />
             </span>
             <div className="text-right">
               <p className="text-muted-foreground text-xs">End</p>
@@ -104,7 +103,7 @@ export function Hero({
           </div>
         </div>
         <div className="absolute bottom-10 left-7 max-w-[720px] text-white md:left-10">
-          <h1 className="max-w-[684px] font-medium text-[32px] leading-[1.18] tracking-normal md:text-[36px] md:leading-[44px]">
+          <h1 className="max-w-[684px] font-medium text-[32px] leading-[1.18] tracking-normal md:text-[36px] md:leading-11">
             {expoTitle}
           </h1>
           <div className="mt-5 flex flex-wrap gap-4">
@@ -149,7 +148,7 @@ export function About() {
           className="mt-4 inline-flex items-center gap-1 font-medium text-[#ed6203] text-sm"
         >
           View more
-          <ArrowRight className="size-4" />
+          <ArrowRightIcon className="size-4" />
         </a>
       </div>
     </section>
@@ -158,10 +157,7 @@ export function About() {
 
 export function Sponsors() {
   return (
-    <section
-      id="sponsors"
-      className="mx-auto max-w-[1284px] px-4 pb-10 md:px-0"
-    >
+    <section id="sponsors" className="container mx-auto px-4 pb-10 md:px-0">
       <div className="border-[#e5e7eb] border-t pt-10 text-center">
         <p className="font-medium text-foreground">
           Get sponsored by companies such as:
@@ -186,7 +182,7 @@ export function Sponsors() {
 
 export function Audience() {
   return (
-    <section className="mx-auto max-w-[1284px] px-4 py-16 md:px-0">
+    <section className="container mx-auto px-4 py-16 md:px-0">
       <h2 className="text-center font-semibold text-[32px] leading-10">
         Who Should Attend?
       </h2>
@@ -226,7 +222,7 @@ export function Audience() {
 
 export function Categories() {
   return (
-    <section className="mx-auto max-w-[1284px] px-4 pb-16 text-center md:px-0">
+    <section className="container mx-auto px-4 pb-16 text-center md:px-0">
       <h2 className="font-semibold text-[32px] leading-10">
         Exhibited Categories
       </h2>
@@ -260,7 +256,7 @@ export function Categories() {
 export function ParticipantValues() {
   return (
     <section className="bg-[#f9fafb] px-4 py-16 md:px-[78px]">
-      <div className="mx-auto max-w-[1284px] text-center">
+      <div className="container mx-auto text-center">
         <h2 className="font-semibold text-[32px] leading-10">
           Exclusive Values for Each Participant
         </h2>
@@ -284,7 +280,7 @@ export function ParticipantValues() {
                 <ul className="space-y-4">
                   {points.map((point) => (
                     <li key={point} className="flex gap-3 text-sm leading-5">
-                      <Check className="mt-0.5 size-4 shrink-0 text-[#16a34a]" />
+                      <CheckIcon className="mt-0.5 size-4 shrink-0 text-[#16a34a]" />
                       <span>{point}</span>
                     </li>
                   ))}
@@ -300,7 +296,7 @@ export function ParticipantValues() {
 
 export function BoothTier() {
   return (
-    <section id="booths" className="mx-auto max-w-[1284px] px-4 py-16 md:px-0">
+    <section id="booths" className="container mx-auto px-4 py-16 md:px-0">
       <h2 className="text-center font-semibold text-[32px] leading-10">
         Type of 3D Booths
       </h2>
@@ -314,7 +310,7 @@ export function BoothTier() {
             key={tab}
             className={cn(
               "h-12 font-medium text-sm",
-              tab === "Premium" && "border-[#ed6203] border-b-2 text-[#ed6203]",
+              tab === "Premium" && "border-legend border-b-2 text-legend",
             )}
           >
             {tab}
@@ -334,7 +330,7 @@ export function BoothTier() {
           <div className="mt-5 grid gap-x-6 gap-y-2 md:grid-cols-2">
             {boothFeatures.map(([feature, strong]) => (
               <div key={feature} className="flex items-center gap-3 text-sm">
-                <Check className="size-4 text-[#16a34a]" />
+                <CheckIcon className="size-4 text-[#16a34a]" />
                 <span className={strong ? "font-semibold" : undefined}>
                   {feature}
                 </span>
@@ -369,7 +365,7 @@ export function BoothTier() {
             className="absolute top-[58px] left-1/2 w-[250px] -translate-x-1/2 object-contain md:w-[300px]"
           />
           <div className="absolute top-1/2 left-1/2 grid size-[72px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-[20px] bg-black/60 text-white backdrop-blur-sm">
-            <Box className="size-10" />
+            <BoxIcon className="size-10" />
           </div>
         </div>
       </div>
@@ -390,7 +386,7 @@ export function BoothTier() {
             href="/seller"
             className="mt-6 inline-flex h-10 items-center gap-2 rounded-full bg-[#ed6203] px-6 font-medium text-sm text-white"
           >
-            <Send className="size-4" />
+            <SendIcon className="size-4" />
             Register Booth Lite
           </Link>
         </div>
