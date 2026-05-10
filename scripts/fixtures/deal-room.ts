@@ -15,7 +15,7 @@ export const CURRENT_USER_ID = DEAL_ROOM_CURRENT_USER_ID
 
 export const mockChatUsers: ChatUser[] = [
   {
-    id: "user-current",
+    id: "11111111-1111-4111-8111-111111111111",
     name: "Khai Pham",
     email: "khaipham@arobid.com",
     company: "Arobid",
@@ -26,7 +26,7 @@ export const mockChatUsers: ChatUser[] = [
     isActive: true
   },
   {
-    id: "user-nguyen",
+    id: "22222222-2222-4222-8222-222222222222",
     name: "Nguyen Van A",
     email: "nguyen.van.a@viettech.vn",
     company: "VietTech Solutions",
@@ -37,7 +37,7 @@ export const mockChatUsers: ChatUser[] = [
     isActive: true
   },
   {
-    id: "user-nina",
+    id: "33333333-3333-4333-8333-333333333333",
     name: "Nina Tran",
     email: "admin@medworld.asia",
     company: "MedWorld Asia",
@@ -48,7 +48,7 @@ export const mockChatUsers: ChatUser[] = [
     isActive: true
   },
   {
-    id: "user-minh",
+    id: "44444444-4444-4444-8444-444444444444",
     name: "Minh Do",
     email: "contact@foodfarminc.com",
     company: "Food Farm Inc",
@@ -59,7 +59,7 @@ export const mockChatUsers: ChatUser[] = [
     isActive: true
   },
   {
-    id: "user-sarah",
+    id: "55555555-5555-4555-8555-555555555555",
     name: "Sarah Chen",
     email: "press@fashionforward.vn",
     company: "AutoDrive SEA",
@@ -69,7 +69,7 @@ export const mockChatUsers: ChatUser[] = [
     isActive: true
   },
   {
-    id: "user-tommy",
+    id: "66666666-6666-4666-8666-666666666666",
     name: "Tommy Nguyen",
     email: "dev@cloudconnect.io",
     company: "Cloud Connect Vietnam",
@@ -88,8 +88,8 @@ export const mockConversations: Conversation[] = [
     id: "conv-001",
     type: "direct",
     members: [
-      { userId: "user-current", joinedAt: isoOffset(120), isArchived: false },
-      { userId: "user-nguyen", joinedAt: isoOffset(120), isArchived: false }
+      { userId: "11111111-1111-4111-8111-111111111111", joinedAt: isoOffset(120), isArchived: false },
+      { userId: "22222222-2222-4222-8222-222222222222", joinedAt: isoOffset(120), isArchived: false }
     ],
     createdAt: isoOffset(120),
     isReadOnly: false
@@ -98,8 +98,8 @@ export const mockConversations: Conversation[] = [
     id: "conv-002",
     type: "direct",
     members: [
-      { userId: "user-current", joinedAt: isoOffset(200), isArchived: false },
-      { userId: "user-nina", joinedAt: isoOffset(200), isArchived: false }
+      { userId: "11111111-1111-4111-8111-111111111111", joinedAt: isoOffset(200), isArchived: false },
+      { userId: "33333333-3333-4333-8333-333333333333", joinedAt: isoOffset(200), isArchived: false }
     ],
     createdAt: isoOffset(200),
     isReadOnly: false
@@ -108,8 +108,8 @@ export const mockConversations: Conversation[] = [
     id: "conv-003",
     type: "direct",
     members: [
-      { userId: "user-current", joinedAt: isoOffset(1500), isArchived: false },
-      { userId: "user-minh", joinedAt: isoOffset(1500), isArchived: false }
+      { userId: "11111111-1111-4111-8111-111111111111", joinedAt: isoOffset(1500), isArchived: false },
+      { userId: "44444444-4444-4444-8444-444444444444", joinedAt: isoOffset(1500), isArchived: false }
     ],
     createdAt: isoOffset(1500),
     isReadOnly: false
@@ -118,8 +118,8 @@ export const mockConversations: Conversation[] = [
     id: "conv-004",
     type: "direct",
     members: [
-      { userId: "user-current", joinedAt: isoOffset(500), isArchived: false },
-      { userId: "user-sarah", joinedAt: isoOffset(500), isArchived: false }
+      { userId: "11111111-1111-4111-8111-111111111111", joinedAt: isoOffset(500), isArchived: false },
+      { userId: "55555555-5555-4555-8555-555555555555", joinedAt: isoOffset(500), isArchived: false }
     ],
     createdAt: isoOffset(500),
     isReadOnly: false
@@ -128,8 +128,8 @@ export const mockConversations: Conversation[] = [
     id: "conv-005",
     type: "direct",
     members: [
-      { userId: "user-current", joinedAt: isoOffset(1000), isArchived: false },
-      { userId: "user-tommy", joinedAt: isoOffset(1000), isArchived: false }
+      { userId: "11111111-1111-4111-8111-111111111111", joinedAt: isoOffset(1000), isArchived: false },
+      { userId: "66666666-6666-4666-8666-666666666666", joinedAt: isoOffset(1000), isArchived: false }
     ],
     createdAt: isoOffset(1000),
     isReadOnly: false
@@ -143,7 +143,7 @@ export const mockMessages: Record<string, Message[]> = {
     {
       id: "msg-001-1",
       conversationId: "conv-001",
-      senderId: "user-nguyen",
+      senderId: "22222222-2222-4222-8222-222222222222",
       content:
         "Hi Khai! I heard you're interested in a supply partnership with Food Farm Inc?",
       attachments: [],
@@ -155,7 +155,7 @@ export const mockMessages: Record<string, Message[]> = {
     {
       id: "msg-001-2",
       conversationId: "conv-001",
-      senderId: "user-current",
+      senderId: "11111111-1111-4111-8111-111111111111",
       content:
         "Yes! I visited your booth at the expo earlier. Very impressed with your organic certification process and the range of products.",
       attachments: [],
@@ -167,7 +167,7 @@ export const mockMessages: Record<string, Message[]> = {
     {
       id: "msg-001-3",
       conversationId: "conv-001",
-      senderId: "user-nguyen",
+      senderId: "22222222-2222-4222-8222-222222222222",
       content:
         "Thank you! We've been certified since 2019. Here's our latest product catalog with bulk pricing.",
       attachments: [
@@ -187,7 +187,7 @@ export const mockMessages: Record<string, Message[]> = {
     {
       id: "msg-001-4",
       conversationId: "conv-001",
-      senderId: "user-current",
+      senderId: "11111111-1111-4111-8111-111111111111",
       content:
         "Perfect, I'll review the catalog and share it with our procurement team. Should have feedback by end of week.",
       attachments: [],
@@ -199,7 +199,7 @@ export const mockMessages: Record<string, Message[]> = {
     {
       id: "msg-001-5",
       conversationId: "conv-001",
-      senderId: "user-nguyen",
+      senderId: "22222222-2222-4222-8222-222222222222",
       content:
         "Sounds great! Feel free to reach out if you have any questions about minimum order quantities or logistics.",
       attachments: [],
@@ -214,7 +214,7 @@ export const mockMessages: Record<string, Message[]> = {
     {
       id: "msg-002-1",
       conversationId: "conv-002",
-      senderId: "user-nina",
+      senderId: "33333333-3333-4333-8333-333333333333",
       content:
         "Hi Khai! I'm the organizer for MedWorld Asia Expo coming up in 60 days. We'd love to have Arobid as an exhibitor — your AI solutions would be a great fit for our healthcare audience.",
       attachments: [],
@@ -226,7 +226,7 @@ export const mockMessages: Record<string, Message[]> = {
     {
       id: "msg-002-2",
       conversationId: "conv-002",
-      senderId: "user-current",
+      senderId: "11111111-1111-4111-8111-111111111111",
       content:
         "Hi Nina! That sounds very interesting. Can you share more details about the booth tiers and what's included?",
       attachments: [],
@@ -238,7 +238,7 @@ export const mockMessages: Record<string, Message[]> = {
     {
       id: "msg-002-3",
       conversationId: "conv-002",
-      senderId: "user-nina",
+      senderId: "33333333-3333-4333-8333-333333333333",
       content:
         "Of course! We have three tiers:\n• Basic ($2,000) — 9m² booth, 2 staff passes, listing in expo catalog\n• Pro ($5,000) — 18m² corner booth, 5 staff passes, featured listing + speaking slot\n• Premium ($10,000) — 36m² island booth, unlimited passes, keynote slot, logo on all materials",
       attachments: [],
@@ -250,7 +250,7 @@ export const mockMessages: Record<string, Message[]> = {
     {
       id: "msg-002-4",
       conversationId: "conv-002",
-      senderId: "user-nina",
+      senderId: "33333333-3333-4333-8333-333333333333",
       content:
         "Also — we have an early-bird discount of 15% off for registrations confirmed before end of this month!",
       attachments: [],
@@ -262,7 +262,7 @@ export const mockMessages: Record<string, Message[]> = {
     {
       id: "msg-002-5",
       conversationId: "conv-002",
-      senderId: "user-nina",
+      senderId: "33333333-3333-4333-8333-333333333333",
       content:
         "Would love to jump on a quick call this week to walk you through the floor plan and available slots. Are you free Thursday afternoon?",
       attachments: [],
@@ -277,7 +277,7 @@ export const mockMessages: Record<string, Message[]> = {
     {
       id: "msg-003-1",
       conversationId: "conv-003",
-      senderId: "user-current",
+      senderId: "11111111-1111-4111-8111-111111111111",
       content:
         "Hi Minh, I wanted to follow up on the Agricultural IoT data partnership we discussed briefly at the expo last month.",
       attachments: [],
@@ -289,7 +289,7 @@ export const mockMessages: Record<string, Message[]> = {
     {
       id: "msg-003-2",
       conversationId: "conv-003",
-      senderId: "user-minh",
+      senderId: "44444444-4444-4444-8444-444444444444",
       content:
         "Hello Khai! Great to hear from you. Yes, I remember that conversation. What specifically did you have in mind?",
       attachments: [],
@@ -301,7 +301,7 @@ export const mockMessages: Record<string, Message[]> = {
     {
       id: "msg-003-3",
       conversationId: "conv-003",
-      senderId: "user-current",
+      senderId: "11111111-1111-4111-8111-111111111111",
       content:
         "We're looking to integrate our Arobid AI platform with field sensor data from your farms to provide predictive yield analytics. The data partnership would be mutually beneficial — you get AI insights, we expand our dataset.",
       attachments: [],
@@ -313,7 +313,7 @@ export const mockMessages: Record<string, Message[]> = {
     {
       id: "msg-003-4",
       conversationId: "conv-003",
-      senderId: "user-minh",
+      senderId: "44444444-4444-4444-8444-444444444444",
       content:
         "That's an interesting proposition. Our CTO would need to evaluate the technical integration. Can you share a technical brief or API documentation?",
       attachments: [],
@@ -328,7 +328,7 @@ export const mockMessages: Record<string, Message[]> = {
     {
       id: "msg-004-1",
       conversationId: "conv-004",
-      senderId: "user-sarah",
+      senderId: "55555555-5555-4555-8555-555555555555",
       content:
         "Hello Khai, I am Sarah from AutoDrive SEA. We are interested in your fleet management AI.",
       attachments: [],
@@ -343,7 +343,7 @@ export const mockMessages: Record<string, Message[]> = {
     {
       id: "msg-005-1",
       conversationId: "conv-005",
-      senderId: "user-tommy",
+      senderId: "66666666-6666-4666-8666-666666666666",
       content:
         "Hey! Tommy from Cloud Connect here. Can we discuss the infrastructure requirements?",
       attachments: [],

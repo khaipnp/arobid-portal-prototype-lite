@@ -86,7 +86,7 @@ describe("NotificationService", () => {
 
   test("dedupes same reference key inside window", async () => {
     const first = await publishNotification({
-      userId: "seller-1",
+      userId: "22222222-2222-4222-8222-222222222222",
       source: "chat",
       type: "message_received",
       title: "New message",
@@ -97,7 +97,7 @@ describe("NotificationService", () => {
     })
 
     const second = await publishNotification({
-      userId: "seller-1",
+      userId: "22222222-2222-4222-8222-222222222222",
       source: "chat",
       type: "message_received",
       title: "New message",
@@ -114,14 +114,14 @@ describe("NotificationService", () => {
     const rows = (await sql`
       select count(*)::int as count
       from notifications
-      where user_id = 'seller-1'
+      where user_id = '22222222-2222-4222-8222-222222222222'
     `) as { count: number }[]
     expect(rows[0]?.count).toBe(1)
   })
 
   test("does not dedupe when reference fields are absent", async () => {
     const first = await publishNotification({
-      userId: "seller-1",
+      userId: "22222222-2222-4222-8222-222222222222",
       source: "chat",
       type: "message_received",
       title: "New message",
@@ -129,7 +129,7 @@ describe("NotificationService", () => {
       deepLinkPath: "/seller/deal-room"
     })
     const second = await publishNotification({
-      userId: "seller-1",
+      userId: "22222222-2222-4222-8222-222222222222",
       source: "chat",
       type: "message_received",
       title: "Another message",
@@ -143,7 +143,7 @@ describe("NotificationService", () => {
     const rows = (await sql`
       select count(*)::int as count
       from notifications
-      where user_id = 'seller-1'
+      where user_id = '22222222-2222-4222-8222-222222222222'
     `) as { count: number }[]
     expect(rows[0]?.count).toBe(2)
   })
@@ -154,7 +154,7 @@ describe("NotificationService", () => {
 
     try {
       const first = await publishNotification({
-        userId: "seller-1",
+        userId: "22222222-2222-4222-8222-222222222222",
         source: "chat",
         type: "message_received",
         title: "New message",
@@ -171,7 +171,7 @@ describe("NotificationService", () => {
       `
 
       const second = await publishNotification({
-        userId: "seller-1",
+        userId: "22222222-2222-4222-8222-222222222222",
         source: "chat",
         type: "message_received",
         title: "New message",
@@ -187,7 +187,7 @@ describe("NotificationService", () => {
       const rows = (await sql`
         select count(*)::int as count
         from notifications
-        where user_id = 'seller-1'
+        where user_id = '22222222-2222-4222-8222-222222222222'
           and reference_id = 'conv-window'
       `) as { count: number }[]
       expect(rows[0]?.count).toBe(2)

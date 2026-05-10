@@ -51,7 +51,7 @@ describe("platform schema consistency", () => {
         )
         values (
           'test-order-b2b-package',
-          'test-user-a',
+          'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1',
           'Test User',
           'test@example.com',
           'Arobid',
@@ -103,15 +103,15 @@ describe("platform schema consistency", () => {
 
     await sql`delete from booth_customizations where registration_id like 'test-reg-%'`
     await sql`delete from seller_booth_registrations where id like 'test-reg-%'`
-    await sql`delete from users where id in ('test-user-a', 'test-user-b')`
+    await sql`delete from users where id in ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2')`
     await sql`delete from expos where id = 'test-expo-scope'`
 
     try {
       await sql`
         insert into users (id, name, email, company, is_active)
         values
-          ('test-user-a', 'Test User A', 'test-user-a@example.com', 'Arobid', true),
-          ('test-user-b', 'Test User B', 'test-user-b@example.com', 'Arobid', true)
+          ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1', 'Test User A', 'test-user-a@example.com', 'Arobid', true),
+          ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2', 'Test User B', 'test-user-b@example.com', 'Arobid', true)
         on conflict (id) do nothing
       `
 
@@ -151,11 +151,13 @@ describe("platform schema consistency", () => {
           purchased_at
         )
         values
-          ('test-reg-user-a', 'test-user-a', 'test-expo-scope', 'A01', 'Basic', 'Live', now()),
-          ('test-reg-user-b', 'test-user-b', 'test-expo-scope', 'A02', 'Basic', 'Live', now())
+          ('test-reg-user-a', 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1', 'test-expo-scope', 'A01', 'Basic', 'Live', now()),
+          ('test-reg-user-b', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2', 'test-expo-scope', 'A02', 'Basic', 'Live', now())
       `
 
-      const registrations = await listSellerBoothRegistrations("test-user-a")
+      const registrations = await listSellerBoothRegistrations(
+        "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1"
+      )
 
       expect(registrations.map((registration) => registration.id)).toEqual([
         "test-reg-user-a"
@@ -163,7 +165,7 @@ describe("platform schema consistency", () => {
     } finally {
       await sql`delete from booth_customizations where registration_id like 'test-reg-%'`
       await sql`delete from seller_booth_registrations where id like 'test-reg-%'`
-      await sql`delete from users where id in ('test-user-a', 'test-user-b')`
+      await sql`delete from users where id in ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1', 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2')`
       await sql`delete from expos where id = 'test-expo-scope'`
     }
   })

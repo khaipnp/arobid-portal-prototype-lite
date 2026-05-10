@@ -3,7 +3,7 @@ import {
   mockVoucherBatches,
   mockVoucherCodes,
   mockVoucherTargets
-} from "@/lib/evoucher/mock-data"
+} from "@/scripts/fixtures/evoucher"
 
 async function ensureSchema() {
   await sql`

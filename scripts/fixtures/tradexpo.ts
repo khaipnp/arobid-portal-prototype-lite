@@ -802,7 +802,7 @@ export const mockStreamSessions: StreamSession[] = [
   {
     streamSessionId: "ss-001",
     status: "Active",
-    hostUserId: "user-nina",
+    hostUserId: "33333333-3333-4333-8333-333333333333",
     hostDisplayName: "Nina Tran",
     streamUrl: "rtmp://live.arobid.io/stream",
     streamKey: "sk_live_abc123xyz789_session001",
@@ -817,7 +817,7 @@ export const mockStreamSessions: StreamSession[] = [
   {
     streamSessionId: "ss-002",
     status: "Provisioned",
-    hostUserId: "user-minh",
+    hostUserId: "44444444-4444-4444-8444-444444444444",
     hostDisplayName: "Minh Do",
     streamUrl: "rtmp://live.arobid.io/stream",
     streamKey: "sk_live_def456uvw321_session002",
@@ -862,7 +862,7 @@ export const mockStreamSessions: StreamSession[] = [
   {
     streamSessionId: "ss-005",
     status: "Ended",
-    hostUserId: "user-nina",
+    hostUserId: "33333333-3333-4333-8333-333333333333",
     hostDisplayName: "Nina Tran",
     streamUrl: "rtmp://live.arobid.io/stream",
     streamKey: "sk_live_pqr345stu210_session005",
@@ -877,7 +877,7 @@ export const mockStreamSessions: StreamSession[] = [
   {
     streamSessionId: "ss-006",
     status: "Ended",
-    hostUserId: "user-minh",
+    hostUserId: "44444444-4444-4444-8444-444444444444",
     hostDisplayName: "Minh Do",
     streamUrl: "rtmp://live.arobid.io/stream",
     streamKey: "sk_live_vwx678yza543_session006",
@@ -892,7 +892,7 @@ export const mockStreamSessions: StreamSession[] = [
   {
     streamSessionId: "ss-007",
     status: "Provisioned",
-    hostUserId: "user-nina",
+    hostUserId: "33333333-3333-4333-8333-333333333333",
     hostDisplayName: "Nina Tran",
     streamUrl: "rtmp://live.arobid.io/stream",
     streamKey: "sk_live_bcd901efg876_session007",
@@ -907,7 +907,7 @@ export const mockStreamSessions: StreamSession[] = [
   {
     streamSessionId: "ss-008",
     status: "Provisioned",
-    hostUserId: "user-nina",
+    hostUserId: "33333333-3333-4333-8333-333333333333",
     hostDisplayName: "Nina Tran",
     streamUrl: "rtmp://live.arobid.io/stream",
     streamKey: "sk_live_hij234klm109_session008",
@@ -922,7 +922,7 @@ export const mockStreamSessions: StreamSession[] = [
   {
     streamSessionId: "ss-009",
     status: "Canceled",
-    hostUserId: "user-minh",
+    hostUserId: "44444444-4444-4444-8444-444444444444",
     hostDisplayName: "Minh Do",
     streamUrl: "rtmp://live.arobid.io/stream",
     streamKey: "sk_live_nop567qrs432_session009",
@@ -968,7 +968,7 @@ export const mockLiveComments: LiveComment[] = [
   {
     liveCommentId: "lc-003",
     streamSessionId: "ss-001",
-    authorUserId: "user-minh",
+    authorUserId: "44444444-4444-4444-8444-444444444444",
     authorDisplayName: "Minh Do",
     guestDisplayName: null,
     guestEmail: null,
@@ -1022,7 +1022,7 @@ export const mockLiveComments: LiveComment[] = [
   {
     liveCommentId: "lc-007",
     streamSessionId: "ss-004",
-    authorUserId: "user-nina",
+    authorUserId: "33333333-3333-4333-8333-333333333333",
     authorDisplayName: "Nina Tran",
     guestDisplayName: null,
     guestEmail: null,
@@ -1048,7 +1048,7 @@ export const mockLiveComments: LiveComment[] = [
   {
     liveCommentId: "lc-009",
     streamSessionId: "ss-004",
-    authorUserId: "user-minh",
+    authorUserId: "44444444-4444-4444-8444-444444444444",
     authorDisplayName: "Minh Do",
     guestDisplayName: null,
     guestEmail: null,
@@ -1075,7 +1075,7 @@ export const mockGoLIVEEvents: GoLIVEEvent[] = [
     sessionType: "Workshop",
     scheduledStartAt: isoOffset(3),
     status: "Live",
-    broadcasterUserId: "user-nina",
+    broadcasterUserId: "33333333-3333-4333-8333-333333333333",
     broadcasterDisplayName: "Nina Tran",
     createdAt: isoOffset(72),
     updatedAt: isoOffset(2)
@@ -1091,7 +1091,7 @@ export const mockGoLIVEEvents: GoLIVEEvent[] = [
     sessionType: "Keynote",
     scheduledStartAt: new Date(Date.now() + 26 * 60 * 60 * 1000).toISOString(),
     status: "Scheduled",
-    broadcasterUserId: "user-minh",
+    broadcasterUserId: "44444444-4444-4444-8444-444444444444",
     broadcasterDisplayName: "Minh Do",
     createdAt: isoOffset(70),
     updatedAt: isoOffset(70)
@@ -1122,7 +1122,7 @@ export const mockGoLIVEEvents: GoLIVEEvent[] = [
     sessionType: "Workshop",
     scheduledStartAt: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
     status: "Canceled",
-    broadcasterUserId: "user-minh",
+    broadcasterUserId: "44444444-4444-4444-8444-444444444444",
     broadcasterDisplayName: "Minh Do",
     createdAt: isoOffset(60),
     updatedAt: isoOffset(9)
@@ -1155,7 +1155,7 @@ export const mockGoLIVEEvents: GoLIVEEvent[] = [
     sessionType: "Talkshow",
     scheduledStartAt: new Date(Date.now() + 50 * 60 * 60 * 1000).toISOString(),
     status: "Scheduled",
-    broadcasterUserId: "user-nina",
+    broadcasterUserId: "33333333-3333-4333-8333-333333333333",
     broadcasterDisplayName: "Nina Tran",
     createdAt: isoOffset(100),
     updatedAt: isoOffset(100)
@@ -1172,7 +1172,7 @@ export const mockGoLIVEEvents: GoLIVEEvent[] = [
     sessionType: "Panel",
     scheduledStartAt: isoOffset(96),
     status: "Ended",
-    broadcasterUserId: "user-nina",
+    broadcasterUserId: "33333333-3333-4333-8333-333333333333",
     broadcasterDisplayName: "Nina Tran",
     createdAt: isoOffset(110),
     updatedAt: isoOffset(93)
@@ -1188,7 +1188,7 @@ export const mockGoLIVEEvents: GoLIVEEvent[] = [
     sessionType: "Workshop",
     scheduledStartAt: isoOffset(98),
     status: "Ended",
-    broadcasterUserId: "user-minh",
+    broadcasterUserId: "44444444-4444-4444-8444-444444444444",
     broadcasterDisplayName: "Minh Do",
     createdAt: isoOffset(108),
     updatedAt: isoOffset(95)
@@ -1207,7 +1207,7 @@ export const mockGoLIVEEvents: GoLIVEEvent[] = [
       Date.now() + 31 * 24 * 60 * 60 * 1000
     ).toISOString(),
     status: "Scheduled",
-    broadcasterUserId: "user-nina",
+    broadcasterUserId: "33333333-3333-4333-8333-333333333333",
     broadcasterDisplayName: "Nina Tran",
     createdAt: isoOffset(10),
     updatedAt: isoOffset(10)
