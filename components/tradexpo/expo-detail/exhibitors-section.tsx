@@ -2,13 +2,27 @@
 
 import { SearchIcon } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
+import { toast } from "sonner"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput
 } from "@/components/ui/input-group"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
@@ -23,14 +37,64 @@ import { ExhibitorCard } from "./exhibitor-card"
 type Props = {
   expoName: string
   initialExhibitors: ExpoDetailExhibitor[]
+  isAuthenticated?: boolean
 }
 
-export function ExhibitorsSection({ expoName, initialExhibitors }: Props) {
+export function ExhibitorsSection({
+  expoName,
+  initialExhibitors,
+  isAuthenticated = false
+}: Props) {
+  const router = useRouter()
   const [search, setSearch] = useState("")
   const [category, setCategory] = useState("all")
   const [items, setItems] = useState(initialExhibitors)
   const [activeChatExhibitor, setActiveChatExhibitor] =
     useState<ExpoDetailExhibitor | null>(null)
+  const [showAuthDialog, setShowAuthDialog] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [quickLoginData, setQuickLoginData] = useState({
+    fullName: "",
+    email: ""
+  })
+
+  const handleChatClick = (exhibitor: ExpoDetailExhibitor) => {
+    if (!isAuthenticated) {
+      setQuickLoginData({ fullName: "", email: "" })
+      setShowAuthDialog(true)
+      return
+    }
+    setActiveChatExhibitor(exhibitor)
+  }
+
+  const handleQuickLogin = async () => {
+    if (!quickLoginData.fullName || !quickLoginData.email) {
+      toast.error("Please fill in all fields")
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      const res = await fetch("/api/auth/quick-register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(quickLoginData)
+      })
+
+      if (res.ok) {
+        setShowAuthDialog(false)
+        router.refresh()
+        toast.success("Login successful!")
+      } else {
+        const payload = await res.json()
+        toast.error(payload.error || "Failed to process quick login")
+      }
+    } catch (err) {
+      toast.error("An unexpected error occurred")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   const categories = useMemo(() => {
     return Array.from(new Set(initialExhibitors.map((x) => x.category))).sort()
@@ -112,7 +176,7 @@ export function ExhibitorsSection({ expoName, initialExhibitors }: Props) {
             <ExhibitorCard
               key={exhibitor.id}
               exhibitor={exhibitor}
-              onChatClick={() => setActiveChatExhibitor(exhibitor)}
+              onChatClick={() => handleChatClick(exhibitor)}
             />
           ))}
         </div>
@@ -124,6 +188,69 @@ export function ExhibitorsSection({ expoName, initialExhibitors }: Props) {
           onClose={() => setActiveChatExhibitor(null)}
         />
       )}
+
+      <AlertDialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
+        <AlertDialogContent className="sm:max-w-[425px]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Quick Login</AlertDialogTitle>
+            <AlertDialogDescription>
+              Enter your details to register as a buyer and start chatting with
+              exhibitors instantly.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="fullName">Full Name</Label>
+              <Input
+                id="fullName"
+                placeholder="John Doe"
+                value={quickLoginData.fullName}
+                onChange={(e) =>
+                  setQuickLoginData((prev) => ({
+                    ...prev,
+                    fullName: e.target.value
+                  }))
+                }
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="john@example.com"
+                value={quickLoginData.email}
+                onChange={(e) =>
+                  setQuickLoginData((prev) => ({
+                    ...prev,
+                    email: e.target.value
+                  }))
+                }
+              />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isSubmitting}>
+              Cancel
+            </AlertDialogCancel>
+            <Button
+              className="bg-legend text-white hover:bg-legend-600"
+              disabled={isSubmitting}
+              onClick={handleQuickLogin}
+            >
+              {isSubmitting ? "Processing..." : "Continue to Chat"}
+            </Button>
+          </AlertDialogFooter>
+          <div className="mt-2 text-center text-xs">
+            <p className="text-muted-foreground">
+              Already have an account?{" "}
+              <Link href="/login" className="text-legend hover:underline">
+                Login here
+              </Link>
+            </p>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   )
 }
