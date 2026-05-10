@@ -17,7 +17,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem
 } from "@/components/ui/sidebar"
-import { CURRENT_USER_ID } from "@/lib/user/current-user"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card"
 
 const seller = [
@@ -56,7 +55,7 @@ const buyer = [
   }
 ]
 
-export function NavSeller() {
+export function NavSeller({ canManageSeller }: { canManageSeller: boolean }) {
   return (
     <SidebarGroup>
       <SidebarMenu>
@@ -68,37 +67,35 @@ export function NavSeller() {
         </SidebarMenuButton>
       </SidebarMenu>
       <SidebarMenu>
-        <NotificationNavLink
-          userId={CURRENT_USER_ID}
-          href="/seller/notifications"
-        />
+        <NotificationNavLink href="/seller/notifications" />
       </SidebarMenu>
 
-      {/* Deal Room */}
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <SidebarMenuButton asChild>
-            <Link href="/seller/deal-room">
-              <MessageCircleIcon />
-              <span>Deal Room</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      </SidebarMenu>
+      {canManageSeller ? (
+        <>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/seller/deal-room">
+                  <MessageCircleIcon />
+                  <span>Deal Room</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
 
-      {/* TradeXpo */}
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <SidebarMenuButton asChild>
-            <Link href="/seller/my-expos">
-              <TvMinimalIcon />
-              <span>My Expos</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-      </SidebarMenu>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton asChild>
+                <Link href="/seller/my-expos">
+                  <TvMinimalIcon />
+                  <span>My Expos</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </>
+      ) : null}
 
-      {/* Orders */}
       <SidebarMenu>
         <SidebarMenuItem>
           <SidebarMenuButton asChild>
@@ -110,22 +107,24 @@ export function NavSeller() {
         </SidebarMenuItem>
       </SidebarMenu>
 
-      {/* Seller */}
-      <SidebarGroupLabel className="select-none">Seller</SidebarGroupLabel>
-      <SidebarMenu>
-        {seller.map((item) => (
-          <SidebarMenuItem key={item.name}>
-            <SidebarMenuButton asChild>
-              <Link href={item.url}>
-                {item.icon}
-                <span>{item.name}</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        ))}
-      </SidebarMenu>
+      {canManageSeller ? (
+        <>
+          <SidebarGroupLabel className="select-none">Seller</SidebarGroupLabel>
+          <SidebarMenu>
+            {seller.map((item) => (
+              <SidebarMenuItem key={item.name}>
+                <SidebarMenuButton asChild>
+                  <Link href={item.url}>
+                    {item.icon}
+                    <span>{item.name}</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </>
+      ) : null}
 
-      {/* Buyer */}
       <SidebarGroupLabel className="select-none">Buyer</SidebarGroupLabel>
       <SidebarMenu>
         {buyer.map((item) => (
@@ -140,26 +139,29 @@ export function NavSeller() {
         ))}
       </SidebarMenu>
 
-      {/* Demo */}
-      <HoverCard>
-        <HoverCardTrigger asChild>
-          <SidebarGroupLabel className="cursor-help underline">
-            Demo
-          </SidebarGroupLabel>
-        </HoverCardTrigger>
-        <HoverCardContent align="start" className="text-sm">
-          <span className="font-bold">PO Note: &nbsp;</span>
-          <span>Chỉ dùng cho mục đích demo không cần coding</span>
-        </HoverCardContent>
-      </HoverCard>
-      <SidebarMenuItem>
-        <SidebarMenuButton asChild>
-          <Link href="/seller/checkout-demo">
-            <ShoppingCartIcon />
-            <span>Checkout Demo (eVoucher)</span>
-          </Link>
-        </SidebarMenuButton>
-      </SidebarMenuItem>
+      {canManageSeller ? (
+        <>
+          <HoverCard>
+            <HoverCardTrigger asChild>
+              <SidebarGroupLabel className="cursor-help underline">
+                Demo
+              </SidebarGroupLabel>
+            </HoverCardTrigger>
+            <HoverCardContent align="start" className="text-sm">
+              <span className="font-bold">PO Note: &nbsp;</span>
+              <span>Chỉ dùng cho mục đích demo không cần coding</span>
+            </HoverCardContent>
+          </HoverCard>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Link href="/seller/checkout-demo">
+                <ShoppingCartIcon />
+                <span>Checkout Demo (eVoucher)</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </>
+      ) : null}
     </SidebarGroup>
   )
 }

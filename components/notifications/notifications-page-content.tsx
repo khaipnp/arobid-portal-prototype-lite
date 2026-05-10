@@ -2,7 +2,7 @@
 
 import { CheckCheckIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { NotificationItemRow } from "@/components/notifications/notification-item-row"
 import { Button } from "@/components/ui/button"
 import type { NotificationRecord } from "@/lib/notifications/types"
@@ -10,9 +10,6 @@ import type { NotificationRecord } from "@/lib/notifications/types"
 const POLL_MS = 5_000
 const LIST_LIMIT = 50
 
-interface NotificationsPageContentProps {
-  userId: string
-}
 
 async function readJson<T>(response: Response): Promise<T | null> {
   if (!response.ok) {
@@ -22,9 +19,7 @@ async function readJson<T>(response: Response): Promise<T | null> {
   return payload
 }
 
-export function NotificationsPageContent({
-  userId
-}: NotificationsPageContentProps) {
+export function NotificationsPageContent() {
   const router = useRouter()
   const [notifications, setNotifications] = useState<NotificationRecord[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
@@ -33,17 +28,13 @@ export function NotificationsPageContent({
   )
   const [isMarkAllBusy, setIsMarkAllBusy] = useState(false)
 
-  const encodedUserId = useMemo(() => encodeURIComponent(userId), [userId])
   const hasUnread = unreadCount > 0
 
   const fetchUnreadCount = useCallback(async () => {
     try {
-      const response = await fetch(
-        `/api/notifications/unread-count?userId=${encodedUserId}`,
-        {
-          cache: "no-store"
-        }
-      )
+      const response = await fetch(`/api/notifications/unread-count`, {
+        cache: "no-store"
+      })
       const payload = await readJson<{ unreadCount: number }>(response)
       if (payload) {
         setUnreadCount(payload.unreadCount)
@@ -51,16 +42,13 @@ export function NotificationsPageContent({
     } catch {
       // Keep last known unread count; polling will retry.
     }
-  }, [encodedUserId])
+  }, [])
 
   const fetchNotificationList = useCallback(async () => {
     try {
-      const response = await fetch(
-        `/api/notifications?userId=${encodedUserId}&limit=${LIST_LIMIT}`,
-        {
-          cache: "no-store"
-        }
-      )
+      const response = await fetch(`/api/notifications?limit=${LIST_LIMIT}`, {
+        cache: "no-store"
+      })
       const payload = await readJson<{ notifications: NotificationRecord[] }>(
         response
       )
@@ -70,7 +58,7 @@ export function NotificationsPageContent({
     } catch {
       // Keep last known list; polling will retry.
     }
-  }, [encodedUserId])
+  }, [])
 
   const refreshListAndCount = useCallback(async () => {
     await Promise.all([fetchNotificationList(), fetchUnreadCount()])
@@ -78,34 +66,28 @@ export function NotificationsPageContent({
 
   const markNotificationRead = useCallback(
     async (notificationId: string) => {
-      const response = await fetch(
-        `/api/notifications/${notificationId}/read?userId=${encodedUserId}`,
-        {
-          method: "PATCH"
-        }
-      )
+      const response = await fetch(`/api/notifications/${notificationId}/read`, {
+        method: "PATCH"
+      })
       if (!response.ok) {
         return false
       }
       return true
     },
-    [encodedUserId]
+    []
   )
 
   const deleteNotification = useCallback(
     async (notificationId: string) => {
-      const response = await fetch(
-        `/api/notifications/${notificationId}?userId=${encodedUserId}`,
-        {
-          method: "DELETE"
-        }
-      )
+      const response = await fetch(`/api/notifications/${notificationId}`, {
+        method: "DELETE"
+      })
       if (!response.ok) {
         return false
       }
       return true
     },
-    [encodedUserId]
+    []
   )
 
   useEffect(() => {
@@ -183,12 +165,9 @@ export function NotificationsPageContent({
         )
       )
       setUnreadCount(0)
-      const response = await fetch(
-        `/api/notifications/read-all?userId=${encodedUserId}`,
-        {
-          method: "POST"
-        }
-      )
+      const response = await fetch(`/api/notifications/read-all`, {
+        method: "POST"
+      })
       if (!response.ok) {
         // Server rejected mark-all; refresh below reconciles optimistic state.
       }
@@ -196,7 +175,7 @@ export function NotificationsPageContent({
       await refreshListAndCount()
       setIsMarkAllBusy(false)
     }
-  }, [encodedUserId, hasUnread, isMarkAllBusy, refreshListAndCount])
+  }, [hasUnread, isMarkAllBusy, refreshListAndCount])
 
   return (
     <div className="space-y-4">

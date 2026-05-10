@@ -1,5 +1,6 @@
 import { SellerExpoDetail } from "@/components/seller/seller-expo-detail"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
+import { requireRole } from "@/lib/auth/rbac"
 import { listBoothTemplates } from "@/lib/tradexpo/db/booth-templates"
 import {
   listBoothCustomizations,
@@ -8,7 +9,6 @@ import {
   listSellerBoothRegistrations,
   listStreamSessions
 } from "@/lib/tradexpo/db/platform-data"
-import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
 interface Props {
   params: Promise<{ expoId: string }>
@@ -18,6 +18,7 @@ export const dynamic = "force-dynamic"
 
 export default async function SellerExpoDetailPage({ params }: Props) {
   const { expoId } = await params
+  const userId = await requireRole("seller")
 
   const [
     expos,
@@ -28,7 +29,7 @@ export default async function SellerExpoDetailPage({ params }: Props) {
     streamSessions
   ] = await Promise.all([
     listExpos(),
-    listSellerBoothRegistrations(CURRENT_USER_ID),
+    listSellerBoothRegistrations(userId),
     listBoothTemplates(),
     listBoothCustomizations(),
     listGoLIVEEvents(),

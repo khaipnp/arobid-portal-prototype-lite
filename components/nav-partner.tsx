@@ -54,7 +54,7 @@ export function NavPartner() {
         </SidebarMenuItem>
       </SidebarMenu>
       <SidebarMenu>
-        <NotificationNavLink userId="partner-1" href="/partner/notifications" />
+        <NotificationNavLink href="/partner/notifications" />
       </SidebarMenu>
       <SidebarGroupLabel className="select-none">
         Expo Management

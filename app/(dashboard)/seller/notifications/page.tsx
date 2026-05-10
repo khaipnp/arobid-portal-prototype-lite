@@ -1,6 +1,5 @@
 import { NotificationsPageContent } from "@/components/notifications/notifications-page-content"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
-import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
 export default function UserNotificationsPage() {
   return (
@@ -12,7 +11,7 @@ export default function UserNotificationsPage() {
         { label: "Notifications" }
       ]}
     >
-      <NotificationsPageContent userId={CURRENT_USER_ID} />
+      <NotificationsPageContent />
     </DashboardShell>
   )
 }

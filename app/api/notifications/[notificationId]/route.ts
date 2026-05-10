@@ -1,17 +1,17 @@
 import { NextResponse } from "next/server"
+import { requireApiUserId } from "@/lib/auth/api-user"
 import { deleteNotification } from "@/lib/notifications/service"
 
 interface Props {
   params: Promise<{ notificationId: string }>
 }
 
-export async function DELETE(request: Request, { params }: Props) {
+export async function DELETE(_request: Request, { params }: Props) {
   const { notificationId } = await params
-  const { searchParams } = new URL(request.url)
-  const userId =
-    searchParams.get("userId") ?? request.headers.get("x-user-id") ?? ""
-
-  if (!userId.trim()) {
+  let userId = ""
+  try {
+    userId = await requireApiUserId()
+  } catch {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 })
   }
 

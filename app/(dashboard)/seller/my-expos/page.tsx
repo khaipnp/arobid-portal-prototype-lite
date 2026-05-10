@@ -1,17 +1,18 @@
 import { SellerExpoList } from "@/components/seller/seller-expo-list"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
+import { requireRole } from "@/lib/auth/rbac"
 import {
   listExpos,
   listSellerBoothRegistrations
 } from "@/lib/tradexpo/db/platform-data"
-import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
 export const dynamic = "force-dynamic"
 
 export default async function SellerMyExposPage() {
+  const userId = await requireRole("seller")
   const [initialExpos, initialRegistrations] = await Promise.all([
     listExpos(),
-    listSellerBoothRegistrations(CURRENT_USER_ID)
+    listSellerBoothRegistrations(userId)
   ])
 
   return (

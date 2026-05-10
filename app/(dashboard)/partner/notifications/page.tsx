@@ -11,7 +11,7 @@ export default function PartnerNotificationsPage() {
         { label: "Notifications" }
       ]}
     >
-      <NotificationsPageContent userId="partner-1" />
+      <NotificationsPageContent />
     </DashboardShell>
   )
 }
