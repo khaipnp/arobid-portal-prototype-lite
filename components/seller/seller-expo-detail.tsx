@@ -7,7 +7,12 @@ import {
   CircleDashedIcon,
   CircleDotIcon,
   ClockIcon,
-  SettingsIcon
+  EyeIcon,
+  MessageSquareIcon,
+  PackageIcon,
+  SettingsIcon,
+  TrendingUpIcon,
+  UsersIcon
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -15,6 +20,7 @@ import * as React from "react"
 import { GoLIVESection } from "@/components/tradexpo/golive-section"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Table,
   TableBody,
@@ -74,6 +80,45 @@ function formatDate(iso: string) {
   )
 }
 
+function StatCard({
+  title,
+  value,
+  icon,
+  trend,
+  description
+}: {
+  title: string
+  value: string | number
+  icon: React.ReactNode
+  trend?: string
+  description?: string
+}) {
+  return (
+    <Card className="overflow-hidden">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
+          {title}
+        </CardTitle>
+        <div className="text-muted-foreground">{icon}</div>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-baseline gap-2">
+          <div className="font-bold text-2xl">{value}</div>
+          {trend && (
+            <div className="flex items-center text-emerald-600 text-xs font-medium">
+              <TrendingUpIcon className="mr-0.5 h-3 w-3" />
+              {trend}
+            </div>
+          )}
+        </div>
+        {description && (
+          <p className="mt-1 text-muted-foreground text-xs">{description}</p>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
 interface Props {
   expoId: string
   expo: Expo | null
@@ -82,6 +127,7 @@ interface Props {
   boothCustomizations: BoothCustomization[]
   goLiveEvents: GoLIVEEvent[]
   streamSessions: StreamSession[]
+  companyProducts: CompanyProduct[]
 }
 
 export function SellerExpoDetail({
@@ -91,7 +137,8 @@ export function SellerExpoDetail({
   boothTemplates,
   boothCustomizations,
   goLiveEvents,
-  streamSessions
+  streamSessions,
+  companyProducts
 }: Props) {
   const boothTemplateMap = React.useMemo(() => {
     const m = new Map<string, BoothTemplate>()
@@ -109,6 +156,58 @@ export function SellerExpoDetail({
     }
     return m
   }, [boothCustomizations])
+
+  const productMap = React.useMemo(() => {
+    const m = new Map<string, CompanyProduct>()
+    for (const p of companyProducts) m.set(p.id, p)
+    return m
+  }, [companyProducts])
+
+  const { stats, seed } = React.useMemo(() => {
+    // In a real app, these would come from an analytics API.
+    // For this prototype, we'll derive some and mock others based on expoId.
+    const s = expoId
+      .split("")
+      .reduce((acc, char) => acc + char.charCodeAt(0), 0)
+    const mockValue = (min: number, max: number) =>
+      Math.floor((s % (max - min)) + min)
+
+    const peakViewers = streamSessions.reduce(
+      (acc, sess) => acc + (sess.peakViewerCount ?? 0),
+      0
+    )
+
+    // Get product IDs displayed in this expo
+    const displayedProductIds = Array.from(
+      new Set(boothCustomizations.flatMap((c) => c.products.map((p) => p.id)))
+    )
+
+    // Match with company products to ensure data integrity
+    const expoProducts = displayedProductIds
+      .map((id) => productMap.get(id))
+      .filter((p): p is CompanyProduct => !!p)
+
+    const topViewedProduct =
+      expoProducts.length > 0 ? expoProducts[s % expoProducts.length] : null
+    const topRFQProduct =
+      expoProducts.length > 0
+        ? expoProducts[(s + 1) % expoProducts.length]
+        : null
+
+    return {
+      seed: s,
+      stats: {
+        visitors: mockValue(500, 2000),
+        clicks: mockValue(200, 1000),
+        leads: mockValue(10, 50),
+        streamViews: peakViewers || mockValue(100, 500),
+        topViewed: topViewedProduct,
+        topViewedCount: mockValue(50, 200),
+        topRFQ: topRFQProduct,
+        topRFQCount: mockValue(5, 20)
+      }
+    }
+  }, [expoId, streamSessions, boothCustomizations, productMap])
 
   if (!expo) {
     return (
@@ -158,6 +257,51 @@ export function SellerExpoDetail({
         </div>
       </div>
 
+      {/* Stats Widgets */}
+      {displayStatus !== "Upcoming" && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <StatCard
+            title="Booth Visitors"
+            value={stats.visitors.toLocaleString()}
+            icon={<UsersIcon className="h-4 w-4" />}
+            trend={`${(seed % 15) + 5}%`}
+            description="Unique visitors across booths"
+          />
+          <StatCard
+            title="Product Clicks"
+            value={stats.clicks.toLocaleString()}
+            icon={<PackageIcon className="h-4 w-4" />}
+            trend={`${(seed % 10) + 2}%`}
+            description="Catalog engagement"
+          />
+          <StatCard
+            title="New Leads"
+            value={stats.leads}
+            icon={<MessageSquareIcon className="h-4 w-4" />}
+            trend={`${(seed % 20) + 10}%`}
+            description="Inquiries & contacts"
+          />
+          <StatCard
+            title="Peak Viewers"
+            value={stats.streamViews.toLocaleString()}
+            icon={<EyeIcon className="h-4 w-4" />}
+            description="Max concurrent on streams"
+          />
+          <StatCard
+            title="Most Viewed Product"
+            value={stats.topViewed?.name ?? "N/A"}
+            icon={<EyeIcon className="h-4 w-4" />}
+            description={`${stats.topViewedCount} views`}
+          />
+          <StatCard
+            title="Top RFQ Product"
+            value={stats.topRFQ?.name ?? "N/A"}
+            icon={<MessageSquareIcon className="h-4 w-4" />}
+            description={`${stats.topRFQCount} quotation requests`}
+          />
+        </div>
+      )}
+
       {/* GoLIVE Sessions */}
       <GoLIVESection
         expoId={expoId}
@@ -168,7 +312,7 @@ export function SellerExpoDetail({
 
       {/* Booth list */}
       <section>
-        <h3 className="mb-3 font-semibold text-base">My Booths in This Expo</h3>
+        <h3 className="mb-3 font-semibold text-base">My Booths</h3>
         <div className="rounded-lg border">
           <Table>
             <TableHeader className="bg-muted/40">

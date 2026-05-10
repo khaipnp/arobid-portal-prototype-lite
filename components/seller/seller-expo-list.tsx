@@ -182,9 +182,10 @@ export function SellerExpoList({
               try again with different filters.
             </EmptyDescription>
           </EmptyHeader>
-          <EmptyContent className="flex-row justify-center gap-2">
+          <EmptyContent className="flex-col justify-center gap-2">
             <Button
               variant="outline"
+              className="border-legend text-legend hover:bg-legend-50 hover:text-legend-600"
               onClick={() => {
                 setSearch("")
                 setDebouncedSearch("")
@@ -193,7 +194,7 @@ export function SellerExpoList({
             >
               Clear Filters
             </Button>
-            <Button>
+            <Button variant="ghost">
               <Link href="/">Explore All Expos</Link>
             </Button>
           </EmptyContent>
