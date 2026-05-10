@@ -33,6 +33,7 @@ import { getAssetUrl } from "@/lib/image-utils"
 import type {
   BoothCustomization,
   BoothTemplate,
+  CompanyProduct,
   Expo,
   ExpoStatus,
   GoLIVEEvent,
