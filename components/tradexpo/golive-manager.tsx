@@ -6,7 +6,7 @@ import {
   ClockIcon,
   MoreHorizontalIcon,
   PlusIcon,
-  RadioIcon,
+  RadioIcon
 } from "lucide-react"
 import Image from "next/image"
 import * as React from "react"
@@ -18,7 +18,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialogTitle
 } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -28,14 +28,14 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -44,20 +44,20 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
 import {
   Tooltip,
   TooltipContent,
-  TooltipTrigger,
+  TooltipTrigger
 } from "@/components/ui/tooltip"
 import type {
   GoLIVEEvent,
   GoLIVEEventStatus,
   GoLIVESessionType,
-  StreamSession,
+  StreamSession
 } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
 
@@ -67,7 +67,7 @@ const SESSION_TYPES: GoLIVESessionType[] = [
   "Keynote",
   "Panel",
   "ProductDemo",
-  "Other",
+  "Other"
 ]
 
 const SESSION_TYPE_LABELS: Record<GoLIVESessionType, string> = {
@@ -76,14 +76,14 @@ const SESSION_TYPE_LABELS: Record<GoLIVESessionType, string> = {
   Keynote: "Keynote",
   Panel: "Panel",
   ProductDemo: "Product Demo",
-  Other: "Other",
+  Other: "Other"
 }
 
 const MOCK_EXPO_MEMBERS = [
   { userId: "user-khai", displayName: "Khai Pham" },
   { userId: "user-nina", displayName: "Nina Tran" },
   { userId: "user-minh", displayName: "Minh Do" },
-  { userId: "user-lan", displayName: "Lan Nguyen" },
+  { userId: "user-lan", displayName: "Lan Nguyen" }
 ]
 
 const statusStyles: Record<GoLIVEEventStatus, string> = {
@@ -91,7 +91,7 @@ const statusStyles: Record<GoLIVEEventStatus, string> = {
   Ready: "border-violet-300 bg-violet-50 text-violet-700",
   Live: "border-emerald-300 bg-emerald-50 text-emerald-700",
   Ended: "border-zinc-300 bg-zinc-100 text-zinc-600",
-  Canceled: "border-rose-300 bg-rose-50 text-rose-700",
+  Canceled: "border-rose-300 bg-rose-50 text-rose-700"
 }
 
 function formatSchedule(iso: string | null) {
@@ -102,7 +102,7 @@ function formatSchedule(iso: string | null) {
     month: "short",
     year: "numeric",
     hour: "2-digit",
-    minute: "2-digit",
+    minute: "2-digit"
   })
 }
 
@@ -130,7 +130,7 @@ const EMPTY_FORM: FormState = {
   description: "",
   scheduledStartAt: "",
   broadcasterUserId: "",
-  replayEnabled: false,
+  replayEnabled: false
 }
 
 interface Props {
@@ -142,23 +142,23 @@ interface Props {
 export function GoLIVEManager({
   expoId,
   initialGoLIVEEvents,
-  initialStreamSessions,
+  initialStreamSessions
 }: Props) {
   const seedEvents = initialGoLIVEEvents.filter((e) => e.expoId === expoId)
   const [events, setEvents] = React.useState<GoLIVEEvent[]>(seedEvents)
   const [formOpen, setFormOpen] = React.useState(false)
   const [editingEvent, setEditingEvent] = React.useState<GoLIVEEvent | null>(
-    null,
+    null
   )
   const [form, setForm] = React.useState<FormState>(EMPTY_FORM)
   const [errors, setErrors] = React.useState<
     Partial<Record<keyof FormState, string>>
   >({})
   const [cancelTarget, setCancelTarget] = React.useState<GoLIVEEvent | null>(
-    null,
+    null
   )
   const [deleteTarget, setDeleteTarget] = React.useState<GoLIVEEvent | null>(
-    null,
+    null
   )
   const [requestError, setRequestError] = React.useState<string | null>(null)
 
@@ -181,8 +181,8 @@ export function GoLIVEManager({
       broadcasterUserId: event.broadcasterUserId,
       replayEnabled:
         initialStreamSessions.find(
-          (s) => s.streamSessionId === event.streamSessionId,
-        )?.replayEnabled ?? false,
+          (s) => s.streamSessionId === event.streamSessionId
+        )?.replayEnabled ?? false
     })
     setErrors({})
     setFormOpen(true)
@@ -202,7 +202,7 @@ export function GoLIVEManager({
     if (!validate()) return
     const now = new Date().toISOString()
     const broadcaster = MOCK_EXPO_MEMBERS.find(
-      (m) => m.userId === form.broadcasterUserId,
+      (m) => m.userId === form.broadcasterUserId
     )
     if (!broadcaster) return
 
@@ -218,7 +218,7 @@ export function GoLIVEManager({
         status: form.scheduledStartAt ? "Scheduled" : "Ready",
         broadcasterUserId: form.broadcasterUserId,
         broadcasterDisplayName: broadcaster.displayName,
-        updatedAt: now,
+        updatedAt: now
       }
       try {
         const response = await fetch(
@@ -229,15 +229,15 @@ export function GoLIVEManager({
             body: JSON.stringify({
               action: "update",
               event: updatedEvent,
-              replayEnabled: form.replayEnabled,
-            }),
-          },
+              replayEnabled: form.replayEnabled
+            })
+          }
         )
         if (!response.ok) throw new Error("failed")
         setEvents((prev) =>
           prev.map((e) =>
-            e.goLiveEventId === editingEvent.goLiveEventId ? updatedEvent : e,
-          ),
+            e.goLiveEventId === editingEvent.goLiveEventId ? updatedEvent : e
+          )
         )
         setRequestError(null)
       } catch {
@@ -262,7 +262,7 @@ export function GoLIVEManager({
         broadcasterUserId: form.broadcasterUserId,
         broadcasterDisplayName: broadcaster.displayName,
         createdAt: now,
-        updatedAt: now,
+        updatedAt: now
       }
       const streamSession: StreamSession = {
         streamSessionId,
@@ -277,7 +277,7 @@ export function GoLIVEManager({
         endedAt: null,
         peakViewerCount: null,
         createdAt: now,
-        updatedAt: now,
+        updatedAt: now
       }
       try {
         const response = await fetch(
@@ -287,9 +287,9 @@ export function GoLIVEManager({
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               event: newEvent,
-              streamSession,
-            }),
-          },
+              streamSession
+            })
+          }
         )
         if (!response.ok) throw new Error("failed")
         setEvents((prev) => [newEvent, ...prev])
@@ -309,16 +309,16 @@ export function GoLIVEManager({
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "cancel" }),
-        },
+          body: JSON.stringify({ action: "cancel" })
+        }
       )
       if (!response.ok) throw new Error("failed")
       setEvents((prev) =>
         prev.map((e) =>
           e.goLiveEventId === event.goLiveEventId
             ? { ...e, status: "Canceled", updatedAt: new Date().toISOString() }
-            : e,
-        ),
+            : e
+        )
       )
       setRequestError(null)
       setCancelTarget(null)
@@ -332,12 +332,12 @@ export function GoLIVEManager({
       const response = await fetch(
         `/api/tradexpo/golive-events/${event.goLiveEventId}`,
         {
-          method: "DELETE",
-        },
+          method: "DELETE"
+        }
       )
       if (!response.ok) throw new Error("failed")
       setEvents((prev) =>
-        prev.filter((e) => e.goLiveEventId !== event.goLiveEventId),
+        prev.filter((e) => e.goLiveEventId !== event.goLiveEventId)
       )
       setRequestError(null)
       setDeleteTarget(null)

@@ -3,7 +3,7 @@ import { HallTemplateLibraryManager } from "@/components/tradexpo/hall-template-
 import {
   listHallTemplateAssets,
   listHallTemplates,
-  listHallTemplateUsage,
+  listHallTemplateUsage
 } from "@/lib/tradexpo/db/hall-templates"
 
 export const dynamic = "force-dynamic"
@@ -12,7 +12,7 @@ export default async function HallTemplateLibraryPage() {
   const [assets, templates, usages] = await Promise.all([
     listHallTemplateAssets(),
     listHallTemplates(),
-    listHallTemplateUsage(),
+    listHallTemplateUsage()
   ])
 
   return (
@@ -22,7 +22,7 @@ export default async function HallTemplateLibraryPage() {
       breadcrumbs={[
         { label: "Dashboard", href: "/admin" },
         { label: "TradeXpo", href: "/admin/tradexpo" },
-        { label: "Hall Templates" },
+        { label: "Hall Templates" }
       ]}
     >
       <HallTemplateLibraryManager

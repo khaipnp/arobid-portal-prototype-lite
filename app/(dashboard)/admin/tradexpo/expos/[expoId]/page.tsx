@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   getPlatformPaymentConfig,
-  listExpoPaymentConfigs,
+  listExpoPaymentConfigs
 } from "@/lib/orders/db"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 import { listHallTemplates } from "@/lib/tradexpo/db/hall-templates"
@@ -15,13 +15,13 @@ import {
   getExpoById,
   listExpoCategories,
   listExpoHalls,
-  listExpoLayoutTemplates,
+  listExpoLayoutTemplates
 } from "@/lib/tradexpo/db/platform-data"
 import type { ExpoStatus } from "@/lib/tradexpo/types"
 import { formatDateTime, getExpoTimelinePhase } from "@/lib/tradexpo/utils"
 import {
   resetExpoPaymentConfigToDefault,
-  saveExpoPaymentConfig,
+  saveExpoPaymentConfig
 } from "./payment-actions"
 
 const statusStyles: Record<ExpoStatus, string> = {
@@ -30,7 +30,7 @@ const statusStyles: Record<ExpoStatus, string> = {
   Live: "border-emerald-300 bg-emerald-100 text-emerald-700",
   Ended: "border-blue-300 bg-blue-100 text-blue-700",
   Archived: "border-zinc-300 bg-zinc-100 text-zinc-500",
-  Canceled: "border-rose-300 bg-rose-100 text-rose-700",
+  Canceled: "border-rose-300 bg-rose-100 text-rose-700"
 }
 
 const timelineStyles: Record<
@@ -39,21 +39,21 @@ const timelineStyles: Record<
 > = {
   Upcoming: "border-sky-300 bg-sky-100 text-sky-800",
   Live: "border-emerald-300 bg-emerald-100 text-emerald-800",
-  Archived: "border-zinc-300 bg-zinc-100 text-zinc-600",
+  Archived: "border-zinc-300 bg-zinc-100 text-zinc-600"
 }
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("vi-VN", {
     day: "2-digit",
     month: "2-digit",
-    year: "numeric",
+    year: "numeric"
   })
 }
 
 export const dynamic = "force-dynamic"
 
 export default async function ExpoDetailPage({
-  params,
+  params
 }: {
   params: Promise<{ expoId: string }>
 }) {
@@ -68,14 +68,14 @@ export default async function ExpoDetailPage({
     layoutTemplates,
     hallTemplates,
     initialConfigs,
-    platformPayment,
+    platformPayment
   ] = await Promise.all([
     listExpoHalls(expoId),
     listExpoCategories(),
     listExpoLayoutTemplates(),
     listHallTemplates(),
     listExpoPaymentConfigs(),
-    getPlatformPaymentConfig(),
+    getPlatformPaymentConfig()
   ])
 
   const layoutTemplateName =
@@ -108,7 +108,7 @@ export default async function ExpoDetailPage({
         { label: "Admin", href: "/admin" },
         { label: "TradeXpo", href: "/admin/tradexpo" },
         { label: "Expo List", href: "/admin/tradexpo/expos" },
-        { label: expo.name },
+        { label: expo.name }
       ]}
     >
       <div className="space-y-6">

@@ -9,7 +9,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import {
   Table,
@@ -17,24 +17,24 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from "@/components/ui/table"
 import type { ExpoPaymentConfig, PaymentConfig } from "@/lib/tradexpo/types"
 
 export function PaymentMethodConfig({
   initialPlatformPayment,
   expoPaymentConfigs,
-  totalExpoCount,
+  totalExpoCount
 }: {
   initialPlatformPayment: PaymentConfig
   expoPaymentConfigs: ExpoPaymentConfig[]
   totalExpoCount: number
 }) {
   const [_platformPayment, setPlatformPayment] = useState(
-    initialPlatformPayment,
+    initialPlatformPayment
   )
   const [vnpayEnabled, setVnpayEnabled] = useState(
-    initialPlatformPayment.vnpayEnabled,
+    initialPlatformPayment.vnpayEnabled
   )
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<string | null>(null)
@@ -49,8 +49,8 @@ export function PaymentMethodConfig({
       description:
         "Customers are redirected to the VNPay gateway to complete payment. Order status is updated automatically via gateway callback.",
       icon: <CreditCardIcon className="size-4" />,
-      enabled: vnpayEnabled,
-    },
+      enabled: vnpayEnabled
+    }
   ] as const
 
   function showToast(msg: string) {
@@ -61,7 +61,7 @@ export function PaymentMethodConfig({
   async function handleSetVNPayStatus(nextEnabled: boolean) {
     if (!nextEnabled) {
       setError(
-        "VNPay is the only active payment method and cannot be disabled.",
+        "VNPay is the only active payment method and cannot be disabled."
       )
       return
     }
@@ -69,7 +69,7 @@ export function PaymentMethodConfig({
       const response = await fetch("/api/orders/platform-payment", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ vnpayEnabled: nextEnabled }),
+        body: JSON.stringify({ vnpayEnabled: nextEnabled })
       })
       if (!response.ok) {
         throw new Error("Failed to update platform payment config")
@@ -90,7 +90,7 @@ export function PaymentMethodConfig({
 
   function handleRemoveMethod(methodName: string) {
     setError(
-      `${methodName} cannot be removed because it is the only active payment method.`,
+      `${methodName} cannot be removed because it is the only active payment method.`
     )
   }
 

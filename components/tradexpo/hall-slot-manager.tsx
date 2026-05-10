@@ -11,7 +11,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
+  AlertDialogTrigger
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import {
@@ -21,7 +21,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import {
@@ -30,14 +30,14 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
 import type { HallSlotUsage, HallTemplateSlot } from "@/lib/tradexpo/types"
 import {
   createMockId,
   parseMetadataInput,
-  serializeMetadata,
+  serializeMetadata
 } from "@/lib/tradexpo/utils"
 
 interface SlotFormState {
@@ -73,7 +73,7 @@ const defaultSlotForm: SlotFormState = {
   width: "0",
   height: "0",
   depth: "0",
-  metadataInput: "",
+  metadataInput: ""
 }
 
 function fieldToNumber(value: string, fallback = 0) {
@@ -86,7 +86,7 @@ export function HallSlotManager({
   templateName,
   initialSlots,
   initialUsage,
-  embedded = false,
+  embedded = false
 }: {
   templateId: string
   templateName: string
@@ -97,11 +97,11 @@ export function HallSlotManager({
   const [slots, setSlots] = React.useState<HallTemplateSlot[]>(() =>
     initialSlots.map((slot) => ({
       ...slot,
-      metadata: { ...slot.metadata },
-    })),
+      metadata: { ...slot.metadata }
+    }))
   )
   const [slotUsage, setSlotUsage] = React.useState<HallSlotUsage[]>(() =>
-    initialUsage.map((usage) => ({ ...usage })),
+    initialUsage.map((usage) => ({ ...usage }))
   )
   const [slotCodeSortAsc, setSlotCodeSortAsc] = React.useState(true)
 
@@ -159,7 +159,7 @@ export function HallSlotManager({
       width: String(slot.width),
       height: String(slot.height),
       depth: String(slot.depth),
-      metadataInput: serializeMetadata(slot.metadata),
+      metadataInput: serializeMetadata(slot.metadata)
     })
     setFormErrors({})
     setFormOpen(true)
@@ -173,7 +173,7 @@ export function HallSlotManager({
         resetForm()
       }
     },
-    [resetForm],
+    [resetForm]
   )
 
   function validateForm() {
@@ -182,7 +182,7 @@ export function HallSlotManager({
     const duplicate = templateSlots.some(
       (slot) =>
         slot.slotCode.toLowerCase() ===
-          formState.slotCode.trim().toLowerCase() && slot.id !== editingSlotId,
+          formState.slotCode.trim().toLowerCase() && slot.id !== editingSlotId
     )
 
     if (!formState.slotCode.trim()) {
@@ -204,7 +204,7 @@ export function HallSlotManager({
       ["rotZ", formState.rotZ],
       ["width", formState.width],
       ["height", formState.height],
-      ["depth", formState.depth],
+      ["depth", formState.depth]
     ]
 
     for (const [fieldName, fieldValue] of requiredNumericFields) {
@@ -246,20 +246,20 @@ export function HallSlotManager({
       width: fieldToNumber(formState.width, 0),
       height: fieldToNumber(formState.height, 0),
       depth: fieldToNumber(formState.depth, 0),
-      metadata: parseMetadataInput(formState.metadataInput),
+      metadata: parseMetadataInput(formState.metadataInput)
     }
 
     if (editingSlotId) {
       setSlots((currentSlots) =>
         currentSlots.map((slot) =>
-          slot.id === editingSlotId ? nextSlot : slot,
-        ),
+          slot.id === editingSlotId ? nextSlot : slot
+        )
       )
 
       if (liveUsage > 0) {
         setNotice({
           type: "info",
-          text: "This slot is in use by a live expo. Changes will take effect on next load.",
+          text: "This slot is in use by a live expo. Changes will take effect on next load."
         })
       } else {
         setNotice({ type: "success", text: "Slot updated." })
@@ -268,7 +268,7 @@ export function HallSlotManager({
       setSlots((currentSlots) => [...currentSlots, nextSlot])
       setSlotUsage((currentUsage) => [
         ...currentUsage,
-        { slotId: nextSlot.id, upcomingExpoCount: 0, liveExpoCount: 0 },
+        { slotId: nextSlot.id, upcomingExpoCount: 0, liveExpoCount: 0 }
       ])
       setNotice({ type: "success", text: "Slot created." })
     }
@@ -285,16 +285,16 @@ export function HallSlotManager({
     if (blocked) {
       setNotice({
         type: "error",
-        text: "This slot is assigned to an active expo and cannot be deleted.",
+        text: "This slot is assigned to an active expo and cannot be deleted."
       })
       return
     }
 
     setSlots((currentSlots) =>
-      currentSlots.filter((item) => item.id !== slot.id),
+      currentSlots.filter((item) => item.id !== slot.id)
     )
     setSlotUsage((currentUsage) =>
-      currentUsage.filter((item) => item.slotId !== slot.id),
+      currentUsage.filter((item) => item.slotId !== slot.id)
     )
 
     setNotice({ type: "success", text: "Slot removed." })
@@ -444,7 +444,7 @@ export function HallSlotManager({
                   onChange={(event) =>
                     setFormState((currentState) => ({
                       ...currentState,
-                      slotCode: event.target.value,
+                      slotCode: event.target.value
                     }))
                   }
                   placeholder="A01"
@@ -461,7 +461,7 @@ export function HallSlotManager({
                   onChange={(event) =>
                     setFormState((currentState) => ({
                       ...currentState,
-                      name: event.target.value,
+                      name: event.target.value
                     }))
                   }
                   placeholder="Booth A01"
@@ -589,7 +589,7 @@ export function HallSlotManager({
                 onChange={(event) =>
                   setFormState((currentState) => ({
                     ...currentState,
-                    metadataInput: event.target.value,
+                    metadataInput: event.target.value
                   }))
                 }
                 className="min-h-24"
@@ -617,7 +617,7 @@ function NumericField({
   value,
   onChange,
   error,
-  defaultHint,
+  defaultHint
 }: {
   label: string
   value: string

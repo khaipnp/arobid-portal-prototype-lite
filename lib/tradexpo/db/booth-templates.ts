@@ -3,7 +3,7 @@ import type {
   BoothTemplate,
   BoothTemplateUsage,
   BoothType,
-  TranslationRecord,
+  TranslationRecord
 } from "@/lib/tradexpo/types"
 
 type BoothTemplateRow = {
@@ -28,7 +28,7 @@ type BoothTemplateTranslationRow = {
 
 function rowToTemplate(
   row: BoothTemplateRow,
-  translations: TranslationRecord[],
+  translations: TranslationRecord[]
 ): BoothTemplate {
   return {
     id: row.id,
@@ -42,7 +42,7 @@ function rowToTemplate(
     isPublic: row.is_public,
     isActive: row.is_active,
     updatedBy: row.updated_by,
-    updatedAt: new Date(row.updated_at).toISOString(),
+    updatedAt: new Date(row.updated_at).toISOString()
   }
 }
 
@@ -65,7 +65,7 @@ export async function listBoothTemplates(): Promise<BoothTemplate[]> {
   }
 
   return templates.map((t) =>
-    rowToTemplate(t, translationsByTemplate.get(t.id) ?? []),
+    rowToTemplate(t, translationsByTemplate.get(t.id) ?? [])
   )
 }
 
@@ -75,6 +75,6 @@ export async function listBoothTemplateUsage(): Promise<BoothTemplateUsage[]> {
     boothTemplateId: r.booth_template_id,
     upcomingExpoBoothCount: r.upcoming_expo_booth_count,
     liveExpoBoothCount: r.live_expo_booth_count,
-    archivedExpoBoothCount: r.archived_expo_booth_count,
+    archivedExpoBoothCount: r.archived_expo_booth_count
   }))
 }

@@ -8,9 +8,9 @@ const footerColumns = [
     "Sell on Arobid.com",
     "Start Selling on Arobid",
     "Seller Central Login",
-    "Membership Program",
+    "Membership Program"
   ],
-  ["Get support", "Help Center", "Contact us"],
+  ["Get support", "Help Center", "Contact us"]
 ]
 
 export function TxFooter() {

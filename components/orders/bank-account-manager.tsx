@@ -5,7 +5,7 @@ import {
   MoreHorizontalIcon,
   PlusIcon,
   SearchIcon,
-  StarIcon,
+  StarIcon
 } from "lucide-react"
 import { useMemo, useState } from "react"
 import {
@@ -16,7 +16,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialogTitle
 } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -25,14 +25,14 @@ import {
   DialogContent,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -41,7 +41,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from "@/components/ui/select"
 import {
   Table,
@@ -49,7 +49,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from "@/components/ui/table"
 import { Toggle } from "@/components/ui/toggle"
 import { VIETNAMESE_BANKS } from "@/lib/orders/bank-directory"
@@ -73,18 +73,18 @@ const emptyForm: FormState = {
   accountNumber: "",
   accountHolderName: "",
   branch: "",
-  isPrimary: false,
+  isPrimary: false
 }
 
 export function BankAccountManager({
   initialBankAccounts,
-  bankTransferEnabled,
+  bankTransferEnabled
 }: {
   initialBankAccounts: BankAccount[]
   bankTransferEnabled: boolean
 }) {
   const [accounts, setAccounts] = useState<BankAccount[]>(() => [
-    ...initialBankAccounts,
+    ...initialBankAccounts
   ])
   const [form, setForm] = useState<FormState>(emptyForm)
   const [editingId, setEditingId] = useState<string | null>(null)
@@ -136,7 +136,7 @@ export function BankAccountManager({
       accountNumber: account.accountNumber,
       accountHolderName: account.accountHolderName,
       branch: account.branch ?? "",
-      isPrimary: account.isPrimary,
+      isPrimary: account.isPrimary
     })
     setError(null)
     setShowFormDialog(true)
@@ -147,7 +147,7 @@ export function BankAccountManager({
     setForm((f) => ({
       ...f,
       bankName: name,
-      bankBIN: bank?.bin ?? "",
+      bankBIN: bank?.bin ?? ""
     }))
   }
 
@@ -173,8 +173,8 @@ export function BankAccountManager({
             accountNumber: form.accountNumber.trim(),
             accountHolderName: form.accountHolderName.trim(),
             branch: form.branch.trim() || undefined,
-            isPrimary: form.isPrimary,
-          }),
+            isPrimary: form.isPrimary
+          })
         })
         if (!response.ok) throw new Error("Update failed")
         const now = new Date().toISOString()
@@ -189,14 +189,14 @@ export function BankAccountManager({
                 accountHolderName: form.accountHolderName.trim(),
                 branch: form.branch.trim() || undefined,
                 isPrimary: form.isPrimary ? true : a.isPrimary,
-                updatedAt: now,
+                updatedAt: now
               }
             }
             if (form.isPrimary && a.id !== editingId) {
               return { ...a, isPrimary: false }
             }
             return a
-          }),
+          })
         )
         showToast("Bank account updated successfully.")
       } else {
@@ -209,8 +209,8 @@ export function BankAccountManager({
             accountNumber: form.accountNumber.trim(),
             accountHolderName: form.accountHolderName.trim(),
             branch: form.branch.trim() || undefined,
-            isPrimary: form.isPrimary,
-          }),
+            isPrimary: form.isPrimary
+          })
         })
         if (!response.ok) throw new Error("Create failed")
         const data = (await response.json()) as { id: string }
@@ -225,7 +225,7 @@ export function BankAccountManager({
           isPrimary: form.isPrimary,
           isActive: true,
           createdAt: now,
-          updatedAt: now,
+          updatedAt: now
         }
         setAccounts((prev) => {
           const updated = form.isPrimary
@@ -255,7 +255,7 @@ export function BankAccountManager({
       // Deactivating
       if (account.isPrimary && bankTransferEnabled) {
         setError(
-          `"${account.bankName} ···${account.accountNumber.slice(-4)}" is the active primary account for Bank Transfer payments. Please set a different primary account before deactivating.`,
+          `"${account.bankName} ···${account.accountNumber.slice(-4)}" is the active primary account for Bank Transfer payments. Please set a different primary account before deactivating.`
         )
         return
       }
@@ -268,7 +268,7 @@ export function BankAccountManager({
   function handleDelete(account: BankAccount) {
     if (account.isPrimary && bankTransferEnabled) {
       setError(
-        "Cannot delete the primary account while Bank Transfer is enabled.",
+        "Cannot delete the primary account while Bank Transfer is enabled."
       )
       return
     }
@@ -287,8 +287,8 @@ export function BankAccountManager({
         const response = await fetch(
           `/api/orders/bank-accounts/${account.id}`,
           {
-            method: "DELETE",
-          },
+            method: "DELETE"
+          }
         )
         if (!response.ok) throw new Error("Delete failed")
       } else {
@@ -303,8 +303,8 @@ export function BankAccountManager({
           {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action }),
-          },
+            body: JSON.stringify({ action })
+          }
         )
         if (!response.ok) throw new Error("Update failed")
       }
@@ -314,15 +314,15 @@ export function BankAccountManager({
           updated = prev.map((a) => ({
             ...a,
             isPrimary: a.id === account.id,
-            updatedAt: a.id === account.id ? now : a.updatedAt,
+            updatedAt: a.id === account.id ? now : a.updatedAt
           }))
         } else if (type === "deactivate") {
           updated = prev.map((a) =>
-            a.id === account.id ? { ...a, isActive: false, updatedAt: now } : a,
+            a.id === account.id ? { ...a, isActive: false, updatedAt: now } : a
           )
         } else if (type === "activate") {
           updated = prev.map((a) =>
-            a.id === account.id ? { ...a, isActive: true, updatedAt: now } : a,
+            a.id === account.id ? { ...a, isActive: true, updatedAt: now } : a
           )
         } else {
           updated = prev.filter((a) => a.id !== account.id)
@@ -334,7 +334,7 @@ export function BankAccountManager({
         "set-primary": `${account.bankName} ···${account.accountNumber.slice(-4)} is now the primary account.`,
         deactivate: "Account deactivated.",
         activate: "Account activated.",
-        delete: "Account deleted.",
+        delete: "Account deleted."
       }
       showToast(messages[type])
       setConfirmAction(null)
@@ -558,7 +558,7 @@ export function BankAccountManager({
                 onChange={(e) =>
                   setForm((f) => ({
                     ...f,
-                    accountHolderName: e.target.value,
+                    accountHolderName: e.target.value
                   }))
                 }
               />

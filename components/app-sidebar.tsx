@@ -12,7 +12,7 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarRail,
+  SidebarRail
 } from "@/components/ui/sidebar"
 
 export type PortalType = "admin" | "partner" | "seller"
@@ -20,7 +20,7 @@ export type PortalType = "admin" | "partner" | "seller"
 const user = {
   name: "Khai Pham",
   email: "khaipham@arobid.com",
-  avatar: "/avatar.webp",
+  avatar: "/avatar.webp"
 }
 
 const portals = [
@@ -28,20 +28,20 @@ const portals = [
     name: "Admin Portal",
     logo: <ShieldUserIcon />,
     plan: "Admin View",
-    url: "/admin",
+    url: "/admin"
   },
   {
     name: "Partner Portal",
     logo: <HandshakeIcon />,
     plan: "Expo Owner View",
-    url: "/partner",
+    url: "/partner"
   },
   {
     name: "Eg. Thaco Company",
     logo: <Building2Icon />,
     plan: "User's Workspace",
-    url: "/seller",
-  },
+    url: "/seller"
+  }
 ]
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {

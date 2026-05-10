@@ -5,7 +5,7 @@ import {
   ChevronDownIcon,
   MoreHorizontalIcon,
   SearchIcon,
-  XIcon,
+  XIcon
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -18,27 +18,27 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialogTitle
 } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   type DateRange,
-  DateRangePicker,
+  DateRangePicker
 } from "@/components/ui/date-range-picker"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from "@/components/ui/select"
 import {
   Table,
@@ -46,7 +46,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from "@/components/ui/table"
 import type { Expo, ExpoCategory, ExpoStatus } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
@@ -54,7 +54,7 @@ import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
-  InputGroupInput,
+  InputGroupInput
 } from "../ui/input-group"
 
 const ALL_STATUSES: ExpoStatus[] = [
@@ -63,7 +63,7 @@ const ALL_STATUSES: ExpoStatus[] = [
   "Live",
   "Ended",
   "Archived",
-  "Canceled",
+  "Canceled"
 ]
 
 const statusStyles: Record<ExpoStatus, string> = {
@@ -72,12 +72,12 @@ const statusStyles: Record<ExpoStatus, string> = {
   Live: "border-emerald-300 bg-emerald-100 text-emerald-700",
   Ended: "border-zinc-300 bg-zinc-100 text-zinc-700",
   Archived: "border-purple-300 bg-purple-100 text-purple-700",
-  Canceled: "border-rose-300 bg-rose-100 text-rose-700",
+  Canceled: "border-rose-300 bg-rose-100 text-rose-700"
 }
 
 function formatDate(iso: string) {
   return new Intl.DateTimeFormat("en-GB", { dateStyle: "short" }).format(
-    new Date(iso),
+    new Date(iso)
   )
 }
 
@@ -95,7 +95,7 @@ type ConfirmAction =
 
 export function ExpoListManager({
   initialExpos,
-  initialCategories,
+  initialCategories
 }: {
   initialExpos: Expo[]
   initialCategories: ExpoCategory[]
@@ -105,13 +105,13 @@ export function ExpoListManager({
       .map((expo) => ({ ...expo }))
       .sort(
         (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      ),
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
   )
   const [searchInput, setSearchInput] = React.useState("")
   const [debouncedSearch, setDebouncedSearch] = React.useState("")
   const [statusFilter, setStatusFilter] = React.useState<ExpoStatus | "All">(
-    "All",
+    "All"
   )
   const [categoryFilter, setCategoryFilter] = React.useState<string[]>([])
   const [dateRangeFilter, setDateRangeFilter] = React.useState<
@@ -144,7 +144,7 @@ export function ExpoListManager({
       result = result.filter(
         (expo) =>
           expo.name.toLowerCase().includes(keyword) ||
-          expo.ownerEmail.toLowerCase().includes(keyword),
+          expo.ownerEmail.toLowerCase().includes(keyword)
       )
     }
 
@@ -154,7 +154,7 @@ export function ExpoListManager({
 
     if (categoryFilter.length > 0) {
       result = result.filter((expo) =>
-        categoryFilter.every((catId) => expo.categoryIds.includes(catId)),
+        categoryFilter.every((catId) => expo.categoryIds.includes(catId))
       )
     }
 
@@ -192,7 +192,7 @@ export function ExpoListManager({
     setCategoryFilter((prev) =>
       prev.includes(catId)
         ? prev.filter((id) => id !== catId)
-        : [...prev, catId],
+        : [...prev, catId]
     )
     setPage(1)
   }
@@ -206,27 +206,27 @@ export function ExpoListManager({
         const response = await fetch(`/api/tradexpo/expos/${expo.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: "Archived" satisfies ExpoStatus }),
+          body: JSON.stringify({ status: "Archived" satisfies ExpoStatus })
         })
         if (!response.ok) {
           setNotice({
             type: "error",
-            text: `Failed to archive "${expo.name}".`,
+            text: `Failed to archive "${expo.name}".`
           })
           return
         }
         setExpos((prev) =>
           prev.map((e) =>
-            e.id === expo.id ? { ...e, status: "Archived" as ExpoStatus } : e,
-          ),
+            e.id === expo.id ? { ...e, status: "Archived" as ExpoStatus } : e
+          )
         )
         setNotice({
           type: "success",
-          text: `"${expo.name}" has been archived.`,
+          text: `"${expo.name}" has been archived.`
         })
       } else if (type === "delete") {
         const response = await fetch(`/api/tradexpo/expos/${expo.id}`, {
-          method: "DELETE",
+          method: "DELETE"
         })
         if (!response.ok) {
           setNotice({ type: "error", text: `Failed to delete "${expo.name}".` })
@@ -238,23 +238,23 @@ export function ExpoListManager({
         const response = await fetch(`/api/tradexpo/expos/${expo.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: "Live" satisfies ExpoStatus }),
+          body: JSON.stringify({ status: "Live" satisfies ExpoStatus })
         })
         if (!response.ok) {
           setNotice({
             type: "error",
-            text: `Failed to approve "${expo.name}".`,
+            text: `Failed to approve "${expo.name}".`
           })
           return
         }
         setExpos((prev) =>
           prev.map((e) =>
-            e.id === expo.id ? { ...e, status: "Live" as ExpoStatus } : e,
-          ),
+            e.id === expo.id ? { ...e, status: "Live" as ExpoStatus } : e
+          )
         )
         setNotice({
           type: "success",
-          text: `"${expo.name}" is now Live. Approval notification sent to ${expo.ownerEmail}.`,
+          text: `"${expo.name}" is now Live. Approval notification sent to ${expo.ownerEmail}.`
         })
       }
     } catch {
@@ -273,7 +273,7 @@ export function ExpoListManager({
         title: "Approve Expo?",
         description: `This will set "${confirmAction.expo.name}" to Live and notify the owner at ${confirmAction.expo.ownerEmail}.`,
         actionLabel: "Approve",
-        variant: "default" as const,
+        variant: "default" as const
       }
     }
 
@@ -282,7 +282,7 @@ export function ExpoListManager({
         title: "Archive Expo?",
         description: `"${confirmAction.expo.name}" will be archived and removed from the public listing.`,
         actionLabel: "Archive",
-        variant: "default" as const,
+        variant: "default" as const
       }
     }
 
@@ -290,7 +290,7 @@ export function ExpoListManager({
       title: "Delete Expo?",
       description: `This will permanently delete "${confirmAction.expo.name}". This action cannot be undone.`,
       actionLabel: "Delete",
-      variant: "destructive" as const,
+      variant: "destructive" as const
     }
   }, [confirmAction])
 
@@ -426,7 +426,7 @@ export function ExpoListManager({
                 ? "border-rose-300 bg-rose-50 text-rose-700"
                 : notice.type === "info"
                   ? "border-amber-300 bg-amber-50 text-amber-700"
-                  : "border-emerald-300 bg-emerald-50 text-emerald-700",
+                  : "border-emerald-300 bg-emerald-50 text-emerald-700"
             )}
           >
             {notice.text}

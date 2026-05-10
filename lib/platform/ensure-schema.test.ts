@@ -26,7 +26,7 @@ describe("platform schema consistency", () => {
     expect(columns).toEqual([
       { column_name: "booth_ref", is_nullable: "YES" },
       { column_name: "booth_tier", is_nullable: "YES" },
-      { column_name: "expo_name", is_nullable: "YES" },
+      { column_name: "expo_name", is_nullable: "YES" }
     ])
 
     await sql`delete from orders where id = 'test-order-b2b-package'`
@@ -83,7 +83,7 @@ describe("platform schema consistency", () => {
         order_type: "b2b_subscription",
         expo_name: null,
         booth_ref: null,
-        booth_tier: null,
+        booth_tier: null
       })
     } finally {
       await sql`delete from orders where id = 'test-order-b2b-package'`
@@ -158,7 +158,7 @@ describe("platform schema consistency", () => {
       const registrations = await listSellerBoothRegistrations("test-user-a")
 
       expect(registrations.map((registration) => registration.id)).toEqual([
-        "test-reg-user-a",
+        "test-reg-user-a"
       ])
     } finally {
       await sql`delete from booth_customizations where registration_id like 'test-reg-%'`

@@ -9,7 +9,7 @@ import {
   MonitorPlayIcon,
   RadioIcon,
   SquareIcon,
-  UsersIcon,
+  UsersIcon
 } from "lucide-react"
 import * as React from "react"
 import { Badge } from "@/components/ui/badge"
@@ -19,14 +19,14 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
+  CardTitle
 } from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import {
@@ -35,12 +35,12 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from "@/components/ui/table"
 import type {
   GoLIVEEvent,
   StreamSession,
-  StreamSessionStatus,
+  StreamSessionStatus
 } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
 
@@ -48,7 +48,7 @@ const statusStyles: Record<StreamSessionStatus, string> = {
   Provisioned: "border-amber-300 bg-amber-50 text-amber-700",
   Active: "border-emerald-300 bg-emerald-50 text-emerald-700",
   Ended: "border-zinc-300 bg-zinc-100 text-zinc-600",
-  Canceled: "border-rose-300 bg-rose-50 text-rose-700",
+  Canceled: "border-rose-300 bg-rose-50 text-rose-700"
 }
 
 function CredentialField({ label, value }: { label: string; value: string }) {
@@ -119,11 +119,11 @@ interface SessionCardProps {
 function SessionCard({
   event,
   session: initialSession,
-  onSessionChange,
+  onSessionChange
 }: SessionCardProps) {
   const [session, setSession] = React.useState<StreamSession>(initialSession)
   const [viewerCount, setViewerCount] = React.useState(
-    session.peakViewerCount ?? 0,
+    session.peakViewerCount ?? 0
   )
   const [elapsedLabel, setElapsedLabel] = React.useState("")
   const startedAtRef = React.useRef<string | null>(session.startedAt)
@@ -138,7 +138,7 @@ function SessionCard({
     if (session.status !== "Active") return
     const interval = setInterval(() => {
       setViewerCount((prev) =>
-        Math.max(1, prev + Math.floor(Math.random() * 11) - 5),
+        Math.max(1, prev + Math.floor(Math.random() * 11) - 5)
       )
       if (startedAtRef.current) {
         setElapsedLabel(formatDuration(startedAtRef.current, null))
@@ -156,7 +156,7 @@ function SessionCard({
     const updatedSession = {
       ...session,
       status: "Active" as const,
-      startedAt: now,
+      startedAt: now
     }
     try {
       const response = await fetch(
@@ -170,9 +170,9 @@ function SessionCard({
             startedAt: now,
             endedAt: null,
             peakViewerCount: null,
-            updatedAt: now,
-          }),
-        },
+            updatedAt: now
+          })
+        }
       )
       if (!response.ok) return
       setSession(updatedSession)
@@ -190,7 +190,7 @@ function SessionCard({
       ...session,
       status: "Ended" as const,
       endedAt: now,
-      peakViewerCount: viewerCount,
+      peakViewerCount: viewerCount
     }
     try {
       const response = await fetch(
@@ -204,9 +204,9 @@ function SessionCard({
             startedAt: session.startedAt,
             endedAt: now,
             peakViewerCount: viewerCount,
-            updatedAt: now,
-          }),
-        },
+            updatedAt: now
+          })
+        }
       )
       if (!response.ok) return
       setSession(updatedSession)
@@ -368,7 +368,7 @@ function SessionCard({
 export function HostDashboard({
   initialStreamSessions,
   initialGoLIVEEvents,
-  currentUserId = "user-khai",
+  currentUserId = "user-khai"
 }: {
   initialStreamSessions: StreamSession[]
   initialGoLIVEEvents: GoLIVEEvent[]
@@ -382,7 +382,7 @@ export function HostDashboard({
   const initialPairs = myEvents
     .map((event) => {
       const session = baseSessionData.find(
-        (s) => s.streamSessionId === event.streamSessionId,
+        (s) => s.streamSessionId === event.streamSessionId
       )
       return session ? { event, session } : null
     })
@@ -407,7 +407,7 @@ export function HostDashboard({
       try {
         const response = await fetch("/api/stream/sessions", {
           signal: controller.signal,
-          cache: "no-store",
+          cache: "no-store"
         })
         if (!response.ok) return
         const payload = (await response.json()) as {
@@ -438,7 +438,7 @@ export function HostDashboard({
 
   const myPairs = initialPairs.map(({ event, session }) => ({
     event,
-    session: sessionStates[session.streamSessionId] || session,
+    session: sessionStates[session.streamSessionId] || session
   }))
 
   const selectedSession = selectedSessionId
@@ -448,7 +448,7 @@ export function HostDashboard({
   const handleSessionChange = (updatedSession: StreamSession) => {
     setSessionStates((prev) => ({
       ...prev,
-      [updatedSession.streamSessionId]: updatedSession,
+      [updatedSession.streamSessionId]: updatedSession
     }))
   }
 

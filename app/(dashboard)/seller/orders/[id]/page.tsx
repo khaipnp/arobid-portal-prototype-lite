@@ -3,7 +3,7 @@ import { CustomerOrderDetail } from "@/components/orders/customer-order-detail"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import {
   getCustomerOrder,
-  listCustomerTransactionLogForOrder,
+  listCustomerTransactionLogForOrder
 } from "@/lib/orders/db"
 import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
@@ -20,7 +20,7 @@ export default async function CustomerOrderDetailPage({ params }: Props) {
 
   const transactionLog = await listCustomerTransactionLogForOrder(
     id,
-    CURRENT_USER_ID,
+    CURRENT_USER_ID
   )
 
   return (
@@ -29,7 +29,7 @@ export default async function CustomerOrderDetailPage({ params }: Props) {
       breadcrumbs={[
         { label: "Dashboard", href: "/seller" },
         { label: "Orders", href: "/seller/orders" },
-        { label: id },
+        { label: id }
       ]}
     >
       <CustomerOrderDetail order={order} transactionLog={transactionLog} />

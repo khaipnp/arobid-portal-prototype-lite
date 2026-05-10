@@ -20,7 +20,7 @@ function rowToAsset(row: AssetRow): ModelAsset {
     fileUrl: row.file_url,
     kind: row.kind,
     status: row.status,
-    createdAt: new Date(row.created_at).toISOString(),
+    createdAt: new Date(row.created_at).toISOString()
   }
 }
 
@@ -41,7 +41,7 @@ function revalidateForScope(scope: TemplateRevalidateScope) {
 export async function updateModelAssetStatus(
   assetId: string,
   status: ModelAsset["status"],
-  scope: TemplateRevalidateScope,
+  scope: TemplateRevalidateScope
 ): Promise<ModelAsset> {
   const rows = (await sql`
     update model_assets

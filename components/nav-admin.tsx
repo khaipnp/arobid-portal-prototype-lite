@@ -14,7 +14,7 @@ import {
   TicketIcon,
   ToyBrickIcon,
   UserRoundKeyIcon,
-  WalletCardsIcon,
+  WalletCardsIcon
 } from "lucide-react"
 import Link from "next/link"
 import {
@@ -22,89 +22,89 @@ import {
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem,
+  SidebarMenuItem
 } from "@/components/ui/sidebar"
 
 const b2bMarketplaceLinks = [
   {
     name: "Hall Templates",
     url: "/admin/tradexpo/hall-templates",
-    icon: <PieChartIcon />,
+    icon: <PieChartIcon />
   },
   {
     name: "Booth Templates",
     url: "/admin/tradexpo/booth-templates",
-    icon: <LayoutPanelTopIcon />,
-  },
+    icon: <LayoutPanelTopIcon />
+  }
 ]
 
 const tradexpoLinks = [
   {
     name: "Overview",
     url: "/admin/tradexpo",
-    icon: <LayoutDashboardIcon />,
+    icon: <LayoutDashboardIcon />
   },
   {
     name: "Expo List",
     url: "/admin/tradexpo/expos",
-    icon: <Grid3x2Icon />,
+    icon: <Grid3x2Icon />
   },
   {
     name: "Hall Templates",
     url: "/admin/tradexpo/hall-templates",
-    icon: <LayoutTemplateIcon />,
+    icon: <LayoutTemplateIcon />
   },
   {
     name: "Booth Templates",
     url: "/admin/tradexpo/booth-templates",
-    icon: <ToyBrickIcon />,
-  },
+    icon: <ToyBrickIcon />
+  }
 ]
 
 const servicesLinks = [
   {
     name: "Host Dashboard",
     url: "/admin/streaming",
-    icon: <MonitorPlayIcon />,
+    icon: <MonitorPlayIcon />
   },
   {
     name: "Order Management",
     url: "/admin/orders",
-    icon: <ReceiptIcon />,
+    icon: <ReceiptIcon />
   },
   {
     name: "eVoucher",
     url: "/admin/evoucher",
-    icon: <TicketIcon />,
+    icon: <TicketIcon />
   },
   {
     name: "Payment Management",
     url: "/admin/settings/payment-management",
-    icon: <WalletCardsIcon />,
-  },
+    icon: <WalletCardsIcon />
+  }
 ]
 
 const administrationLinks = [
   {
     name: "Modules",
     url: "/admin/administration/modules",
-    icon: <ShieldCheckIcon />,
+    icon: <ShieldCheckIcon />
   },
   {
     name: "Roles",
     url: "/admin/administration/roles",
-    icon: <UserRoundKeyIcon />,
+    icon: <UserRoundKeyIcon />
   },
   {
     name: "Features",
     url: "/admin/administration/features",
-    icon: <ShapesIcon />,
+    icon: <ShapesIcon />
   },
   {
     name: "Permissions",
     url: "/admin/administration/permissions",
-    icon: <BrickWallShieldIcon />,
-  },
+    icon: <BrickWallShieldIcon />
+  }
 ]
 
 export function NavAdmin() {

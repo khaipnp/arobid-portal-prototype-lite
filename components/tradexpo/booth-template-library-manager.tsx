@@ -15,7 +15,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
+  AlertDialogTrigger
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -24,14 +24,14 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -40,7 +40,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from "@/components/ui/select"
 import {
   Table,
@@ -48,18 +48,18 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
 import {
   toggleBoothTemplateActive,
-  toggleBoothTemplatePublic,
+  toggleBoothTemplatePublic
 } from "@/lib/tradexpo/actions/booth-templates"
 import type {
   BoothTemplate,
   BoothTemplateUsage,
   BoothType,
-  ModelAsset,
+  ModelAsset
 } from "@/lib/tradexpo/types"
 import {
   canPublish,
@@ -68,7 +68,7 @@ import {
   getAssetMap,
   getBoothTemplateStatus,
   getTranslationName,
-  isValidFileName,
+  isValidFileName
 } from "@/lib/tradexpo/utils"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group"
 
@@ -91,14 +91,14 @@ const defaultFormState: BoothTemplateFormState = {
   thumbnailFileName: "",
   blendFileName: "",
   isPublic: false,
-  isActive: true,
+  isActive: true
 }
 
 export function BoothTemplateLibraryManager({
   initialAssets,
   initialTemplates,
   initialUsage,
-  initialBoothTypes,
+  initialBoothTypes
 }: {
   initialAssets: ModelAsset[]
   initialTemplates: BoothTemplate[]
@@ -106,16 +106,16 @@ export function BoothTemplateLibraryManager({
   initialBoothTypes: BoothType[]
 }) {
   const [assets, setAssets] = React.useState<ModelAsset[]>(() =>
-    initialAssets.map((a) => ({ ...a })),
+    initialAssets.map((a) => ({ ...a }))
   )
   const [templates, setTemplates] = React.useState<BoothTemplate[]>(() =>
     initialTemplates.map((t) => ({
       ...t,
-      translations: t.translations.map((tr) => ({ ...tr })),
-    })),
+      translations: t.translations.map((tr) => ({ ...tr }))
+    }))
   )
   const [usages, setUsages] = React.useState<BoothTemplateUsage[]>(() =>
-    initialUsage.map((u) => ({ ...u })),
+    initialUsage.map((u) => ({ ...u }))
   )
   const boothTypes = React.useMemo(() => initialBoothTypes, [initialBoothTypes])
 
@@ -144,7 +144,7 @@ export function BoothTemplateLibraryManager({
   const [translationName, setTranslationName] = React.useState("")
   const [previewLocale, setPreviewLocale] = React.useState("en")
   const [deleteTemplateId, setDeleteTemplateId] = React.useState<string | null>(
-    null,
+    null
   )
 
   const assetMap = React.useMemo(() => getAssetMap(assets), [assets])
@@ -157,7 +157,7 @@ export function BoothTemplateLibraryManager({
     }
 
     return templates.filter((template) =>
-      template.name.toLowerCase().includes(keyword),
+      template.name.toLowerCase().includes(keyword)
     )
   }, [templates, search])
 
@@ -177,12 +177,12 @@ export function BoothTemplateLibraryManager({
 
   const translationTarget = React.useMemo(
     () => templates.find((template) => template.id === translationTemplateId),
-    [templates, translationTemplateId],
+    [templates, translationTemplateId]
   )
 
   const deleteTarget = React.useMemo(
     () => templates.find((template) => template.id === deleteTemplateId),
-    [templates, deleteTemplateId],
+    [templates, deleteTemplateId]
   )
 
   const resetForm = React.useCallback(() => {
@@ -208,7 +208,7 @@ export function BoothTemplateLibraryManager({
       thumbnailFileName: "",
       blendFileName: "",
       isPublic: template.isPublic,
-      isActive: template.isActive,
+      isActive: template.isActive
     })
     setFormErrors({})
     setFormOpen(true)
@@ -222,15 +222,15 @@ export function BoothTemplateLibraryManager({
         resetForm()
       }
     },
-    [resetForm],
+    [resetForm]
   )
 
   const scheduleAssetProcessing = React.useCallback((asset: ModelAsset) => {
     window.setTimeout(() => {
       setAssets((currentAssets) =>
         currentAssets.map((item) =>
-          item.id === asset.id ? { ...item, status: "processing" } : item,
-        ),
+          item.id === asset.id ? { ...item, status: "processing" } : item
+        )
       )
     }, 600)
 
@@ -241,8 +241,8 @@ export function BoothTemplateLibraryManager({
 
       setAssets((currentAssets) =>
         currentAssets.map((item) =>
-          item.id === asset.id ? { ...item, status: nextStatus } : item,
-        ),
+          item.id === asset.id ? { ...item, status: nextStatus } : item
+        )
       )
     }, 2100)
   }, [])
@@ -250,13 +250,13 @@ export function BoothTemplateLibraryManager({
   function validateForm() {
     const nextErrors: Record<string, string> = {}
     const currentTemplate = templates.find(
-      (template) => template.id === editingTemplateId,
+      (template) => template.id === editingTemplateId
     )
 
     const duplicateName = templates.some(
       (template) =>
         template.name.toLowerCase() === formState.name.trim().toLowerCase() &&
-        template.id !== editingTemplateId,
+        template.id !== editingTemplateId
     )
 
     if (!formState.name.trim()) {
@@ -333,7 +333,7 @@ export function BoothTemplateLibraryManager({
         kind === "blend"
           ? `https://example.com/files/${fileName}`
           : `https://picsum.photos/seed/${createMockId("preview")}/640/360`,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date().toISOString()
     }
   }
 
@@ -345,7 +345,7 @@ export function BoothTemplateLibraryManager({
     }
 
     const currentTemplate = templates.find(
-      (template) => template.id === editingTemplateId,
+      (template) => template.id === editingTemplateId
     )
 
     const newAssets: ModelAsset[] = []
@@ -356,7 +356,7 @@ export function BoothTemplateLibraryManager({
 
     if (formState.thumbnailFileName.trim()) {
       newAssets.push(
-        buildAsset(formState.thumbnailFileName.trim(), "thumbnail"),
+        buildAsset(formState.thumbnailFileName.trim(), "thumbnail")
       )
     }
 
@@ -375,7 +375,7 @@ export function BoothTemplateLibraryManager({
     if (!newGlbAssetId || !newThumbnailAssetId || !formState.boothTypeId) {
       setNotice({
         type: "error",
-        text: "Missing required fields. Please verify booth type and required assets.",
+        text: "Missing required fields. Please verify booth type and required assets."
       })
       return
     }
@@ -394,7 +394,7 @@ export function BoothTemplateLibraryManager({
         isPublic: false,
         isActive: formState.isActive,
         updatedBy: "Khai Pham",
-        updatedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       }
 
       setTemplates((currentTemplates) => [nextTemplate, ...currentTemplates])
@@ -403,13 +403,13 @@ export function BoothTemplateLibraryManager({
           boothTemplateId: nextTemplate.id,
           upcomingExpoBoothCount: 0,
           liveExpoBoothCount: 0,
-          archivedExpoBoothCount: 0,
+          archivedExpoBoothCount: 0
         },
-        ...currentUsage,
+        ...currentUsage
       ])
       setNotice({
         type: "success",
-        text: "Booth template created. Required assets are processing.",
+        text: "Booth template created. Required assets are processing."
       })
     } else if (currentTemplate) {
       setTemplates((currentTemplates) =>
@@ -431,14 +431,14 @@ export function BoothTemplateLibraryManager({
             isPublic: formState.isPublic,
             isActive: formState.isActive,
             updatedBy: "Khai Pham",
-            updatedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
           }
-        }),
+        })
       )
 
       setNotice({
         type: "success",
-        text: "Booth template updated successfully.",
+        text: "Booth template updated successfully."
       })
     }
 
@@ -463,7 +463,7 @@ export function BoothTemplateLibraryManager({
     if (nextPublic && !canPublish(template, assetMap)) {
       setNotice({
         type: "error",
-        text: "Cannot publish: required assets are not ready yet.",
+        text: "Cannot publish: required assets are not ready yet."
       })
       return
     }
@@ -475,10 +475,10 @@ export function BoothTemplateLibraryManager({
               ...item,
               isPublic: nextPublic,
               updatedAt: new Date().toISOString(),
-              updatedBy: item.updatedBy,
+              updatedBy: item.updatedBy
             }
-          : item,
-      ),
+          : item
+      )
     )
 
     void toggleBoothTemplatePublic(template.id).catch(() => {
@@ -486,12 +486,12 @@ export function BoothTemplateLibraryManager({
         currentTemplates.map((item) =>
           item.id === template.id
             ? { ...item, isPublic: template.isPublic }
-            : item,
-        ),
+            : item
+        )
       )
       setNotice({
         type: "error",
-        text: "Failed to update template visibility.",
+        text: "Failed to update template visibility."
       })
     })
   }
@@ -507,10 +507,10 @@ export function BoothTemplateLibraryManager({
               ...item,
               isActive: nextActive,
               updatedAt: new Date().toISOString(),
-              updatedBy: item.updatedBy,
+              updatedBy: item.updatedBy
             }
-          : item,
-      ),
+          : item
+      )
     )
 
     void toggleBoothTemplateActive(template.id).catch(() => {
@@ -518,26 +518,26 @@ export function BoothTemplateLibraryManager({
         currentTemplates.map((item) =>
           item.id === template.id
             ? { ...item, isActive: template.isActive }
-            : item,
-        ),
+            : item
+        )
       )
       setNotice({
         type: "error",
-        text: "Failed to update template activation.",
+        text: "Failed to update template activation."
       })
     })
 
     if (!nextActive && (usage?.upcomingExpoBoothCount || 0) > 0) {
       setNotice({
         type: "info",
-        text: `Template deactivated. Mock notification sent to ${usage?.upcomingExpoBoothCount} exhibitor(s).`,
+        text: `Template deactivated. Mock notification sent to ${usage?.upcomingExpoBoothCount} exhibitor(s).`
       })
       return
     }
 
     setNotice({
       type: "success",
-      text: nextActive ? "Template re-activated." : "Template deactivated.",
+      text: nextActive ? "Template re-activated." : "Template deactivated."
     })
   }
 
@@ -551,7 +551,7 @@ export function BoothTemplateLibraryManager({
     if (totalReferences > 0) {
       setNotice({
         type: "error",
-        text: "This template is used by one or more expo booths and cannot be deleted.",
+        text: "This template is used by one or more expo booths and cannot be deleted."
       })
       return
     }
@@ -560,12 +560,12 @@ export function BoothTemplateLibraryManager({
     const removedAssetIds = [
       template.sourceBlendAssetId,
       template.renderGlbAssetId,
-      template.thumbnailAssetId,
+      template.thumbnailAssetId
     ].filter(Boolean)
 
     setTemplates(nextTemplates)
     setUsages((currentUsage) =>
-      currentUsage.filter((item) => item.boothTemplateId !== template.id),
+      currentUsage.filter((item) => item.boothTemplateId !== template.id)
     )
 
     setAssets((currentAssets) =>
@@ -578,10 +578,10 @@ export function BoothTemplateLibraryManager({
           [
             candidate.sourceBlendAssetId,
             candidate.renderGlbAssetId,
-            candidate.thumbnailAssetId,
-          ].includes(asset.id),
+            candidate.thumbnailAssetId
+          ].includes(asset.id)
         )
-      }),
+      })
     )
 
     if (translationTemplateId === template.id) {
@@ -590,7 +590,7 @@ export function BoothTemplateLibraryManager({
 
     setNotice({
       type: "success",
-      text: "Template and linked unused assets were deleted.",
+      text: "Template and linked unused assets were deleted."
     })
   }
 
@@ -606,7 +606,7 @@ export function BoothTemplateLibraryManager({
     if (!normalizedCode || !translationName.trim()) {
       setNotice({
         type: "error",
-        text: "Language code and translated name are required.",
+        text: "Language code and translated name are required."
       })
       return
     }
@@ -619,7 +619,7 @@ export function BoothTemplateLibraryManager({
 
         const existing = template.translations.find(
           (translation) =>
-            translation.languageCode.toLowerCase() === normalizedCode,
+            translation.languageCode.toLowerCase() === normalizedCode
         )
 
         if (existing) {
@@ -628,10 +628,10 @@ export function BoothTemplateLibraryManager({
             translations: template.translations.map((translation) =>
               translation.languageCode.toLowerCase() === normalizedCode
                 ? { ...translation, name: translationName.trim() }
-                : translation,
+                : translation
             ),
             updatedAt: new Date().toISOString(),
-            updatedBy: "Khai Pham",
+            updatedBy: "Khai Pham"
           }
         }
 
@@ -639,12 +639,12 @@ export function BoothTemplateLibraryManager({
           ...template,
           translations: [
             ...template.translations,
-            { languageCode: normalizedCode, name: translationName.trim() },
+            { languageCode: normalizedCode, name: translationName.trim() }
           ],
           updatedAt: new Date().toISOString(),
-          updatedBy: "Khai Pham",
+          updatedBy: "Khai Pham"
         }
-      }),
+      })
     )
 
     setTranslationName("")
@@ -665,12 +665,12 @@ export function BoothTemplateLibraryManager({
         return {
           ...template,
           translations: template.translations.filter(
-            (translation) => translation.languageCode !== languageCode,
+            (translation) => translation.languageCode !== languageCode
           ),
           updatedAt: new Date().toISOString(),
-          updatedBy: "Khai Pham",
+          updatedBy: "Khai Pham"
         }
-      }),
+      })
     )
 
     setNotice({ type: "success", text: "Translation removed." })
@@ -748,7 +748,7 @@ export function BoothTemplateLibraryManager({
                   const translatedName = getTranslationName(
                     template.name,
                     template.translations,
-                    previewLocale,
+                    previewLocale
                   )
                   const boothTypeName =
                     boothTypes.find((type) => type.id === template.boothTypeId)
@@ -821,9 +821,7 @@ export function BoothTemplateLibraryManager({
                             <DropdownMenuItem
                               onSelect={() =>
                                 setTranslationTemplateId((currentId) =>
-                                  currentId === template.id
-                                    ? null
-                                    : template.id,
+                                  currentId === template.id ? null : template.id
                                 )
                               }
                             >
@@ -938,7 +936,7 @@ export function BoothTemplateLibraryManager({
                 onChange={(event) =>
                   setFormState((currentState) => ({
                     ...currentState,
-                    name: event.target.value,
+                    name: event.target.value
                   }))
                 }
                 placeholder="Minimal Basic Booth"
@@ -955,7 +953,7 @@ export function BoothTemplateLibraryManager({
                 onValueChange={(value) =>
                   setFormState((currentState) => ({
                     ...currentState,
-                    boothTypeId: value,
+                    boothTypeId: value
                   }))
                 }
               >
@@ -984,7 +982,7 @@ export function BoothTemplateLibraryManager({
                 onChange={(event) =>
                   setFormState((currentState) => ({
                     ...currentState,
-                    description: event.target.value,
+                    description: event.target.value
                   }))
                 }
                 className="min-h-20"
@@ -1000,7 +998,7 @@ export function BoothTemplateLibraryManager({
                   onChange={(event) =>
                     setFormState((currentState) => ({
                       ...currentState,
-                      glbFileName: event.target.value,
+                      glbFileName: event.target.value
                     }))
                   }
                   placeholder="example.glb"
@@ -1023,7 +1021,7 @@ export function BoothTemplateLibraryManager({
                   onChange={(event) =>
                     setFormState((currentState) => ({
                       ...currentState,
-                      thumbnailFileName: event.target.value,
+                      thumbnailFileName: event.target.value
                     }))
                   }
                   placeholder="example.png"
@@ -1049,7 +1047,7 @@ export function BoothTemplateLibraryManager({
                 onChange={(event) =>
                   setFormState((currentState) => ({
                     ...currentState,
-                    blendFileName: event.target.value,
+                    blendFileName: event.target.value
                   }))
                 }
                 placeholder="source.blend"
@@ -1072,7 +1070,7 @@ export function BoothTemplateLibraryManager({
                   onCheckedChange={(checked) =>
                     setFormState((currentState) => ({
                       ...currentState,
-                      isPublic: checked === true,
+                      isPublic: checked === true
                     }))
                   }
                 />
@@ -1084,7 +1082,7 @@ export function BoothTemplateLibraryManager({
                   onCheckedChange={(checked) =>
                     setFormState((currentState) => ({
                       ...currentState,
-                      isActive: checked === true,
+                      isActive: checked === true
                     }))
                   }
                 />
@@ -1194,7 +1192,7 @@ export function BoothTemplateLibraryManager({
                                 variant="destructive"
                                 onClick={() =>
                                   handleDeleteTranslation(
-                                    translation.languageCode,
+                                    translation.languageCode
                                   )
                                 }
                               >

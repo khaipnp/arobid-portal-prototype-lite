@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     if (!fileName || !fileUrl || !kind) {
       return NextResponse.json(
         { error: "Missing required fields" },
-        { status: 400 },
+        { status: 400 }
       )
     }
 
@@ -31,7 +31,7 @@ export async function POST(req: Request) {
     console.error("Error saving asset metadata:", error)
     return NextResponse.json(
       { error: "Failed to save asset metadata" },
-      { status: 500 },
+      { status: 500 }
     )
   }
 }

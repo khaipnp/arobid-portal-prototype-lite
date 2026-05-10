@@ -10,29 +10,30 @@ import {
   Categories,
   Hero,
   ParticipantValues,
-  Sponsors,
+  Sponsors
 } from "@/components/tradexpo/expo-detail/sections"
 import {
   getExpoBySlug,
-  listExpoDetailExhibitorsByName,
+  getExpoHeroStatsByExpo,
+  listExpoDetailExhibitorsByName
 } from "@/lib/tradexpo/db/platform-data"
 
 const VIRTUAL_LOBBY_URL_BY_EXPO_SLUG: Record<string, string> = {
   "food-farm-global-fair":
     "https://arobidglobal.shapespark.com/foodexpo2025_lobby/",
-  "vifmw-2026": "https://arobidglobal.shapespark.com/foodexpo2025_lobby/",
+  "vifmw-2026": "https://arobidglobal.shapespark.com/foodexpo2025_lobby/"
 }
 
 function toLongDate(date: string) {
   return new Intl.DateTimeFormat("en-US", {
     month: "long",
     day: "numeric",
-    year: "numeric",
+    year: "numeric"
   }).format(new Date(date))
 }
 
 export default async function Page({
-  params,
+  params
 }: {
   params: Promise<{ slug: string }>
 }) {
@@ -40,11 +41,14 @@ export default async function Page({
   const expo = await getExpoBySlug(slug)
   if (!expo) notFound()
 
-  const exhibitors = await listExpoDetailExhibitorsByName(expo.name)
+  const [exhibitors, heroStats] = await Promise.all([
+    listExpoDetailExhibitorsByName(expo.name),
+    getExpoHeroStatsByExpo({ id: expo.id, name: expo.name })
+  ])
   const virtualLobbyUrl = VIRTUAL_LOBBY_URL_BY_EXPO_SLUG[expo.slug ?? slug]
 
   return (
-    <main className="min-h-screen scroll-smooth bg-white text-[#030712] [font-family:var(--font-tight)]">
+    <main className="min-h-screen scroll-smooth bg-white text-foreground [font-family:var(--font-tight)]">
       <TxHeader />
       <Breadcrumb />
       <Hero
@@ -52,8 +56,9 @@ export default async function Page({
         startDateLabel={toLongDate(expo.startDate)}
         endDateLabel={toLongDate(expo.endDate)}
         virtualLobbyUrl={virtualLobbyUrl}
+        stats={heroStats}
       />
-      <About />
+      <About title={expo.name} description={expo.description} />
       <Sponsors />
       <ExhibitorsSection expoName={expo.name} initialExhibitors={exhibitors} />
       <Audience />

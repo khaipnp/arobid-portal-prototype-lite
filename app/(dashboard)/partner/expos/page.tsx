@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic"
 export default async function PartnerExposPage() {
   const [expos, goLiveEvents] = await Promise.all([
     listExpos(),
-    listGoLIVEEvents(),
+    listGoLIVEEvents()
   ])
 
   return (
@@ -16,7 +16,7 @@ export default async function PartnerExposPage() {
       description="Manage your expo events, GoLIVE sessions, and exhibitors."
       breadcrumbs={[
         { label: "Dashboard", href: "/partner" },
-        { label: "My Expos" },
+        { label: "My Expos" }
       ]}
     >
       <PartnerExpoList expos={expos} goLiveEvents={goLiveEvents} />

@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   ArrowRight,
@@ -6,23 +6,21 @@ import {
   Grid2X2,
   Heart,
   RadioIcon,
-  Sparkles,
-} from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-
-import { asset, type HomeExpoCard } from "./data";
-import { toast } from "sonner";
+  Sparkles
+} from "lucide-react"
+import Image from "next/image"
+import Link from "next/link"
+import { toast } from "sonner"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import { cn } from "@/lib/utils"
+import { asset, type HomeExpoCard } from "./data"
 
 type ExhibitionsProps = {
-  categories: string[];
-  expos: HomeExpoCard[];
-};
+  categories: string[]
+  expos: HomeExpoCard[]
+}
 
 export function Exhibitions({ categories, expos }: ExhibitionsProps) {
   return (
@@ -39,7 +37,7 @@ export function Exhibitions({ categories, expos }: ExhibitionsProps) {
               "inline-flex h-10 shrink-0 items-center gap-1 rounded-full px-3 text-sm",
               index === 0
                 ? "border border-legend bg-[#ffeae1] text-legend"
-                : "bg-[#f9fafb] text-foreground",
+                : "bg-[#f9fafb] text-foreground"
             )}
           >
             <Grid2X2 className="size-4" />
@@ -62,7 +60,7 @@ export function Exhibitions({ categories, expos }: ExhibitionsProps) {
         </button>
       </div>
     </section>
-  );
+  )
 }
 
 function ExpoCard({ expo }: { expo: HomeExpoCard }) {
@@ -71,8 +69,8 @@ function ExpoCard({ expo }: { expo: HomeExpoCard }) {
       ? "bg-[#16a34a]"
       : expo.status === "Upcoming"
         ? "bg-[#f59e0b]"
-        : "bg-[#9ca3af]";
-  const countdownLabel = expo.status === "Upcoming" ? "Starts in" : "Ends in";
+        : "bg-[#9ca3af]"
+  const countdownLabel = expo.status === "Upcoming" ? "Starts in" : "Ends in"
 
   return (
     <Card className="overflow-hidden rounded-3xl bg-white p-2 shadow-[0_0_12px_rgba(0,0,0,0.08)]">
@@ -145,7 +143,7 @@ function ExpoCard({ expo }: { expo: HomeExpoCard }) {
                 </p>
                 <p className="text-[#6b7280] text-xs">{label}</p>
               </div>
-            ),
+            )
           )}
         </div>
         {expo.disabled ? (
@@ -162,5 +160,5 @@ function ExpoCard({ expo }: { expo: HomeExpoCard }) {
         )}
       </CardContent>
     </Card>
-  );
+  )
 }

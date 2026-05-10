@@ -3,7 +3,7 @@ import {
   GemIcon,
   HeartIcon,
   RocketIcon,
-  StarIcon,
+  StarIcon
 } from "lucide-react"
 import Image from "next/image"
 import type { ReactNode } from "react"
@@ -18,7 +18,7 @@ const productFallbackImages = [
   asset("figma-product-1.png"),
   asset("figma-product-2.png"),
   asset("figma-product-3.png"),
-  asset("figma-product-4.png"),
+  asset("figma-product-4.png")
 ]
 
 type ExhibitorCardProps = {
@@ -33,7 +33,7 @@ function Dot() {
 function MetaBadge({
   className,
   icon,
-  label,
+  label
 }: {
   className: string
   icon?: ReactNode
@@ -52,7 +52,7 @@ function MetaBadge({
 export function ExhibitorCard({ exhibitor, onChatClick }: ExhibitorCardProps) {
   const productImages = productFallbackImages.map((image, index) => ({
     image,
-    label: exhibitor.products[index] ?? `Featured product ${index + 1}`,
+    label: exhibitor.products[index] ?? `Featured product ${index + 1}`
   }))
 
   return (

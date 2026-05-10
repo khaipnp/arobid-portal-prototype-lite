@@ -9,7 +9,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from "@/components/ui/table"
 import { reuploadHallTemplateAsset } from "@/lib/tradexpo/actions/hall-templates"
 import { updateModelAssetStatus } from "@/lib/tradexpo/actions/model-assets"
@@ -17,7 +17,7 @@ import type { HallTemplate, ModelAsset } from "@/lib/tradexpo/types"
 import { getAssetMap } from "@/lib/tradexpo/utils"
 
 function assetStatusVariant(
-  status: string,
+  status: string
 ): "default" | "secondary" | "destructive" | "outline" {
   if (status === "ready") return "default"
   if (status === "failed") return "destructive"
@@ -27,17 +27,17 @@ function assetStatusVariant(
 
 export function HallTemplateDetailManager({
   initialTemplate,
-  initialAssets,
+  initialAssets
 }: {
   initialTemplate: HallTemplate
   initialAssets: ModelAsset[]
 }) {
   const [assets, setAssets] = React.useState<ModelAsset[]>(() =>
-    initialAssets.map((a) => ({ ...a })),
+    initialAssets.map((a) => ({ ...a }))
   )
   const [template, setTemplate] = React.useState<HallTemplate>(() => ({
     ...initialTemplate,
-    translations: initialTemplate.translations.map((tr) => ({ ...tr })),
+    translations: initialTemplate.translations.map((tr) => ({ ...tr }))
   }))
   const [notice, setNotice] = React.useState<{
     type: "success" | "error"
@@ -53,13 +53,13 @@ export function HallTemplateDetailManager({
         void updateModelAssetStatus(assetId, "processing", scope)
           .then((updated) => {
             setAssets((current) =>
-              current.map((item) => (item.id === assetId ? updated : item)),
+              current.map((item) => (item.id === assetId ? updated : item))
             )
           })
           .catch(() => {
             setNotice({
               type: "error",
-              text: "Could not update asset to processing.",
+              text: "Could not update asset to processing."
             })
           })
       }, 600)
@@ -67,31 +67,31 @@ export function HallTemplateDetailManager({
         void updateModelAssetStatus(assetId, "ready", scope)
           .then((updated) => {
             setAssets((current) =>
-              current.map((item) => (item.id === assetId ? updated : item)),
+              current.map((item) => (item.id === assetId ? updated : item))
             )
           })
           .catch(() => {
             setNotice({
               type: "error",
-              text: "Could not finalize asset processing.",
+              text: "Could not finalize asset processing."
             })
           })
       }, 2100)
     },
-    [template.id],
+    [template.id]
   )
 
   async function handleReuploadAsset(kind: "glb" | "thumbnail" | "blend") {
     try {
       const { asset, templateFields } = await reuploadHallTemplateAsset(
         template.id,
-        kind,
+        kind
       )
       setAssets((current) => [asset, ...current])
       setTemplate((current) => ({ ...current, ...templateFields }))
       setNotice({
         type: "success",
-        text: `Re-uploading ${kind} asset. Processing...`,
+        text: `Re-uploading ${kind} asset. Processing...`
       })
       scheduleAssetProcessing(asset.id)
     } catch (err) {
@@ -111,13 +111,13 @@ export function HallTemplateDetailManager({
       label: "GLB Render File",
       asset: glbAsset,
       kind: "glb" as const,
-      required: true,
+      required: true
     },
     {
       label: "Thumbnail",
       asset: thumbAsset,
       kind: "thumbnail" as const,
-      required: true,
+      required: true
     },
     ...(blendAsset
       ? [
@@ -125,10 +125,10 @@ export function HallTemplateDetailManager({
             label: "Source Blender File",
             asset: blendAsset,
             kind: "blend" as const,
-            required: false,
-          },
+            required: false
+          }
         ]
-      : []),
+      : [])
   ]
 
   return (

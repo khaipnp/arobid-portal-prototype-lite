@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import {
   cancelGoLIVEEvent,
   deleteGoLIVEEvent,
-  updateGoLIVEEventAndSession,
+  updateGoLIVEEventAndSession
 } from "@/lib/tradexpo/db/platform-data"
 import type { GoLIVEEvent } from "@/lib/tradexpo/types"
 
@@ -31,7 +31,7 @@ export async function PATCH(request: Request, { params }: Props) {
     }
     await updateGoLIVEEventAndSession({
       event: body.event,
-      replayEnabled: body.replayEnabled,
+      replayEnabled: body.replayEnabled
     })
     return NextResponse.json({ ok: true })
   }

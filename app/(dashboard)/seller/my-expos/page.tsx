@@ -2,7 +2,7 @@ import { SellerExpoList } from "@/components/seller/seller-expo-list"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import {
   listExpos,
-  listSellerBoothRegistrations,
+  listSellerBoothRegistrations
 } from "@/lib/tradexpo/db/platform-data"
 import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic"
 export default async function SellerMyExposPage() {
   const [initialExpos, initialRegistrations] = await Promise.all([
     listExpos(),
-    listSellerBoothRegistrations(CURRENT_USER_ID),
+    listSellerBoothRegistrations(CURRENT_USER_ID)
   ])
 
   return (
@@ -20,7 +20,7 @@ export default async function SellerMyExposPage() {
       description="All expo events where you have purchased a booth."
       breadcrumbs={[
         { label: "Dashboard", href: "/seller" },
-        { label: "My Expos" },
+        { label: "My Expos" }
       ]}
     >
       <SellerExpoList

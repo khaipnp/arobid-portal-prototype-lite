@@ -4,7 +4,7 @@ import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 import { listHallTemplates } from "@/lib/tradexpo/db/hall-templates"
 import {
   listExpoCategories,
-  listExpoLayoutTemplates,
+  listExpoLayoutTemplates
 } from "@/lib/tradexpo/db/platform-data"
 
 export const dynamic = "force-dynamic"
@@ -14,7 +14,7 @@ export default async function CreateExpoPage() {
   const [categories, layoutTemplates, hallTemplates] = await Promise.all([
     listExpoCategories(),
     listExpoLayoutTemplates(),
-    listHallTemplates(),
+    listHallTemplates()
   ])
 
   return (
@@ -25,7 +25,7 @@ export default async function CreateExpoPage() {
         { label: "Admin", href: "/admin" },
         { label: "TradeXpo", href: "/admin/tradexpo" },
         { label: "Expo List", href: "/admin/tradexpo/expos" },
-        { label: "Create" },
+        { label: "Create" }
       ]}
     >
       <ExpoForm

@@ -9,17 +9,17 @@ const customerOrderStatusStyles: Record<CustomerOrderStatus, string> = {
     "border-zinc-300 bg-zinc-100 text-zinc-700 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300",
   Paid: "border-emerald-300 bg-emerald-100 text-emerald-700 dark:border-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400",
   Cancel:
-    "border-zinc-300 bg-zinc-100 text-zinc-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
+    "border-zinc-300 bg-zinc-100 text-zinc-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
 }
 
 const customerOrderStatusLabels: Record<CustomerOrderStatus, string> = {
   "Pending Payment": "Pending Payment",
   Paid: "Paid",
-  Cancel: "Cancel",
+  Cancel: "Cancel"
 }
 
 export function mapOrderStatusForCustomer(
-  status: OrderStatus,
+  status: OrderStatus
 ): CustomerOrderStatus {
   if (status === "Pending Payment" || status === "Paid") {
     return status
@@ -32,7 +32,7 @@ export function getCustomerOrderStatusLabel(status: CustomerOrderStatus) {
 }
 
 export function CustomerOrderStatusBadge({
-  status,
+  status
 }: {
   status: OrderStatus | CustomerOrderStatus
 }) {
@@ -46,7 +46,7 @@ export function CustomerOrderStatusBadge({
       variant="outline"
       className={cn(
         "h-auto py-0.5 text-xs",
-        customerOrderStatusStyles[normalizedStatus],
+        customerOrderStatusStyles[normalizedStatus]
       )}
     >
       {getCustomerOrderStatusLabel(normalizedStatus)}

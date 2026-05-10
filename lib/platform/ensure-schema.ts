@@ -589,6 +589,8 @@ export async function ensurePlatformSchema() {
       primary key (user_id, conversation_id)
     )
   `
+  await sql`create index if not exists idx_chat_unread_counts_user on chat_unread_counts (user_id)`
+
   await sql`
     do $$
     begin
@@ -601,6 +603,11 @@ export async function ensurePlatformSchema() {
       when duplicate_object then null;
     end $$;
   `
+  await sql`create index if not exists idx_chat_conversation_members_user on chat_conversation_members (user_id)`
+  await sql`create index if not exists idx_chat_conversation_members_conv on chat_conversation_members (conversation_id)`
+
+  await sql`create index if not exists idx_chat_messages_conv_sent on chat_messages (conversation_id, sent_at asc)`
+  await sql`create index if not exists idx_chat_messages_sender on chat_messages (sender_id)`
   await sql`
     do $$
     begin

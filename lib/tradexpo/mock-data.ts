@@ -17,7 +17,7 @@ import type {
   LiveComment,
   ModelAsset,
   SellerBoothRegistration,
-  StreamSession,
+  StreamSession
 } from "@/lib/tradexpo/types"
 import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
@@ -34,7 +34,7 @@ export const mockAssets: ModelAsset[] = [
     fileUrl: "https://picsum.photos/seed/hall1/640/360",
     kind: "glb",
     status: "ready",
-    createdAt: isoOffset(48),
+    createdAt: isoOffset(48)
   },
   {
     id: "asset-thumb-hall-1",
@@ -42,7 +42,7 @@ export const mockAssets: ModelAsset[] = [
     fileUrl: "https://picsum.photos/seed/hall1thumb/640/360",
     kind: "thumbnail",
     status: "ready",
-    createdAt: isoOffset(48),
+    createdAt: isoOffset(48)
   },
   {
     id: "asset-blend-hall-1",
@@ -50,7 +50,7 @@ export const mockAssets: ModelAsset[] = [
     fileUrl: "https://example.com/files/modern-hall.blend",
     kind: "blend",
     status: "ready",
-    createdAt: isoOffset(48),
+    createdAt: isoOffset(48)
   },
   {
     id: "asset-glb-hall-2",
@@ -58,7 +58,7 @@ export const mockAssets: ModelAsset[] = [
     fileUrl: "https://picsum.photos/seed/hall2/640/360",
     kind: "glb",
     status: "processing",
-    createdAt: isoOffset(24),
+    createdAt: isoOffset(24)
   },
   {
     id: "asset-thumb-hall-2",
@@ -66,7 +66,7 @@ export const mockAssets: ModelAsset[] = [
     fileUrl: "https://picsum.photos/seed/hall2thumb/640/360",
     kind: "thumbnail",
     status: "ready",
-    createdAt: isoOffset(24),
+    createdAt: isoOffset(24)
   },
   {
     id: "asset-glb-hall-3",
@@ -74,7 +74,7 @@ export const mockAssets: ModelAsset[] = [
     fileUrl: "https://picsum.photos/seed/hall3/640/360",
     kind: "glb",
     status: "ready",
-    createdAt: isoOffset(120),
+    createdAt: isoOffset(120)
   },
   {
     id: "asset-thumb-hall-3",
@@ -82,7 +82,7 @@ export const mockAssets: ModelAsset[] = [
     fileUrl: "https://picsum.photos/seed/hall3thumb/640/360",
     kind: "thumbnail",
     status: "ready",
-    createdAt: isoOffset(120),
+    createdAt: isoOffset(120)
   },
   {
     id: "asset-glb-booth-1",
@@ -90,7 +90,7 @@ export const mockAssets: ModelAsset[] = [
     fileUrl: "https://picsum.photos/seed/booth1/640/360",
     kind: "glb",
     status: "ready",
-    createdAt: isoOffset(24),
+    createdAt: isoOffset(24)
   },
   {
     id: "asset-thumb-booth-1",
@@ -98,7 +98,7 @@ export const mockAssets: ModelAsset[] = [
     fileUrl: "https://picsum.photos/seed/booth1thumb/640/360",
     kind: "thumbnail",
     status: "ready",
-    createdAt: isoOffset(24),
+    createdAt: isoOffset(24)
   },
   {
     id: "asset-blend-booth-1",
@@ -106,7 +106,7 @@ export const mockAssets: ModelAsset[] = [
     fileUrl: "https://example.com/files/standard-minimal.blend",
     kind: "blend",
     status: "ready",
-    createdAt: isoOffset(24),
+    createdAt: isoOffset(24)
   },
   {
     id: "asset-glb-booth-2",
@@ -114,7 +114,7 @@ export const mockAssets: ModelAsset[] = [
     fileUrl: "https://picsum.photos/seed/booth2/640/360",
     kind: "glb",
     status: "failed",
-    createdAt: isoOffset(10),
+    createdAt: isoOffset(10)
   },
   {
     id: "asset-thumb-booth-2",
@@ -122,7 +122,7 @@ export const mockAssets: ModelAsset[] = [
     fileUrl: "https://picsum.photos/seed/booth2thumb/640/360",
     kind: "thumbnail",
     status: "ready",
-    createdAt: isoOffset(10),
+    createdAt: isoOffset(10)
   },
   {
     id: "asset-glb-booth-3",
@@ -130,7 +130,7 @@ export const mockAssets: ModelAsset[] = [
     fileUrl: "https://picsum.photos/seed/booth3/640/360",
     kind: "glb",
     status: "ready",
-    createdAt: isoOffset(80),
+    createdAt: isoOffset(80)
   },
   {
     id: "asset-thumb-booth-3",
@@ -138,8 +138,8 @@ export const mockAssets: ModelAsset[] = [
     fileUrl: "https://picsum.photos/seed/booth3thumb/640/360",
     kind: "thumbnail",
     status: "ready",
-    createdAt: isoOffset(80),
-  },
+    createdAt: isoOffset(80)
+  }
 ]
 
 export const mockHallTemplates: HallTemplate[] = [
@@ -148,7 +148,7 @@ export const mockHallTemplates: HallTemplate[] = [
     name: "Modern Convention Hall",
     translations: [
       { languageCode: "vi", name: "Sanh Hoi Nghi Hien Dai" },
-      { languageCode: "ja", name: "モダンコンベンションホール" },
+      { languageCode: "ja", name: "モダンコンベンションホール" }
     ],
     sourceBlendAssetId: "asset-blend-hall-1",
     renderGlbAssetId: "asset-glb-hall-1",
@@ -156,7 +156,7 @@ export const mockHallTemplates: HallTemplate[] = [
     isPublic: true,
     isActive: true,
     updatedBy: "Khai Pham",
-    updatedAt: isoOffset(6),
+    updatedAt: isoOffset(6)
   },
   {
     id: "hall-template-2",
@@ -167,7 +167,7 @@ export const mockHallTemplates: HallTemplate[] = [
     isPublic: false,
     isActive: true,
     updatedBy: "Nina Tran",
-    updatedAt: isoOffset(12),
+    updatedAt: isoOffset(12)
   },
   {
     id: "hall-template-3",
@@ -178,8 +178,8 @@ export const mockHallTemplates: HallTemplate[] = [
     isPublic: false,
     isActive: false,
     updatedBy: "Minh Do",
-    updatedAt: isoOffset(72),
-  },
+    updatedAt: isoOffset(72)
+  }
 ]
 
 export const mockHallTemplateSlots: HallTemplateSlot[] = [
@@ -200,7 +200,7 @@ export const mockHallTemplateSlots: HallTemplateSlot[] = [
     width: 3,
     height: 2.5,
     depth: 3,
-    metadata: { zone: "north", lighting: "warm" },
+    metadata: { zone: "north", lighting: "warm" }
   },
   {
     id: "slot-2",
@@ -219,7 +219,7 @@ export const mockHallTemplateSlots: HallTemplateSlot[] = [
     width: 3,
     height: 2.5,
     depth: 3,
-    metadata: { zone: "north" },
+    metadata: { zone: "north" }
   },
   {
     id: "slot-3",
@@ -238,7 +238,7 @@ export const mockHallTemplateSlots: HallTemplateSlot[] = [
     width: 3,
     height: 2.5,
     depth: 3,
-    metadata: { zone: "south" },
+    metadata: { zone: "south" }
   },
   {
     id: "slot-4",
@@ -257,14 +257,14 @@ export const mockHallTemplateSlots: HallTemplateSlot[] = [
     width: 4,
     height: 2.5,
     depth: 4,
-    metadata: {},
-  },
+    metadata: {}
+  }
 ]
 
 export const mockBoothTypes: BoothType[] = [
   { id: "booth-type-basic", name: "Basic" },
   { id: "booth-type-pro", name: "Pro" },
-  { id: "booth-type-premium", name: "Premium" },
+  { id: "booth-type-premium", name: "Premium" }
 ]
 
 export const mockBoothTemplates: BoothTemplate[] = [
@@ -280,7 +280,7 @@ export const mockBoothTemplates: BoothTemplate[] = [
     isPublic: true,
     isActive: true,
     updatedBy: "Khai Pham",
-    updatedAt: isoOffset(8),
+    updatedAt: isoOffset(8)
   },
   {
     id: "booth-template-2",
@@ -293,13 +293,13 @@ export const mockBoothTemplates: BoothTemplate[] = [
     isPublic: false,
     isActive: true,
     updatedBy: "Nina Tran",
-    updatedAt: isoOffset(4),
+    updatedAt: isoOffset(4)
   },
   {
     id: "booth-template-3",
     name: "Premium Suite Executive",
     translations: [
-      { languageCode: "ja", name: "プレミアムスイートエグゼクティブ" },
+      { languageCode: "ja", name: "プレミアムスイートエグゼクティブ" }
     ],
     boothTypeId: "booth-type-premium",
     renderGlbAssetId: "asset-glb-booth-3",
@@ -308,8 +308,8 @@ export const mockBoothTemplates: BoothTemplate[] = [
     isPublic: false,
     isActive: false,
     updatedBy: "Minh Do",
-    updatedAt: isoOffset(68),
-  },
+    updatedAt: isoOffset(68)
+  }
 ]
 
 export const mockHallTemplateUsage: HallTemplateUsage[] = [
@@ -317,27 +317,27 @@ export const mockHallTemplateUsage: HallTemplateUsage[] = [
     hallTemplateId: "hall-template-1",
     upcomingExpoCount: 2,
     liveExpoCount: 1,
-    archivedExpoCount: 4,
+    archivedExpoCount: 4
   },
   {
     hallTemplateId: "hall-template-2",
     upcomingExpoCount: 0,
     liveExpoCount: 0,
-    archivedExpoCount: 0,
+    archivedExpoCount: 0
   },
   {
     hallTemplateId: "hall-template-3",
     upcomingExpoCount: 0,
     liveExpoCount: 0,
-    archivedExpoCount: 2,
-  },
+    archivedExpoCount: 2
+  }
 ]
 
 export const mockHallSlotUsage: HallSlotUsage[] = [
   { slotId: "slot-1", upcomingExpoCount: 1, liveExpoCount: 0 },
   { slotId: "slot-2", upcomingExpoCount: 0, liveExpoCount: 1 },
   { slotId: "slot-3", upcomingExpoCount: 0, liveExpoCount: 0 },
-  { slotId: "slot-4", upcomingExpoCount: 0, liveExpoCount: 0 },
+  { slotId: "slot-4", upcomingExpoCount: 0, liveExpoCount: 0 }
 ]
 
 export const mockBoothTemplateUsage: BoothTemplateUsage[] = [
@@ -345,20 +345,20 @@ export const mockBoothTemplateUsage: BoothTemplateUsage[] = [
     boothTemplateId: "booth-template-1",
     upcomingExpoBoothCount: 2,
     liveExpoBoothCount: 1,
-    archivedExpoBoothCount: 6,
+    archivedExpoBoothCount: 6
   },
   {
     boothTemplateId: "booth-template-2",
     upcomingExpoBoothCount: 1,
     liveExpoBoothCount: 0,
-    archivedExpoBoothCount: 0,
+    archivedExpoBoothCount: 0
   },
   {
     boothTemplateId: "booth-template-3",
     upcomingExpoBoothCount: 0,
     liveExpoBoothCount: 0,
-    archivedExpoBoothCount: 2,
-  },
+    archivedExpoBoothCount: 2
+  }
 ]
 
 export const mockExpoCategories: ExpoCategory[] = [
@@ -373,7 +373,7 @@ export const mockExpoCategories: ExpoCategory[] = [
   { id: "cat-pharma", name: "Pharmaceuticals", level: 1 },
   { id: "cat-retail", name: "Retail & Commerce", level: 1 },
   { id: "cat-fashion", name: "Fashion & Apparel", level: 1 },
-  { id: "cat-energy", name: "Energy & Environment", level: 1 },
+  { id: "cat-energy", name: "Energy & Environment", level: 1 }
 ]
 
 function isoDate(offsetDays: number) {
@@ -392,7 +392,7 @@ export const mockExpos: Expo[] = [
     endDate: isoDate(33),
     status: "Pending Review",
     categoryIds: ["cat-tech", "cat-ai"],
-    createdAt: isoOffset(12),
+    createdAt: isoOffset(12)
   },
   {
     id: "expo-002",
@@ -403,7 +403,7 @@ export const mockExpos: Expo[] = [
     endDate: isoDate(63),
     status: "Draft",
     categoryIds: ["cat-health", "cat-pharma"],
-    createdAt: isoOffset(24),
+    createdAt: isoOffset(24)
   },
   {
     id: "expo-003",
@@ -414,7 +414,7 @@ export const mockExpos: Expo[] = [
     endDate: isoDate(5),
     status: "Live",
     categoryIds: ["cat-food", "cat-organic"],
-    createdAt: isoOffset(72),
+    createdAt: isoOffset(72)
   },
   {
     id: "expo-004",
@@ -425,7 +425,7 @@ export const mockExpos: Expo[] = [
     endDate: isoDate(-85),
     status: "Ended",
     categoryIds: ["cat-manufacturing", "cat-auto"],
-    createdAt: isoOffset(200),
+    createdAt: isoOffset(200)
   },
   {
     id: "expo-005",
@@ -436,7 +436,7 @@ export const mockExpos: Expo[] = [
     endDate: isoDate(-115),
     status: "Archived",
     categoryIds: ["cat-retail", "cat-fashion"],
-    createdAt: isoOffset(300),
+    createdAt: isoOffset(300)
   },
   {
     id: "expo-006",
@@ -447,7 +447,7 @@ export const mockExpos: Expo[] = [
     endDate: isoDate(47),
     status: "Pending Review",
     categoryIds: ["cat-energy"],
-    createdAt: isoOffset(6),
+    createdAt: isoOffset(6)
   },
   {
     id: "expo-007",
@@ -458,7 +458,7 @@ export const mockExpos: Expo[] = [
     endDate: isoDate(17),
     status: "Draft",
     categoryIds: ["cat-tech", "cat-cloud"],
-    createdAt: isoOffset(3),
+    createdAt: isoOffset(3)
   },
   {
     id: "expo-008",
@@ -469,7 +469,7 @@ export const mockExpos: Expo[] = [
     endDate: isoDate(-177),
     status: "Canceled",
     categoryIds: ["cat-retail"],
-    createdAt: isoOffset(400),
+    createdAt: isoOffset(400)
   },
   {
     id: "expo-009",
@@ -480,7 +480,7 @@ export const mockExpos: Expo[] = [
     endDate: isoDate(2),
     status: "Live",
     categoryIds: ["cat-tech", "cat-ai"],
-    createdAt: isoOffset(48),
+    createdAt: isoOffset(48)
   },
   {
     id: "expo-010",
@@ -491,7 +491,7 @@ export const mockExpos: Expo[] = [
     endDate: isoDate(93),
     status: "Draft",
     categoryIds: ["cat-health", "cat-pharma"],
-    createdAt: isoOffset(1),
+    createdAt: isoOffset(1)
   },
   {
     id: "expo-011",
@@ -502,7 +502,7 @@ export const mockExpos: Expo[] = [
     endDate: isoDate(-57),
     status: "Ended",
     categoryIds: ["cat-manufacturing"],
-    createdAt: isoOffset(150),
+    createdAt: isoOffset(150)
   },
   {
     id: "expo-012",
@@ -513,7 +513,7 @@ export const mockExpos: Expo[] = [
     endDate: isoDate(22),
     status: "Pending Review",
     categoryIds: ["cat-food", "cat-organic"],
-    createdAt: isoOffset(2),
+    createdAt: isoOffset(2)
   },
   {
     id: "expo-013",
@@ -524,7 +524,7 @@ export const mockExpos: Expo[] = [
     endDate: isoDate(-197),
     status: "Archived",
     categoryIds: ["cat-health", "cat-tech"],
-    createdAt: isoOffset(500),
+    createdAt: isoOffset(500)
   },
   {
     id: "expo-014",
@@ -535,7 +535,7 @@ export const mockExpos: Expo[] = [
     endDate: isoDate(78),
     status: "Draft",
     categoryIds: ["cat-manufacturing", "cat-auto", "cat-energy"],
-    createdAt: isoOffset(4),
+    createdAt: isoOffset(4)
   },
   {
     id: "expo-015",
@@ -546,8 +546,8 @@ export const mockExpos: Expo[] = [
     endDate: isoDate(4),
     status: "Live",
     categoryIds: ["cat-retail", "cat-tech"],
-    createdAt: isoOffset(96),
-  },
+    createdAt: isoOffset(96)
+  }
 ]
 
 // ─── Seller Mock Data ────────────────────────────────────────────────────────
@@ -556,25 +556,25 @@ export const mockExpos: Expo[] = [
 export const mockExpoBoothTemplateAssignments: ExpoBoothTemplateAssignment[] = [
   {
     expoId: "expo-001",
-    boothTemplateIds: ["booth-template-1", "booth-template-3"],
+    boothTemplateIds: ["booth-template-1", "booth-template-3"]
   },
   {
     expoId: "expo-003",
-    boothTemplateIds: ["booth-template-1", "booth-template-2"],
+    boothTemplateIds: ["booth-template-1", "booth-template-2"]
   },
   {
     expoId: "expo-004",
-    boothTemplateIds: ["booth-template-1", "booth-template-2"],
+    boothTemplateIds: ["booth-template-1", "booth-template-2"]
   },
   {
     expoId: "expo-009",
     boothTemplateIds: [
       "booth-template-1",
       "booth-template-2",
-      "booth-template-3",
-    ],
+      "booth-template-3"
+    ]
   },
-  { expoId: "expo-011", boothTemplateIds: ["booth-template-2"] },
+  { expoId: "expo-011", boothTemplateIds: ["booth-template-2"] }
 ]
 
 /** Template-driven customization config per booth template. */
@@ -585,22 +585,22 @@ export const mockBoothTemplateCustomizationConfigs: BoothTemplateCustomizationCo
       colorSlots: 2,
       imageSlots: 1,
       productLimit: 3,
-      hasVideo: false,
+      hasVideo: false
     },
     {
       boothTemplateId: "booth-template-2",
       colorSlots: 3,
       imageSlots: 2,
       productLimit: 5,
-      hasVideo: true,
+      hasVideo: true
     },
     {
       boothTemplateId: "booth-template-3",
       colorSlots: 3,
       imageSlots: 4,
       productLimit: 5,
-      hasVideo: true,
-    },
+      hasVideo: true
+    }
   ]
 
 /** Exhibitor's own B2B Marketplace product catalog. */
@@ -610,42 +610,42 @@ export const mockExhibitorCatalogProducts: ExhibitorCatalogProduct[] = [
     name: "FarmSense Pro",
     description:
       "Real-time soil and weather monitoring system with AI-driven recommendations.",
-    imageUrl: "https://picsum.photos/seed/farmsense/400/300",
+    imageUrl: "https://picsum.photos/seed/farmsense/400/300"
   },
   {
     id: "cat-prod-2",
     name: "TraceChain Platform",
     description:
       "Blockchain-backed traceability for produce from farm to shelf.",
-    imageUrl: "https://picsum.photos/seed/tracechain/400/300",
+    imageUrl: "https://picsum.photos/seed/tracechain/400/300"
   },
   {
     id: "cat-prod-3",
     name: "AgroAI Enterprise",
     description:
       "Machine learning pipeline for yield prediction and logistics optimisation.",
-    imageUrl: "https://picsum.photos/seed/agroai/400/300",
+    imageUrl: "https://picsum.photos/seed/agroai/400/300"
   },
   {
     id: "cat-prod-4",
     name: "FieldBot Lite",
     description:
       "Autonomous field robot for crop scouting and data collection.",
-    imageUrl: "https://picsum.photos/seed/fieldbot/400/300",
+    imageUrl: "https://picsum.photos/seed/fieldbot/400/300"
   },
   {
     id: "cat-prod-5",
     name: "ColdChain Monitor",
     description: "End-to-end cold storage monitoring with real-time alerts.",
-    imageUrl: "https://picsum.photos/seed/coldchain/400/300",
+    imageUrl: "https://picsum.photos/seed/coldchain/400/300"
   },
   {
     id: "cat-prod-6",
     name: "HarvestIQ",
     description:
       "Predictive analytics platform for harvest planning and yield optimisation.",
-    imageUrl: "https://picsum.photos/seed/harvestiq/400/300",
-  },
+    imageUrl: "https://picsum.photos/seed/harvestiq/400/300"
+  }
 ]
 
 export const mockSellerRegistrations: SellerBoothRegistration[] = [
@@ -658,7 +658,7 @@ export const mockSellerRegistrations: SellerBoothRegistration[] = [
     boothRef: "A01",
     boothTier: "Basic",
     status: "Live",
-    purchasedAt: isoOffset(80),
+    purchasedAt: isoOffset(80)
   },
   {
     id: "reg-002",
@@ -669,7 +669,7 @@ export const mockSellerRegistrations: SellerBoothRegistration[] = [
     boothRef: "A02",
     boothTier: "Pro",
     status: "Live",
-    purchasedAt: isoOffset(78),
+    purchasedAt: isoOffset(78)
   },
   {
     id: "reg-003",
@@ -680,7 +680,7 @@ export const mockSellerRegistrations: SellerBoothRegistration[] = [
     boothRef: "B01",
     boothTier: "Basic",
     status: "Configured",
-    purchasedAt: isoOffset(50),
+    purchasedAt: isoOffset(50)
   },
   {
     // No template selected yet — demonstrates US-01 (Select Booth Template)
@@ -690,7 +690,7 @@ export const mockSellerRegistrations: SellerBoothRegistration[] = [
     boothRef: "C05",
     boothTier: "Premium",
     status: "Pending Setup",
-    purchasedAt: isoOffset(10),
+    purchasedAt: isoOffset(10)
   },
   {
     id: "reg-005",
@@ -701,7 +701,7 @@ export const mockSellerRegistrations: SellerBoothRegistration[] = [
     boothRef: "C01",
     boothTier: "Basic",
     status: "Ended",
-    purchasedAt: isoOffset(250),
+    purchasedAt: isoOffset(250)
   },
   {
     id: "reg-006",
@@ -711,8 +711,8 @@ export const mockSellerRegistrations: SellerBoothRegistration[] = [
     boothRef: "D03",
     boothTier: "Pro",
     status: "Ended",
-    purchasedAt: isoOffset(180),
-  },
+    purchasedAt: isoOffset(180)
+  }
 ]
 
 export const mockBoothCustomizations: BoothCustomization[] = [
@@ -731,16 +731,16 @@ export const mockBoothCustomizations: BoothCustomization[] = [
         name: "FarmSense Pro",
         description:
           "Real-time soil and weather monitoring system with AI-driven recommendations.",
-        imageUrl: "https://picsum.photos/seed/farmsense/400/300",
+        imageUrl: "https://picsum.photos/seed/farmsense/400/300"
       },
       {
         id: "cat-prod-2",
         name: "TraceChain Platform",
         description:
           "Blockchain-backed traceability for produce from farm to shelf.",
-        imageUrl: "https://picsum.photos/seed/tracechain/400/300",
-      },
-    ],
+        imageUrl: "https://picsum.photos/seed/tracechain/400/300"
+      }
+    ]
   },
   {
     registrationId: "reg-002",
@@ -750,7 +750,7 @@ export const mockBoothCustomizations: BoothCustomization[] = [
     logoUrl: "https://picsum.photos/seed/arotechlogo/200/200",
     imageUrls: [
       "https://picsum.photos/seed/arotechbooth2a/800/500",
-      "https://picsum.photos/seed/arotechbooth2b/800/500",
+      "https://picsum.photos/seed/arotechbooth2b/800/500"
     ],
     videoType: "youtube",
     videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
@@ -760,9 +760,9 @@ export const mockBoothCustomizations: BoothCustomization[] = [
         name: "AgroAI Enterprise",
         description:
           "Machine learning pipeline for yield prediction and logistics optimisation.",
-        imageUrl: "https://picsum.photos/seed/agroai/400/300",
-      },
-    ],
+        imageUrl: "https://picsum.photos/seed/agroai/400/300"
+      }
+    ]
   },
   {
     registrationId: "reg-003",
@@ -773,7 +773,7 @@ export const mockBoothCustomizations: BoothCustomization[] = [
     imageUrls: [],
     videoType: null,
     videoUrl: "",
-    products: [],
+    products: []
   },
   {
     registrationId: "reg-005",
@@ -790,10 +790,10 @@ export const mockBoothCustomizations: BoothCustomization[] = [
         name: "ColdChain Monitor",
         description:
           "End-to-end cold storage monitoring with real-time alerts.",
-        imageUrl: "https://picsum.photos/seed/coldchain/400/300",
-      },
-    ],
-  },
+        imageUrl: "https://picsum.photos/seed/coldchain/400/300"
+      }
+    ]
+  }
 ]
 
 // ─── Core: Streaming Service ─────────────────────────────────────────────────
@@ -812,7 +812,7 @@ export const mockStreamSessions: StreamSession[] = [
     endedAt: null,
     peakViewerCount: 142,
     createdAt: isoOffset(3),
-    updatedAt: isoOffset(2),
+    updatedAt: isoOffset(2)
   },
   {
     streamSessionId: "ss-002",
@@ -827,7 +827,7 @@ export const mockStreamSessions: StreamSession[] = [
     endedAt: null,
     peakViewerCount: null,
     createdAt: isoOffset(6),
-    updatedAt: isoOffset(6),
+    updatedAt: isoOffset(6)
   },
   {
     streamSessionId: "ss-003",
@@ -842,7 +842,7 @@ export const mockStreamSessions: StreamSession[] = [
     endedAt: null,
     peakViewerCount: null,
     createdAt: isoOffset(5),
-    updatedAt: isoOffset(5),
+    updatedAt: isoOffset(5)
   },
   {
     streamSessionId: "ss-004",
@@ -857,7 +857,7 @@ export const mockStreamSessions: StreamSession[] = [
     endedAt: null,
     peakViewerCount: 89,
     createdAt: isoOffset(4),
-    updatedAt: isoOffset(0.5),
+    updatedAt: isoOffset(0.5)
   },
   {
     streamSessionId: "ss-005",
@@ -872,7 +872,7 @@ export const mockStreamSessions: StreamSession[] = [
     endedAt: isoOffset(93),
     peakViewerCount: 317,
     createdAt: isoOffset(100),
-    updatedAt: isoOffset(93),
+    updatedAt: isoOffset(93)
   },
   {
     streamSessionId: "ss-006",
@@ -887,7 +887,7 @@ export const mockStreamSessions: StreamSession[] = [
     endedAt: isoOffset(95),
     peakViewerCount: 54,
     createdAt: isoOffset(100),
-    updatedAt: isoOffset(95),
+    updatedAt: isoOffset(95)
   },
   {
     streamSessionId: "ss-007",
@@ -902,7 +902,7 @@ export const mockStreamSessions: StreamSession[] = [
     endedAt: null,
     peakViewerCount: null,
     createdAt: isoOffset(8),
-    updatedAt: isoOffset(8),
+    updatedAt: isoOffset(8)
   },
   {
     streamSessionId: "ss-008",
@@ -917,7 +917,7 @@ export const mockStreamSessions: StreamSession[] = [
     endedAt: null,
     peakViewerCount: null,
     createdAt: isoOffset(48),
-    updatedAt: isoOffset(48),
+    updatedAt: isoOffset(48)
   },
   {
     streamSessionId: "ss-009",
@@ -932,8 +932,8 @@ export const mockStreamSessions: StreamSession[] = [
     endedAt: null,
     peakViewerCount: null,
     createdAt: isoOffset(10),
-    updatedAt: isoOffset(9),
-  },
+    updatedAt: isoOffset(9)
+  }
 ]
 
 export const mockLiveComments: LiveComment[] = [
@@ -949,7 +949,7 @@ export const mockLiveComments: LiveComment[] = [
     isDeleted: false,
     createdAt: isoOffset(1.9),
     deletedAt: null,
-    deletedByUserId: null,
+    deletedByUserId: null
   },
   {
     liveCommentId: "lc-002",
@@ -963,7 +963,7 @@ export const mockLiveComments: LiveComment[] = [
     isDeleted: false,
     createdAt: isoOffset(1.85),
     deletedAt: null,
-    deletedByUserId: null,
+    deletedByUserId: null
   },
   {
     liveCommentId: "lc-003",
@@ -976,7 +976,7 @@ export const mockLiveComments: LiveComment[] = [
     isDeleted: false,
     createdAt: isoOffset(1.8),
     deletedAt: null,
-    deletedByUserId: null,
+    deletedByUserId: null
   },
   {
     liveCommentId: "lc-004",
@@ -990,7 +990,7 @@ export const mockLiveComments: LiveComment[] = [
     isDeleted: false,
     createdAt: isoOffset(1.7),
     deletedAt: null,
-    deletedByUserId: null,
+    deletedByUserId: null
   },
   {
     liveCommentId: "lc-005",
@@ -1003,7 +1003,7 @@ export const mockLiveComments: LiveComment[] = [
     isDeleted: false,
     createdAt: isoOffset(1.6),
     deletedAt: null,
-    deletedByUserId: null,
+    deletedByUserId: null
   },
   {
     liveCommentId: "lc-006",
@@ -1016,7 +1016,7 @@ export const mockLiveComments: LiveComment[] = [
     isDeleted: false,
     createdAt: isoOffset(1.5),
     deletedAt: null,
-    deletedByUserId: null,
+    deletedByUserId: null
   },
   // Comments on ss-004 (Active - B2B Marketplace)
   {
@@ -1030,7 +1030,7 @@ export const mockLiveComments: LiveComment[] = [
     isDeleted: false,
     createdAt: isoOffset(0.4),
     deletedAt: null,
-    deletedByUserId: null,
+    deletedByUserId: null
   },
   {
     liveCommentId: "lc-008",
@@ -1043,7 +1043,7 @@ export const mockLiveComments: LiveComment[] = [
     isDeleted: false,
     createdAt: isoOffset(0.35),
     deletedAt: null,
-    deletedByUserId: null,
+    deletedByUserId: null
   },
   {
     liveCommentId: "lc-009",
@@ -1056,8 +1056,8 @@ export const mockLiveComments: LiveComment[] = [
     isDeleted: false,
     createdAt: isoOffset(0.3),
     deletedAt: null,
-    deletedByUserId: null,
-  },
+    deletedByUserId: null
+  }
 ]
 
 // ─── TradeXpo: Event GoLIVE ───────────────────────────────────────────────────
@@ -1078,7 +1078,7 @@ export const mockGoLIVEEvents: GoLIVEEvent[] = [
     broadcasterUserId: "user-nina",
     broadcasterDisplayName: "Nina Tran",
     createdAt: isoOffset(72),
-    updatedAt: isoOffset(2),
+    updatedAt: isoOffset(2)
   },
   {
     goLiveEventId: "gl-002",
@@ -1094,7 +1094,7 @@ export const mockGoLIVEEvents: GoLIVEEvent[] = [
     broadcasterUserId: "user-minh",
     broadcasterDisplayName: "Minh Do",
     createdAt: isoOffset(70),
-    updatedAt: isoOffset(70),
+    updatedAt: isoOffset(70)
   },
   {
     goLiveEventId: "gl-003",
@@ -1110,7 +1110,7 @@ export const mockGoLIVEEvents: GoLIVEEvent[] = [
     broadcasterUserId: "user-khai",
     broadcasterDisplayName: "Khai Pham",
     createdAt: isoOffset(48),
-    updatedAt: isoOffset(48),
+    updatedAt: isoOffset(48)
   },
   {
     goLiveEventId: "gl-008",
@@ -1125,7 +1125,7 @@ export const mockGoLIVEEvents: GoLIVEEvent[] = [
     broadcasterUserId: "user-minh",
     broadcasterDisplayName: "Minh Do",
     createdAt: isoOffset(60),
-    updatedAt: isoOffset(9),
+    updatedAt: isoOffset(9)
   },
   // expo-015 (B2B Marketplace Summit APAC — Live)
   {
@@ -1142,7 +1142,7 @@ export const mockGoLIVEEvents: GoLIVEEvent[] = [
     broadcasterUserId: "user-khai",
     broadcasterDisplayName: "Khai Pham",
     createdAt: isoOffset(120),
-    updatedAt: isoOffset(0.5),
+    updatedAt: isoOffset(0.5)
   },
   {
     goLiveEventId: "gl-005",
@@ -1158,7 +1158,7 @@ export const mockGoLIVEEvents: GoLIVEEvent[] = [
     broadcasterUserId: "user-nina",
     broadcasterDisplayName: "Nina Tran",
     createdAt: isoOffset(100),
-    updatedAt: isoOffset(100),
+    updatedAt: isoOffset(100)
   },
   // expo-004 (AutoDrive Expo — Ended)
   {
@@ -1175,7 +1175,7 @@ export const mockGoLIVEEvents: GoLIVEEvent[] = [
     broadcasterUserId: "user-nina",
     broadcasterDisplayName: "Nina Tran",
     createdAt: isoOffset(110),
-    updatedAt: isoOffset(93),
+    updatedAt: isoOffset(93)
   },
   {
     goLiveEventId: "gl-007",
@@ -1191,7 +1191,7 @@ export const mockGoLIVEEvents: GoLIVEEvent[] = [
     broadcasterUserId: "user-minh",
     broadcasterDisplayName: "Minh Do",
     createdAt: isoOffset(108),
-    updatedAt: isoOffset(95),
+    updatedAt: isoOffset(95)
   },
   // expo-001 (VietTech Innovation Summit — Pending Review / Upcoming)
   {
@@ -1204,14 +1204,14 @@ export const mockGoLIVEEvents: GoLIVEEvent[] = [
     thumbnailUrl: "https://picsum.photos/seed/golive009/640/360",
     sessionType: "Workshop",
     scheduledStartAt: new Date(
-      Date.now() + 31 * 24 * 60 * 60 * 1000,
+      Date.now() + 31 * 24 * 60 * 60 * 1000
     ).toISOString(),
     status: "Scheduled",
     broadcasterUserId: "user-nina",
     broadcasterDisplayName: "Nina Tran",
     createdAt: isoOffset(10),
-    updatedAt: isoOffset(10),
-  },
+    updatedAt: isoOffset(10)
+  }
 ]
 
 export const mockNotifications: AdminNotification[] = [
@@ -1223,7 +1223,7 @@ export const mockNotifications: AdminNotification[] = [
       '"VietTech Innovation Summit 2025" submitted by nguyen.van.a@viettech.vn is pending your review.',
     relatedExpoId: "expo-001",
     createdAt: isoOffset(12),
-    isRead: false,
+    isRead: false
   },
   {
     id: "notif-002",
@@ -1233,7 +1233,7 @@ export const mockNotifications: AdminNotification[] = [
       '"GreenEnergy Hanoi 2025" submitted by ceo@greenenergy.vn is pending your review.',
     relatedExpoId: "expo-006",
     createdAt: isoOffset(6),
-    isRead: false,
+    isRead: false
   },
   {
     id: "notif-003",
@@ -1243,7 +1243,7 @@ export const mockNotifications: AdminNotification[] = [
       '"Organic Living Festival" submitted by team@organicliving.vn is pending your review.',
     relatedExpoId: "expo-012",
     createdAt: isoOffset(2),
-    isRead: false,
+    isRead: false
   },
   {
     id: "notif-004",
@@ -1253,7 +1253,7 @@ export const mockNotifications: AdminNotification[] = [
       '"B2B Marketplace Summit APAC" went live and is now visible to the public.',
     relatedExpoId: "expo-015",
     createdAt: isoOffset(96),
-    isRead: true,
+    isRead: true
   },
   {
     id: "notif-005",
@@ -1263,7 +1263,7 @@ export const mockNotifications: AdminNotification[] = [
       '"AI & Robotics Showcase" went live. Approval notification sent to showcase@airobotics.tech.',
     relatedExpoId: "expo-009",
     createdAt: isoOffset(48),
-    isRead: true,
+    isRead: true
   },
   {
     id: "notif-006",
@@ -1275,7 +1275,7 @@ export const mockNotifications: AdminNotification[] = [
       ". Ensure all resources are ready.",
     relatedExpoId: "expo-007",
     createdAt: isoOffset(3),
-    isRead: false,
+    isRead: false
   },
   {
     id: "notif-007",
@@ -1284,7 +1284,7 @@ export const mockNotifications: AdminNotification[] = [
     message: `"Organic Living Festival" is scheduled to start on ${isoDate(20)}.`,
     relatedExpoId: "expo-012",
     createdAt: isoOffset(2),
-    isRead: false,
+    isRead: false
   },
   {
     id: "notif-008",
@@ -1293,7 +1293,7 @@ export const mockNotifications: AdminNotification[] = [
     message:
       'GLB file for booth template "Pro Corner Neon" failed to process. Please re-upload the asset.',
     createdAt: isoOffset(10),
-    isRead: false,
+    isRead: false
   },
   {
     id: "notif-009",
@@ -1305,7 +1305,7 @@ export const mockNotifications: AdminNotification[] = [
       ". Archive or review the record.",
     relatedExpoId: "expo-011",
     createdAt: isoOffset(150),
-    isRead: true,
+    isRead: true
   },
   {
     id: "notif-010",
@@ -1315,7 +1315,7 @@ export const mockNotifications: AdminNotification[] = [
       '"Retail Innovation Forum 2024" was canceled by the owner. No further action required.',
     relatedExpoId: "expo-008",
     createdAt: isoOffset(400),
-    isRead: true,
+    isRead: true
   },
   {
     id: "notif-011",
@@ -1327,6 +1327,6 @@ export const mockNotifications: AdminNotification[] = [
       ". Consider archiving.",
     relatedExpoId: "expo-004",
     createdAt: isoOffset(200),
-    isRead: true,
-  },
+    isRead: true
+  }
 ]

@@ -9,13 +9,13 @@ export async function POST(request: Request) {
   } catch {
     return NextResponse.json(
       { error: "Invalid JSON payload." },
-      { status: 400 },
+      { status: 400 }
     )
   }
 
   try {
     const result = await publishNotification(
-      payload as NotificationEventPayload,
+      payload as NotificationEventPayload
     )
     return NextResponse.json(result, { status: result.deduped ? 200 : 201 })
   } catch (error) {
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
       const validationErrorMessages = new Set([
         "missing required notification fields",
         "title must be <= 80 characters",
-        "body must be <= 120 characters",
+        "body must be <= 120 characters"
       ])
       if (validationErrorMessages.has(error.message)) {
         return NextResponse.json({ error: error.message }, { status: 400 })
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     }
     return NextResponse.json(
       { error: "Failed to publish notification." },
-      { status: 500 },
+      { status: 500 }
     )
   }
 }

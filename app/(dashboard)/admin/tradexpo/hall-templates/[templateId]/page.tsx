@@ -10,27 +10,27 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
+  CardTitle
 } from "@/components/ui/card"
 import {
   listHallSlotUsage,
-  listHallTemplateSlots,
+  listHallTemplateSlots
 } from "@/lib/tradexpo/db/hall-slots"
 import {
   listHallTemplateAssets,
   listHallTemplates,
-  listHallTemplateUsage,
+  listHallTemplateUsage
 } from "@/lib/tradexpo/db/hall-templates"
 import {
   formatDateTime,
   getAssetMap,
-  getHallTemplateStatus,
+  getHallTemplateStatus
 } from "@/lib/tradexpo/utils"
 
 export const dynamic = "force-dynamic"
 
 export default async function HallTemplateDetailPage({
-  params,
+  params
 }: {
   params: Promise<{ templateId: string }>
 }) {
@@ -41,7 +41,7 @@ export default async function HallTemplateDetailPage({
     listHallTemplates(),
     listHallTemplateUsage(),
     listHallTemplateSlots(templateId),
-    listHallSlotUsage(templateId),
+    listHallSlotUsage(templateId)
   ])
 
   const template = templates.find((item) => item.id === templateId)
@@ -54,7 +54,7 @@ export default async function HallTemplateDetailPage({
     hallTemplateId: template.id,
     upcomingExpoCount: 0,
     liveExpoCount: 0,
-    archivedExpoCount: 0,
+    archivedExpoCount: 0
   }
 
   const slotCount = slots.length
@@ -70,7 +70,7 @@ export default async function HallTemplateDetailPage({
         { label: "Dashboard", href: "/admin" },
         { label: "TradeXpo", href: "/admin/tradexpo" },
         { label: "Hall Templates", href: "/admin/tradexpo/hall-templates" },
-        { label: template.name },
+        { label: template.name }
       ]}
     >
       <div className="grid gap-4 lg:grid-cols-3">

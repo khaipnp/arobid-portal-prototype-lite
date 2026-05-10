@@ -7,7 +7,7 @@ import {
   PlayIcon,
   UsersIcon,
   Volume2Icon,
-  VolumeXIcon,
+  VolumeXIcon
 } from "lucide-react"
 import * as React from "react"
 import { Button } from "@/components/ui/button"
@@ -25,7 +25,7 @@ export function StreamPlayer({
   session,
   title,
   sessionType,
-  onStreamEnded,
+  onStreamEnded
 }: Props) {
   const [currentSession, setCurrentSession] =
     React.useState<StreamSession>(session)
@@ -41,11 +41,11 @@ export function StreamPlayer({
   const [muted, setMuted] = React.useState(false)
   const [progress, setProgress] = React.useState(0)
   const [viewerCount, setViewerCount] = React.useState(
-    currentSession.peakViewerCount ?? 0,
+    currentSession.peakViewerCount ?? 0
   )
   const [showControls, setShowControls] = React.useState(true)
   const controlsTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(
-    null,
+    null
   )
 
   React.useEffect(() => {
@@ -64,8 +64,8 @@ export function StreamPlayer({
           `/api/stream/sessions/${currentSession.streamSessionId}`,
           {
             signal: controller.signal,
-            cache: "no-store",
-          },
+            cache: "no-store"
+          }
         )
         if (!response.ok) return
         const payload = (await response.json()) as { session?: StreamSession }
@@ -125,12 +125,12 @@ export function StreamPlayer({
     Talkshow: "from-violet-900 via-purple-900 to-indigo-900",
     Panel: "from-slate-900 via-slate-800 to-zinc-900",
     ProductDemo: "from-orange-900 via-amber-900 to-yellow-900",
-    Other: "from-gray-900 via-gray-800 to-gray-900",
+    Other: "from-gray-900 via-gray-800 to-gray-900"
   }
   const gradient = gradients[sessionType] ?? gradients.Other
   const liveBars = React.useMemo(
     () => Array.from({ length: 20 }, (_, index) => `bar-${index}`),
-    [],
+    []
   )
 
   return (
@@ -138,7 +138,7 @@ export function StreamPlayer({
     <div
       className={cn(
         "relative flex aspect-video w-full select-none overflow-hidden rounded-lg bg-linear-to-br",
-        gradient,
+        gradient
       )}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => setShowControls(true)}
@@ -156,7 +156,7 @@ export function StreamPlayer({
                   style={{
                     height: `${20 + Math.sin((Date.now() / 300 + i) * 0.8) * 60}%`,
                     animation: `pulse ${0.6 + i * 0.05}s ease-in-out infinite alternate`,
-                    animationDelay: `${i * 50}ms`,
+                    animationDelay: `${i * 50}ms`
                   }}
                 />
               ))}
@@ -205,7 +205,7 @@ export function StreamPlayer({
       <div
         className={cn(
           "absolute top-0 right-0 left-0 flex items-center justify-between bg-linear-to-b from-black/60 to-transparent p-3 transition-opacity duration-200",
-          showControls || !playing ? "opacity-100" : "opacity-0",
+          showControls || !playing ? "opacity-100" : "opacity-0"
         )}
       >
         <div className="flex items-center gap-2">
@@ -247,7 +247,7 @@ export function StreamPlayer({
         <div
           className={cn(
             "absolute right-0 bottom-0 left-0 bg-linear-to-t from-black/70 to-transparent p-3 transition-opacity duration-200",
-            showControls || !playing ? "opacity-100" : "opacity-0",
+            showControls || !playing ? "opacity-100" : "opacity-0"
           )}
         >
           {isReplay && (
@@ -292,7 +292,7 @@ export function StreamPlayer({
               <span className="ml-2 text-white/70 text-xs">
                 {Math.floor((progress / 100) * 120)}:
                 {String(
-                  Math.floor(((progress / 100) * 120 * 60) % 60),
+                  Math.floor(((progress / 100) * 120 * 60) % 60)
                 ).padStart(2, "0")}{" "}
                 / 2:00:00
               </span>

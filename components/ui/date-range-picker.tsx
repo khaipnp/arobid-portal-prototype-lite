@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input"
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
+  PopoverTrigger
 } from "@/components/ui/popover"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
@@ -83,15 +83,15 @@ function DateRangePicker({
   placeholder = "Select Date Range",
   className,
   disabled,
-  timezoneLabel,
+  timezoneLabel
 }: DateRangePickerProps) {
   const [open, setOpen] = React.useState(false)
   const [draft, setDraft] = React.useState<DateRange | undefined>(value)
   const [startDateText, setStartDateText] = React.useState(
-    formatDate(value?.from),
+    formatDate(value?.from)
   )
   const [startTimeText, setStartTimeText] = React.useState(
-    formatTime(value?.from),
+    formatTime(value?.from)
   )
   const [endDateText, setEndDateText] = React.useState(formatDate(value?.to))
   const [endTimeText, setEndTimeText] = React.useState(formatTime(value?.to))
@@ -135,7 +135,7 @@ function DateRangePicker({
               const d = new Date(rangeFrom)
               d.setHours(0, 0, 0, 0)
               return d
-            })(),
+            })()
         )
       : undefined
 
@@ -147,7 +147,7 @@ function DateRangePicker({
               const d = new Date(rangeTo)
               d.setHours(23, 59, 0, 0)
               return d
-            })(),
+            })()
         )
       : undefined
 
@@ -228,7 +228,7 @@ function DateRangePicker({
           disabled={disabled}
           className={cn(
             "justify-start rounded-lg text-left font-normal data-[empty=true]:text-muted-foreground",
-            className,
+            className
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />

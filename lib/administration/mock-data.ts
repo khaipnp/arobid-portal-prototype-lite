@@ -2,7 +2,7 @@ import type {
   AdminFeature,
   AdminModule,
   AdminPermission,
-  AdminRole,
+  AdminRole
 } from "@/lib/administration/types"
 
 export const adminModules: AdminModule[] = [
@@ -10,14 +10,14 @@ export const adminModules: AdminModule[] = [
     id: "module-b2b",
     code: "B2B_MARKETPLACE",
     name: "B2B Marketplace",
-    description: "Core trading and supplier management features.",
+    description: "Core trading and supplier management features."
   },
   {
     id: "module-tradexpo",
     code: "TRADEXPO",
     name: "TradeXpo",
-    description: "Expo and booth management capabilities.",
-  },
+    description: "Expo and booth management capabilities."
+  }
 ]
 
 export const adminRoles: AdminRole[] = [
@@ -26,29 +26,29 @@ export const adminRoles: AdminRole[] = [
     name: "BUYER",
     moduleId: "module-b2b",
     moduleName: "B2B Marketplace",
-    description: "Can discover and place orders for products.",
+    description: "Can discover and place orders for products."
   },
   {
     id: "role-seller",
     name: "SELLER",
     moduleId: "module-b2b",
     moduleName: "B2B Marketplace",
-    description: "Can create and manage products and quotations.",
+    description: "Can create and manage products and quotations."
   },
   {
     id: "role-expo-owner",
     name: "EXPO_OWNER",
     moduleId: "module-tradexpo",
     moduleName: "TradeXpo",
-    description: "Can create and operate expo events.",
+    description: "Can create and operate expo events."
   },
   {
     id: "role-exhibitor",
     name: "EXHIBITOR",
     moduleId: "module-tradexpo",
     moduleName: "TradeXpo",
-    description: "Can participate in expo and manage booths.",
-  },
+    description: "Can participate in expo and manage booths."
+  }
 ]
 
 export const adminFeatures: AdminFeature[] = [
@@ -57,29 +57,29 @@ export const adminFeatures: AdminFeature[] = [
     name: "Order Management",
     moduleId: "module-b2b",
     moduleName: "B2B Marketplace",
-    description: "Track, review, and process platform orders.",
+    description: "Track, review, and process platform orders."
   },
   {
     id: "feature-catalog",
     name: "Catalog",
     moduleId: "module-b2b",
     moduleName: "B2B Marketplace",
-    description: "Manage product catalog entries and categories.",
+    description: "Manage product catalog entries and categories."
   },
   {
     id: "feature-expo-list",
     name: "Expo List",
     moduleId: "module-tradexpo",
     moduleName: "TradeXpo",
-    description: "Create and administer expo records.",
+    description: "Create and administer expo records."
   },
   {
     id: "feature-booth-template",
     name: "Booth Templates",
     moduleId: "module-tradexpo",
     moduleName: "TradeXpo",
-    description: "Configure reusable 3D booth templates.",
-  },
+    description: "Configure reusable 3D booth templates."
+  }
 ]
 
 export const adminPermissions: AdminPermission[] = [
@@ -92,7 +92,7 @@ export const adminPermissions: AdminPermission[] = [
     roleName: "BUYER",
     featureId: "feature-order-management",
     featureName: "Order Management",
-    action: "read",
+    action: "read"
   },
   {
     id: "order-create",
@@ -103,7 +103,7 @@ export const adminPermissions: AdminPermission[] = [
     roleName: "BUYER",
     featureId: "feature-order-management",
     featureName: "Order Management",
-    action: "create",
+    action: "create"
   },
   {
     id: "catalog-edit",
@@ -114,7 +114,7 @@ export const adminPermissions: AdminPermission[] = [
     roleName: "SELLER",
     featureId: "feature-catalog",
     featureName: "Catalog",
-    action: "update",
+    action: "update"
   },
   {
     id: "expo-read",
@@ -125,7 +125,7 @@ export const adminPermissions: AdminPermission[] = [
     roleName: "EXPO_OWNER",
     featureId: "feature-expo-list",
     featureName: "Expo List",
-    action: "read",
+    action: "read"
   },
   {
     id: "expo-create",
@@ -136,7 +136,7 @@ export const adminPermissions: AdminPermission[] = [
     roleName: "EXPO_OWNER",
     featureId: "feature-expo-list",
     featureName: "Expo List",
-    action: "create",
+    action: "create"
   },
   {
     id: "booth-read",
@@ -147,6 +147,6 @@ export const adminPermissions: AdminPermission[] = [
     roleName: "EXHIBITOR",
     featureId: "feature-booth-template",
     featureName: "Booth Templates",
-    action: "read",
-  },
+    action: "read"
+  }
 ]

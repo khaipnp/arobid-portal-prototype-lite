@@ -8,24 +8,24 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
+  CardTitle
 } from "@/components/ui/card"
 import {
   listBoothTemplates,
   listBoothTemplateUsage,
-  listBoothTypes,
+  listBoothTypes
 } from "@/lib/tradexpo/db/booth-templates"
 import { listHallTemplateAssets } from "@/lib/tradexpo/db/hall-templates"
 import {
   formatDateTime,
   getAssetMap,
-  getBoothTemplateStatus,
+  getBoothTemplateStatus
 } from "@/lib/tradexpo/utils"
 
 export const dynamic = "force-dynamic"
 
 export default async function BoothTemplateDetailPage({
-  params,
+  params
 }: {
   params: Promise<{ templateId: string }>
 }) {
@@ -35,7 +35,7 @@ export default async function BoothTemplateDetailPage({
     listHallTemplateAssets(),
     listBoothTemplates(),
     listBoothTemplateUsage(),
-    listBoothTypes(),
+    listBoothTypes()
   ])
 
   const template = templates.find((item) => item.id === templateId)
@@ -48,7 +48,7 @@ export default async function BoothTemplateDetailPage({
     boothTemplateId: template.id,
     upcomingExpoBoothCount: 0,
     liveExpoBoothCount: 0,
-    archivedExpoBoothCount: 0,
+    archivedExpoBoothCount: 0
   }
 
   const boothTypeName =
@@ -66,7 +66,7 @@ export default async function BoothTemplateDetailPage({
         { label: "Dashboard", href: "/admin" },
         { label: "TradeXpo", href: "/admin/tradexpo" },
         { label: "Booth Templates", href: "/admin/tradexpo/booth-templates" },
-        { label: template.name },
+        { label: template.name }
       ]}
     >
       <div className="grid gap-4 lg:grid-cols-3">

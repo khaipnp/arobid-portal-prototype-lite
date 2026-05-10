@@ -4,33 +4,33 @@ import {
   CheckIcon,
   ChevronsUpDownIcon,
   FilterXIcon,
-  SearchIcon,
+  SearchIcon
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import {
   getOrderStatusLabel,
-  OrderStatusBadge,
+  OrderStatusBadge
 } from "@/components/orders/order-status-badge"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
   type DateRange,
-  DateRangePicker,
+  DateRangePicker
 } from "@/components/ui/date-range-picker"
 import { Input } from "@/components/ui/input"
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
+  PopoverTrigger
 } from "@/components/ui/popover"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from "@/components/ui/select"
 import {
   Table,
@@ -38,13 +38,13 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from "@/components/ui/table"
 import type {
   InvoiceStatus,
   Order,
   OrderStatus,
-  OrderType,
+  OrderType
 } from "@/lib/tradexpo/types"
 
 const PAGE_SIZE = 20
@@ -55,7 +55,7 @@ const ALL_STATUSES: OrderStatus[] = [
   "Paid",
   "Failed",
   "Cancelled",
-  "Expired",
+  "Expired"
 ]
 
 const INVOICE_STATUS_OPTIONS: Array<"all" | InvoiceStatus> = [
@@ -65,7 +65,7 @@ const INVOICE_STATUS_OPTIONS: Array<"all" | InvoiceStatus> = [
   "requested_paid",
   "exported",
   "issued",
-  "sent",
+  "sent"
 ]
 
 function getInvoiceStatusLabel(status: "all" | InvoiceStatus) {
@@ -91,7 +91,7 @@ function formatVND(amount: number) {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
     currency: "VND",
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 0
   }).format(amount)
 }
 
@@ -101,12 +101,12 @@ function formatDate(iso: string) {
     month: "2-digit",
     year: "numeric",
     hour: "2-digit",
-    minute: "2-digit",
+    minute: "2-digit"
   })
 }
 
 export function OrderManagementDashboard({
-  initialOrders,
+  initialOrders
 }: {
   initialOrders: Order[]
 }) {
@@ -114,8 +114,8 @@ export function OrderManagementDashboard({
   const [orders] = useState<Order[]>(() =>
     [...initialOrders].sort(
       (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    ),
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    )
   )
 
   const [search, setSearch] = useState("")
@@ -141,14 +141,14 @@ export function OrderManagementDashboard({
       }
       setSearch(parsed.search ?? "")
       setStatusFilters(
-        Array.isArray(parsed.statusFilters) ? parsed.statusFilters : [],
+        Array.isArray(parsed.statusFilters) ? parsed.statusFilters : []
       )
       setTypeFilter(parsed.typeFilter ?? "all")
       setInvoiceStatusFilter(parsed.invoiceStatusFilter ?? "all")
       if (parsed.dateFrom || parsed.dateTo) {
         setDateRange({
           from: parsed.dateFrom ? new Date(parsed.dateFrom) : undefined,
-          to: parsed.dateTo ? new Date(parsed.dateTo) : undefined,
+          to: parsed.dateTo ? new Date(parsed.dateTo) : undefined
         })
       }
     } catch {
@@ -165,8 +165,8 @@ export function OrderManagementDashboard({
         typeFilter,
         invoiceStatusFilter,
         dateFrom: dateRange?.from?.toISOString(),
-        dateTo: dateRange?.to?.toISOString(),
-      }),
+        dateTo: dateRange?.to?.toISOString()
+      })
     )
   }, [search, statusFilters, typeFilter, invoiceStatusFilter, dateRange])
 
@@ -207,14 +207,14 @@ export function OrderManagementDashboard({
     statusFilters,
     typeFilter,
     invoiceStatusFilter,
-    dateRange,
+    dateRange
   ])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const currentPage = Math.min(page, totalPages)
   const pageItems = filtered.slice(
     (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE,
+    currentPage * PAGE_SIZE
   )
 
   function handleFilterChange() {

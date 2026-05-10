@@ -19,8 +19,8 @@ export function useUpload() {
         body: JSON.stringify({
           fileName: file.name,
           contentType: file.type,
-          kind,
-        }),
+          kind
+        })
       })
 
       if (!presignedRes.ok) throw new Error("Failed to get upload URL")
@@ -33,8 +33,8 @@ export function useUpload() {
         method: "PUT",
         body: file,
         headers: {
-          "Content-Type": file.type,
-        },
+          "Content-Type": file.type
+        }
       })
 
       if (!uploadRes.ok) throw new Error("Failed to upload to R2")
@@ -51,9 +51,9 @@ export function useUpload() {
           metadata: {
             size: file.size,
             type: file.type,
-            lastModified: file.lastModified,
-          },
-        }),
+            lastModified: file.lastModified
+          }
+        })
       })
 
       if (!assetRes.ok) throw new Error("Failed to save asset metadata")

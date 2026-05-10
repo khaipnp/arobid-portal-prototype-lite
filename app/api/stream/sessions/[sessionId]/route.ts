@@ -2,11 +2,11 @@ import { NextResponse } from "next/server"
 import {
   getStreamSessionById,
   updateGoLIVEEventStatusBySession,
-  updateStreamSessionStatus,
+  updateStreamSessionStatus
 } from "@/lib/tradexpo/db/platform-data"
 import type {
   GoLIVEEventStatus,
-  StreamSessionStatus,
+  StreamSessionStatus
 } from "@/lib/tradexpo/types"
 
 interface Props {
@@ -41,12 +41,12 @@ export async function PATCH(request: Request, { params }: Props) {
     startedAt: body.startedAt ?? null,
     endedAt: body.endedAt ?? null,
     peakViewerCount: body.peakViewerCount ?? null,
-    updatedAt: body.updatedAt,
+    updatedAt: body.updatedAt
   })
   await updateGoLIVEEventStatusBySession({
     streamSessionId: sessionId,
     status: body.goLiveEventStatus,
-    updatedAt: body.updatedAt,
+    updatedAt: body.updatedAt
   })
   return NextResponse.json({ ok: true })
 }

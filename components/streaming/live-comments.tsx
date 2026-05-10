@@ -26,7 +26,7 @@ interface Props {
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString([], {
     hour: "2-digit",
-    minute: "2-digit",
+    minute: "2-digit"
   })
 }
 
@@ -43,13 +43,13 @@ export function LiveComments({
   streamSessionId,
   sessionStatus,
   initialComments,
-  isModerator = false,
+  isModerator = false
 }: Props) {
   const [comments, setComments] = React.useState<LiveComment[]>(() =>
     [...initialComments].sort(
       (a, b) =>
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-    ),
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    )
   )
   const [commentText, setCommentText] = React.useState("")
   const [_guestIdentity, setGuestIdentity] =
@@ -82,8 +82,8 @@ export function LiveComments({
           `/api/stream/sessions/${streamSessionId}/comments`,
           {
             signal: controller.signal,
-            cache: "no-store",
-          },
+            cache: "no-store"
+          }
         )
         if (!response.ok) return
         const payload = (await response.json()) as { comments?: LiveComment[] }
@@ -91,8 +91,8 @@ export function LiveComments({
         setComments(
           [...payload.comments].sort(
             (a, b) =>
-              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
-          ),
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          )
         )
       } catch {
         // no-op
@@ -121,7 +121,7 @@ export function LiveComments({
       isDeleted: false,
       createdAt: new Date().toISOString(),
       deletedAt: null,
-      deletedByUserId: null,
+      deletedByUserId: null
     }
 
     if (identity) {
@@ -137,8 +137,8 @@ export function LiveComments({
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ comment: newComment }),
-        },
+          body: JSON.stringify({ comment: newComment })
+        }
       )
       if (!response.ok) return
       setComments((prev) => [...prev, newComment])
@@ -171,7 +171,7 @@ export function LiveComments({
 
     const identity: GuestIdentity = {
       displayName: guestName.trim(),
-      email: guestEmail.trim(),
+      email: guestEmail.trim()
     }
     setGuestIdentity(identity)
     setShowGuestForm(false)
@@ -188,8 +188,8 @@ export function LiveComments({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           deletedByUserId: currentUserId,
-          deletedAt,
-        }),
+          deletedAt
+        })
       })
       if (!response.ok) return
       setComments((prev) =>
@@ -199,10 +199,10 @@ export function LiveComments({
                 ...c,
                 isDeleted: true,
                 deletedAt,
-                deletedByUserId: currentUserId,
+                deletedByUserId: currentUserId
               }
-            : c,
-        ),
+            : c
+        )
       )
     } catch {
       // no-op
@@ -242,7 +242,7 @@ export function LiveComments({
                       "text-[10px]",
                       isGuest
                         ? "bg-violet-100 text-violet-700"
-                        : "bg-primary/10 text-primary",
+                        : "bg-primary/10 text-primary"
                     )}
                   >
                     {getInitials(displayName)}

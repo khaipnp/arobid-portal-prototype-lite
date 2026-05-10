@@ -10,7 +10,7 @@ const DEMO_ORDER = {
     "Booth Registration — VietTech Innovation Summit 2025 (Standard Booth)",
   total: 5_000_000,
   scopeType: "expo" as const,
-  scopeId: "expo-001",
+  scopeId: "expo-001"
 }
 
 const HINT_CODES = [
@@ -20,24 +20,24 @@ const HINT_CODES = [
   // Multi-use — valid
   {
     code: "SUMMER25",
-    note: "Multi-use · 10% off VietTech · reusable across orders ✓",
+    note: "Multi-use · 10% off VietTech · reusable across orders ✓"
   },
   {
     code: "IPTCWELCOME",
-    note: "Multi-use · Discount 1.000.000 VND off VietTech · reusable across orders ✓",
+    note: "Multi-use · Discount 1.000.000 VND off VietTech · reusable across orders ✓"
   },
   // Failure cases
   { code: "SVC2025-DEMO01", note: "Wrong scope (service voucher) — will fail" },
   { code: "MEDPRO25", note: "Wrong scope (multi-use, service) — will fail" },
   { code: "NEWYR25-DEMO01", note: "Expired batch — will fail" },
   { code: "REVOKE24-DEMO01", note: "Revoked batch — will fail" },
-  { code: "LAUNCH25-0001XX", note: "Depleted batch — will fail" },
+  { code: "LAUNCH25-0001XX", note: "Depleted batch — will fail" }
 ]
 
 export default async function CheckoutDemoPage() {
   const [batches, codes] = await Promise.all([
     listVoucherBatches(),
-    listVoucherCodes(),
+    listVoucherCodes()
   ])
 
   return (
@@ -46,7 +46,7 @@ export default async function CheckoutDemoPage() {
       description="Apply an eVoucher code at checkout to see how the discount is calculated, locked, and resolved on payment."
       breadcrumbs={[
         { label: "Seller", href: "/seller" },
-        { label: "Checkout Demo" },
+        { label: "Checkout Demo" }
       ]}
     >
       <div className="grid gap-6 lg:grid-cols-2">

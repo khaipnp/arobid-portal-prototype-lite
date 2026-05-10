@@ -9,7 +9,7 @@ import {
   DialogContent,
   DialogDescription,
   DialogTitle,
-  DialogTrigger,
+  DialogTrigger
 } from "@/components/ui/dialog"
 
 type VirtualLobbyDialogProps = {
@@ -19,7 +19,7 @@ type VirtualLobbyDialogProps = {
 
 export function VirtualLobbyDialog({
   src = "https://arobidglobal.shapespark.com/foodexpo2025_lobby/",
-  expoTitle = "Virtual Lobby",
+  expoTitle = "Virtual Lobby"
 }: VirtualLobbyDialogProps) {
   const autoplaySrc = src.includes("#") ? `${src}&autoplay` : `${src}#autoplay`
   const [open, setOpen] = useState(false)

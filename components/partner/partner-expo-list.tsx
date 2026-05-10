@@ -17,20 +17,20 @@ const statusStyles: Record<ExpoStatus, string> = {
   Live: "border-emerald-300 bg-emerald-100 text-emerald-700",
   Ended: "border-zinc-300 bg-zinc-100 text-zinc-700",
   Archived: "border-purple-300 bg-purple-100 text-purple-700",
-  Canceled: "border-rose-300 bg-rose-100 text-rose-700",
+  Canceled: "border-rose-300 bg-rose-100 text-rose-700"
 }
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", {
     day: "2-digit",
     month: "short",
-    year: "numeric",
+    year: "numeric"
   })
 }
 
 export function PartnerExpoList({
   expos: allExpos,
-  goLiveEvents,
+  goLiveEvents
 }: {
   expos: Expo[]
   goLiveEvents: GoLIVEEvent[]
@@ -41,7 +41,7 @@ export function PartnerExpoList({
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {expos.map((expo) => {
         const goLIVECount = goLiveEvents.filter(
-          (e) => e.expoId === expo.id && e.status !== "Canceled",
+          (e) => e.expoId === expo.id && e.status !== "Canceled"
         ).length
 
         return (
@@ -61,7 +61,7 @@ export function PartnerExpoList({
                 variant="outline"
                 className={cn(
                   "absolute top-2 right-2 border text-xs",
-                  statusStyles[expo.status],
+                  statusStyles[expo.status]
                 )}
               >
                 {expo.status}

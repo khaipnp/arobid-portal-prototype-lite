@@ -15,7 +15,7 @@ export async function PUT(request: Request, { params }: Props) {
   if (body.customization.registrationId !== registrationId) {
     return NextResponse.json(
       { error: "Mismatched registration." },
-      { status: 400 },
+      { status: 400 }
     )
   }
   await upsertBoothCustomization(body.customization)

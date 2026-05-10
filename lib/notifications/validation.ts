@@ -1,7 +1,7 @@
 import type { NotificationEventPayload } from "@/lib/notifications/types"
 
 export function parseNotificationEvent(
-  input: unknown,
+  input: unknown
 ): NotificationEventPayload {
   if (!input || typeof input !== "object") {
     throw new Error("missing required notification fields")
@@ -14,7 +14,7 @@ export function parseNotificationEvent(
     "type",
     "title",
     "body",
-    "deepLinkPath",
+    "deepLinkPath"
   ] as const
 
   for (const field of requiredFields) {
@@ -38,7 +38,7 @@ export function parseNotificationEvent(
       : {}),
     ...(typeof candidate.referenceType === "string"
       ? { referenceType: candidate.referenceType }
-      : {}),
+      : {})
   }
 
   if (

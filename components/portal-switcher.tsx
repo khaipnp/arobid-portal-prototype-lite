@@ -8,19 +8,19 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuShortcut,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
+  useSidebar
 } from "@/components/ui/sidebar"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card"
 
 export function PortalSwitcher({
   portals,
-  activePortalName,
+  activePortalName
 }: {
   portals: {
     name: string
@@ -33,7 +33,7 @@ export function PortalSwitcher({
   const { isMobile } = useSidebar()
   const router = useRouter()
   const [activePortal, setActivePortal] = React.useState(
-    portals.find((p) => p.name === activePortalName) ?? portals[0],
+    portals.find((p) => p.name === activePortalName) ?? portals[0]
   )
 
   const handlePortalSelect = React.useCallback(
@@ -41,7 +41,7 @@ export function PortalSwitcher({
       setActivePortal(portal)
       router.push(portal.url)
     },
-    [router],
+    [router]
   )
 
   React.useEffect(() => {

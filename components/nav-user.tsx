@@ -7,7 +7,7 @@ import {
   MonitorIcon,
   MoonIcon,
   SunIcon,
-  UserCircleIcon,
+  UserCircleIcon
 } from "lucide-react"
 import Link from "next/link"
 import { useTheme } from "next-themes"
@@ -21,17 +21,17 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  useSidebar,
+  useSidebar
 } from "@/components/ui/sidebar"
 
 export function NavUser({
-  user,
+  user
 }: {
   user: {
     name: string

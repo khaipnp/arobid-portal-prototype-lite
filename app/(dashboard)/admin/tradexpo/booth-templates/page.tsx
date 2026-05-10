@@ -3,7 +3,7 @@ import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import {
   listBoothTemplates,
   listBoothTemplateUsage,
-  listBoothTypes,
+  listBoothTypes
 } from "@/lib/tradexpo/db/booth-templates"
 import { listHallTemplateAssets } from "@/lib/tradexpo/db/hall-templates"
 
@@ -14,7 +14,7 @@ export default async function BoothTemplateLibraryPage() {
     listHallTemplateAssets(),
     listBoothTemplates(),
     listBoothTemplateUsage(),
-    listBoothTypes(),
+    listBoothTypes()
   ])
 
   return (
@@ -24,7 +24,7 @@ export default async function BoothTemplateLibraryPage() {
       breadcrumbs={[
         { label: "Dashboard", href: "/admin" },
         { label: "TradeXpo", href: "/admin/tradexpo" },
-        { label: "Booth Templates" },
+        { label: "Booth Templates" }
       ]}
     >
       <BoothTemplateLibraryManager

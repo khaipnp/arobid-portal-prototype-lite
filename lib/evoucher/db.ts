@@ -2,7 +2,7 @@ import { sql } from "@/lib/db/neon"
 import type {
   VoucherBatch,
   VoucherCode,
-  VoucherTarget,
+  VoucherTarget
 } from "@/lib/evoucher/types"
 
 type VoucherBatchRow = {
@@ -74,7 +74,7 @@ function mapBatch(row: VoucherBatchRow): VoucherBatch {
     description: row.description ?? undefined,
     isRevoked: row.is_revoked,
     createdAt: toIsoDateTime(row.created_at),
-    updatedAt: toIsoDateTime(row.updated_at),
+    updatedAt: toIsoDateTime(row.updated_at)
   }
 }
 
@@ -85,7 +85,7 @@ function mapCode(row: VoucherCodeRow): VoucherCode {
     code: row.code,
     status: row.status,
     lockedByOrderId: row.locked_by_order_id ?? undefined,
-    redeemedAt: row.redeemed_at ? toIsoDateTime(row.redeemed_at) : undefined,
+    redeemedAt: row.redeemed_at ? toIsoDateTime(row.redeemed_at) : undefined
   }
 }
 
@@ -93,7 +93,7 @@ function mapTarget(row: VoucherTargetRow): VoucherTarget {
   return {
     id: row.id,
     name: row.name,
-    type: row.type,
+    type: row.type
   }
 }
 

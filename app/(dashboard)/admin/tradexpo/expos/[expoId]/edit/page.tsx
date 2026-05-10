@@ -8,13 +8,13 @@ import {
   getUserById,
   listExpoCategories,
   listExpoHalls,
-  listExpoLayoutTemplates,
+  listExpoLayoutTemplates
 } from "@/lib/tradexpo/db/platform-data"
 
 export const dynamic = "force-dynamic"
 
 export default async function EditExpoPage({
-  params,
+  params
 }: {
   params: Promise<{ expoId: string }>
 }) {
@@ -29,8 +29,8 @@ export default async function EditExpoPage({
       listExpoCategories(),
       listExpoLayoutTemplates(),
       listHallTemplates(),
-      listExpoHalls(expoId),
-    ],
+      listExpoHalls(expoId)
+    ]
   )
 
   const initialOwner =
@@ -45,7 +45,7 @@ export default async function EditExpoPage({
         { label: "TradeXpo", href: "/admin/tradexpo" },
         { label: "Expo List", href: "/admin/tradexpo/expos" },
         { label: expo.name, href: `/admin/tradexpo/expos/${expoId}` },
-        { label: "Edit" },
+        { label: "Edit" }
       ]}
     >
       <ExpoForm

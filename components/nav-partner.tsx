@@ -5,7 +5,7 @@ import {
   LayoutDashboardIcon,
   RadioIcon,
   Settings2Icon,
-  UsersIcon,
+  UsersIcon
 } from "lucide-react"
 import Link from "next/link"
 import { NotificationNavLink } from "@/components/notifications/notification-nav-link"
@@ -14,30 +14,30 @@ import {
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem,
+  SidebarMenuItem
 } from "@/components/ui/sidebar"
 
 const expoOwnerLinks = [
   {
     name: "My Expos",
     url: "/partner/expos",
-    icon: <CalendarIcon />,
+    icon: <CalendarIcon />
   },
   {
     name: "GoLIVE",
     url: "/partner/expos",
-    icon: <RadioIcon />,
+    icon: <RadioIcon />
   },
   {
     name: "Exhibitors",
     url: "#",
-    icon: <UsersIcon />,
+    icon: <UsersIcon />
   },
   {
     name: "Settings",
     url: "#",
-    icon: <Settings2Icon />,
-  },
+    icon: <Settings2Icon />
+  }
 ]
 
 export function NavPartner() {

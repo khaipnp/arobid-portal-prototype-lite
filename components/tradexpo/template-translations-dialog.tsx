@@ -10,7 +10,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
+  AlertDialogTrigger
 } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -19,7 +19,7 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import {
@@ -28,7 +28,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from "@/components/ui/table"
 import type { TranslationRecord } from "@/lib/tradexpo/types"
 
@@ -39,11 +39,11 @@ interface Props {
 
 export function TemplateTranslationsDialog({
   templateName,
-  initialTranslations,
+  initialTranslations
 }: Props) {
   const [open, setOpen] = React.useState(false)
   const [translations, setTranslations] = React.useState<TranslationRecord[]>(
-    () => initialTranslations.map((tr) => ({ ...tr })),
+    () => initialTranslations.map((tr) => ({ ...tr }))
   )
   const [languageCode, setLanguageCode] = React.useState("vi")
   const [name, setName] = React.useState("")
@@ -56,13 +56,13 @@ export function TemplateTranslationsDialog({
 
     setTranslations((current) => {
       const exists = current.some(
-        (tr) => tr.languageCode.toLowerCase() === normalizedCode,
+        (tr) => tr.languageCode.toLowerCase() === normalizedCode
       )
       if (exists) {
         return current.map((tr) =>
           tr.languageCode.toLowerCase() === normalizedCode
             ? { ...tr, name: name.trim() }
-            : tr,
+            : tr
         )
       }
       return [...current, { languageCode: normalizedCode, name: name.trim() }]
@@ -73,7 +73,7 @@ export function TemplateTranslationsDialog({
 
   function handleRemove(code: string) {
     setTranslations((current) =>
-      current.filter((tr) => tr.languageCode !== code),
+      current.filter((tr) => tr.languageCode !== code)
     )
   }
 

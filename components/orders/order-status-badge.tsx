@@ -11,7 +11,7 @@ const statusStyles: Record<OrderStatus, string> = {
   Cancelled:
     "border-zinc-300 bg-zinc-100 text-zinc-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
   Expired:
-    "border-zinc-300 bg-zinc-100 text-zinc-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-400",
+    "border-zinc-300 bg-zinc-100 text-zinc-500 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
 }
 
 const statusLabels: Record<OrderStatus, string> = {
@@ -19,7 +19,7 @@ const statusLabels: Record<OrderStatus, string> = {
   Paid: "Paid",
   Failed: "Failed",
   Cancelled: "Cancelled",
-  Expired: "Expired",
+  Expired: "Expired"
 }
 
 export function getOrderStatusLabel(status: OrderStatus): string {

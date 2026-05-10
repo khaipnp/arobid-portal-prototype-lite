@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import {
   deleteNotification,
-  markNotificationRead,
+  markNotificationRead
 } from "@/lib/tradexpo/db/platform-data"
 
 interface Props {

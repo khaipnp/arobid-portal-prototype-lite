@@ -14,7 +14,7 @@ function isValidCursor(cursor: string) {
   if (Number.isNaN(createdAt.getTime())) return false
   if (!notificationIdRaw) return true
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-    notificationIdRaw.trim(),
+    notificationIdRaw.trim()
   )
 }
 
@@ -43,7 +43,7 @@ export async function GET(request: Request) {
   } catch {
     return NextResponse.json(
       { error: "Failed to list notifications." },
-      { status: 500 },
+      { status: 500 }
     )
   }
 }

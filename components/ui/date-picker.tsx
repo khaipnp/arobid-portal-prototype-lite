@@ -7,7 +7,7 @@ import { Calendar } from "@/components/ui/calendar"
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
+  PopoverTrigger
 } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 
@@ -24,7 +24,7 @@ function DatePicker({
   onChange,
   placeholder = "Pick a date",
   className,
-  disabled,
+  disabled
 }: DatePickerProps) {
   return (
     <Popover>
@@ -35,7 +35,7 @@ function DatePicker({
           disabled={disabled}
           className={cn(
             "w-70 justify-start text-left font-normal data-[empty=true]:text-muted-foreground",
-            className,
+            className
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />

@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server"
 import {
   type AdministrationEntity,
-  getAdministrationList,
+  getAdministrationList
 } from "@/lib/administration/list"
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ entity: string }> },
+  { params }: { params: Promise<{ entity: string }> }
 ) {
   const { entity } = await params
   if (
@@ -26,7 +26,7 @@ export async function GET(
     search,
     moduleId,
     page: url.searchParams.get("page"),
-    pageSize: url.searchParams.get("pageSize"),
+    pageSize: url.searchParams.get("pageSize")
   })
 
   return NextResponse.json(result)

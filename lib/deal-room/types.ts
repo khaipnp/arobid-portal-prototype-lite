@@ -61,4 +61,6 @@ export interface Conversation {
   members: ConversationMember[]
   createdAt: string
   isReadOnly: boolean
+  lastMessage?: string
+  lastMessageAt?: string
 }

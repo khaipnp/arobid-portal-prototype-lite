@@ -3,7 +3,7 @@ import type {
   HallTemplate,
   HallTemplateUsage,
   ModelAsset,
-  TranslationRecord,
+  TranslationRecord
 } from "@/lib/tradexpo/types"
 
 type AssetRow = {
@@ -40,13 +40,13 @@ function rowToAsset(row: AssetRow): ModelAsset {
     fileUrl: row.file_url,
     kind: row.kind,
     status: row.status,
-    createdAt: new Date(row.created_at).toISOString(),
+    createdAt: new Date(row.created_at).toISOString()
   }
 }
 
 function rowToTemplate(
   row: HallTemplateRow,
-  translations: TranslationRecord[],
+  translations: TranslationRecord[]
 ): HallTemplate {
   return {
     id: row.id,
@@ -58,7 +58,7 @@ function rowToTemplate(
     isPublic: row.is_public,
     isActive: row.is_active,
     updatedBy: row.updated_by,
-    updatedAt: new Date(row.updated_at).toISOString(),
+    updatedAt: new Date(row.updated_at).toISOString()
   }
 }
 
@@ -82,7 +82,7 @@ export async function listHallTemplates(): Promise<HallTemplate[]> {
   }
 
   return templates.map((t) =>
-    rowToTemplate(t, translationsByTemplate.get(t.id) ?? []),
+    rowToTemplate(t, translationsByTemplate.get(t.id) ?? [])
   )
 }
 
@@ -92,6 +92,6 @@ export async function listHallTemplateUsage(): Promise<HallTemplateUsage[]> {
     hallTemplateId: r.hall_template_id,
     upcomingExpoCount: r.upcoming_expo_count,
     liveExpoCount: r.live_expo_count,
-    archivedExpoCount: r.archived_expo_count,
+    archivedExpoCount: r.archived_expo_count
   }))
 }

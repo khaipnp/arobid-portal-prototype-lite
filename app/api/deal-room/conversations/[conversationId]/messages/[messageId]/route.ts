@@ -15,7 +15,7 @@ export async function PATCH(request: Request, { params }: Props) {
     messageId,
     conversationId,
     content: body.content,
-    editedAt: body.editedAt,
+    editedAt: body.editedAt
   })
   return NextResponse.json({ ok: true })
 }

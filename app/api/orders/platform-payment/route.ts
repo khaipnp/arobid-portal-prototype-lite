@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import {
   getPlatformPaymentConfig,
-  updatePlatformPaymentConfig,
+  updatePlatformPaymentConfig
 } from "@/lib/orders/db"
 
 export async function GET() {
@@ -11,7 +11,7 @@ export async function GET() {
   } catch {
     return NextResponse.json(
       { error: "Unable to load platform payment config." },
-      { status: 500 },
+      { status: 500 }
     )
   }
 }
@@ -23,23 +23,23 @@ export async function PATCH(request: Request) {
       return NextResponse.json(
         {
           error:
-            "VNPay is the only active payment method and cannot be disabled.",
+            "VNPay is the only active payment method and cannot be disabled."
         },
-        { status: 400 },
+        { status: 400 }
       )
     }
 
     const config = await updatePlatformPaymentConfig({
       vnpayEnabled: true,
       bankTransferEnabled: false,
-      updatedBy: "admin@arobid.com",
+      updatedBy: "admin@arobid.com"
     })
 
     return NextResponse.json(config)
   } catch {
     return NextResponse.json(
       { error: "Unable to update platform payment config." },
-      { status: 500 },
+      { status: 500 }
     )
   }
 }

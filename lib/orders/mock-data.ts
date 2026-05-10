@@ -6,14 +6,14 @@ import type {
   InvoiceType,
   Order,
   PaymentConfig,
-  TransactionLogEntry,
+  TransactionLogEntry
 } from "@/lib/tradexpo/types"
 import { CURRENT_USER_PROFILE } from "@/lib/user/current-user"
 
 const now = new Date()
 function iso(daysAgo: number, hoursAgo = 0) {
   return new Date(
-    now.getTime() - daysAgo * 86400_000 - hoursAgo * 3600_000,
+    now.getTime() - daysAgo * 86400_000 - hoursAgo * 3600_000
   ).toISOString()
 }
 
@@ -28,7 +28,7 @@ export const mockBankAccounts: BankAccount[] = [
     isPrimary: true,
     isActive: true,
     createdAt: iso(60),
-    updatedAt: iso(5),
+    updatedAt: iso(5)
   },
   {
     id: "ba-002",
@@ -40,7 +40,7 @@ export const mockBankAccounts: BankAccount[] = [
     isPrimary: false,
     isActive: true,
     createdAt: iso(45),
-    updatedAt: iso(45),
+    updatedAt: iso(45)
   },
   {
     id: "ba-003",
@@ -51,15 +51,15 @@ export const mockBankAccounts: BankAccount[] = [
     isPrimary: false,
     isActive: false,
     createdAt: iso(120),
-    updatedAt: iso(30),
-  },
+    updatedAt: iso(30)
+  }
 ]
 
 export const mockPaymentConfig: PaymentConfig = {
   vnpayEnabled: true,
   bankTransferEnabled: false,
   updatedAt: iso(5),
-  updatedBy: "admin@arobid.com",
+  updatedBy: "admin@arobid.com"
 }
 
 // Per-expo payment config overrides.
@@ -72,7 +72,7 @@ export const mockExpoPaymentConfigs: ExpoPaymentConfig[] = [
     bankTransferEnabled: false,
     bankAccountId: null,
     updatedAt: iso(2),
-    updatedBy: "admin@arobid.com",
+    updatedBy: "admin@arobid.com"
   },
   {
     expoId: "expo-004",
@@ -81,8 +81,8 @@ export const mockExpoPaymentConfigs: ExpoPaymentConfig[] = [
     bankTransferEnabled: false,
     bankAccountId: null,
     updatedAt: iso(10),
-    updatedBy: "admin@arobid.com",
-  },
+    updatedBy: "admin@arobid.com"
+  }
 ]
 
 const customers = [
@@ -90,44 +90,44 @@ const customers = [
     id: CURRENT_USER_PROFILE.id,
     name: CURRENT_USER_PROFILE.name,
     email: CURRENT_USER_PROFILE.email,
-    company: CURRENT_USER_PROFILE.company,
+    company: CURRENT_USER_PROFILE.company
   },
   {
     id: "cus-002",
     name: "Trần Thị Lan",
     email: "lan.tran@greenlife.vn",
-    company: "GreenLife JSC",
+    company: "GreenLife JSC"
   },
   {
     id: "cus-003",
     name: "Phạm Đức Hải",
     email: "hai.pham@agitech.io",
-    company: "AgiTech",
+    company: "AgiTech"
   },
   {
     id: "cus-004",
     name: "Lê Thị Thu",
     email: "thu.le@vinsmart.vn",
-    company: "VinSmart Industries",
+    company: "VinSmart Industries"
   },
   {
     id: "cus-005",
     name: "Hoàng Văn Nam",
     email: "nam.hoang@fpt.com.vn",
-    company: "FPT Corporation",
+    company: "FPT Corporation"
   },
   {
     id: "cus-006",
     name: "Vũ Thị Hoa",
     email: "hoa.vu@masan.com",
-    company: "Masan Group",
+    company: "Masan Group"
   },
   {
     id: "cus-007",
     name: "Đặng Quốc Bảo",
     email: "bao.dang@vinamilk.com.vn",
-    company: "Vinamilk",
-  },
+    company: "Vinamilk"
+  }
 ]
 
 const expos = [
@@ -136,50 +136,50 @@ const expos = [
     name: "Vietnam Tech Summit 2026",
     ref: "B-A01",
     tier: "Premium",
-    partnerName: "Tech Events Vietnam",
+    partnerName: "Tech Events Vietnam"
   },
   {
     expoId: "expo-002",
     name: "Vietnam Tech Summit 2026",
     ref: "B-B03",
     tier: "Standard",
-    partnerName: "Tech Events Vietnam",
+    partnerName: "Tech Events Vietnam"
   },
   {
     expoId: "expo-003",
     name: "GreenExpo Hanoi 2026",
     ref: "B-C02",
     tier: "Premium",
-    partnerName: "GreenLife Organizer",
+    partnerName: "GreenLife Organizer"
   },
   {
     expoId: "expo-003",
     name: "GreenExpo Hanoi 2026",
     ref: "B-D05",
     tier: "Economy",
-    partnerName: "GreenLife Organizer",
+    partnerName: "GreenLife Organizer"
   },
   {
     expoId: "expo-004",
     name: "Digital Innovation Fair 2026",
     ref: "B-A07",
     tier: "Premium",
-    partnerName: "DIF Management",
+    partnerName: "DIF Management"
   },
   {
     expoId: "expo-004",
     name: "Digital Innovation Fair 2026",
     ref: "B-B12",
     tier: "Standard",
-    partnerName: "DIF Management",
+    partnerName: "DIF Management"
   },
   {
     expoId: "expo-005",
     name: "HCMC Trade Expo 2026",
     ref: "B-E03",
     tier: "Economy",
-    partnerName: "Saigon Expo Hub",
-  },
+    partnerName: "Saigon Expo Hub"
+  }
 ]
 
 function orderId(n: number) {
@@ -190,7 +190,7 @@ function buildBillingSnapshot(
   n: number,
   customerName: string,
   customerCompany: string,
-  customerEmail: string,
+  customerEmail: string
 ): {
   invoiceRequested: boolean
   invoiceType?: InvoiceType
@@ -209,8 +209,8 @@ function buildBillingSnapshot(
         invoiceEmail: customerEmail,
         taxCode: `0${100000000 + n}`,
         address: `${n} Nguyen Hue, District 1, Ho Chi Minh City`,
-        phoneNumber: `090${String(100000 + n).slice(-6)}`,
-      },
+        phoneNumber: `090${String(100000 + n).slice(-6)}`
+      }
     }
   }
 
@@ -221,14 +221,14 @@ function buildBillingSnapshot(
       fullName: customerName,
       invoiceEmail: customerEmail,
       taxCode: `0${200000000 + n}`,
-      address: `${n} Tran Hung Dao, Hoan Kiem, Hanoi`,
-    },
+      address: `${n} Tran Hung Dao, Hoan Kiem, Hanoi`
+    }
   }
 }
 
 function deriveInvoiceStatus(
   status: Order["status"],
-  invoiceRequested: boolean,
+  invoiceRequested: boolean
 ): InvoiceStatus {
   if (!invoiceRequested) return "not_requested"
   if (status === "Pending Payment") return "requested_pending_payment"
@@ -241,7 +241,7 @@ function makeOrder(
   cIdx: number,
   eIdx: number,
   status: Order["status"],
-  daysAgo: number,
+  daysAgo: number
 ): Order {
   const c = customers[cIdx % customers.length]
   const e = expos[eIdx % expos.length]
@@ -307,7 +307,7 @@ function makeOrder(
     sentBy: sentAt ? "finance@arobid.com" : undefined,
     expiresAt,
     createdAt,
-    updatedAt: iso(daysAgo - 0.1),
+    updatedAt: iso(daysAgo - 0.1)
   }
 }
 
@@ -336,12 +336,12 @@ export const mockOrders: Order[] = [
   makeOrder(22, 0, 3, "Paid", 16),
   makeOrder(23, 1, 5, "Cancelled", 18),
   makeOrder(24, 2, 6, "Expired", 5),
-  makeOrder(25, 3, 0, "Paid", 20),
+  makeOrder(25, 3, 0, "Paid", 20)
 ]
 
 function withOffset(isoString: string, hours: number) {
   return new Date(
-    new Date(isoString).getTime() + hours * 3600_000,
+    new Date(isoString).getTime() + hours * 3600_000
   ).toISOString()
 }
 
@@ -354,8 +354,8 @@ function buildTransactionLogForOrder(order: Order): TransactionLogEntry[] {
       status: "Pending Payment",
       actor: "System",
       note: "Order created",
-      processedAt: order.createdAt,
-    },
+      processedAt: order.createdAt
+    }
   ]
 
   if (order.paymentMethod === "vnpay") {
@@ -367,7 +367,7 @@ function buildTransactionLogForOrder(order: Order): TransactionLogEntry[] {
         status: "Paid",
         actor: "VNPay Gateway",
         note: "VNPay callback: success",
-        processedAt: withOffset(order.createdAt, 0.2),
+        processedAt: withOffset(order.createdAt, 0.2)
       })
     } else if (order.status === "Failed") {
       entries.push({
@@ -377,7 +377,7 @@ function buildTransactionLogForOrder(order: Order): TransactionLogEntry[] {
         status: "Failed",
         actor: "VNPay Gateway",
         note: "VNPay callback: failed",
-        processedAt: withOffset(order.createdAt, 0.2),
+        processedAt: withOffset(order.createdAt, 0.2)
       })
     } else if (order.status === "Cancelled") {
       entries.push({
@@ -387,7 +387,7 @@ function buildTransactionLogForOrder(order: Order): TransactionLogEntry[] {
         status: "Cancelled",
         actor: "VNPay Gateway",
         note: "Customer cancelled on VNPay",
-        processedAt: withOffset(order.createdAt, 0.2),
+        processedAt: withOffset(order.createdAt, 0.2)
       })
     } else if (order.status === "Expired") {
       entries.push({
@@ -397,7 +397,7 @@ function buildTransactionLogForOrder(order: Order): TransactionLogEntry[] {
         status: "Expired",
         actor: "System",
         note: "VNPay timeout",
-        processedAt: withOffset(order.createdAt, 72),
+        processedAt: withOffset(order.createdAt, 72)
       })
     }
   }
@@ -413,7 +413,7 @@ function buildTransactionLogForOrder(order: Order): TransactionLogEntry[] {
         order.status === "Paid"
           ? "Invoice request eligible for processing"
           : "Invoice info captured at checkout",
-      processedAt: order.paidAt ?? order.createdAt,
+      processedAt: order.paidAt ?? order.createdAt
     })
   }
 
@@ -425,7 +425,7 @@ function buildTransactionLogForOrder(order: Order): TransactionLogEntry[] {
       status: order.status,
       actor: order.exportedBy ?? "Admin",
       note: `Invoice data exported (${order.exportBatchId})`,
-      processedAt: order.exportedAt,
+      processedAt: order.exportedAt
     })
   }
 
@@ -437,7 +437,7 @@ function buildTransactionLogForOrder(order: Order): TransactionLogEntry[] {
       status: order.status,
       actor: order.issuedBy ?? "Finance/Admin",
       note: "Invoice marked as issued",
-      processedAt: order.issuedAt,
+      processedAt: order.issuedAt
     })
   }
 
@@ -449,7 +449,7 @@ function buildTransactionLogForOrder(order: Order): TransactionLogEntry[] {
       status: order.status,
       actor: order.sentBy ?? "Finance/Admin",
       note: "Invoice marked as sent",
-      processedAt: order.sentAt,
+      processedAt: order.sentAt
     })
   }
 
@@ -457,5 +457,5 @@ function buildTransactionLogForOrder(order: Order): TransactionLogEntry[] {
 }
 
 export const mockTransactionLog: TransactionLogEntry[] = mockOrders.flatMap(
-  (order) => buildTransactionLogForOrder(order),
+  (order) => buildTransactionLogForOrder(order)
 )

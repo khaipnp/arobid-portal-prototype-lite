@@ -4,17 +4,32 @@ import type {
   Conversation,
   ConversationMember,
   Message,
-  MessageAttachment,
+  MessageAttachment
 } from "@/lib/deal-room/types"
 
 function toIso(value: string | Date) {
   return new Date(value).toISOString()
 }
 
-export async function listChatUsers(): Promise<ChatUser[]> {
-  const rows = (await sql`
+export async function listChatUsers(userId?: string): Promise<ChatUser[]> {
+  const rows = (
+    userId
+      ? await sql`
+    select u.* from users u
+    where u.id in (
+      select user_id from chat_conversation_members
+      where conversation_id in (
+        select conversation_id from chat_conversation_members
+        where user_id = ${userId}
+      )
+    )
+    or u.id = ${userId}
+    order by u.name asc
+  `
+      : await sql`
     select * from users order by name asc
-  `) as {
+  `
+  ) as {
     id: string
     name: string
     email: string
@@ -36,22 +51,44 @@ export async function listChatUsers(): Promise<ChatUser[]> {
     website: r.website ?? undefined,
     location: r.location ?? undefined,
     avatarUrl: r.avatar_url ?? undefined,
-    isActive: r.is_active,
+    isActive: r.is_active
   }))
 }
 
-export async function listConversations(): Promise<Conversation[]> {
-  const convRows = (await sql`
-    select * from chat_conversations order by created_at desc
-  `) as {
+export async function listConversations(
+  userId?: string
+): Promise<
+  (Conversation & { lastMessage?: string; lastMessageAt?: string })[]
+> {
+  const convRows = (
+    userId
+      ? await sql`
+    select c.*,
+      (select content from chat_messages where conversation_id = c.id order by sent_at desc limit 1) as last_message,
+      (select sent_at from chat_messages where conversation_id = c.id order by sent_at desc limit 1) as last_message_at
+    from chat_conversations c
+    join chat_conversation_members m on m.conversation_id = c.id
+    where m.user_id = ${userId}
+    order by coalesce((select sent_at from chat_messages where conversation_id = c.id order by sent_at desc limit 1), c.created_at) desc
+  `
+      : await sql`
+    select *,
+      (select content from chat_messages where conversation_id = chat_conversations.id order by sent_at desc limit 1) as last_message,
+      (select sent_at from chat_messages where conversation_id = chat_conversations.id order by sent_at desc limit 1) as last_message_at
+    from chat_conversations order by created_at desc
+  `
+  ) as {
     id: string
     type: Conversation["type"]
     created_at: string | Date
     is_read_only: boolean
+    last_message?: string
+    last_message_at?: string | Date
   }[]
 
   const memberRows = (await sql`
     select * from chat_conversation_members
+    where conversation_id in (select id from chat_conversations)
   `) as {
     conversation_id: string
     user_id: string
@@ -65,7 +102,7 @@ export async function listConversations(): Promise<Conversation[]> {
     list.push({
       userId: m.user_id,
       joinedAt: toIso(m.joined_at),
-      isArchived: m.is_archived,
+      isArchived: m.is_archived
     })
     membersByConv.set(m.conversation_id, list)
   }
@@ -76,15 +113,26 @@ export async function listConversations(): Promise<Conversation[]> {
     members: membersByConv.get(r.id) ?? [],
     createdAt: toIso(r.created_at),
     isReadOnly: r.is_read_only,
+    lastMessage: r.last_message,
+    lastMessageAt: r.last_message_at ? toIso(r.last_message_at) : undefined
   }))
 }
 
-export async function listMessagesByConversation(): Promise<
-  Record<string, Message[]>
-> {
-  const rows = (await sql`
+export async function listMessagesByConversation(
+  userId?: string
+): Promise<Record<string, Message[]>> {
+  const rows = (
+    userId
+      ? await sql`
+    select m.* from chat_messages m
+    join chat_conversation_members ccm on ccm.conversation_id = m.conversation_id
+    where ccm.user_id = ${userId}
+    order by m.sent_at asc
+  `
+      : await sql`
     select * from chat_messages order by sent_at asc
-  `) as {
+  `
+  ) as {
     id: string
     conversation_id: string
     sender_id: string
@@ -110,7 +158,7 @@ export async function listMessagesByConversation(): Promise<
       sentAt: toIso(r.sent_at),
       editedAt: r.edited_at ? toIso(r.edited_at) : undefined,
       isDeleted: r.is_deleted,
-      isSystemMessage: r.is_system_message,
+      isSystemMessage: r.is_system_message
     })
     out[r.conversation_id] = list
   }
@@ -118,7 +166,7 @@ export async function listMessagesByConversation(): Promise<
 }
 
 export async function listUnreadCountsForUser(
-  userId: string,
+  userId: string
 ): Promise<Record<string, number>> {
   const rows = (await sql`
     select conversation_id, unread_count from chat_unread_counts

@@ -5,7 +5,7 @@ import {
   ChevronRightIcon,
   HomeIcon,
   RadioIcon,
-  SendIcon,
+  SendIcon
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -17,12 +17,23 @@ import {
   audiences,
   boothFeatures,
   categories,
-  heroStats,
   productImages,
   sponsors,
-  valueCards,
+  valueCards
 } from "./data"
 import { VirtualLobbyDialog } from "./virtual-lobby-dialog"
+
+function formatHeroStat(value: number) {
+  if (value >= 1000) {
+    const compact = new Intl.NumberFormat("en-US", {
+      notation: "compact",
+      compactDisplay: "short",
+      maximumFractionDigits: 1
+    }).format(value)
+    return compact.toUpperCase()
+  }
+  return new Intl.NumberFormat("en-US").format(value)
+}
 
 export function Breadcrumb() {
   return (
@@ -41,12 +52,26 @@ export function Hero({
   startDateLabel = "April 15, 2026",
   endDateLabel = "April 17, 2026",
   virtualLobbyUrl,
+  stats
 }: {
   expoTitle?: string
   startDateLabel?: string
   endDateLabel?: string
   virtualLobbyUrl?: string
+  stats?: {
+    exhibitors: number
+    visitors: number
+    products: number
+    rfqs: number
+  }
 }) {
+  const heroStats: Array<[string, string]> = [
+    [formatHeroStat(stats?.exhibitors ?? 0), "Exhibitors"],
+    [formatHeroStat(stats?.visitors ?? 0), "Visitors"],
+    [formatHeroStat(stats?.products ?? 0), "Products"],
+    [formatHeroStat(stats?.rfqs ?? 0), "RFQs"]
+  ]
+
   return (
     <section className="bg-linear-to-b from-white via-25% via-[#ffe0d2] to-white pb-0">
       <div className="container relative mx-auto min-h-[60vh] overflow-hidden rounded-2xl">
@@ -76,7 +101,7 @@ export function Hero({
                 ["12", "Days"],
                 ["03", "Hours"],
                 ["24", "Min"],
-                ["00", "Sec"],
+                ["00", "Sec"]
               ].map(([value, label], index) => (
                 <div key={label} className="contents">
                   {index > 0 && <span className="font-medium">:</span>}
@@ -102,8 +127,8 @@ export function Hero({
             </div>
           </div>
         </div>
-        <div className="absolute bottom-10 left-7 max-w-[720px] text-white md:left-10">
-          <h1 className="max-w-[684px] font-medium text-[32px] leading-[1.18] tracking-normal md:text-[36px] md:leading-11">
+        <div className="absolute bottom-10 left-7 max-w-3xl text-white md:left-10">
+          <h1 className="max-w-2xl font-medium text-[32px] leading-[1.18] tracking-normal md:text-[36px] md:leading-11">
             {expoTitle}
           </h1>
           <div className="mt-5 flex flex-wrap gap-4">
@@ -129,20 +154,18 @@ export function Hero({
   )
 }
 
-export function About() {
+export function About({
+  title = "VICONS",
+  description = "At the 1st Vietnam International Construction & Building Materials Expo, businesses can demonstrate their large-scale production capacity and compliance with rigorous technical standards such as ISO 9001, CE, ASTM, JIS, and green building certifications like LEED and BREEAM. Through interactive 3D/VR models, suppliers can intuitively showcase their full portfolio, ranging from structural steel and raw materials to finishing materials and modern M&E systems."
+}: {
+  title?: string
+  description?: string
+}) {
   return (
     <section className="container relative mx-auto grid gap-8 px-4 py-16 md:grid-cols-[1fr_1.1fr] md:px-0">
-      <h2 className="font-semibold text-[32px] leading-10">About VICONS</h2>
+      <h2 className="font-semibold text-[32px] leading-10">About {title}</h2>
       <div>
-        <p className="text-foreground text-sm leading-6">
-          At the 1st Vietnam International Construction & Building Materials
-          Expo, businesses can demonstrate their large-scale production capacity
-          and compliance with rigorous technical standards such as ISO 9001, CE,
-          ASTM, JIS, and green building certifications like LEED and BREEAM.
-          Through interactive 3D/VR models, suppliers can intuitively showcase
-          their full portfolio, ranging from structural steel and raw materials
-          to finishing materials and modern M&E systems.
-        </p>
+        <p className="text-foreground text-sm leading-6">{description}</p>
         <a
           href="#booths"
           className="mt-4 inline-flex items-center gap-1 font-medium text-[#ed6203] text-sm"
@@ -269,8 +292,8 @@ export function ParticipantValues() {
             <article key={title} className="rounded-xl bg-white p-6">
               <div
                 className={cn(
-                  "grid size-[58px] place-items-center rounded-lg",
-                  tone,
+                  "grid size-14 place-items-center rounded-lg",
+                  tone
                 )}
               >
                 <Icon className="size-7" />
@@ -310,7 +333,7 @@ export function BoothTier() {
             key={tab}
             className={cn(
               "h-12 font-medium text-sm",
-              tab === "Premium" && "border-legend border-b-2 text-legend",
+              tab === "Premium" && "border-legend border-b-2 text-legend"
             )}
           >
             {tab}

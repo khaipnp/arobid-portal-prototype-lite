@@ -15,7 +15,7 @@ import {
   SparkleIcon,
   ToyBrickIcon,
   XIcon,
-  ZapIcon,
+  ZapIcon
 } from "lucide-react"
 import Link from "next/link"
 import * as React from "react"
@@ -29,12 +29,12 @@ import type {
   ExpoStatus,
   HallTemplate,
   ModelAsset,
-  NotificationKind,
+  NotificationKind
 } from "@/lib/tradexpo/types"
 import {
   getAssetMap,
   getBoothTemplateStatus,
-  getHallTemplateStatus,
+  getHallTemplateStatus
 } from "@/lib/tradexpo/utils"
 import { cn } from "@/lib/utils"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "../ui/hover-card"
@@ -51,7 +51,7 @@ function daysUntil(dateStr: string) {
 
 function formatShortDate(iso: string) {
   return new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" }).format(
-    new Date(iso),
+    new Date(iso)
   )
 }
 
@@ -72,7 +72,7 @@ const EXPO_STATUS_ORDER: ExpoStatus[] = [
   "Draft",
   "Ended",
   "Archived",
-  "Canceled",
+  "Canceled"
 ]
 
 const STATUS_COLOR: Record<ExpoStatus, string> = {
@@ -81,7 +81,7 @@ const STATUS_COLOR: Record<ExpoStatus, string> = {
   Draft: "bg-slate-400",
   Ended: "bg-zinc-400",
   Archived: "bg-purple-400",
-  Canceled: "bg-rose-400",
+  Canceled: "bg-rose-400"
 }
 
 const STATUS_TEXT: Record<ExpoStatus, string> = {
@@ -90,7 +90,7 @@ const STATUS_TEXT: Record<ExpoStatus, string> = {
   Draft: "text-slate-600",
   Ended: "text-zinc-600",
   Archived: "text-purple-700",
-  Canceled: "text-rose-700",
+  Canceled: "text-rose-700"
 }
 
 function ExpoStatsCard({ expos }: { expos: Expo[] }) {
@@ -248,7 +248,7 @@ function PendingReviewCard({ expos }: { expos: Expo[] }) {
           <span
             className={cn(
               "font-bold text-4xl leading-none",
-              pending.length > 0 ? "text-amber-600" : "text-foreground",
+              pending.length > 0 ? "text-amber-600" : "text-foreground"
             )}
           >
             {pending.length}
@@ -276,7 +276,7 @@ function PendingReviewCard({ expos }: { expos: Expo[] }) {
 function TemplatesCard({
   assets,
   hallTemplates,
-  boothTemplates,
+  boothTemplates
 }: {
   assets: ModelAsset[]
   hallTemplates: HallTemplate[]
@@ -285,19 +285,19 @@ function TemplatesCard({
   const assetMap = React.useMemo(() => getAssetMap(assets), [assets])
 
   const hallReady = hallTemplates.filter(
-    (t) => getHallTemplateStatus(t, assetMap) === "Published",
+    (t) => getHallTemplateStatus(t, assetMap) === "Published"
   ).length
 
   const boothReady = boothTemplates.filter(
-    (t) => getBoothTemplateStatus(t, assetMap) === "Published",
+    (t) => getBoothTemplateStatus(t, assetMap) === "Published"
   ).length
 
   const hallFailed = hallTemplates.filter(
-    (t) => getHallTemplateStatus(t, assetMap) === "Failed",
+    (t) => getHallTemplateStatus(t, assetMap) === "Failed"
   ).length
 
   const boothFailed = boothTemplates.filter(
-    (t) => getBoothTemplateStatus(t, assetMap) === "Failed",
+    (t) => getBoothTemplateStatus(t, assetMap) === "Failed"
   ).length
 
   const hasIssues = hallFailed > 0 || boothFailed > 0
@@ -352,7 +352,7 @@ function RemindersPanel({
   expos,
   assets,
   hallTemplates,
-  boothTemplates,
+  boothTemplates
 }: {
   expos: Expo[]
   assets: ModelAsset[]
@@ -375,7 +375,7 @@ function RemindersPanel({
     .sort((a, b) => daysUntil(a.startDate) - daysUntil(b.startDate))
 
   const endedUnarchived = expos.filter(
-    (e) => e.status === "Ended" && daysUntil(e.endDate) < -7,
+    (e) => e.status === "Ended" && daysUntil(e.endDate) < -7
   )
 
   const failedTemplates = [
@@ -384,7 +384,7 @@ function RemindersPanel({
       .map((t) => ({ name: t.name, kind: "Hall Template" as const })),
     ...boothTemplates
       .filter((t) => getBoothTemplateStatus(t, assetMap) === "Failed")
-      .map((t) => ({ name: t.name, kind: "Booth Template" as const })),
+      .map((t) => ({ name: t.name, kind: "Booth Template" as const }))
   ]
 
   const hasAny =
@@ -518,32 +518,32 @@ const KIND_META: Record<
 > = {
   approval_needed: {
     icon: <FileClockIcon className="h-4 w-4" />,
-    color: "text-amber-500",
+    color: "text-amber-500"
   },
   expo_live: {
     icon: <RadioIcon className="h-4 w-4" />,
-    color: "text-emerald-500",
+    color: "text-emerald-500"
   },
   expo_ended: {
     icon: <ClockIcon className="h-4 w-4" />,
-    color: "text-zinc-400",
+    color: "text-zinc-400"
   },
   asset_failed: {
     icon: <AlertCircleIcon className="h-4 w-4" />,
-    color: "text-rose-500",
+    color: "text-rose-500"
   },
   expo_starting_soon: {
     icon: <CalendarCheckIcon className="h-4 w-4" />,
-    color: "text-blue-500",
+    color: "text-blue-500"
   },
   expo_canceled: {
     icon: <XIcon className="h-4 w-4" />,
-    color: "text-rose-400",
-  },
+    color: "text-rose-400"
+  }
 }
 
 function NotificationFeed({
-  initialNotifications,
+  initialNotifications
 }: {
   initialNotifications: AdminNotification[]
 }) {
@@ -551,8 +551,8 @@ function NotificationFeed({
     () =>
       [...initialNotifications].sort(
         (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-      ),
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
   )
   const [showAll, setShowAll] = React.useState(false)
 
@@ -561,7 +561,7 @@ function NotificationFeed({
   async function markAllRead() {
     try {
       const response = await fetch("/api/tradexpo/notifications", {
-        method: "PATCH",
+        method: "PATCH"
       })
       if (!response.ok) return
       setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
@@ -573,7 +573,7 @@ function NotificationFeed({
   async function dismiss(id: string) {
     try {
       const response = await fetch(`/api/tradexpo/notifications/${id}`, {
-        method: "DELETE",
+        method: "DELETE"
       })
       if (!response.ok) return
       setNotifications((prev) => prev.filter((n) => n.id !== id))
@@ -585,11 +585,11 @@ function NotificationFeed({
   async function markRead(id: string) {
     try {
       const response = await fetch(`/api/tradexpo/notifications/${id}`, {
-        method: "PATCH",
+        method: "PATCH"
       })
       if (!response.ok) return
       setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
+        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
       )
     } catch {
       // no-op
@@ -632,7 +632,7 @@ function NotificationFeed({
                   key={notif.id}
                   className={cn(
                     "flex gap-3 py-3",
-                    !notif.isRead && "-mx-4 bg-muted/30 px-4",
+                    !notif.isRead && "-mx-4 bg-muted/30 px-4"
                   )}
                 >
                   <span className={cn("mt-0.5 shrink-0", meta.color)}>
@@ -645,7 +645,7 @@ function NotificationFeed({
                           "text-sm leading-snug",
                           !notif.isRead
                             ? "font-medium"
-                            : "text-muted-foreground",
+                            : "text-muted-foreground"
                         )}
                       >
                         {notif.title}
@@ -716,7 +716,7 @@ export function TradeXpoOverview({
   initialHallTemplates,
   initialBoothTemplates,
   initialExpos,
-  initialNotifications,
+  initialNotifications
 }: {
   initialAssets: ModelAsset[]
   initialHallTemplates: HallTemplate[]
@@ -726,7 +726,7 @@ export function TradeXpoOverview({
 }) {
   const expos = React.useMemo(
     () => initialExpos.map((e) => ({ ...e })),
-    [initialExpos],
+    [initialExpos]
   )
 
   return (

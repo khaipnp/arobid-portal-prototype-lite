@@ -6,6 +6,13 @@
     "useIgnoreFile": true,
     "defaultBranch": "main"
   },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
@@ -28,9 +35,9 @@
       },
       "nursery": {
         "useSortedClasses": {
-          "level": "warn",
+          "level": "error",
           "options": {
-            "functions": ["cn", "cva"]
+            "functions": ["cn", "cva", "clsx", "twMerge"]
           }
         }
       }
@@ -41,7 +48,7 @@
       "quoteStyle": "double",
       "jsxQuoteStyle": "double",
       "semicolons": "asNeeded",
-      "trailingCommas": "all",
+      "trailingCommas": "none",
       "arrowParentheses": "always"
     }
   },

@@ -2,7 +2,7 @@ import { PaymentMethodConfig } from "@/components/orders/payment-method-config"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import {
   getPlatformPaymentConfig,
-  listExpoPaymentConfigs,
+  listExpoPaymentConfigs
 } from "@/lib/orders/db"
 import { countExpos } from "@/lib/tradexpo/db/platform-data"
 
@@ -13,7 +13,7 @@ export default async function PaymentMethodPage() {
     await Promise.all([
       getPlatformPaymentConfig(),
       listExpoPaymentConfigs(),
-      countExpos(),
+      countExpos()
     ])
 
   return (
@@ -22,7 +22,7 @@ export default async function PaymentMethodPage() {
       description="Configure platform-level payment methods for marketplace and Expo checkout."
       breadcrumbs={[
         { label: "Admin", href: "/admin" },
-        { label: "Payment Management" },
+        { label: "Payment Management" }
       ]}
     >
       <PaymentMethodConfig

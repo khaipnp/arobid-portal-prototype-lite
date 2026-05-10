@@ -10,13 +10,13 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialogTitle
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import type {
   Expo,
   ExpoPaymentConfig,
-  PaymentConfig,
+  PaymentConfig
 } from "@/lib/tradexpo/types"
 
 // ─── Toggle row ───────────────────────────────────────────────────────────────
@@ -34,7 +34,7 @@ function ToggleRow({
   label,
   enabled,
   disabled,
-  onToggle,
+  onToggle
 }: ToggleRowProps) {
   return (
     <div
@@ -79,7 +79,7 @@ function ExpoPaymentConfigPanel({
   configs,
   platformPayment,
   onSave,
-  onReset,
+  onReset
 }: ExpoPaymentConfigPanelProps) {
   const currentConfig = useMemo((): ExpoPaymentConfig => {
     const saved = configs.find((c) => c.expoId === expoId)
@@ -91,7 +91,7 @@ function ExpoPaymentConfigPanel({
       bankTransferEnabled: false,
       bankAccountId: null,
       updatedAt: platformPayment.updatedAt,
-      updatedBy: platformPayment.updatedBy,
+      updatedBy: platformPayment.updatedBy
     }
   }, [configs, expoId, platformPayment])
 
@@ -112,7 +112,7 @@ function ExpoPaymentConfigPanel({
 
   function startOverride() {
     setEditing({
-      vnpayEnabled: currentConfig.vnpayEnabled,
+      vnpayEnabled: currentConfig.vnpayEnabled
     })
     setError(null)
   }
@@ -122,7 +122,7 @@ function ExpoPaymentConfigPanel({
     const next = !editing.vnpayEnabled
     if (!next) {
       setError(
-        "VNPay is the only active payment method and cannot be disabled.",
+        "VNPay is the only active payment method and cannot be disabled."
       )
       return
     }
@@ -134,7 +134,7 @@ function ExpoPaymentConfigPanel({
     if (!editing) return
     if (!editing.vnpayEnabled) {
       setError(
-        "VNPay is the only active payment method and cannot be disabled.",
+        "VNPay is the only active payment method and cannot be disabled."
       )
       return
     }
@@ -145,7 +145,7 @@ function ExpoPaymentConfigPanel({
       bankTransferEnabled: false,
       bankAccountId: null,
       updatedAt: new Date().toISOString(),
-      updatedBy: "admin@arobid.com",
+      updatedBy: "admin@arobid.com"
     }
     try {
       await onSave(saved)
@@ -303,16 +303,16 @@ export function ExpoPaymentConfigManager({
   initialConfigs,
   platformPayment,
   onSaveConfig,
-  onResetConfig,
+  onResetConfig
 }: ExpoPaymentConfigManagerProps) {
   const [configs, setConfigs] = useState<ExpoPaymentConfig[]>(() => [
-    ...initialConfigs,
+    ...initialConfigs
   ])
 
   async function handleSave(saved: ExpoPaymentConfig) {
     const persisted = await onSaveConfig({
       expoId: saved.expoId,
-      vnpayEnabled: saved.vnpayEnabled,
+      vnpayEnabled: saved.vnpayEnabled
     })
     setConfigs((prev) => {
       const idx = prev.findIndex((c) => c.expoId === persisted.expoId)

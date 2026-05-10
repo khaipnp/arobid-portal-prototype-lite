@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto"
 import { sql } from "@/lib/db/neon"
 import type {
   NotificationEventPayload,
-  NotificationRecord,
+  NotificationRecord
 } from "@/lib/notifications/types"
 import { parseNotificationEvent } from "@/lib/notifications/validation"
 
@@ -34,7 +34,7 @@ function isUuid(value: string) {
 }
 
 function parsePaginationCursor(
-  cursor: string,
+  cursor: string
 ): { createdAt: string; notificationId?: string } | null {
   const parts = cursor.split("|")
   const createdAtRaw = parts[0]?.trim()
@@ -57,7 +57,7 @@ function parsePaginationCursor(
 
   return {
     createdAt: createdAtDate.toISOString(),
-    notificationId: notificationIdRaw,
+    notificationId: notificationIdRaw
   }
 }
 
@@ -87,12 +87,12 @@ function toNotificationRecord(row: {
     ...(row.reference_type ? { referenceType: row.reference_type } : {}),
     isRead: row.is_read,
     createdAt: toIso(row.created_at),
-    readAt: row.read_at ? toIso(row.read_at) : null,
+    readAt: row.read_at ? toIso(row.read_at) : null
   }
 }
 
 export async function publishNotification(
-  payload: NotificationEventPayload,
+  payload: NotificationEventPayload
 ): Promise<{ deduped: boolean; notificationId: string }> {
   const parsed = parseNotificationEvent(payload)
   const dedupeWindowMs = getDedupeWindowMs()
@@ -163,7 +163,7 @@ export async function publishNotification(
     // Full hard guarantees need a DB-enforced uniqueness strategy introduced in a later task.
     return {
       deduped: dedupeResult.deduped,
-      notificationId: dedupeResult.notification_id,
+      notificationId: dedupeResult.notification_id
     }
   }
 
@@ -201,13 +201,13 @@ export async function publishNotification(
 
   return {
     deduped: false,
-    notificationId,
+    notificationId
   }
 }
 
 export async function listNotifications(
   userId: string,
-  opts: { limit: number; cursor?: string },
+  opts: { limit: number; cursor?: string }
 ): Promise<NotificationRecord[]> {
   const rawLimit = Number.isFinite(opts.limit) ? opts.limit : 20
   const limit = Math.max(1, Math.min(100, Math.floor(rawLimit)))
@@ -301,7 +301,7 @@ export async function getUnreadCount(userId: string): Promise<number> {
 
 export async function markNotificationRead(
   userId: string,
-  notificationId: string,
+  notificationId: string
 ): Promise<{ found: boolean; updated: boolean }> {
   const normalizedNotificationId = notificationId.trim()
   if (!isUuid(normalizedNotificationId)) {
@@ -347,7 +347,7 @@ export async function markAllNotificationsRead(userId: string): Promise<void> {
 
 export async function deleteNotification(
   userId: string,
-  notificationId: string,
+  notificationId: string
 ): Promise<{ found: boolean; deleted: boolean }> {
   const normalizedNotificationId = notificationId.trim()
   if (!isUuid(normalizedNotificationId)) {

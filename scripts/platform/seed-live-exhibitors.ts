@@ -14,7 +14,7 @@ const BOOTH_STATUS = [
   "Pending Setup",
   "Configured",
   "Approved",
-  "Live",
+  "Live"
 ] as const
 
 function pick<T>(arr: readonly T[], index: number) {
@@ -90,13 +90,13 @@ async function seedExhibitorsForLiveExpo(count: number) {
       {
         id: `seed-product-${serial}-1`,
         name: `Featured Product ${serial}A`,
-        description: `Primary catalog product ${serial}A`,
+        description: `Primary catalog product ${serial}A`
       },
       {
         id: `seed-product-${serial}-2`,
         name: `Featured Product ${serial}B`,
-        description: `Primary catalog product ${serial}B`,
-      },
+        description: `Primary catalog product ${serial}B`
+      }
     ]
 
     await sql`
@@ -126,7 +126,7 @@ async function seedExhibitorsForLiveExpo(count: number) {
 
   // eslint-disable-next-line no-console
   console.log(
-    `Seeded ${count} exhibitors for expo "${expo.name}" (id=${expo.id}, slug=${expo.slug ?? "null"}).`,
+    `Seeded ${count} exhibitors for expo "${expo.name}" (id=${expo.id}, slug=${expo.slug ?? "null"}).`
   )
 }
 

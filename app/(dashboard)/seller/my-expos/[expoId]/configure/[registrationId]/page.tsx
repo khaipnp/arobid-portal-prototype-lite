@@ -8,7 +8,7 @@ import {
   listExhibitorCatalogProducts,
   listExpoBoothTemplateAssignments,
   listExpos,
-  listSellerBoothRegistrations,
+  listSellerBoothRegistrations
 } from "@/lib/tradexpo/db/platform-data"
 import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
@@ -28,7 +28,7 @@ export default async function SellerBoothConfigurePage({ params }: Props) {
     expoBoothTemplateAssignments,
     boothTemplateCustomizationConfigs,
     boothCustomizations,
-    exhibitorCatalogProducts,
+    exhibitorCatalogProducts
   ] = await Promise.all([
     listExpos(),
     listSellerBoothRegistrations(CURRENT_USER_ID),
@@ -36,12 +36,12 @@ export default async function SellerBoothConfigurePage({ params }: Props) {
     listExpoBoothTemplateAssignments(),
     listBoothTemplateCustomizationConfigs(),
     listBoothCustomizations(),
-    listExhibitorCatalogProducts(),
+    listExhibitorCatalogProducts()
   ])
 
   const expo = expos.find((e) => e.id === expoId)
   const registration = registrations.find(
-    (r) => r.id === registrationId && r.expoId === expoId,
+    (r) => r.id === registrationId && r.expoId === expoId
   )
   if (!expo || !registration) notFound()
 
@@ -53,7 +53,7 @@ export default async function SellerBoothConfigurePage({ params }: Props) {
         { label: "Dashboard", href: "/seller" },
         { label: "My Expos", href: "/seller/my-expos" },
         { label: expo.name, href: `/seller/my-expos/${expoId}` },
-        { label: `Booth ${registration.boothRef}` },
+        { label: `Booth ${registration.boothRef}` }
       ]}
     >
       <SellerBoothConfigurator

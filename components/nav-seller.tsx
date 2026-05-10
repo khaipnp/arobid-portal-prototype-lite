@@ -6,7 +6,7 @@ import {
   MessageCircleIcon,
   ReceiptTextIcon,
   ShoppingCartIcon,
-  TvMinimalIcon,
+  TvMinimalIcon
 } from "lucide-react"
 import Link from "next/link"
 import { NotificationNavLink } from "@/components/notifications/notification-nav-link"
@@ -15,7 +15,7 @@ import {
   SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
-  SidebarMenuItem,
+  SidebarMenuItem
 } from "@/components/ui/sidebar"
 import { CURRENT_USER_ID } from "@/lib/user/current-user"
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card"
@@ -24,36 +24,36 @@ const seller = [
   {
     name: "Legal Information",
     url: "/seller/b2b-marketplace",
-    icon: <DotIcon />,
+    icon: <DotIcon />
   },
   {
     name: "Company Profile",
     url: "/seller/product-management",
-    icon: <DotIcon />,
+    icon: <DotIcon />
   },
   {
     name: "eProfile",
     url: "/seller/eprofile",
-    icon: <DotIcon />,
+    icon: <DotIcon />
   },
   {
     name: "Product Management",
     url: "/seller/product-management",
-    icon: <DotIcon />,
+    icon: <DotIcon />
   },
   {
     name: "My Quotations",
     url: "/seller/my-quotations",
-    icon: <DotIcon />,
-  },
+    icon: <DotIcon />
+  }
 ]
 
 const buyer = [
   {
     name: "My RFQs",
     url: "/seller/my-rfqs",
-    icon: <DotIcon />,
-  },
+    icon: <DotIcon />
+  }
 ]
 
 export function NavSeller() {

@@ -13,7 +13,7 @@ import {
   SendIcon,
   Trash2Icon,
   VideoIcon,
-  XIcon,
+  XIcon
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -26,7 +26,7 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -42,7 +42,7 @@ import type {
   ExpoStatus,
   SellerBoothProduct,
   SellerBoothRegistration,
-  SellerBoothStatus,
+  SellerBoothStatus
 } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
 
@@ -53,12 +53,12 @@ const boothStatusStyles: Record<SellerBoothStatus, string> = {
   Configured: "border-blue-300 bg-blue-100 text-blue-700",
   Approved: "border-teal-300 bg-teal-100 text-teal-700",
   Live: "border-emerald-300 bg-emerald-100 text-emerald-700",
-  Ended: "border-zinc-300 bg-zinc-100 text-zinc-700",
+  Ended: "border-zinc-300 bg-zinc-100 text-zinc-700"
 }
 
 const publishStatusStyles: Record<BoothPublishStatus, string> = {
   Draft: "border-blue-300 bg-blue-50 text-blue-700",
-  Published: "border-emerald-300 bg-emerald-50 text-emerald-700",
+  Published: "border-emerald-300 bg-emerald-50 text-emerald-700"
 }
 
 function isExpoEditable(status: ExpoStatus | undefined): boolean {
@@ -79,7 +79,7 @@ function hasCustomizations(c: BoothCustomization): boolean {
 function buildDefaultCustomization(
   registrationId: string,
   templateId: string | null,
-  templateConfig: BoothTemplateCustomizationConfig | null,
+  templateConfig: BoothTemplateCustomizationConfig | null
 ): BoothCustomization {
   return {
     registrationId,
@@ -87,32 +87,32 @@ function buildDefaultCustomization(
     publishStatus: "Draft",
     colors: Array.from(
       { length: templateConfig?.colorSlots ?? 0 },
-      () => "#ffffff",
+      () => "#ffffff"
     ),
     logoUrl: "",
     imageUrls: Array.from(
       { length: templateConfig?.imageSlots ?? 0 },
-      () => "",
+      () => ""
     ),
     videoType: null,
     videoUrl: "",
-    products: [],
+    products: []
   }
 }
 
 function buildInitialCustomization(
   registrationId: string,
-  boothCustomizations: BoothCustomization[],
+  boothCustomizations: BoothCustomization[]
 ): BoothCustomization {
   const existing = boothCustomizations.find(
-    (c) => c.registrationId === registrationId,
+    (c) => c.registrationId === registrationId
   )
   if (existing) {
     return {
       ...existing,
       colors: [...existing.colors],
       imageUrls: [...existing.imageUrls],
-      products: existing.products.map((p) => ({ ...p })),
+      products: existing.products.map((p) => ({ ...p }))
     }
   }
   return buildDefaultCustomization(registrationId, null, null)
@@ -155,26 +155,26 @@ export function SellerBoothConfigurator({
   expoBoothTemplateAssignments,
   boothTemplateCustomizationConfigs,
   exhibitorCatalogProducts,
-  boothCustomizations,
+  boothCustomizations
 }: Props) {
   const availableTemplates = React.useMemo<BoothTemplate[]>(() => {
     const assignment = expoBoothTemplateAssignments.find(
-      (a) => a.expoId === expoId,
+      (a) => a.expoId === expoId
     )
     if (!assignment) return boothTemplates
     return boothTemplates.filter((t) =>
-      assignment.boothTemplateIds.includes(t.id),
+      assignment.boothTemplateIds.includes(t.id)
     )
   }, [expoId, boothTemplates, expoBoothTemplateAssignments])
 
   const [customization, setCustomization] = React.useState<BoothCustomization>(
-    () => buildInitialCustomization(registrationId, boothCustomizations),
+    () => buildInitialCustomization(registrationId, boothCustomizations)
   )
   const [isDirty, setIsDirty] = React.useState(false)
   const [savedStatus, setSavedStatus] =
     React.useState<BoothPublishStatus | null>(() => {
       const existing = boothCustomizations.find(
-        (c) => c.registrationId === registrationId,
+        (c) => c.registrationId === registrationId
       )
       return existing?.publishStatus ?? null
     })
@@ -182,7 +182,7 @@ export function SellerBoothConfigurator({
   // Gallery / template selection state
   const [galleryOpen, setGalleryOpen] = React.useState(false)
   const [galleryStep, setGalleryStep] = React.useState<"list" | "detail">(
-    "list",
+    "list"
   )
   const [galleryHighlight, setGalleryHighlight] =
     React.useState<BoothTemplate | null>(null)
@@ -207,20 +207,20 @@ export function SellerBoothConfigurator({
     () =>
       customization.selectedBoothTemplateId
         ? boothTemplates.find(
-            (t) => t.id === customization.selectedBoothTemplateId,
+            (t) => t.id === customization.selectedBoothTemplateId
           )
         : undefined,
-    [customization.selectedBoothTemplateId, boothTemplates],
+    [customization.selectedBoothTemplateId, boothTemplates]
   )
 
   const templateConfig = React.useMemo<BoothTemplateCustomizationConfig | null>(
     () =>
       customization.selectedBoothTemplateId
         ? (boothTemplateCustomizationConfigs.find(
-            (c) => c.boothTemplateId === customization.selectedBoothTemplateId,
+            (c) => c.boothTemplateId === customization.selectedBoothTemplateId
           ) ?? null)
         : null,
-    [customization.selectedBoothTemplateId, boothTemplateCustomizationConfigs],
+    [customization.selectedBoothTemplateId, boothTemplateCustomizationConfigs]
   )
 
   const isReadOnly =
@@ -230,7 +230,7 @@ export function SellerBoothConfigurator({
 
   function patch<K extends keyof BoothCustomization>(
     key: K,
-    value: BoothCustomization[K],
+    value: BoothCustomization[K]
   ) {
     setCustomization((prev) => {
       const next = { ...prev, [key]: value }
@@ -289,12 +289,12 @@ export function SellerBoothConfigurator({
     if (!pendingTemplate) return
     const config =
       boothTemplateCustomizationConfigs.find(
-        (c) => c.boothTemplateId === pendingTemplate.id,
+        (c) => c.boothTemplateId === pendingTemplate.id
       ) ?? null
     const fresh = buildDefaultCustomization(
       registrationId,
       pendingTemplate.id,
-      config,
+      config
     )
     setCustomization(fresh)
     setIsDirty(false)
@@ -312,8 +312,8 @@ export function SellerBoothConfigurator({
       {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ customization: next }),
-      },
+        body: JSON.stringify({ customization: next })
+      }
     )
     if (!response.ok) {
       throw new Error("Failed to persist customization")
@@ -323,7 +323,7 @@ export function SellerBoothConfigurator({
   async function handleSaveDraft() {
     const next: BoothCustomization = {
       ...customization,
-      publishStatus: "Draft",
+      publishStatus: "Draft"
     }
     try {
       await persistCustomization(next)
@@ -343,7 +343,7 @@ export function SellerBoothConfigurator({
   async function confirmPublish() {
     const next: BoothCustomization = {
       ...customization,
-      publishStatus: "Published",
+      publishStatus: "Published"
     }
     try {
       await persistCustomization(next)
@@ -367,7 +367,7 @@ export function SellerBoothConfigurator({
       if (exists) {
         return {
           ...prev,
-          products: prev.products.filter((p) => p.id !== catalogProduct.id),
+          products: prev.products.filter((p) => p.id !== catalogProduct.id)
         }
       }
       if (prev.products.length >= productLimit) return prev
@@ -375,7 +375,7 @@ export function SellerBoothConfigurator({
         id: catalogProduct.id,
         name: catalogProduct.name,
         description: catalogProduct.description,
-        imageUrl: catalogProduct.imageUrl,
+        imageUrl: catalogProduct.imageUrl
       }
       return { ...prev, products: [...prev.products, next] }
     })
@@ -385,7 +385,7 @@ export function SellerBoothConfigurator({
   function removeProduct(id: string) {
     setCustomization((prev) => ({
       ...prev,
-      products: prev.products.filter((p) => p.id !== id),
+      products: prev.products.filter((p) => p.id !== id)
     }))
     setIsDirty(true)
   }
@@ -428,7 +428,7 @@ export function SellerBoothConfigurator({
             variant="outline"
             className={cn(
               "ml-1 text-xs",
-              boothStatusStyles[registration.status],
+              boothStatusStyles[registration.status]
             )}
           >
             {registration.status}
@@ -515,7 +515,7 @@ export function SellerBoothConfigurator({
                     template={t}
                     config={
                       boothTemplateCustomizationConfigs.find(
-                        (c) => c.boothTemplateId === t.id,
+                        (c) => c.boothTemplateId === t.id
                       ) ?? null
                     }
                     isSelected={customization.selectedBoothTemplateId === t.id}
@@ -530,7 +530,7 @@ export function SellerBoothConfigurator({
                 template={galleryHighlight}
                 config={
                   boothTemplateCustomizationConfigs.find(
-                    (c) => c.boothTemplateId === galleryHighlight.id,
+                    (c) => c.boothTemplateId === galleryHighlight.id
                   ) ?? null
                 }
                 onBack={() => setGalleryStep("list")}
@@ -685,7 +685,7 @@ export function SellerBoothConfigurator({
 
 function NoTemplateView({
   isReadOnly,
-  onSelectTemplate,
+  onSelectTemplate
 }: {
   isReadOnly: boolean
   onSelectTemplate: () => void
@@ -731,7 +731,7 @@ function CustomizationPanel({
   onOpenProductSelector,
   onSaveDraft,
   onPublish,
-  expoId,
+  expoId
 }: {
   customization: BoothCustomization
   templateConfig: BoothTemplateCustomizationConfig | null
@@ -743,7 +743,7 @@ function CustomizationPanel({
   onPatchImageUrl: (i: number, url: string) => void
   onPatch: <K extends keyof BoothCustomization>(
     k: K,
-    v: BoothCustomization[K],
+    v: BoothCustomization[K]
   ) => void
   onRemoveProduct: (id: string) => void
   onOpenProductSelector: () => void
@@ -766,7 +766,7 @@ function CustomizationPanel({
           <div className="flex flex-wrap gap-6">
             {Array.from({ length: colorSlots }, (_, index) => ({
               id: `color-slot-${index + 1}`,
-              index,
+              index
             })).map((slot) => (
               <ColorSlot
                 key={slot.id}
@@ -818,7 +818,7 @@ function CustomizationPanel({
             <div className="grid gap-4">
               {Array.from({ length: imageSlots }, (_, index) => ({
                 id: `image-slot-${index + 1}`,
-                index,
+                index
               })).map((slot) => (
                 <div key={slot.id} className="grid gap-2">
                   <FieldGroup label={`Image ${slot.index + 1}`}>
@@ -1061,7 +1061,7 @@ function TemplateCard({
   template,
   config,
   isSelected,
-  onClick,
+  onClick
 }: {
   template: BoothTemplate
   config: BoothTemplateCustomizationConfig | null
@@ -1074,7 +1074,7 @@ function TemplateCard({
       onClick={onClick}
       className={cn(
         "group flex flex-col overflow-hidden rounded-xl border bg-card text-left transition-all hover:shadow-md",
-        isSelected && "ring-2 ring-primary",
+        isSelected && "ring-2 ring-primary"
       )}
     >
       <div className="relative overflow-hidden">
@@ -1134,7 +1134,7 @@ function TemplateDetailView({
   config,
   onBack,
   onSelect,
-  onPreview3D,
+  onPreview3D
 }: {
   template: BoothTemplate
   config: BoothTemplateCustomizationConfig | null
@@ -1198,7 +1198,7 @@ function ConfigStat({ label, value }: { label: string; value: string }) {
 
 function Preview3DViewer({
   template,
-  customization,
+  customization
 }: {
   template: BoothTemplate | null
   customization: BoothCustomization
@@ -1216,7 +1216,7 @@ function Preview3DViewer({
               "linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)",
             backgroundSize: "40px 40px",
             transform:
-              "perspective(600px) rotateX(45deg) scale(2.5) translateY(20%)",
+              "perspective(600px) rotateX(45deg) scale(2.5) translateY(20%)"
           }}
         />
         {/* Booth representation */}
@@ -1276,7 +1276,7 @@ function ProductSelectorList({
   catalogProducts,
   selectedIds,
   limit,
-  onToggle,
+  onToggle
 }: {
   catalogProducts: ExhibitorCatalogProduct[]
   selectedIds: string[]
@@ -1302,7 +1302,7 @@ function ProductSelectorList({
               isSelected
                 ? "border-primary bg-primary/5"
                 : "hover:border-primary/40 hover:bg-muted/40",
-              isDisabled && "cursor-not-allowed opacity-50",
+              isDisabled && "cursor-not-allowed opacity-50"
             )}
           >
             {p.imageUrl && (
@@ -1330,7 +1330,7 @@ function ProductSelectorList({
                 "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors",
                 isSelected
                   ? "border-primary bg-primary"
-                  : "border-muted-foreground/30",
+                  : "border-muted-foreground/30"
               )}
             >
               {isSelected && (
@@ -1354,7 +1354,7 @@ function ProductSelectorList({
 function Section({
   title,
   action,
-  children,
+  children
 }: {
   title: string
   action?: React.ReactNode
@@ -1373,7 +1373,7 @@ function Section({
 
 function FieldGroup({
   label,
-  children,
+  children
 }: {
   label: string
   children: React.ReactNode
@@ -1390,7 +1390,7 @@ function ColorSlot({
   label,
   value,
   onChange,
-  disabled,
+  disabled
 }: {
   label: string
   value: string
@@ -1408,7 +1408,7 @@ function ColorSlot({
           htmlFor={id}
           className={cn(
             "relative block h-9 w-9 cursor-pointer overflow-hidden rounded-md border-2 border-border transition-opacity",
-            disabled && "cursor-not-allowed opacity-50",
+            disabled && "cursor-not-allowed opacity-50"
           )}
           style={{ background: value }}
         >

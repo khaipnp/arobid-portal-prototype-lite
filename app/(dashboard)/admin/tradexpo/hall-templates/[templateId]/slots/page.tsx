@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 
 export default async function HallTemplateSlotsPage({
-  params,
+  params
 }: {
   params: Promise<{ templateId: string }>
 }) {

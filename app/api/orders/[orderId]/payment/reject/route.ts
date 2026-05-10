@@ -9,8 +9,8 @@ export async function POST(request: Request, { params }: Props) {
   await request.json().catch(() => null)
   return NextResponse.json(
     {
-      error: `Manual payment rejection is not available for order ${orderId}. Orders & Transactions is VNPay-only.`,
+      error: `Manual payment rejection is not available for order ${orderId}. Orders & Transactions is VNPay-only.`
     },
-    { status: 410 },
+    { status: 410 }
   )
 }

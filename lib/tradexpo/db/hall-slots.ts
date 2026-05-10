@@ -2,7 +2,7 @@ import { sql } from "@/lib/db/neon"
 import type { HallSlotUsage, HallTemplateSlot } from "@/lib/tradexpo/types"
 
 export async function listHallTemplateSlots(
-  templateId: string,
+  templateId: string
 ): Promise<HallTemplateSlot[]> {
   const rows =
     await sql`select * from hall_template_slots where hall_template_id = ${templateId} order by slot_code asc`
@@ -24,12 +24,12 @@ export async function listHallTemplateSlots(
     width: r.width,
     height: r.height,
     depth: r.depth,
-    metadata: r.metadata ?? {},
+    metadata: r.metadata ?? {}
   }))
 }
 
 export async function listHallSlotUsage(
-  templateId: string,
+  templateId: string
 ): Promise<HallSlotUsage[]> {
   const rows = await sql`
     select u.*
@@ -41,6 +41,6 @@ export async function listHallSlotUsage(
   return rows.map((r) => ({
     slotId: r.slot_id,
     upcomingExpoCount: r.upcoming_expo_count,
-    liveExpoCount: r.live_expo_count,
+    liveExpoCount: r.live_expo_count
   }))
 }

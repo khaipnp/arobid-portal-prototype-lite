@@ -38,8 +38,8 @@ export const plans: Plan[] = [
       "1 Standee",
       "Brand Placement: Video",
       "GoLive: Video & Chat",
-      "Product Listing: 10",
-    ],
+      "Product Listing: 10"
+    ]
   },
   {
     name: "Professional",
@@ -56,8 +56,8 @@ export const plans: Plan[] = [
       "2 Standees",
       "Brand Placement: 3D",
       "GoLive: Video & Chat",
-      "Product Listing: 20",
-    ],
+      "Product Listing: 20"
+    ]
   },
   {
     name: "Premium",
@@ -73,31 +73,31 @@ export const plans: Plan[] = [
       "2 Standees",
       "Brand Placement: 3D",
       "GoLive: Video & Chat",
-      "Product Listing: 50",
-    ],
-  },
+      "Product Listing: 50"
+    ]
+  }
 ] as const
 
 export const faqs = [
   {
     question: "How long does it take to set up my Virtual Booth after booking?",
     answer:
-      "Most booths can be prepared within a few working days once booth content, brand assets, and product information are provided.",
+      "Most booths can be prepared within a few working days once booth content, brand assets, and product information are provided."
   },
   {
     question: "How does booking a booth activate the AI Matching feature?",
     answer:
-      "Once your booth is live, our engine scans your product data and automatically recommends your booth to 95% of high-intent buyers with matching sourcing needs.",
+      "Once your booth is live, our engine scans your product data and automatically recommends your booth to 95% of high-intent buyers with matching sourcing needs."
   },
   {
     question:
       "How does a Virtual Booth compare to a physical one in terms of cost?",
     answer:
-      "A Virtual Booth reduces setup, travel, logistics, and staffing costs while keeping the core exposure and lead-generation workflow online.",
+      "A Virtual Booth reduces setup, travel, logistics, and staffing costs while keeping the core exposure and lead-generation workflow online."
   },
   {
     question: "Do I get technical support if I'm not tech-savvy?",
     answer:
-      "Yes. Arobid support can guide booth content preparation, publishing, and daily operation so teams can focus on trading activity.",
-  },
+      "Yes. Arobid support can guide booth content preparation, publishing, and daily operation so teams can focus on trading activity."
+  }
 ] as const

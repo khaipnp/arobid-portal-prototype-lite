@@ -4,7 +4,7 @@ function getDatabaseUrl() {
   const url = process.env.DATABASE_URL
   if (!url) {
     throw new Error(
-      "Missing DATABASE_URL. Set a Neon Postgres connection string in your environment variables.",
+      "Missing DATABASE_URL. Set a Neon Postgres connection string in your environment variables."
     )
   }
   return url

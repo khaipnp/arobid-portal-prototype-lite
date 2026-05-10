@@ -18,7 +18,7 @@ import type {
   NotificationKind,
   SellerBoothRegistration,
   StreamSession,
-  StreamSessionStatus,
+  StreamSessionStatus
 } from "@/lib/tradexpo/types"
 
 export type ExpoDetailExhibitor = {
@@ -107,7 +107,7 @@ async function uniqueExpoSlug(base: string, excludeExpoId?: string) {
     rows
       .filter((r) => (excludeExpoId ? r.id !== excludeExpoId : true))
       .map((r) => r.slug)
-      .filter(Boolean),
+      .filter(Boolean)
   )
   if (!used.has(normalized)) return normalized
   let i = 2
@@ -122,7 +122,7 @@ export async function listExpoCategories(): Promise<ExpoCategory[]> {
   return rows.map((r) => ({
     id: r.id,
     name: r.name,
-    level: 1,
+    level: 1
   }))
 }
 
@@ -149,7 +149,7 @@ function rowToExpo(r: ExpoRow): Expo {
     description: r.description,
     timezone: r.timezone,
     expoTemplateId: r.expo_template_id ?? undefined,
-    ownerUserId: r.owner_user_id ?? undefined,
+    ownerUserId: r.owner_user_id ?? undefined
   }
 }
 
@@ -188,6 +188,59 @@ export type ExpoCardStats = {
   exhibitors: number
   visitors: number
   products: number
+}
+
+export type ExpoHeroStats = {
+  exhibitors: number
+  visitors: number
+  products: number
+  rfqs: number
+}
+
+export async function getExpoHeroStatsByExpo(
+  input: Pick<Expo, "id" | "name">
+): Promise<ExpoHeroStats> {
+  const rows = (await sql`
+    with exhibitor_stats as (
+      select count(*)::int as exhibitors
+      from seller_booth_registrations
+      where expo_id = ${input.id}
+    ),
+    product_stats as (
+      select coalesce(sum(jsonb_array_length(coalesce(bc.products, '[]'::jsonb))), 0)::int as products
+      from seller_booth_registrations sbr
+      left join booth_customizations bc on bc.registration_id = sbr.id
+      where sbr.expo_id = ${input.id}
+    ),
+    visitor_stats as (
+      select count(distinct customer_id)::int as visitors
+      from orders
+      where expo_name = ${input.name}
+    ),
+    rfq_stats as (
+      select count(*)::int as rfqs
+      from orders
+      where expo_name = ${input.name}
+    )
+    select
+      coalesce((select exhibitors from exhibitor_stats), 0)::int as exhibitors,
+      coalesce((select visitors from visitor_stats), 0)::int as visitors,
+      coalesce((select products from product_stats), 0)::int as products,
+      coalesce((select rfqs from rfq_stats), 0)::int as rfqs
+  `) as {
+    exhibitors: number
+    visitors: number
+    products: number
+    rfqs: number
+  }[]
+
+  const row = rows[0]
+  return {
+    exhibitors: row?.exhibitors ?? 0,
+    visitors: row?.visitors ?? 0,
+    products: row?.products ?? 0,
+    rfqs: row?.rfqs ?? 0
+  }
 }
 
 export async function listExpoCardStats(): Promise<ExpoCardStats[]> {
@@ -232,7 +285,7 @@ export async function listExpoCardStats(): Promise<ExpoCardStats[]> {
     expoId: row.expo_id,
     exhibitors: row.exhibitors,
     visitors: row.visitors,
-    products: row.products,
+    products: row.products
   }))
 }
 
@@ -267,12 +320,12 @@ export async function listExpoHalls(expoId: string): Promise<ExpoHall[]> {
     hallTemplateId: r.hall_template_id,
     basicQty: r.basic_qty,
     professionalQty: r.professional_qty,
-    premiumQty: r.premium_qty,
+    premiumQty: r.premium_qty
   }))
 }
 
 export async function searchExpoOwnersByEmail(
-  query: string,
+  query: string
 ): Promise<{ id: string; email: string; name: string }[]> {
   const q = query.trim()
   if (q.length < 2) {
@@ -304,7 +357,7 @@ export type CreateExpoWithHallsInput = {
 }
 
 export async function createExpoWithHalls(
-  input: CreateExpoWithHallsInput,
+  input: CreateExpoWithHallsInput
 ): Promise<{ id: string }> {
   const start = new Date(input.startAt)
   const end = new Date(input.endAt)
@@ -418,7 +471,7 @@ export async function getExpoById(expoId: string): Promise<Expo | null> {
 }
 
 export async function getUserById(
-  userId: string,
+  userId: string
 ): Promise<{ id: string; email: string; name: string } | null> {
   const rows = (await sql`
     select id, email, name from users where id = ${userId} limit 1
@@ -428,7 +481,7 @@ export async function getUserById(
 
 export async function updateExpoWithHalls(
   expoId: string,
-  input: CreateExpoWithHallsInput,
+  input: CreateExpoWithHallsInput
 ): Promise<void> {
   const start = new Date(input.startAt)
   const end = new Date(input.endAt)
@@ -517,7 +570,7 @@ export async function updateExpoWithHalls(
 
 export async function updateExpoStatus(
   expoId: string,
-  status: ExpoStatus,
+  status: ExpoStatus
 ): Promise<void> {
   await sql`
     update expos
@@ -541,12 +594,12 @@ export async function listAdminNotifications(): Promise<AdminNotification[]> {
     message: r.message,
     relatedExpoId: r.related_expo_id ?? undefined,
     createdAt: toIso(r.created_at),
-    isRead: r.is_read,
+    isRead: r.is_read
   }))
 }
 
 export async function markNotificationRead(
-  notificationId: string,
+  notificationId: string
 ): Promise<void> {
   await sql`
     update admin_notifications
@@ -560,7 +613,7 @@ export async function markAllNotificationsRead(): Promise<void> {
 }
 
 export async function deleteNotification(
-  notificationId: string,
+  notificationId: string
 ): Promise<void> {
   await sql`delete from admin_notifications where id = ${notificationId}`
 }
@@ -573,7 +626,7 @@ export async function listExpoBoothTemplateAssignments(): Promise<
   `) as { expo_id: string; booth_template_ids: string[] }[]
   return rows.map((r) => ({
     expoId: r.expo_id,
-    boothTemplateIds: r.booth_template_ids,
+    boothTemplateIds: r.booth_template_ids
   }))
 }
 
@@ -594,7 +647,7 @@ export async function listBoothTemplateCustomizationConfigs(): Promise<
     colorSlots: Number(r.color_slots),
     imageSlots: Number(r.image_slots),
     productLimit: Number(r.product_limit),
-    hasVideo: r.has_video,
+    hasVideo: r.has_video
   }))
 }
 
@@ -613,12 +666,12 @@ export async function listExhibitorCatalogProducts(): Promise<
     id: r.id,
     name: r.name,
     description: r.description,
-    imageUrl: r.image_url ?? undefined,
+    imageUrl: r.image_url ?? undefined
   }))
 }
 
 export async function listSellerBoothRegistrations(
-  userId: string,
+  userId: string
 ): Promise<SellerBoothRegistration[]> {
   const rows = (await sql`
     select *
@@ -645,7 +698,7 @@ export async function listSellerBoothRegistrations(
     boothRef: r.booth_ref,
     boothTier: r.booth_tier,
     status: r.status,
-    purchasedAt: toIso(r.purchased_at),
+    purchasedAt: toIso(r.purchased_at)
   }))
 }
 
@@ -672,12 +725,12 @@ export async function listBoothCustomizations(): Promise<BoothCustomization[]> {
     imageUrls: r.image_urls,
     videoType: r.video_type,
     videoUrl: r.video_url,
-    products: r.products,
+    products: r.products
   }))
 }
 
 export async function listExpoDetailExhibitorsByName(
-  expoName: string,
+  expoName: string
 ): Promise<ExpoDetailExhibitor[]> {
   const pattern = `%${expoName.trim()}%`
   const rows = (await sql`
@@ -725,7 +778,7 @@ export async function listExpoDetailExhibitorsByName(
       .map((item) =>
         typeof item === "object" && item !== null && "name" in item
           ? String((item as { name: string }).name)
-          : "",
+          : ""
       )
       .filter(Boolean)
       .slice(0, 4)
@@ -739,7 +792,7 @@ export async function listExpoDetailExhibitorsByName(
       boothTier: normalizeBoothTier(row.booth_tier),
       boothRef: row.booth_ref,
       country: row.country,
-      products,
+      products
     }
   })
 }
@@ -775,12 +828,12 @@ export async function listStreamSessions(): Promise<StreamSession[]> {
     endedAt: r.ended_at ? toIso(r.ended_at) : null,
     peakViewerCount: r.peak_viewer_count,
     createdAt: toIso(r.created_at),
-    updatedAt: toIso(r.updated_at),
+    updatedAt: toIso(r.updated_at)
   }))
 }
 
 export async function getStreamSessionById(
-  streamSessionId: string,
+  streamSessionId: string
 ): Promise<StreamSession | null> {
   const rows = (await sql`
     select *
@@ -817,7 +870,7 @@ export async function getStreamSessionById(
     endedAt: r.ended_at ? toIso(r.ended_at) : null,
     peakViewerCount: r.peak_viewer_count,
     createdAt: toIso(r.created_at),
-    updatedAt: toIso(r.updated_at),
+    updatedAt: toIso(r.updated_at)
   }
 }
 
@@ -848,12 +901,12 @@ export async function listLiveComments(): Promise<LiveComment[]> {
     isDeleted: r.is_deleted,
     createdAt: toIso(r.created_at),
     deletedAt: r.deleted_at ? toIso(r.deleted_at) : null,
-    deletedByUserId: r.deleted_by_user_id,
+    deletedByUserId: r.deleted_by_user_id
   }))
 }
 
 export async function listLiveCommentsBySession(
-  streamSessionId: string,
+  streamSessionId: string
 ): Promise<LiveComment[]> {
   const rows = (await sql`
     select * from live_comments
@@ -883,7 +936,7 @@ export async function listLiveCommentsBySession(
     isDeleted: r.is_deleted,
     createdAt: toIso(r.created_at),
     deletedAt: r.deleted_at ? toIso(r.deleted_at) : null,
-    deletedByUserId: r.deleted_by_user_id,
+    deletedByUserId: r.deleted_by_user_id
   }))
 }
 
@@ -918,7 +971,7 @@ export async function listGoLIVEEvents(): Promise<GoLIVEEvent[]> {
     broadcasterUserId: r.broadcaster_user_id,
     broadcasterDisplayName: r.broadcaster_display_name,
     createdAt: toIso(r.created_at),
-    updatedAt: toIso(r.updated_at),
+    updatedAt: toIso(r.updated_at)
   }))
 }
 
@@ -1112,7 +1165,7 @@ export async function softDeleteLiveComment(input: {
 }
 
 export async function upsertBoothCustomization(
-  customization: BoothCustomization,
+  customization: BoothCustomization
 ): Promise<void> {
   await sql`
     insert into booth_customizations (

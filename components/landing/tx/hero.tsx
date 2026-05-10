@@ -1,75 +1,181 @@
+"use client"
+
 import { Box } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import * as React from "react"
 
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  type CarouselApi,
+} from "@/components/ui/carousel"
+import { cn } from "@/lib/utils"
 import { asset } from "./data"
 
-export function Hero() {
+export interface HeroExpoItem {
+  title: string
+  dateLabel: string
+  slug: string
+  detailHref: string
+  actionHref?: string
+  backgroundImage?: string
+}
+
+export interface HeroProps {
+  expos: HeroExpoItem[]
+}
+
+export function Hero({ expos }: HeroProps) {
+  const [api, setApi] = React.useState<CarouselApi>()
+  const [current, setCurrent] = React.useState(0)
+
+  React.useEffect(() => {
+    if (!api) return
+
+    setCurrent(api.selectedScrollSnap())
+
+    const onSelect = () => {
+      setCurrent(api.selectedScrollSnap())
+    }
+
+    api.on("select", onSelect)
+
+    // Auto slide every 10 seconds
+    const intervalId = setInterval(() => {
+      api.scrollNext()
+    }, 10000)
+
+    return () => {
+      api.off("select", onSelect)
+      clearInterval(intervalId)
+    }
+  }, [api])
+
+  if (!expos || expos.length === 0) return null
+
+  const activeExpo = expos[current]
+  const nextExpo = expos[(current + 1) % expos.length]
+
   return (
-    <section className="relative min-h-[617px] overflow-hidden">
-      <Image
-        src={asset("hero-bg.jpg")}
-        alt=""
-        fill
-        priority
-        sizes="100vw"
-        className="absolute inset-0 size-full object-cover"
-      />
-      <div className="absolute inset-x-0 bottom-0 h-80 bg-linear-to-b from-black/0 to-black/80 backdrop-blur-[2px]" />
-      <div className="container relative mx-auto flex min-h-[617px] items-end justify-between gap-8 px-5 pb-10 md:pb-14">
-        <div className="max-w-3xl pb-8 text-white">
-          <p className="font-medium text-sm drop-shadow-lg">
-            20 MAY - 22 MAY, 2026
-          </p>
-          <h1 className="mt-2 max-w-2xl font-medium text-4xl leading-[1.15] tracking-normal drop-shadow-xl md:text-[36px]">
-            Vietnam International Furniture Manufacturing & Wood Expo (VIFMW) #1
-          </h1>
-          <div className="mt-8 flex flex-wrap gap-4">
-            <Link
-              href="/seller"
-              className="inline-flex h-10 w-44 items-center justify-center gap-2 rounded-full bg-legend font-medium text-white shadow-[0_1px_2px_rgba(0,0,0,0.2),0_0_0_1px_#f37b42]"
-            >
-              <Box className="size-5" />
-              Virtual Lobby
-            </Link>
-            <Link
-              href="/expos/vifmw-2026"
-              className="inline-flex h-10 w-[178px] items-center justify-center rounded-full border border-white bg-white/10 font-medium text-white backdrop-blur"
-            >
-              View Detail
-            </Link>
-          </div>
-          <div className="mt-6 flex items-end gap-4">
-            <div className="font-normal text-lg">
-              01<span className="align-baseline text-[10px]">/05</span>
-            </div>
-            <div className="mb-2 flex items-center gap-1">
-              <span className="size-1.5 rounded-full bg-white/80" />
-              <span className="h-1.5 w-6 rounded-full bg-white" />
-              <span className="size-1.5 rounded-full bg-white/80" />
-              <span className="size-1.5 rounded-full bg-white/80" />
-              <span className="size-1.5 rounded-full bg-white/80" />
-            </div>
-          </div>
-        </div>
-        <article className="mb-8 hidden size-[218px] overflow-hidden rounded-2xl bg-white p-1 shadow-2xl lg:block">
-          <Image
-            src={asset("hero-card.jpg")}
-            alt=""
-            width={210}
-            height={118}
-            className="h-[118px] w-full rounded-xl object-cover"
-          />
-          <div className="p-2">
-            <p className="font-medium text-[#6b7280] text-xs">
-              20 MAY - 22 MAY, 2026
+    <div className="relative min-h-154 w-full overflow-hidden">
+      {/* Background Sliding Layer */}
+      <Carousel
+        setApi={setApi}
+        className="absolute inset-0 size-full"
+        opts={{ loop: true }}
+      >
+        <CarouselContent className="ml-0 h-154">
+          {expos.map((expo, index) => (
+            <CarouselItem key={expo.slug} className="relative pl-0">
+              <div className="relative size-full">
+                <Image
+                  src={expo.backgroundImage || asset("hero-bg.jpg")}
+                  alt={expo.title}
+                  fill
+                  priority={index === 0}
+                  sizes="100vw"
+                  className="object-cover"
+                />
+              </div>
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+      </Carousel>
+
+      {/* Static Overlay Layers */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-x-0 bottom-0 h-80 bg-linear-to-b from-black/0 to-black/80 backdrop-blur-[2px]" />
+
+        <div className="container relative mx-auto flex h-full items-end justify-between gap-8 px-5 pb-10 md:pb-14">
+          {/* Main Content - Updates based on activeExpo */}
+          <div className="max-w-3xl pb-8 text-white pointer-events-auto">
+            <p className="font-medium text-sm drop-shadow-lg transition-all duration-500">
+              {activeExpo.dateLabel}
             </p>
-            <h2 className="mt-1 font-medium text-sm leading-5">
-              Vietnam International Paper & Stationery Expo (VPAPS) #1
-            </h2>
+            <h1 className="mt-2 max-w-2xl font-medium text-4xl leading-[1.15] tracking-normal drop-shadow-xl md:text-[36px] transition-all duration-500">
+              {activeExpo.title}
+            </h1>
+
+            <div className="mt-8 flex flex-wrap gap-4">
+              <Link
+                href={activeExpo.actionHref || "/seller"}
+                className="inline-flex h-10 w-44 items-center justify-center gap-2 rounded-full bg-legend font-medium text-white shadow-[0_1px_2px_rgba(0,0,0,0.2),0_0_0_1px_#f37b42]"
+              >
+                <Box className="size-5" />
+                Virtual Lobby
+              </Link>
+              <Link
+                href={activeExpo.detailHref}
+                className="inline-flex h-10 w-44 items-center justify-center rounded-full border border-white bg-white/10 font-medium text-white backdrop-blur"
+              >
+                View Detail
+              </Link>
+            </div>
+
+            {/* Pagination Controls */}
+            <div className="mt-6 flex items-end gap-4">
+              <div className="font-normal text-lg">
+                {String(current + 1).padStart(2, "0")}
+                <span className="align-baseline text-[10px]">
+                  /{String(expos.length).padStart(2, "0")}
+                </span>
+              </div>
+              <div className="mb-2 flex items-center gap-1">
+                {expos.map((_, i) => (
+                  <button
+                    type="button"
+                    key={`hero-dot-${expos[i].slug}`}
+                    className={cn(
+                      "rounded-full transition-all duration-300",
+                      current === i
+                        ? "h-1.5 w-6 bg-white"
+                        : "size-1.5 bg-white/80",
+                    )}
+                    onClick={() => api?.scrollTo(i)}
+                    aria-label={`Go to slide ${i + 1}`}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
-        </article>
+
+          {/* Right Card for the NEXT expo */}
+          {expos.length > 1 && (
+            <article
+              className="pointer-events-auto mb-8 hidden size-56 cursor-pointer overflow-hidden rounded-2xl bg-white p-1 shadow-2xl transition-all duration-500 hover:scale-105 lg:block"
+              onClick={() => api?.scrollNext()}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault()
+                  api?.scrollNext()
+                }
+              }}
+              tabIndex={0}
+              role="button"
+              aria-label={`Next expo: ${nextExpo.title}`}
+            >
+              <div className="relative h-28 w-full overflow-hidden rounded-xl">
+                <Image
+                  src={nextExpo.backgroundImage || asset("hero-card.jpg")}
+                  alt=""
+                  fill
+                  className="object-cover"
+                />
+              </div>
+              <div className="p-2">
+                <p className="font-medium text-[#6b7280] text-xs">
+                  {nextExpo.dateLabel}
+                </p>
+                <h2 className="mt-1 line-clamp-2 font-medium text-sm leading-5">
+                  {nextExpo.title}
+                </h2>
+              </div>
+            </article>
+          )}
+        </div>
       </div>
-    </section>
+    </div>
   )
 }
