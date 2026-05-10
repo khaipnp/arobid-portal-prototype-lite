@@ -19,13 +19,10 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger
 } from "@/components/ui/alert-dialog"
+import type { Expo as TradexpoExpo } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
 
-type Expo = {
-  id: string
-  name: string
-  slug: string | null
-}
+type BookingExpo = Pick<TradexpoExpo, "id" | "name" | "slug">
 
 interface HallLocation {
   id: string
@@ -34,7 +31,7 @@ interface HallLocation {
   exhibitor: string | null
 }
 
-export function BookingContent({ expo }: { expo: Expo }) {
+export function BookingContent({ expo }: { expo: BookingExpo }) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const initialTierId = searchParams.get("tier") || "premium"

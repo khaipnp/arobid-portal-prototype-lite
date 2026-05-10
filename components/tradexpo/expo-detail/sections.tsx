@@ -319,7 +319,9 @@ export function ParticipantValues() {
 }
 
 export function BoothTier({ slug }: { slug: string }) {
-  const [activeTierId, setActiveTierId] = useState(BOOTH_TIERS[2].id) // Default to Premium
+  const [activeTierId, setActiveTierId] = useState<
+    (typeof BOOTH_TIERS)[number]["id"]
+  >(BOOTH_TIERS[2].id) // Default to Premium
   const activeTier =
     BOOTH_TIERS.find((t) => t.id === activeTierId) || BOOTH_TIERS[2]
 
@@ -357,9 +359,7 @@ export function BoothTier({ slug }: { slug: string }) {
             {activeTier.description}
           </p>
           <p className="mt-7 font-medium text-2xl leading-8">
-            {activeTier.price === 0
-              ? "Contact for Pricing"
-              : `$${activeTier.price.toLocaleString()}`}
+            {`$${activeTier.price.toLocaleString()}`}
           </p>
           <div className="mt-5 grid gap-x-6 gap-y-2 md:grid-cols-2">
             {activeTier.features.map(([feature, strong]) => (
