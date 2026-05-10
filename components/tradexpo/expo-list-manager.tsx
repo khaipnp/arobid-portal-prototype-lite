@@ -48,6 +48,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
+import { getAssetUrl } from "@/lib/image-utils"
 import type { Expo, ExpoCategory, ExpoStatus } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
 import {
@@ -460,7 +461,7 @@ export function ExpoListManager({
                   <TableRow key={expo.id}>
                     <TableCell>
                       <Image
-                        src={expo.thumbnailUrl}
+                        src={getAssetUrl(expo.thumbnailUrl, expo.id, 64, 48)}
                         alt={expo.name}
                         width={64}
                         height={48}

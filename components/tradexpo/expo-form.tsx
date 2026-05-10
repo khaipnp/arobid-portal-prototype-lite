@@ -1,6 +1,7 @@
 "use client"
 
 import { ImagePlusIcon, PlusIcon, SearchIcon, Trash2Icon } from "lucide-react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import * as React from "react"
 import { Button } from "@/components/ui/button"
@@ -342,10 +343,11 @@ export function ExpoForm(props: ExpoFormProps) {
             <div className="flex flex-col gap-3">
               {thumbnailUrl ? (
                 <div className="relative aspect-video w-full max-w-md overflow-hidden rounded-lg border bg-muted">
-                  {/* biome-ignore lint/a11y/useAltText: <explanation> */}
-                  <img
+                  <Image
                     src={thumbnailUrl}
-                    className="h-full w-full object-cover"
+                    alt="Expo thumbnail preview"
+                    fill
+                    className="object-cover"
                   />
                   <Button
                     type="button"
@@ -363,9 +365,12 @@ export function ExpoForm(props: ExpoFormProps) {
                   onClick={() => fileInputRef.current?.click()}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault()
                       fileInputRef.current?.click()
                     }
                   }}
+                  tabIndex={0}
+                  role="button"
                 >
                   {isUploading ? (
                     <Spinner />

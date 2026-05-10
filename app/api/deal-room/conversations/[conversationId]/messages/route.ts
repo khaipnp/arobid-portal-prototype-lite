@@ -14,7 +14,18 @@ export async function GET(_request: Request, { params }: Props) {
       select * from chat_messages
       where conversation_id = ${conversationId}
       order by sent_at asc
-    `) as any[]
+    `) as {
+      id: string
+      conversation_id: string
+      sender_id: string
+      content: string
+      attachments: any[] | null
+      status: Message["status"]
+      sent_at: string | Date
+      edited_at: string | Date | null
+      is_deleted: boolean
+      is_system_message: boolean
+    }[]
 
     const messages = rows.map((r) => ({
       id: r.id,

@@ -17,12 +17,6 @@ import {
 
 export type PortalType = "admin" | "partner" | "seller"
 
-const user = {
-  name: "Khai Pham",
-  email: "khaipham@arobid.com",
-  avatar: "/avatar.webp"
-}
-
 const portals = [
   {
     name: "Admin Portal",
@@ -46,10 +40,21 @@ const portals = [
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   portal?: PortalType
+  user: {
+    name: string
+    email: string
+    avatar: string
+    roles?: string[]
+  }
 }
 
-export function AppSidebar({ portal = "admin", ...props }: AppSidebarProps) {
+export function AppSidebar({
+  portal = "admin",
+  user,
+  ...props
+}: AppSidebarProps) {
   const activePortalName = portals.find((p) => p.url === `/${portal}`)?.name
+  const canManageSeller = (user.roles ?? []).includes("seller")
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -59,7 +64,7 @@ export function AppSidebar({ portal = "admin", ...props }: AppSidebarProps) {
       <SidebarContent>
         {portal === "admin" && <NavAdmin />}
         {portal === "partner" && <NavPartner />}
-        {portal === "seller" && <NavSeller />}
+        {portal === "seller" && <NavSeller canManageSeller={canManageSeller} />}
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user} />

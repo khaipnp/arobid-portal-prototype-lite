@@ -36,8 +36,8 @@ export function VirtualLobbyDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="items-center justify-center gap-2 rounded-full bg-legend shadow-[0_1px_2px_rgba(0,0,0,0.2),0_0_0_1px_#f37b42]">
-          <BoxIcon className="size-5" />
+        <Button size="lg" className="bg-legend hover:bg-legend-600">
+          <BoxIcon className="size-4" />
           Virtual Lobby
         </Button>
       </DialogTrigger>

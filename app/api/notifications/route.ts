@@ -1,11 +1,6 @@
 import { NextResponse } from "next/server"
+import { requireApiUserId } from "@/lib/auth/api-user"
 import { listNotifications } from "@/lib/notifications/service"
-
-function getRequestUserId(request: Request, searchParams: URLSearchParams) {
-  const userId =
-    searchParams.get("userId") ?? request.headers.get("x-user-id") ?? ""
-  return userId.trim()
-}
 
 function isValidCursor(cursor: string) {
   const [createdAtRaw, notificationIdRaw] = cursor.split("|")
@@ -19,13 +14,14 @@ function isValidCursor(cursor: string) {
 }
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const userId = getRequestUserId(request, searchParams)
-
-  if (!userId) {
+  let userId = ""
+  try {
+    userId = await requireApiUserId()
+  } catch {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 })
   }
 
+  const { searchParams } = new URL(request.url)
   const limitParam = searchParams.get("limit")
   const limit = limitParam ? Number.parseInt(limitParam, 10) : 20
   if (!Number.isFinite(limit) || limit <= 0) {

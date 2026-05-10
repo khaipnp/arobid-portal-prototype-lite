@@ -3,12 +3,11 @@
 import { BellIcon } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar"
 
 interface NotificationNavLinkProps {
-  userId: string
   href: string
 }
 
@@ -22,25 +21,18 @@ async function readJson<T>(response: Response): Promise<T | null> {
 
 const POLL_MS = 10_000
 
-export function NotificationNavLink({
-  userId,
-  href
-}: NotificationNavLinkProps) {
+export function NotificationNavLink({ href }: NotificationNavLinkProps) {
   const pathname = usePathname()
   const [unreadCount, setUnreadCount] = useState(0)
 
-  const encodedUserId = useMemo(() => encodeURIComponent(userId), [userId])
   const hasUnread = unreadCount > 0
   const isActive = pathname === href
 
   const fetchUnreadCount = useCallback(async () => {
     try {
-      const response = await fetch(
-        `/api/notifications/unread-count?userId=${encodedUserId}`,
-        {
-          cache: "no-store"
-        }
-      )
+      const response = await fetch(`/api/notifications/unread-count`, {
+        cache: "no-store"
+      })
       const payload = await readJson<{ unreadCount: number }>(response)
       if (payload) {
         setUnreadCount(payload.unreadCount)
@@ -48,7 +40,7 @@ export function NotificationNavLink({
     } catch {
       // Keep last known unread count; polling will retry.
     }
-  }, [encodedUserId])
+  }, [])
 
   useEffect(() => {
     void fetchUnreadCount()

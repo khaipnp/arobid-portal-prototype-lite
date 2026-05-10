@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import { SellerBoothConfigurator } from "@/components/seller/seller-booth-configurator"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
+import { requireRole } from "@/lib/auth/rbac"
 import { listBoothTemplates } from "@/lib/tradexpo/db/booth-templates"
 import {
   listBoothCustomizations,
@@ -10,7 +11,6 @@ import {
   listExpos,
   listSellerBoothRegistrations
 } from "@/lib/tradexpo/db/platform-data"
-import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
 interface Props {
   params: Promise<{ expoId: string; registrationId: string }>
@@ -20,6 +20,7 @@ export const dynamic = "force-dynamic"
 
 export default async function SellerBoothConfigurePage({ params }: Props) {
   const { expoId, registrationId } = await params
+  const userId = await requireRole("seller")
 
   const [
     expos,
@@ -31,7 +32,7 @@ export default async function SellerBoothConfigurePage({ params }: Props) {
     exhibitorCatalogProducts
   ] = await Promise.all([
     listExpos(),
-    listSellerBoothRegistrations(CURRENT_USER_ID),
+    listSellerBoothRegistrations(userId),
     listBoothTemplates(),
     listExpoBoothTemplateAssignments(),
     listBoothTemplateCustomizationConfigs(),

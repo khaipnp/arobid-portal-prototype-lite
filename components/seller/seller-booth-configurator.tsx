@@ -31,6 +31,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Separator } from "@/components/ui/separator"
+import { getAssetUrl } from "@/lib/image-utils"
 import type {
   BoothCustomization,
   BoothPublishStatus,
@@ -408,7 +409,7 @@ export function SellerBoothConfigurator({
         <div className="flex flex-wrap items-center gap-3">
           {selectedTemplate && (
             <Image
-              src={`https://picsum.photos/seed/${selectedTemplate.id}/120/80`}
+              src={getAssetUrl(null, selectedTemplate.id, 120, 80)}
               alt={selectedTemplate.name}
               width={80}
               height={54}
@@ -1079,7 +1080,7 @@ function TemplateCard({
     >
       <div className="relative overflow-hidden">
         <Image
-          src={`https://picsum.photos/seed/${template.id}/400/240`}
+          src={getAssetUrl(null, template.id, 400, 240)}
           alt={template.name}
           width={400}
           height={240}
@@ -1151,7 +1152,7 @@ function TemplateDetailView({
         </Button>
       </div>
       <Image
-        src={`https://picsum.photos/seed/${template.id}/800/400`}
+        src={getAssetUrl(null, template.id, 800, 400)}
         alt={template.name}
         width={800}
         height={400}
@@ -1224,7 +1225,7 @@ function Preview3DViewer({
           <div className="relative">
             {template && (
               <Image
-                src={`https://picsum.photos/seed/${template.id}3d/400/280`}
+                src={getAssetUrl(null, `${template.id}3d`, 400, 280)}
                 alt={template.name}
                 width={280}
                 height={180}

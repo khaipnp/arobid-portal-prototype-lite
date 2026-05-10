@@ -16,8 +16,8 @@ export default function Loading() {
           </div>
         </div>
         <div className="flex-1 space-y-4 overflow-hidden p-3">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="flex items-center gap-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={`sidebar-item-${i}`} className="flex items-center gap-3">
               <Skeleton className="size-10 rounded-full" />
               <div className="flex-1 space-y-2">
                 <Skeleton className="h-4 w-3/4" />

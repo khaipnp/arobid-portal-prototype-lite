@@ -1,12 +1,13 @@
 import { CustomerOrderHistory } from "@/components/orders/customer-order-history"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
+import { requireAnyRole } from "@/lib/auth/rbac"
 import { listCustomerOrders } from "@/lib/orders/db"
-import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
 export const dynamic = "force-dynamic"
 
 export default async function CustomerOrdersPage() {
-  const initialOrders = await listCustomerOrders(CURRENT_USER_ID)
+  const userId = await requireAnyRole(["seller", "buyer"])
+  const initialOrders = await listCustomerOrders(userId)
 
   return (
     <DashboardShell

@@ -1,16 +1,21 @@
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
+import { getCurrentSessionUserId } from "@/lib/auth/session"
 import { sql } from "@/lib/db/neon"
-import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
-import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
 export const APP_ROLES = ["admin", "seller", "buyer", "exhibitor"] as const
 export type AppRole = (typeof APP_ROLES)[number]
 
 export async function getCurrentUserIdFromRequest(): Promise<string> {
+  const sessionUserId = await getCurrentSessionUserId()
+  if (sessionUserId) return sessionUserId
+
   const requestHeaders = await headers()
   const userId = requestHeaders.get("x-user-id")?.trim()
-  return userId || CURRENT_USER_ID
+  if (userId && process.env.NODE_ENV !== "production") {
+    return userId
+  }
+  throw new Error("Unauthorized")
 }
 
 export async function userHasRole(
@@ -18,7 +23,6 @@ export async function userHasRole(
   role: AppRole,
   expoId?: string | null
 ): Promise<boolean> {
-  await ensurePlatformSchema()
   const rows = expoId
     ? ((await sql`
         select 1
@@ -40,10 +44,33 @@ export async function userHasRole(
 }
 
 export async function requireRole(role: AppRole): Promise<string> {
-  const userId = await getCurrentUserIdFromRequest()
+  let userId = ""
+  try {
+    userId = await getCurrentUserIdFromRequest()
+  } catch {
+    redirect("/login")
+  }
   const allowed = await userHasRole(userId, role)
   if (!allowed) {
-    redirect("/")
+    redirect("/login")
   }
   return userId
+}
+
+export async function requireAnyRole(roles: AppRole[]): Promise<string> {
+  let userId = ""
+  try {
+    userId = await getCurrentUserIdFromRequest()
+  } catch {
+    redirect("/login")
+  }
+
+  for (const role of roles) {
+    const allowed = await userHasRole(userId, role)
+    if (allowed) {
+      return userId
+    }
+  }
+
+  redirect("/login")
 }

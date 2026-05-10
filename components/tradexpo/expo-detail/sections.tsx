@@ -9,7 +9,7 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-
+import { getAssetUrl } from "@/lib/image-utils"
 import { cn } from "@/lib/utils"
 
 import {
@@ -22,6 +22,7 @@ import {
   valueCards
 } from "./data"
 import { VirtualLobbyDialog } from "./virtual-lobby-dialog"
+import { Button } from "@/components/ui/button"
 
 function formatHeroStat(value: number) {
   if (value >= 1000) {
@@ -51,12 +52,14 @@ export function Hero({
   expoTitle = "Vietnam International Furniture Manufacturing & Wood Expo (VIFMW) #1",
   startDateLabel = "April 15, 2026",
   endDateLabel = "April 17, 2026",
+  thumbnailUrl,
   virtualLobbyUrl,
   stats
 }: {
   expoTitle?: string
   startDateLabel?: string
   endDateLabel?: string
+  thumbnailUrl?: string
   virtualLobbyUrl?: string
   stats?: {
     exhibitors: number
@@ -74,19 +77,16 @@ export function Hero({
 
   return (
     <section className="bg-linear-to-b from-white via-25% via-[#ffe0d2] to-white pb-0">
-      <div className="container relative mx-auto min-h-[60vh] overflow-hidden rounded-2xl">
+      <div className="container relative mx-auto min-h-[60vh] overflow-hidden rounded-4xl">
         <Image
-          src={asset("figma-hero.png")}
+          src={getAssetUrl(thumbnailUrl, expoTitle, 1284, 722)}
           alt=""
           fill
           priority
           sizes="(min-width: 1280px) 1284px, 100vw"
           className="object-cover"
         />
-        <div className="absolute inset-x-0 bottom-0 h-96 bg-linear-to-b from-black/0 to-black/80 backdrop-blur-[5px]" />
-        <div className="absolute top-6 left-4 rounded-full bg-[#e4e7ff] px-2 py-1 font-medium text-[#022582] text-xs md:top-60 md:left-10">
-          Global Strategic Network
-        </div>
+        <div className="absolute inset-x-0 bottom-0 h-64 bg-linear-to-b from-black/0 to-black/80 backdrop-blur-xs" />
         <div className="absolute right-7 bottom-6 hidden w-2xs md:block">
           <div className="z-10 mx-auto flex w-max items-center gap-3 rounded-full bg-[#01175c] py-1.5 pr-5 pl-1.5">
             <span className="inline-flex h-6 items-center gap-1 rounded-full bg-green-600 px-3 font-medium text-white text-xs">
@@ -128,23 +128,24 @@ export function Hero({
           </div>
         </div>
         <div className="absolute bottom-10 left-7 max-w-3xl text-white md:left-10">
-          <h1 className="max-w-2xl font-medium text-[32px] leading-[1.18] tracking-normal md:text-[36px] md:leading-11">
+          <h1 className="max-w-2xl font-medium text-3xl tracking-normal md:text-4xl md:leading-11">
             {expoTitle}
           </h1>
-          <div className="mt-5 flex flex-wrap gap-4">
+          <div className="mt-5 flex flex-wrap gap-2">
             <VirtualLobbyDialog src={virtualLobbyUrl} expoTitle={expoTitle} />
             <Link
-              href="/seller"
-              className="inline-flex h-10 w-[178px] items-center justify-center rounded-full border border-white bg-white/10 font-medium text-white backdrop-blur"
+              href="#booths"
             >
-              Join as Exhibitor
+              <Button variant="secondary" size="lg">
+                Join as Exhibitor
+              </Button>
             </Link>
           </div>
-          <div className="mt-9 grid max-w-[630px] grid-cols-2 gap-y-4 divide-white/20 md:grid-cols-4 md:divide-x">
+          <div className="mt-9 grid max-w-155 grid-cols-2 gap-y-4 divide-white/20 md:grid-cols-4 md:divide-x">
             {heroStats.map(([value, label]) => (
               <div key={label} className="first:pl-0 md:px-5">
-                <p className="font-medium text-2xl leading-8">{value}</p>
-                <p className="text-[#9ca3af] text-xs">{label}</p>
+                <p className="font-medium text-3xl">{value}</p>
+                <p className="text-muted text-sm">{label}</p>
               </div>
             ))}
           </div>
@@ -166,13 +167,13 @@ export function About({
       <h2 className="font-semibold text-[32px] leading-10">About {title}</h2>
       <div>
         <p className="text-foreground text-sm leading-6">{description}</p>
-        <a
+        <Link
           href="#booths"
-          className="mt-4 inline-flex items-center gap-1 font-medium text-[#ed6203] text-sm"
+          className="mt-4 inline-flex items-center gap-1 font-medium text-legend text-sm"
         >
           View more
           <ArrowRightIcon className="size-4" />
-        </a>
+        </Link>
       </div>
     </section>
   )
@@ -193,7 +194,7 @@ export function Sponsors() {
               alt={name}
               width={150}
               height={32}
-              className="h-7 max-w-[150px] object-contain"
+              className="h-7 max-w-37 object-contain"
             />
           ))}
           <span className="font-bold text-2xl">HubSpot</span>
@@ -369,13 +370,13 @@ export function BoothTier() {
             </button>
             <button
               type="button"
-              className="h-10 rounded-full bg-[#ed6203] px-10 font-medium text-sm text-white shadow-[0_1px_2px_rgba(0,0,0,0.2),0_0_0_1px_#f37b42]"
+              className="h-10 rounded-full bg-legend px-10 font-medium text-sm text-white shadow-[0_1px_2px_rgba(0,0,0,0.2),0_0_0_1px_#f37b42]"
             >
               Book Now
             </button>
           </div>
         </div>
-        <div className="relative min-h-[360px] overflow-hidden rounded-2xl bg-[#f3f4f6]">
+        <div className="relative min-h-90 overflow-hidden rounded-2xl bg-[#f3f4f6]">
           <p className="absolute top-8 left-1/2 -translate-x-1/2 font-semibold text-xl">
             Premium
           </p>
@@ -385,9 +386,9 @@ export function BoothTier() {
             width={500}
             height={437}
             loading="eager"
-            className="absolute top-[58px] left-1/2 w-[250px] -translate-x-1/2 object-contain md:w-[300px]"
+            className="absolute top-[58px] left-1/2 w-62 -translate-x-1/2 object-contain md:w-[300px]"
           />
-          <div className="absolute top-1/2 left-1/2 grid size-[72px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-[20px] bg-black/60 text-white backdrop-blur-sm">
+          <div className="absolute top-1/2 left-1/2 grid size-18 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-[20px] bg-black/60 text-white backdrop-blur-sm">
             <BoxIcon className="size-10" />
           </div>
         </div>
@@ -407,7 +408,7 @@ export function BoothTier() {
           </p>
           <Link
             href="/seller"
-            className="mt-6 inline-flex h-10 items-center gap-2 rounded-full bg-[#ed6203] px-6 font-medium text-sm text-white"
+            className="mt-6 inline-flex h-10 items-center gap-2 rounded-full bg-legend px-6 font-medium text-sm text-white"
           >
             <SendIcon className="size-4" />
             Register Booth Lite

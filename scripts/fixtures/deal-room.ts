@@ -88,8 +88,16 @@ export const mockConversations: Conversation[] = [
     id: "conv-001",
     type: "direct",
     members: [
-      { userId: "11111111-1111-4111-8111-111111111111", joinedAt: isoOffset(120), isArchived: false },
-      { userId: "22222222-2222-4222-8222-222222222222", joinedAt: isoOffset(120), isArchived: false }
+      {
+        userId: "11111111-1111-4111-8111-111111111111",
+        joinedAt: isoOffset(120),
+        isArchived: false
+      },
+      {
+        userId: "22222222-2222-4222-8222-222222222222",
+        joinedAt: isoOffset(120),
+        isArchived: false
+      }
     ],
     createdAt: isoOffset(120),
     isReadOnly: false
@@ -98,8 +106,16 @@ export const mockConversations: Conversation[] = [
     id: "conv-002",
     type: "direct",
     members: [
-      { userId: "11111111-1111-4111-8111-111111111111", joinedAt: isoOffset(200), isArchived: false },
-      { userId: "33333333-3333-4333-8333-333333333333", joinedAt: isoOffset(200), isArchived: false }
+      {
+        userId: "11111111-1111-4111-8111-111111111111",
+        joinedAt: isoOffset(200),
+        isArchived: false
+      },
+      {
+        userId: "33333333-3333-4333-8333-333333333333",
+        joinedAt: isoOffset(200),
+        isArchived: false
+      }
     ],
     createdAt: isoOffset(200),
     isReadOnly: false
@@ -108,8 +124,16 @@ export const mockConversations: Conversation[] = [
     id: "conv-003",
     type: "direct",
     members: [
-      { userId: "11111111-1111-4111-8111-111111111111", joinedAt: isoOffset(1500), isArchived: false },
-      { userId: "44444444-4444-4444-8444-444444444444", joinedAt: isoOffset(1500), isArchived: false }
+      {
+        userId: "11111111-1111-4111-8111-111111111111",
+        joinedAt: isoOffset(1500),
+        isArchived: false
+      },
+      {
+        userId: "44444444-4444-4444-8444-444444444444",
+        joinedAt: isoOffset(1500),
+        isArchived: false
+      }
     ],
     createdAt: isoOffset(1500),
     isReadOnly: false
@@ -118,8 +142,16 @@ export const mockConversations: Conversation[] = [
     id: "conv-004",
     type: "direct",
     members: [
-      { userId: "11111111-1111-4111-8111-111111111111", joinedAt: isoOffset(500), isArchived: false },
-      { userId: "55555555-5555-4555-8555-555555555555", joinedAt: isoOffset(500), isArchived: false }
+      {
+        userId: "11111111-1111-4111-8111-111111111111",
+        joinedAt: isoOffset(500),
+        isArchived: false
+      },
+      {
+        userId: "55555555-5555-4555-8555-555555555555",
+        joinedAt: isoOffset(500),
+        isArchived: false
+      }
     ],
     createdAt: isoOffset(500),
     isReadOnly: false
@@ -128,8 +160,16 @@ export const mockConversations: Conversation[] = [
     id: "conv-005",
     type: "direct",
     members: [
-      { userId: "11111111-1111-4111-8111-111111111111", joinedAt: isoOffset(1000), isArchived: false },
-      { userId: "66666666-6666-4666-8666-666666666666", joinedAt: isoOffset(1000), isArchived: false }
+      {
+        userId: "11111111-1111-4111-8111-111111111111",
+        joinedAt: isoOffset(1000),
+        isArchived: false
+      },
+      {
+        userId: "66666666-6666-4666-8666-666666666666",
+        joinedAt: isoOffset(1000),
+        isArchived: false
+      }
     ],
     createdAt: isoOffset(1000),
     isReadOnly: false
