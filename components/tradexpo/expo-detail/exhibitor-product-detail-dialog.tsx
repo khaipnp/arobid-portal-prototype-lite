@@ -109,7 +109,7 @@ export function ExhibitorProductDetailDialog({
                       className={`relative size-16.5 shrink-0 overflow-hidden rounded-xl border transition md:size-20 ${
                         active
                           ? "border-legend ring-1 ring-legend/25"
-                          : "border-[#e5e7eb] hover:border-[#d1d5db]"
+                          : "border-muted hover:border-[#d1d5db]"
                       }`}
                       onClick={() => onSelectedProductChange(item)}
                       aria-label={`Switch to product image: ${item.label}`}
@@ -173,18 +173,18 @@ export function ExhibitorProductDetailDialog({
                   <h4 className="font-semibold text-foreground text-xl">
                     Technical Specifications
                   </h4>
-                  <div className="overflow-hidden rounded-xl border border-[#e5e7eb]">
+                  <div className="overflow-hidden rounded-xl border border-muted">
                     <div className="grid grid-cols-2">
-                      <div className="border-[#e5e7eb] border-b bg-[#f9fafb] px-4 py-2 text-sm">
+                      <div className="border-muted border-b bg-[#f9fafb] px-4 py-2 text-sm">
                         Size / Dimensions
                       </div>
-                      <div className="border-[#e5e7eb] border-b px-4 py-2 text-sm">
+                      <div className="border-muted border-b px-4 py-2 text-sm">
                         2094 × 1038 × 35 mm
                       </div>
-                      <div className="border-[#e5e7eb] border-b bg-[#f9fafb] px-4 py-2 text-sm">
+                      <div className="border-muted border-b bg-[#f9fafb] px-4 py-2 text-sm">
                         Material
                       </div>
-                      <div className="border-[#e5e7eb] border-b px-4 py-2 text-sm">
+                      <div className="border-muted border-b px-4 py-2 text-sm">
                         Monocrystalline Silicon
                       </div>
                       <div className="bg-[#f9fafb] px-4 py-2 text-sm">
@@ -199,7 +199,7 @@ export function ExhibitorProductDetailDialog({
                   <h4 className="font-semibold text-base text-foreground">
                     Returns Policy
                   </h4>
-                  <div className="rounded-xl border border-[#e5e7eb]">
+                  <div className="rounded-xl border border-muted">
                     <div className="bg-[#f9fafb] px-4 py-3 text-sm">
                       Wholesale Return Policy
                     </div>
@@ -253,7 +253,7 @@ export function ExhibitorProductDetailDialog({
                     className={`rounded-lg border px-2.5 py-1.5 text-xs ${
                       index === 0
                         ? "border-legend bg-[#fff7ed] text-[#9a3412]"
-                        : "border-[#e5e7eb] text-foreground"
+                        : "border-muted text-foreground"
                     }`}
                   >
                     {variant}
@@ -262,7 +262,7 @@ export function ExhibitorProductDetailDialog({
               </div>
             </div>
 
-            <div className="space-y-2 border-[#e5e7eb] border-t pt-4">
+            <div className="space-y-2 border-muted border-t pt-4">
               <p className="font-medium text-foreground text-sm">Quantity</p>
               <div className="flex items-center gap-2">
                 <div className="flex h-10 w-32 items-center justify-between rounded-full border border-muted px-2">

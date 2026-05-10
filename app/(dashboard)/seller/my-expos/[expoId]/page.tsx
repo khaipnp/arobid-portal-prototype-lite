@@ -1,6 +1,7 @@
 import { SellerExpoDetail } from "@/components/seller/seller-expo-detail"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import { requireRole } from "@/lib/auth/rbac"
+import { sql } from "@/lib/db/neon"
 import { listBoothTemplates } from "@/lib/tradexpo/db/booth-templates"
 import {
   listBoothCustomizations,
@@ -9,6 +10,7 @@ import {
   listSellerBoothRegistrations,
   listStreamSessions
 } from "@/lib/tradexpo/db/platform-data"
+import { listCompanyProducts } from "@/lib/tradexpo/db/products"
 
 interface Props {
   params: Promise<{ expoId: string }>
@@ -20,20 +22,28 @@ export default async function SellerExpoDetailPage({ params }: Props) {
   const { expoId } = await params
   const userId = await requireRole("seller")
 
+  // Get user's company ID
+  const users = (await sql`
+    select company_id from users where id = ${userId} limit 1
+  `) as { company_id: string | null }[]
+  const companyId = users[0]?.company_id
+
   const [
     expos,
     allRegistrations,
     boothTemplates,
     boothCustomizations,
     goLiveEvents,
-    streamSessions
+    streamSessions,
+    companyProducts
   ] = await Promise.all([
     listExpos(),
     listSellerBoothRegistrations(userId),
     listBoothTemplates(),
     listBoothCustomizations(),
     listGoLIVEEvents(),
-    listStreamSessions()
+    listStreamSessions(),
+    companyId ? listCompanyProducts(companyId) : Promise.resolve([])
   ])
 
   const expo = expos.find((e) => e.id === expoId) ?? null
@@ -57,6 +67,7 @@ export default async function SellerExpoDetailPage({ params }: Props) {
         boothCustomizations={boothCustomizations}
         goLiveEvents={goLiveEvents}
         streamSessions={streamSessions}
+        companyProducts={companyProducts}
       />
     </DashboardShell>
   )
