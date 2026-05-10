@@ -221,11 +221,11 @@ export function BookingContent({ expo }: { expo: BookingExpo }) {
           {step === 1 ? (
             <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
               <div className="mb-6 flex flex-col gap-1">
-                <h2 className="flex items-center gap-2 font-bold text-[#030712] text-xl">
+                <h2 className="flex items-center gap-2 font-semibold text-foreground text-xl">
                   <MapPinIcon className="size-5 text-legend" />
                   Select Booth Location
                 </h2>
-                <p className="text-gray-500 text-sm">
+                <p className="text-muted-foreground text-sm">
                   Pick a Hall and select an available spot
                 </p>
               </div>
@@ -334,7 +334,7 @@ export function BookingContent({ expo }: { expo: BookingExpo }) {
             </div>
           ) : (
             <div className="rounded-2xl border border-gray-200 bg-white p-8 shadow-sm">
-              <h2 className="mb-8 font-bold text-[#030712] text-xl">
+              <h2 className="mb-8 font-semibold text-foreground text-xl">
                 Review Order Details
               </h2>
               <div className="flex flex-col gap-8">
