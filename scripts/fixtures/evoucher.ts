@@ -3,7 +3,7 @@ import type {
   VoucherCode,
   VoucherPartner,
   VoucherTarget
-} from "./types"
+} from "@/lib/evoucher/types"
 
 // ─── Partners ────────────────────────────────────────────────────────────────
 

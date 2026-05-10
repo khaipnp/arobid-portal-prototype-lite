@@ -8,7 +8,7 @@ import {
   mockHallTemplateSlots,
   mockHallTemplates,
   mockHallTemplateUsage
-} from "@/lib/tradexpo/mock-data"
+} from "@/scripts/fixtures/tradexpo"
 
 async function ensureSchema() {
   await sql`

@@ -1,9 +1,3 @@
-import {
-  adminFeatures,
-  adminModules,
-  adminPermissions,
-  adminRoles
-} from "@/lib/administration/mock-data"
 import type {
   AdminFeature,
   AdminModule,
@@ -86,44 +80,63 @@ async function ensureAdministrationSchema() {
     on admin_permissions (module_id)
   `
 
-  for (const moduleItem of adminModules) {
-    await sql`
-      insert into admin_modules (id, name, code, description)
-      values (${moduleItem.id}, ${moduleItem.name}, ${moduleItem.code}, ${moduleItem.description})
-      on conflict (id) do nothing
-    `
-  }
+  await sql`
+    insert into admin_modules (id, name, code, description)
+    values
+      ('module-b2b', 'B2B Marketplace', 'B2B_MARKETPLACE', 'Core trading and supplier management features.'),
+      ('module-tradexpo', 'TradeXpo', 'TRADEXPO', 'Expo and booth management capabilities.')
+    on conflict (id) do update
+    set
+      name = excluded.name,
+      code = excluded.code,
+      description = excluded.description
+  `
 
-  for (const role of adminRoles) {
-    await sql`
-      insert into admin_roles (id, name, module_id, description)
-      values (${role.id}, ${role.name}, ${role.moduleId}, ${role.description})
-      on conflict (id) do nothing
-    `
-  }
+  await sql`
+    insert into admin_roles (id, name, module_id, description)
+    values
+      ('role-buyer', 'BUYER', 'module-b2b', 'Can discover and place orders for products.'),
+      ('role-seller', 'SELLER', 'module-b2b', 'Can create and manage products and quotations.'),
+      ('role-expo-owner', 'EXPO_OWNER', 'module-tradexpo', 'Can create and operate expo events.'),
+      ('role-exhibitor', 'EXHIBITOR', 'module-tradexpo', 'Can participate in expo and manage booths.')
+    on conflict (id) do update
+    set
+      name = excluded.name,
+      module_id = excluded.module_id,
+      description = excluded.description
+  `
 
-  for (const feature of adminFeatures) {
-    await sql`
-      insert into admin_features (id, name, module_id, description)
-      values (${feature.id}, ${feature.name}, ${feature.moduleId}, ${feature.description})
-      on conflict (id) do nothing
-    `
-  }
+  await sql`
+    insert into admin_features (id, name, module_id, description)
+    values
+      ('feature-order-management', 'Order Management', 'module-b2b', 'Track, review, and process platform orders.'),
+      ('feature-catalog', 'Catalog', 'module-b2b', 'Manage product catalog entries and categories.'),
+      ('feature-expo-list', 'Expo List', 'module-tradexpo', 'Create and administer expo records.'),
+      ('feature-booth-template', 'Booth Templates', 'module-tradexpo', 'Configure reusable 3D booth templates.')
+    on conflict (id) do update
+    set
+      name = excluded.name,
+      module_id = excluded.module_id,
+      description = excluded.description
+  `
 
-  for (const permission of adminPermissions) {
-    await sql`
-      insert into admin_permissions (id, name, module_id, role_id, feature_id, action)
-      values (
-        ${permission.id},
-        ${permission.name},
-        ${permission.moduleId},
-        ${permission.roleId},
-        ${permission.featureId},
-        ${permission.action}
-      )
-      on conflict (id) do nothing
-    `
-  }
+  await sql`
+    insert into admin_permissions (id, name, module_id, role_id, feature_id, action)
+    values
+      ('order-read', 'Read Orders', 'module-b2b', 'role-buyer', 'feature-order-management', 'read'),
+      ('order-create', 'Create Orders', 'module-b2b', 'role-buyer', 'feature-order-management', 'create'),
+      ('catalog-edit', 'Edit Catalog', 'module-b2b', 'role-seller', 'feature-catalog', 'update'),
+      ('expo-read', 'Read Expo', 'module-tradexpo', 'role-expo-owner', 'feature-expo-list', 'read'),
+      ('expo-create', 'Create Expo', 'module-tradexpo', 'role-expo-owner', 'feature-expo-list', 'create'),
+      ('booth-read', 'Read Booth Templates', 'module-tradexpo', 'role-exhibitor', 'feature-booth-template', 'read')
+    on conflict (id) do update
+    set
+      name = excluded.name,
+      module_id = excluded.module_id,
+      role_id = excluded.role_id,
+      feature_id = excluded.feature_id,
+      action = excluded.action
+  `
 
   administrationSchemaReady = true
 }

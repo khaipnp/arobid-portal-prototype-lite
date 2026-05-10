@@ -361,6 +361,146 @@ export async function ensurePlatformSchema() {
       is_active boolean not null
     )
   `
+  await sql`
+    do $$
+    begin
+      alter table seller_booth_registrations drop constraint if exists seller_booth_registrations_user_id_fkey;
+      alter table user_roles drop constraint if exists user_roles_user_id_fkey;
+      alter table chat_conversation_members drop constraint if exists chat_conversation_members_user_id_fkey;
+      alter table chat_unread_counts drop constraint if exists chat_unread_counts_user_id_fkey;
+      alter table notifications drop constraint if exists notifications_user_id_fkey;
+    exception
+      when undefined_table then null;
+    end $$;
+  `
+  await sql`
+    create table if not exists schema_user_id_map_tmp (
+      old_id text primary key,
+      new_id text not null
+    )
+  `
+  await sql`delete from schema_user_id_map_tmp`
+  await sql`
+    insert into schema_user_id_map_tmp (old_id, new_id)
+    select
+      id,
+      case
+        when id ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$' then lower(id)
+        when id = 'user-current' then '11111111-1111-4111-8111-111111111111'
+        when id = 'seller-1' then '22222222-2222-4222-8222-222222222222'
+        when id = 'buyer-1' then '77777777-7777-4777-8777-777777777777'
+        when id = 'user-nguyen' then '22222222-2222-4222-8222-222222222222'
+        when id = 'user-nina' then '33333333-3333-4333-8333-333333333333'
+        when id = 'user-minh' then '44444444-4444-4444-8444-444444444444'
+        when id = 'user-sarah' then '55555555-5555-4555-8555-555555555555'
+        when id = 'user-tommy' then '66666666-6666-4666-8666-666666666666'
+        else gen_random_uuid()::text
+      end
+    from users
+  `
+  await sql`
+    update seller_booth_registrations s
+    set user_id = m.new_id
+    from schema_user_id_map_tmp m
+    where s.user_id = m.old_id and s.user_id <> m.new_id
+  `
+  await sql`
+    update user_roles ur
+    set user_id = m.new_id
+    from schema_user_id_map_tmp m
+    where ur.user_id = m.old_id and ur.user_id <> m.new_id
+  `
+  await sql`
+    update chat_users cu
+    set id = m.new_id
+    from schema_user_id_map_tmp m
+    where cu.id = m.old_id and cu.id <> m.new_id
+  `
+  await sql`
+    update chat_conversation_members ccm
+    set user_id = m.new_id
+    from schema_user_id_map_tmp m
+    where ccm.user_id = m.old_id and ccm.user_id <> m.new_id
+  `
+  await sql`
+    update chat_unread_counts cuc
+    set user_id = m.new_id
+    from schema_user_id_map_tmp m
+    where cuc.user_id = m.old_id and cuc.user_id <> m.new_id
+  `
+  await sql`
+    update chat_messages cm
+    set sender_id = m.new_id
+    from schema_user_id_map_tmp m
+    where cm.sender_id = m.old_id and cm.sender_id <> m.new_id
+  `
+  await sql`
+    update notifications n
+    set user_id = m.new_id
+    from schema_user_id_map_tmp m
+    where n.user_id = m.old_id and n.user_id <> m.new_id
+  `
+  await sql`
+    update stream_sessions ss
+    set host_user_id = m.new_id
+    from schema_user_id_map_tmp m
+    where ss.host_user_id = m.old_id and ss.host_user_id <> m.new_id
+  `
+  await sql`
+    update live_comments lc
+    set author_user_id = m.new_id
+    from schema_user_id_map_tmp m
+    where lc.author_user_id = m.old_id and lc.author_user_id <> m.new_id
+  `
+  await sql`
+    update live_comments lc
+    set deleted_by_user_id = m.new_id
+    from schema_user_id_map_tmp m
+    where lc.deleted_by_user_id = m.old_id and lc.deleted_by_user_id <> m.new_id
+  `
+  await sql`
+    update go_live_events gle
+    set broadcaster_user_id = m.new_id
+    from schema_user_id_map_tmp m
+    where gle.broadcaster_user_id = m.old_id and gle.broadcaster_user_id <> m.new_id
+  `
+  await sql`
+    update expos e
+    set owner_user_id = m.new_id
+    from schema_user_id_map_tmp m
+    where e.owner_user_id = m.old_id and e.owner_user_id <> m.new_id
+  `
+  await sql`
+    update orders o
+    set customer_id = m.new_id
+    from schema_user_id_map_tmp m
+    where o.customer_id = m.old_id and o.customer_id <> m.new_id
+  `
+  await sql`
+    update orders o
+    set exported_by = m.new_id
+    from schema_user_id_map_tmp m
+    where o.exported_by = m.old_id and o.exported_by <> m.new_id
+  `
+  await sql`
+    update orders o
+    set issued_by = m.new_id
+    from schema_user_id_map_tmp m
+    where o.issued_by = m.old_id and o.issued_by <> m.new_id
+  `
+  await sql`
+    update orders o
+    set sent_by = m.new_id
+    from schema_user_id_map_tmp m
+    where o.sent_by = m.old_id and o.sent_by <> m.new_id
+  `
+  await sql`
+    update users u
+    set id = m.new_id
+    from schema_user_id_map_tmp m
+    where u.id = m.old_id and u.id <> m.new_id
+  `
+  await sql`drop table if exists schema_user_id_map_tmp`
   await sql`alter table users add column if not exists industry text`
   await sql`
     alter table users
@@ -382,6 +522,15 @@ export async function ensurePlatformSchema() {
     create index if not exists idx_users_industry_category
     on users (industry_category_id)
   `
+  await sql`
+    alter table users
+    add constraint users_id_uuid_format_ck
+    check (id ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$')
+    not valid
+  `.catch(() => null)
+  await sql`alter table users validate constraint users_id_uuid_format_ck`.catch(
+    () => null
+  )
   await sql`
     create table if not exists roles (
       id text primary key,
@@ -452,6 +601,15 @@ export async function ensurePlatformSchema() {
     create index if not exists idx_chat_users_industry_category
     on chat_users (industry_category_id)
   `
+  await sql`
+    alter table chat_users
+    add constraint chat_users_id_uuid_format_ck
+    check (id ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$')
+    not valid
+  `.catch(() => null)
+  await sql`alter table chat_users validate constraint chat_users_id_uuid_format_ck`.catch(
+    () => null
+  )
   await sql`
     insert into users (
       id,

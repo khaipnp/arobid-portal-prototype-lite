@@ -44,14 +44,14 @@ export async function seedPlatform() {
     mockNotifications,
     mockSellerRegistrations,
     mockStreamSessions
-  } = await import("@/lib/tradexpo/mock-data")
+  } = await import("@/scripts/fixtures/tradexpo")
   const {
     mockBankAccounts,
     mockExpoPaymentConfigs,
     mockOrders,
     mockPaymentConfig,
     mockTransactionLog
-  } = await import("@/lib/orders/mock-data")
+  } = await import("@/scripts/fixtures/orders")
   const { DEAL_ROOM_CURRENT_USER_ID } = await import(
     "@/lib/deal-room/constants"
   )
@@ -60,7 +60,7 @@ export async function seedPlatform() {
     mockConversations,
     mockInitialUnreadCounts,
     mockMessages
-  } = await import("@/lib/deal-room/mock-data")
+  } = await import("@/scripts/fixtures/deal-room")
 
   await ensurePlatformSchema()
   await clearPlatformTables()
