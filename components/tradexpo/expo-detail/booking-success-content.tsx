@@ -89,23 +89,23 @@ export function BookingSuccessContent({
 
             <div className="grid grid-cols-2 gap-x-6 gap-y-8">
               <div className="flex flex-col gap-1.5">
-                <span className="font-bold text-[10px] text-gray-400 uppercase tracking-widest">
+                <span className="font-bold text-xs text-muted-foreground uppercase tracking-widest">
                   Start Date
                 </span>
-                <span className="font-bold text-[#1F2937] text-sm">
+                <span className="font-bold text-foreground text-sm">
                   05/05/2026
                 </span>
               </div>
               <div className="flex flex-col gap-1.5">
-                <span className="font-bold text-gray-400 text-xs uppercase tracking-widest">
+                <span className="font-bold text-xs text-muted-foreground uppercase tracking-widest">
                   End Date
                 </span>
-                <span className="font-bold text-[#1F2937] text-sm">
+                <span className="font-bold text-foreground text-sm">
                   20/05/2026
                 </span>
               </div>
               <div className="flex flex-col gap-1.5">
-                <span className="font-bold text-gray-400 text-xs uppercase tracking-widest">
+                <span className="font-bold text-xs text-muted-foreground uppercase tracking-widest">
                   Hall
                 </span>
                 <span className="font-bold text-foreground text-sm">
@@ -113,7 +113,7 @@ export function BookingSuccessContent({
                 </span>
               </div>
               <div className="flex flex-col gap-1.5">
-                <span className="font-bold text-gray-400 text-xs uppercase tracking-widest">
+                <span className="font-bold text-xs text-muted-foreground uppercase tracking-widest">
                   Booth
                 </span>
                 <span className="font-bold text-legend text-sm">{booth}</span>
