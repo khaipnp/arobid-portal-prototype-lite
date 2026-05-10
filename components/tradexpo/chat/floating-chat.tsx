@@ -140,12 +140,19 @@ export function FloatingChat({ exhibitor, onClose }: Props) {
           if (payload.messages) {
             setMessagesMap((prev) => ({
               ...prev,
-              [activeExhibitor.id]: payload.messages.map((m: any) => ({
-                id: m.id,
-                senderId: m.senderId,
-                text: m.content,
-                timestamp: new Date(m.sentAt)
-              }))
+              [activeExhibitor.id]: payload.messages.map(
+                (m: {
+                  id: string
+                  senderId: string
+                  content: string
+                  sentAt: string
+                }) => ({
+                  id: m.id,
+                  senderId: m.senderId,
+                  text: m.content,
+                  timestamp: new Date(m.sentAt)
+                })
+              )
             }))
           }
         } catch (err) {

@@ -16,7 +16,10 @@ export async function POST(request: Request) {
 
     const user = await authenticateByDemoRole({ role })
     if (!user) {
-      return NextResponse.json({ error: "Demo account not found." }, { status: 404 })
+      return NextResponse.json(
+        { error: "Demo account not found." },
+        { status: 404 }
+      )
     }
 
     await createAuthSession(user.id)

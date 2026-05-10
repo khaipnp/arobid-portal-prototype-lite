@@ -9,4 +9,3 @@ export async function POST() {
     return NextResponse.json({ error: "Failed to sign out." }, { status: 500 })
   }
 }
-

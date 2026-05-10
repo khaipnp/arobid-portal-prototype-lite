@@ -7,4 +7,3 @@ export async function requireApiUserId() {
   }
   return userId
 }
-

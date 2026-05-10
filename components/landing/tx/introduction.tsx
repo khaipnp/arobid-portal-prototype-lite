@@ -1,10 +1,10 @@
 export function Introduction() {
   return (
-    <section className="relative overflow-hidden bg-white px-5 py-16 text-center md:px-[78px]">
-      <div className="absolute inset-x-0 top-0 mx-auto aspect-square max-w-[1120px] rounded-full bg-[radial-gradient(circle,rgba(237,98,3,0.14),rgba(255,255,255,0)_62%)]" />
+    <section className="relative overflow-hidden bg-white px-5 py-16 text-center md:px-20">
+      <div className="absolute inset-x-0 top-0 mx-auto aspect-square max-w-5xl rounded-full bg-[radial-gradient(circle,rgba(237,98,3,0.14),rgba(255,255,255,0)_62%)]" />
       <div className="relative">
         <h2 className="font-semibold text-[32px] leading-10">AI-Powered</h2>
-        <p className="font-semibold text-[#ed6203] text-[32px] leading-10">
+        <p className="font-semibold text-3xl text-legend leading-10">
           Virtual Trade Ecosystem
         </p>
         <p className="mt-2 text-foreground">
@@ -32,7 +32,7 @@ export function Introduction() {
               key={label}
               className="border-[#e5e7eb] last:border-r-0 md:border-r"
             >
-              <p className="font-semibold text-[#ed6203] text-[32px] leading-10">
+              <p className="font-semibold text-3xl text-legend leading-10">
                 {value}
               </p>
               <p className="text-sm">{label}</p>

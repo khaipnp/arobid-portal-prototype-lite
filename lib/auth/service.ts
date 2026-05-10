@@ -1,7 +1,7 @@
-import { sql } from "@/lib/db/neon"
 import { hashPassword, verifyPassword } from "@/lib/auth/password"
 import type { AppRole } from "@/lib/auth/rbac"
 import { APP_ROLES } from "@/lib/auth/rbac"
+import { sql } from "@/lib/db/neon"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 import { CURRENT_USER_PROFILE } from "@/lib/user/current-user"
 

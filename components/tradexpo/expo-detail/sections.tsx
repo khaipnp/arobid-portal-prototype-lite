@@ -9,9 +9,8 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-
-import { cn } from "@/lib/utils"
 import { getAssetUrl } from "@/lib/image-utils"
+import { cn } from "@/lib/utils"
 
 import {
   asset,
@@ -23,6 +22,7 @@ import {
   valueCards
 } from "./data"
 import { VirtualLobbyDialog } from "./virtual-lobby-dialog"
+import { Button } from "@/components/ui/button"
 
 function formatHeroStat(value: number) {
   if (value >= 1000) {
@@ -77,7 +77,7 @@ export function Hero({
 
   return (
     <section className="bg-linear-to-b from-white via-25% via-[#ffe0d2] to-white pb-0">
-      <div className="container relative mx-auto min-h-[60vh] overflow-hidden rounded-2xl">
+      <div className="container relative mx-auto min-h-[60vh] overflow-hidden rounded-4xl">
         <Image
           src={getAssetUrl(thumbnailUrl, expoTitle, 1284, 722)}
           alt=""
@@ -86,10 +86,7 @@ export function Hero({
           sizes="(min-width: 1280px) 1284px, 100vw"
           className="object-cover"
         />
-        <div className="absolute inset-x-0 bottom-0 h-96 bg-linear-to-b from-black/0 to-black/80 backdrop-blur-[5px]" />
-        <div className="absolute top-6 left-4 rounded-full bg-[#e4e7ff] px-2 py-1 font-medium text-[#022582] text-xs md:top-60 md:left-10">
-          Global Strategic Network
-        </div>
+        <div className="absolute inset-x-0 bottom-0 h-64 bg-linear-to-b from-black/0 to-black/80 backdrop-blur-xs" />
         <div className="absolute right-7 bottom-6 hidden w-2xs md:block">
           <div className="z-10 mx-auto flex w-max items-center gap-3 rounded-full bg-[#01175c] py-1.5 pr-5 pl-1.5">
             <span className="inline-flex h-6 items-center gap-1 rounded-full bg-green-600 px-3 font-medium text-white text-xs">
@@ -134,20 +131,21 @@ export function Hero({
           <h1 className="max-w-2xl font-medium text-[32px] leading-[1.18] tracking-normal md:text-[36px] md:leading-11">
             {expoTitle}
           </h1>
-          <div className="mt-5 flex flex-wrap gap-4">
+          <div className="mt-5 flex flex-wrap gap-2">
             <VirtualLobbyDialog src={virtualLobbyUrl} expoTitle={expoTitle} />
             <Link
-              href="/seller"
-              className="inline-flex h-10 w-44 items-center justify-center rounded-full border border-white bg-white/10 font-medium text-white backdrop-blur"
+              href="#booths"
             >
-              Join as Exhibitor
+              <Button variant="secondary" size="lg">
+                Join as Exhibitor
+              </Button>
             </Link>
           </div>
           <div className="mt-9 grid max-w-155 grid-cols-2 gap-y-4 divide-white/20 md:grid-cols-4 md:divide-x">
             {heroStats.map(([value, label]) => (
               <div key={label} className="first:pl-0 md:px-5">
-                <p className="font-medium text-2xl leading-8">{value}</p>
-                <p className="text-[#9ca3af] text-xs">{label}</p>
+                <p className="font-medium text-3xl">{value}</p>
+                <p className="text-muted text-sm">{label}</p>
               </div>
             ))}
           </div>
@@ -169,13 +167,13 @@ export function About({
       <h2 className="font-semibold text-[32px] leading-10">About {title}</h2>
       <div>
         <p className="text-foreground text-sm leading-6">{description}</p>
-        <a
+        <Link
           href="#booths"
           className="mt-4 inline-flex items-center gap-1 font-medium text-legend text-sm"
         >
           View more
           <ArrowRightIcon className="size-4" />
-        </a>
+        </Link>
       </div>
     </section>
   )

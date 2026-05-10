@@ -1,7 +1,7 @@
 import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
-import { getAuthenticatedUserById } from "@/lib/auth/service"
 import { requireRole } from "@/lib/auth/rbac"
+import { getAuthenticatedUserById } from "@/lib/auth/service"
 
 export default async function PartnerLayout({
   children

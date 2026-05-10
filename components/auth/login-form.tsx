@@ -1,12 +1,6 @@
 "use client"
 
-import {
-  CheckIcon,
-  EyeIcon,
-  LockKeyholeIcon,
-  MailIcon,
-  RefreshCwIcon
-} from "lucide-react"
+import { EyeIcon, LockKeyholeIcon, MailIcon } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -141,7 +135,7 @@ function DemoAccountPicker({
             type="button"
             disabled={disabled}
             onClick={() => onSelect(account.role)}
-            className="rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-left transition hover:border-legend hover:bg-legend-50 disabled:pointer-events-none disabled:opacity-60 cursor-pointer"
+            className="cursor-pointer rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-left transition hover:border-legend hover:bg-legend-50 disabled:pointer-events-none disabled:opacity-60"
           >
             <span className="block font-medium text-foreground text-sm">
               {account.label}
@@ -212,7 +206,7 @@ function LoginPanel() {
   return (
     <section className="w-full max-w-lg rounded-[20px] bg-white px-6 py-8 shadow-[0_0_10px_rgba(0,55,67,0.1)] backdrop-blur md:px-10 md:py-14">
       <div className="space-y-2">
-        <h1 className="font-semibold text-foreground text-4xl leading-10">
+        <h1 className="font-semibold text-4xl text-foreground leading-10">
           Welcome to <span className="text-legend">Arobid</span>
         </h1>
         <p className="text-muted-foreground text-sm leading-5">
@@ -302,7 +296,7 @@ export function LoginForm({ className }: { className?: string }) {
       )}
     >
       <div
-        className="absolute inset-0 bg-cover bg-center"
+        className="absolute inset-0 bg-center bg-cover"
         style={{ backgroundImage: `url(${FIGMA_EXPO_BACKGROUND})` }}
       />
       <div className="absolute inset-0 bg-[#022582]/90" />

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
-import { listNotifications } from "@/lib/notifications/service"
 import { requireApiUserId } from "@/lib/auth/api-user"
+import { listNotifications } from "@/lib/notifications/service"
 
 function isValidCursor(cursor: string) {
   const [createdAtRaw, notificationIdRaw] = cursor.split("|")

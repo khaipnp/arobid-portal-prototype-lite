@@ -7,13 +7,12 @@ import * as React from "react"
 
 import {
   Carousel,
-  CarouselContent,
-  CarouselItem,
   type CarouselApi,
+  CarouselContent,
+  CarouselItem
 } from "@/components/ui/carousel"
-import { cn } from "@/lib/utils"
 import { getAssetUrl } from "@/lib/image-utils"
-import { asset } from "./data"
+import { cn } from "@/lib/utils"
 
 export interface HeroExpoItem {
   title: string
@@ -72,7 +71,12 @@ export function Hero({ expos }: HeroProps) {
             <CarouselItem key={expo.slug} className="relative pl-0">
               <div className="relative size-full">
                 <Image
-                  src={getAssetUrl(expo.backgroundImage, expo.title, 1920, 1080)}
+                  src={getAssetUrl(
+                    expo.backgroundImage,
+                    expo.title,
+                    1920,
+                    1080
+                  )}
                   alt={expo.title}
                   fill
                   priority={index === 0}
@@ -86,16 +90,16 @@ export function Hero({ expos }: HeroProps) {
       </Carousel>
 
       {/* Static Overlay Layers */}
-      <div className="absolute inset-0 pointer-events-none">
+      <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-x-0 bottom-0 h-80 bg-linear-to-b from-black/0 to-black/80 backdrop-blur-[2px]" />
 
         <div className="container relative mx-auto flex h-full items-end justify-between gap-8 px-5 pb-10 md:pb-14">
           {/* Main Content - Updates based on activeExpo */}
-          <div className="max-w-3xl pb-8 text-white pointer-events-auto">
+          <div className="pointer-events-auto max-w-3xl pb-8 text-white">
             <p className="font-medium text-sm drop-shadow-lg transition-all duration-500">
               {activeExpo.dateLabel}
             </p>
-            <h1 className="mt-2 max-w-2xl font-medium text-4xl leading-[1.15] tracking-normal drop-shadow-xl md:text-[36px] transition-all duration-500">
+            <h1 className="mt-2 max-w-2xl font-medium text-4xl leading-[1.15] tracking-normal drop-shadow-xl transition-all duration-500 md:text-[36px]">
               {activeExpo.title}
             </h1>
 
@@ -132,7 +136,7 @@ export function Hero({ expos }: HeroProps) {
                       "rounded-full transition-all duration-300",
                       current === i
                         ? "h-1.5 w-6 bg-white"
-                        : "size-1.5 bg-white/80",
+                        : "size-1.5 bg-white/80"
                     )}
                     onClick={() => api?.scrollTo(i)}
                     aria-label={`Go to slide ${i + 1}`}
@@ -153,13 +157,16 @@ export function Hero({ expos }: HeroProps) {
                   api?.scrollNext()
                 }
               }}
-              tabIndex={0}
-              role="button"
               aria-label={`Next expo: ${nextExpo.title}`}
             >
               <div className="relative h-28 w-full overflow-hidden rounded-xl">
                 <Image
-                  src={getAssetUrl(nextExpo.backgroundImage, nextExpo.title, 400, 225)}
+                  src={getAssetUrl(
+                    nextExpo.backgroundImage,
+                    nextExpo.title,
+                    400,
+                    225
+                  )}
                   alt=""
                   fill
                   className="object-cover"

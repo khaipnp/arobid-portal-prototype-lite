@@ -10,7 +10,6 @@ import type { NotificationRecord } from "@/lib/notifications/types"
 const POLL_MS = 5_000
 const LIST_LIMIT = 50
 
-
 async function readJson<T>(response: Response): Promise<T | null> {
   if (!response.ok) {
     return null
@@ -64,31 +63,25 @@ export function NotificationsPageContent() {
     await Promise.all([fetchNotificationList(), fetchUnreadCount()])
   }, [fetchNotificationList, fetchUnreadCount])
 
-  const markNotificationRead = useCallback(
-    async (notificationId: string) => {
-      const response = await fetch(`/api/notifications/${notificationId}/read`, {
-        method: "PATCH"
-      })
-      if (!response.ok) {
-        return false
-      }
-      return true
-    },
-    []
-  )
+  const markNotificationRead = useCallback(async (notificationId: string) => {
+    const response = await fetch(`/api/notifications/${notificationId}/read`, {
+      method: "PATCH"
+    })
+    if (!response.ok) {
+      return false
+    }
+    return true
+  }, [])
 
-  const deleteNotification = useCallback(
-    async (notificationId: string) => {
-      const response = await fetch(`/api/notifications/${notificationId}`, {
-        method: "DELETE"
-      })
-      if (!response.ok) {
-        return false
-      }
-      return true
-    },
-    []
-  )
+  const deleteNotification = useCallback(async (notificationId: string) => {
+    const response = await fetch(`/api/notifications/${notificationId}`, {
+      method: "DELETE"
+    })
+    if (!response.ok) {
+      return false
+    }
+    return true
+  }, [])
 
   useEffect(() => {
     void refreshListAndCount()

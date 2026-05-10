@@ -19,7 +19,7 @@ export function getAssetUrl(
   }
 
   // Nếu URL chính là picsum, giữ nguyên nó để tránh thay đổi seed ngẫu nhiên
-  if (url && url.includes("picsum.photos")) {
+  if (url?.includes("picsum.photos")) {
     return url
   }
 

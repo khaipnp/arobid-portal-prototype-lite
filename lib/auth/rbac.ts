@@ -1,7 +1,7 @@
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
-import { sql } from "@/lib/db/neon"
 import { getCurrentSessionUserId } from "@/lib/auth/session"
+import { sql } from "@/lib/db/neon"
 
 export const APP_ROLES = ["admin", "seller", "buyer", "exhibitor"] as const
 export type AppRole = (typeof APP_ROLES)[number]

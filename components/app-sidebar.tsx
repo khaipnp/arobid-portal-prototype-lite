@@ -48,7 +48,11 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   }
 }
 
-export function AppSidebar({ portal = "admin", user, ...props }: AppSidebarProps) {
+export function AppSidebar({
+  portal = "admin",
+  user,
+  ...props
+}: AppSidebarProps) {
   const activePortalName = portals.find((p) => p.url === `/${portal}`)?.name
   const canManageSeller = (user.roles ?? []).includes("seller")
 
