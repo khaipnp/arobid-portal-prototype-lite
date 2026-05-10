@@ -302,12 +302,12 @@ export function LoginForm({ className }: { className?: string }) {
         style={{ backgroundImage: `url(${FIGMA_EXPO_BACKGROUND})` }}
       />
       <div className="absolute inset-0 bg-[#022582]/70" />
-      <div className="relative flex flex-col md:flex-row min-h-screen items-center justify-center px-5 py-10 md:justify-end md:px-[12vw]">
+      <div className="relative flex min-h-screen flex-col items-center justify-center px-5 py-10 md:flex-row md:justify-end md:px-[12vw]">
         <div className="flex-1 space-y-5">
-          <h3 className="text-3xl text-primary-foreground font-semibold">
+          <h3 className="font-semibold text-3xl text-primary-foreground">
             Empowering B2B Global Trade
           </h3>
-          <p className="text-lg text-primary-foreground max-w-md">
+          <p className="max-w-md text-lg text-primary-foreground">
             Unlock efficient global B2B trade. Connect with verified suppliers,
             streamline your procurement processes, and manage transactions
             securely on a unified digital infrastructure.
@@ -315,7 +315,7 @@ export function LoginForm({ className }: { className?: string }) {
         </div>
         <Suspense
           fallback={
-            <div className="w-full max-w-lg rounded-3xl bg-white h-150 animate-pulse" />
+            <div className="h-150 w-full max-w-lg animate-pulse rounded-3xl bg-white" />
           }
         >
           <LoginPanel />

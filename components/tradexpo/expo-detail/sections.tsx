@@ -1,3 +1,5 @@
+"use client"
+
 import {
   ArrowRightIcon,
   BoxIcon,
@@ -9,20 +11,20 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
 import { getAssetUrl } from "@/lib/image-utils"
 import { cn } from "@/lib/utils"
-
 import {
   asset,
   audiences,
-  boothFeatures,
+  BOOTH_TIERS,
   categories,
   productImages,
   sponsors,
   valueCards
 } from "./data"
 import { VirtualLobbyDialog } from "./virtual-lobby-dialog"
-import { Button } from "@/components/ui/button"
 
 function formatHeroStat(value: number) {
   if (value >= 1000) {
@@ -133,9 +135,7 @@ export function Hero({
           </h1>
           <div className="mt-5 flex flex-wrap gap-2">
             <VirtualLobbyDialog src={virtualLobbyUrl} expoTitle={expoTitle} />
-            <Link
-              href="#booths"
-            >
+            <Link href="#booths">
               <Button variant="secondary" size="lg">
                 Join as Exhibitor
               </Button>
@@ -318,7 +318,11 @@ export function ParticipantValues() {
   )
 }
 
-export function BoothTier() {
+export function BoothTier({ slug }: { slug: string }) {
+  const [activeTierId, setActiveTierId] = useState(BOOTH_TIERS[2].id) // Default to Premium
+  const activeTier =
+    BOOTH_TIERS.find((t) => t.id === activeTierId) || BOOTH_TIERS[2]
+
   return (
     <section id="booths" className="container mx-auto px-4 py-16 md:px-0">
       <h2 className="text-center font-semibold text-[32px] leading-10">
@@ -328,31 +332,37 @@ export function BoothTier() {
         Choose a professional exhibition space tailored to your business scale.
       </p>
       <div className="mt-10 grid border-[#e5e7eb] border-b text-center md:grid-cols-3">
-        {["Basic", "Professional", "Premium"].map((tab) => (
+        {BOOTH_TIERS.map((tier) => (
           <button
             type="button"
-            key={tab}
+            key={tier.id}
+            onClick={() => setActiveTierId(tier.id)}
             className={cn(
-              "h-12 font-medium text-sm",
-              tab === "Premium" && "border-legend border-b-2 text-legend"
+              "h-12 font-medium text-sm transition-colors",
+              activeTierId === tier.id
+                ? "border-legend border-b-2 text-legend"
+                : "text-muted-foreground hover:text-foreground"
             )}
           >
-            {tab}
+            {tier.name}
           </button>
         ))}
       </div>
       <div className="mt-6 grid gap-10 lg:grid-cols-[1fr_1.06fr]">
-        <div>
-          <h3 className="font-semibold text-2xl leading-8">Premium Booth</h3>
+        <div className="flex flex-col">
+          <h3 className="font-semibold text-2xl leading-8">
+            {activeTier.name} Booth
+          </h3>
           <p className="mt-2 text-[#6b7280] text-sm leading-5">
-            Ultimate exhibition experience with maximum visibility and advanced
-            features for enterprise-level presence.
+            {activeTier.description}
           </p>
           <p className="mt-7 font-medium text-2xl leading-8">
-            Contact for Pricing
+            {activeTier.price === 0
+              ? "Contact for Pricing"
+              : `$${activeTier.price.toLocaleString()}`}
           </p>
           <div className="mt-5 grid gap-x-6 gap-y-2 md:grid-cols-2">
-            {boothFeatures.map(([feature, strong]) => (
+            {activeTier.features.map(([feature, strong]) => (
               <div key={feature} className="flex items-center gap-3 text-sm">
                 <CheckIcon className="size-4 text-[#16a34a]" />
                 <span className={strong ? "font-semibold" : undefined}>
@@ -361,28 +371,28 @@ export function BoothTier() {
               </div>
             ))}
           </div>
-          <div className="mt-7 flex flex-wrap gap-3">
+          <div className="mt-auto flex flex-wrap gap-3 pt-7">
             <button
               type="button"
               className="h-10 rounded-full bg-[#f3f4f6] px-6 font-medium text-foreground text-sm"
             >
               Explore Exhibitions
             </button>
-            <button
-              type="button"
-              className="h-10 rounded-full bg-legend px-10 font-medium text-sm text-white shadow-[0_1px_2px_rgba(0,0,0,0.2),0_0_0_1px_#f37b42]"
+            <Link
+              href={`/expos/${slug}/booking?tier=${activeTier.id}`}
+              className="inline-flex h-10 items-center justify-center rounded-full bg-legend px-10 font-medium text-sm text-white shadow-[0_1px_2px_rgba(0,0,0,0.2),0_0_0_1px_#f37b42]"
             >
               Book Now
-            </button>
+            </Link>
           </div>
         </div>
         <div className="relative min-h-90 overflow-hidden rounded-2xl bg-[#f3f4f6]">
           <p className="absolute top-8 left-1/2 -translate-x-1/2 font-semibold text-xl">
-            Premium
+            {activeTier.name}
           </p>
           <Image
-            src={asset("figma-booth-premium.png")}
-            alt="Premium 3D booth"
+            src={asset(activeTier.image)}
+            alt={`${activeTier.name} 3D booth`}
             width={500}
             height={437}
             loading="eager"
@@ -402,8 +412,8 @@ export function BoothTier() {
           sizes="(min-width: 1280px) 1282px, 100vw"
           className="object-cover"
         />
-        <div className="relative z-10 max-w-[560px] px-8 py-10 text-white md:px-14 md:py-14">
-          <p className="font-semibold text-[34px] leading-[1.15] md:text-[40px] md:leading-[48px]">
+        <div className="relative z-10 max-w-xl px-8 py-10 text-white md:px-14 md:py-14">
+          <p className="font-semibold text-[34px] leading-[1.15] md:text-[40px] md:leading-12">
             Your road to big deals starts at the 2026 Expos.
           </p>
           <Link
