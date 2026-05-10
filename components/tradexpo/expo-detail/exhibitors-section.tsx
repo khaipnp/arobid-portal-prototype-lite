@@ -7,7 +7,6 @@ import { useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -40,6 +39,11 @@ type Props = {
   isAuthenticated?: boolean
 }
 
+type ChatProductContext = {
+  image: string
+  label: string
+} | null
+
 export function ExhibitorsSection({
   expoName,
   initialExhibitors,
@@ -51,6 +55,8 @@ export function ExhibitorsSection({
   const [items, setItems] = useState(initialExhibitors)
   const [activeChatExhibitor, setActiveChatExhibitor] =
     useState<ExpoDetailExhibitor | null>(null)
+  const [activeChatProduct, setActiveChatProduct] =
+    useState<ChatProductContext>(null)
   const [showAuthDialog, setShowAuthDialog] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [quickLoginData, setQuickLoginData] = useState({
@@ -58,13 +64,17 @@ export function ExhibitorsSection({
     email: ""
   })
 
-  const handleChatClick = (exhibitor: ExpoDetailExhibitor) => {
+  const handleChatClick = (
+    exhibitor: ExpoDetailExhibitor,
+    product?: ChatProductContext
+  ) => {
     if (!isAuthenticated) {
       setQuickLoginData({ fullName: "", email: "" })
       setShowAuthDialog(true)
       return
     }
     setActiveChatExhibitor(exhibitor)
+    setActiveChatProduct(product ?? null)
   }
 
   const handleQuickLogin = async () => {
@@ -89,7 +99,7 @@ export function ExhibitorsSection({
         const payload = await res.json()
         toast.error(payload.error || "Failed to process quick login")
       }
-    } catch (err) {
+    } catch (_err) {
       toast.error("An unexpected error occurred")
     } finally {
       setIsSubmitting(false)
@@ -176,7 +186,7 @@ export function ExhibitorsSection({
             <ExhibitorCard
               key={exhibitor.id}
               exhibitor={exhibitor}
-              onChatClick={() => handleChatClick(exhibitor)}
+              onChatClick={(product) => handleChatClick(exhibitor, product)}
             />
           ))}
         </div>
@@ -185,7 +195,11 @@ export function ExhibitorsSection({
       {activeChatExhibitor && (
         <FloatingChat
           exhibitor={activeChatExhibitor}
-          onClose={() => setActiveChatExhibitor(null)}
+          selectedProduct={activeChatProduct}
+          onClose={() => {
+            setActiveChatExhibitor(null)
+            setActiveChatProduct(null)
+          }}
         />
       )}
 

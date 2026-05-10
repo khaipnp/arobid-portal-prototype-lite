@@ -120,7 +120,12 @@ export function BookingSuccessDialog({
                   </div>
                   <div className="flex flex-col gap-1">
                     <BoothTierBadge
-                      tier={data.activeTier.id as any}
+                      tier={
+                        data.activeTier.id.toLowerCase() as
+                          | "basic"
+                          | "professional"
+                          | "premium"
+                      }
                       className="w-fit"
                     />
                     <p className="line-clamp-1 font-bold text-[#1F2937] text-sm">

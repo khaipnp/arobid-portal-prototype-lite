@@ -18,7 +18,7 @@ export default async function SellerProductsPage() {
   const userId = await requireAnyRole(["seller", "exhibitor"])
   const user = await getAuthenticatedUserById(userId)
 
-  if (!user || !user.companyId) {
+  if (!user?.companyId) {
     notFound()
   }
 

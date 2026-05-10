@@ -80,7 +80,15 @@ export function BookingSuccessContent({
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <BoothTierBadge tier={activeTier.id as any} className="w-fit" />
+                <BoothTierBadge
+                  tier={
+                    activeTier.id.toLowerCase() as
+                      | "basic"
+                      | "professional"
+                      | "premium"
+                  }
+                  className="w-fit"
+                />
                 <p className="line-clamp-2 font-bold text-[#1F2937] text-base leading-tight">
                   {expoName}
                 </p>
@@ -89,7 +97,7 @@ export function BookingSuccessContent({
 
             <div className="grid grid-cols-2 gap-x-6 gap-y-8">
               <div className="flex flex-col gap-1.5">
-                <span className="font-bold text-xs text-muted-foreground uppercase tracking-widest">
+                <span className="font-bold text-muted-foreground text-xs uppercase tracking-widest">
                   Start Date
                 </span>
                 <span className="font-bold text-foreground text-sm">
@@ -97,7 +105,7 @@ export function BookingSuccessContent({
                 </span>
               </div>
               <div className="flex flex-col gap-1.5">
-                <span className="font-bold text-xs text-muted-foreground uppercase tracking-widest">
+                <span className="font-bold text-muted-foreground text-xs uppercase tracking-widest">
                   End Date
                 </span>
                 <span className="font-bold text-foreground text-sm">
@@ -105,7 +113,7 @@ export function BookingSuccessContent({
                 </span>
               </div>
               <div className="flex flex-col gap-1.5">
-                <span className="font-bold text-xs text-muted-foreground uppercase tracking-widest">
+                <span className="font-bold text-muted-foreground text-xs uppercase tracking-widest">
                   Hall
                 </span>
                 <span className="font-bold text-foreground text-sm">
@@ -113,7 +121,7 @@ export function BookingSuccessContent({
                 </span>
               </div>
               <div className="flex flex-col gap-1.5">
-                <span className="font-bold text-xs text-muted-foreground uppercase tracking-widest">
+                <span className="font-bold text-muted-foreground text-xs uppercase tracking-widest">
                   Booth
                 </span>
                 <span className="font-bold text-legend text-sm">{booth}</span>

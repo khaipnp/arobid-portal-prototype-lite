@@ -24,7 +24,7 @@ const productFallbackImages = [
 
 type ExhibitorCardProps = {
   exhibitor: ExpoDetailExhibitor
-  onChatClick?: () => void
+  onChatClick?: (product?: { image: string; label: string } | null) => void
 }
 
 function Dot() {
@@ -149,7 +149,7 @@ export function ExhibitorCard({ exhibitor, onChatClick }: ExhibitorCardProps) {
           type="button"
           variant="secondary"
           className="rounded-full"
-          onClick={onChatClick}
+          onClick={() => onChatClick?.(null)}
         >
           Chat Now
         </Button>
@@ -166,6 +166,9 @@ export function ExhibitorCard({ exhibitor, onChatClick }: ExhibitorCardProps) {
         products={productImages}
         selectedProduct={selectedProduct}
         onSelectedProductChange={setSelectedProduct}
+        onChatNow={(product) => {
+          onChatClick?.(product)
+        }}
       />
     </Card>
   )
