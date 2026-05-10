@@ -46,21 +46,32 @@ async function seedExhibitorsForLiveExpo(count: number) {
 
   for (let i = 0; i < count; i += 1) {
     const serial = String(i + 1).padStart(3, "0")
-    const userId = `seed-live-user-${batchPrefix}-${serial}-${randomUUID().slice(0, 8)}`
-    const registrationId = `seed-live-reg-${batchPrefix}-${serial}-${randomUUID().slice(0, 8)}`
+    const userId = randomUUID()
+    const registrationId = randomUUID()
     const company = `Live Expo Company ${serial}`
     const tier = pick(TIERS, i)
     const purchasedAt = new Date(now.getTime() - i * 86_400_000).toISOString()
     const boothRef = `L-${String(i + 1).padStart(4, "0")}`
 
     await sql`
+      insert into companies (id, name, website, address)
+      values (
+        'comp-' || encode(sha256(${company}::bytea), 'hex'),
+        ${company},
+        ${`https://company-${serial}.example.com`},
+        ${"Vietnam"}
+      )
+      on conflict (id) do nothing
+    `
+
+    await sql`
       insert into chat_users (
-        id, name, email, company, job_title, phone, website, location, avatar_url, is_active
+        id, name, email, company_id, job_title, phone, website, location, avatar_url, is_active
       ) values (
         ${userId},
         ${`Exhibitor ${serial}`},
         ${`seed.live.${batchPrefix}.${serial}@example.com`},
-        ${company},
+        'comp-' || encode(sha256(${company}::bytea), 'hex'),
         ${"Sales Manager"},
         ${"+84-000-000-000"},
         ${`https://company-${serial}.example.com`},
@@ -68,6 +79,28 @@ async function seedExhibitorsForLiveExpo(count: number) {
         ${null},
         ${true}
       )
+    `
+
+    await sql`
+      insert into users (
+        id, name, email, company_id, job_title, phone, website, location, avatar_url, is_active
+      ) values (
+        ${userId},
+        ${`Exhibitor ${serial}`},
+        ${`seed.live.${batchPrefix}.${serial}@example.com`},
+        'comp-' || encode(sha256(${company}::bytea), 'hex'),
+        ${"Sales Manager"},
+        ${"+84-000-000-000"},
+        ${`https://company-${serial}.example.com`},
+        ${"Vietnam"},
+        ${null},
+        ${true}
+      )
+      on conflict (id) do update set
+        name = excluded.name,
+        email = excluded.email,
+        company_id = excluded.company_id,
+        is_active = excluded.is_active
     `
 
     await sql`
@@ -98,6 +131,14 @@ async function seedExhibitorsForLiveExpo(count: number) {
         description: `Primary catalog product ${serial}B`
       }
     ]
+
+    for (const p of products) {
+      await sql`
+        insert into company_products (id, company_id, name, description)
+        values (${p.id}, 'comp-' || encode(sha256(${company}::bytea), 'hex'), ${p.name}, ${p.description})
+        on conflict (id) do nothing
+      `
+    }
 
     await sql`
       insert into booth_customizations (

@@ -60,6 +60,7 @@ export type AuthenticatedUser = {
   name: string
   email: string
   roles: AppRole[]
+  companyId: string | null
 }
 
 function toRedirectPath(input: { roles: AppRole[] }) {
@@ -69,21 +70,27 @@ function toRedirectPath(input: { roles: AppRole[] }) {
 }
 
 export async function ensureDemoAccounts() {
+  await sql`
+    insert into companies (id, name)
+    values ('comp-' || encode(sha256('Arobid Demo'::bytea), 'hex'), 'Arobid Demo')
+    on conflict (id) do nothing
+  `
+
   for (const account of DEMO_ACCOUNTS) {
     await sql`
-      insert into users (id, name, email, company, is_active)
+      insert into users (id, name, email, company_id, is_active)
       values (
         ${account.userId},
         ${account.name},
         ${account.email},
-        'Arobid Demo',
+        'comp-' || encode(sha256('Arobid Demo'::bytea), 'hex'),
         true
       )
       on conflict (id) do update
       set
         name = excluded.name,
         email = excluded.email,
-        company = excluded.company,
+        company_id = excluded.company_id,
         is_active = excluded.is_active
     `
 
@@ -160,7 +167,8 @@ export async function authenticateByEmailPassword(input: {
       ai.is_active as identity_active,
       u.name,
       u.email,
-      u.is_active as user_active
+      u.is_active as user_active,
+      u.company_id
     from auth_identities ai
     inner join users u on u.id = ai.user_id
     where lower(ai.email) = lower(${input.email.trim()})
@@ -172,6 +180,7 @@ export async function authenticateByEmailPassword(input: {
     name: string
     email: string
     user_active: boolean
+    company_id: string | null
   }[]
 
   const row = rows[0]
@@ -194,7 +203,8 @@ export async function authenticateByEmailPassword(input: {
     id: row.user_id,
     name: row.name,
     email: row.email,
-    roles
+    roles,
+    companyId: row.company_id
   }
 }
 
@@ -204,12 +214,12 @@ export async function authenticateByDemoRole(input: {
   const account = DEMO_ACCOUNTS.find((item) => item.role === input.role)
   if (!account) return null
 
+  const user = await getAuthenticatedUserById(account.userId)
+  if (!user) return null
+
   return {
-    id: account.userId,
-    name: account.name,
-    email: account.email,
-    roles: [account.appRole],
-    redirectPath: toRedirectPath({ roles: [account.appRole] })
+    ...user,
+    redirectPath: toRedirectPath({ roles: user.roles })
   }
 }
 
@@ -217,11 +227,17 @@ export async function getAuthenticatedUserById(
   userId: string
 ): Promise<AuthenticatedUser | null> {
   const rows = (await sql`
-    select id, name, email, is_active
+    select id, name, email, is_active, company_id
     from users
     where id = ${userId}
     limit 1
-  `) as { id: string; name: string; email: string; is_active: boolean }[]
+  `) as {
+    id: string
+    name: string
+    email: string
+    is_active: boolean
+    company_id: string | null
+  }[]
   const user = rows[0]
   if (!user?.is_active) return null
 
@@ -240,6 +256,7 @@ export async function getAuthenticatedUserById(
     id: user.id,
     name: user.name,
     email: user.email,
-    roles
+    roles,
+    companyId: user.company_id
   }
 }

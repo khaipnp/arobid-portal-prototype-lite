@@ -14,7 +14,7 @@ export function LoginLink() {
   return (
     <Link href={loginUrl}>
       <Button variant="ghost" className="font-medium">
-        Login or Sign in
+        Login or Sign up
       </Button>
     </Link>
   )

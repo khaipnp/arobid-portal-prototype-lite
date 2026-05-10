@@ -108,10 +108,10 @@ describe("platform schema consistency", () => {
 
     try {
       await sql`
-        insert into users (id, name, email, company, is_active)
+        insert into users (id, name, email, is_active)
         values
-          ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1', 'Test User A', 'test-user-a@example.com', 'Arobid', true),
-          ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2', 'Test User B', 'test-user-b@example.com', 'Arobid', true)
+          ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa1', 'Test User A', 'test-user-a@example.com', true),
+          ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2', 'Test User B', 'test-user-b@example.com', true)
         on conflict (id) do nothing
       `
 

@@ -652,7 +652,7 @@ export async function listExhibitorCatalogProducts(): Promise<
   ExhibitorCatalogProduct[]
 > {
   const rows = (await sql`
-    select * from exhibitor_catalog_products order by name asc
+    select id, name, description, main_image_url as image_url from company_products order by name asc
   `) as {
     id: string
     name: string
@@ -736,15 +736,20 @@ export async function listExpoDetailExhibitorsByName(
       sbr.booth_tier,
       sbr.booth_ref,
       cu.name,
-      cu.company,
-      coalesce(ec.name, nullif(cu.industry, ''), 'Other') as category,
+      comp.name as company,
+      (
+        select string_agg(cat.name, ' • ')
+        from company_categories cc
+        join exhibitor_categories cat on cat.id = cc.category_id
+        where cc.company_id = comp.id
+      ) as category,
       cu.avatar_url,
       'Vietnam'::text as country,
       coalesce(bc.products, '[]'::jsonb) as products
     from seller_booth_registrations sbr
     join expos e on e.id = sbr.expo_id
     join users cu on cu.id = sbr.user_id
-    left join exhibitor_categories ec on ec.id = cu.industry_category_id
+    left join companies comp on comp.id = cu.company_id
     left join booth_customizations bc on bc.registration_id = sbr.id
     where e.name ilike ${pattern}
     order by
