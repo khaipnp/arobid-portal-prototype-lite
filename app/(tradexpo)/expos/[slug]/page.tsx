@@ -17,6 +17,7 @@ import {
   getExpoHeroStatsByExpo,
   listExpoDetailExhibitorsByName
 } from "@/lib/tradexpo/db/platform-data"
+import { getCurrentSessionUserId } from "@/lib/auth/session"
 
 const VIRTUAL_LOBBY_URL_BY_EXPO_SLUG: Record<string, string> = {
   "food-farm-global-fair":
@@ -46,6 +47,7 @@ export default async function Page({
     getExpoHeroStatsByExpo({ id: expo.id, name: expo.name })
   ])
   const virtualLobbyUrl = VIRTUAL_LOBBY_URL_BY_EXPO_SLUG[expo.slug ?? slug]
+  const userId = await getCurrentSessionUserId()
 
   return (
     <main className="min-h-screen scroll-smooth bg-white text-foreground [font-family:var(--font-tight)]">
@@ -65,7 +67,7 @@ export default async function Page({
       <Audience />
       <Categories />
       <ParticipantValues />
-      <BoothTier slug={slug} />
+      <BoothTier slug={slug} isAuthenticated={!!userId} />
       <TxFooter />
     </main>
   )
