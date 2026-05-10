@@ -1,5 +1,5 @@
 import { DealRoomManager } from "@/components/deal-room/deal-room-manager"
-import { DEAL_ROOM_CURRENT_USER_ID } from "@/lib/deal-room/constants"
+import { requireRole } from "@/lib/auth/rbac"
 import {
   listChatUsers,
   listConversations,
@@ -9,11 +9,12 @@ import {
 export const dynamic = "force-dynamic"
 
 export default async function DealRoomPage() {
+  const userId = await requireRole("seller")
   const [initialUsers, initialConversations, initialUnreadCounts] =
     await Promise.all([
-      listChatUsers(DEAL_ROOM_CURRENT_USER_ID),
-      listConversations(DEAL_ROOM_CURRENT_USER_ID),
-      listUnreadCountsForUser(DEAL_ROOM_CURRENT_USER_ID)
+      listChatUsers(userId),
+      listConversations(userId),
+      listUnreadCountsForUser(userId)
     ])
 
   return (
@@ -22,7 +23,7 @@ export default async function DealRoomPage() {
       initialConversations={initialConversations}
       initialMessagesMap={{}}
       initialUnreadCounts={initialUnreadCounts}
-      currentUserId={DEAL_ROOM_CURRENT_USER_ID}
+      currentUserId={userId}
     />
   )
 }

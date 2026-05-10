@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation"
 import { CustomerOrderDetail } from "@/components/orders/customer-order-detail"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
+import { requireAnyRole } from "@/lib/auth/rbac"
 import {
   getCustomerOrder,
   listCustomerTransactionLogForOrder
 } from "@/lib/orders/db"
-import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
 interface Props {
   params: Promise<{ id: string }>
@@ -15,13 +15,11 @@ export const dynamic = "force-dynamic"
 
 export default async function CustomerOrderDetailPage({ params }: Props) {
   const { id } = await params
-  const order = await getCustomerOrder(id, CURRENT_USER_ID)
+  const userId = await requireAnyRole(["seller", "buyer"])
+  const order = await getCustomerOrder(id, userId)
   if (!order) notFound()
 
-  const transactionLog = await listCustomerTransactionLogForOrder(
-    id,
-    CURRENT_USER_ID
-  )
+  const transactionLog = await listCustomerTransactionLogForOrder(id, userId)
 
   return (
     <DashboardShell

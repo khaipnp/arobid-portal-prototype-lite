@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { DEAL_ROOM_CURRENT_USER_ID } from "@/lib/deal-room/constants"
+import { requireApiUserId } from "@/lib/auth/api-user"
 import {
   listChatUsers,
   listConversations,
@@ -9,24 +9,25 @@ import {
 
 export async function GET() {
   try {
+    const userId = await requireApiUserId()
     const [users, conversations, messagesMap, unreadCounts] = await Promise.all(
       [
-        listChatUsers(),
-        listConversations(),
+        listChatUsers(userId),
+        listConversations(userId),
         listMessagesByConversation(),
-        listUnreadCountsForUser(DEAL_ROOM_CURRENT_USER_ID)
+        listUnreadCountsForUser(userId)
       ]
     )
 
     // Filter conversations where the current user is a member
     const userConversations = conversations.filter((c) =>
-      c.members.some((m) => m.userId === DEAL_ROOM_CURRENT_USER_ID)
+      c.members.some((m) => m.userId === userId)
     )
 
     // Format the response for the Floating Chat
     const data = userConversations.map((conv) => {
       const otherMemberId = conv.members.find(
-        (m) => m.userId !== DEAL_ROOM_CURRENT_USER_ID
+        (m) => m.userId !== userId
       )?.userId
       const otherUser = users.find((u) => u.id === otherMemberId)
       const messages = messagesMap[conv.id] || []
@@ -50,6 +51,9 @@ export async function GET() {
 
     return NextResponse.json({ data })
   } catch (error) {
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized." }, { status: 401 })
+    }
     console.error("Error fetching chat conversations:", error)
     return NextResponse.json(
       { error: "Internal Server Error" },

@@ -30,6 +30,7 @@ async function clearPlatformTables() {
 }
 
 export async function seedPlatform() {
+  const { ensureDemoAccounts } = await import("@/lib/auth/service")
   const { ensurePlatformSchema } = await import("@/lib/platform/ensure-schema")
   const { sql } = await import("@/lib/db/neon")
   const {
@@ -329,6 +330,8 @@ export async function seedPlatform() {
       values (${DEAL_ROOM_CURRENT_USER_ID}, ${convId}, ${count})
     `
   }
+
+  await ensureDemoAccounts()
 }
 
 if (import.meta.main) {
