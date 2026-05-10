@@ -500,7 +500,8 @@ export async function ensurePlatformSchema() {
     from schema_user_id_map_tmp m
     where u.id = m.old_id and u.id <> m.new_id
   `
-  await sql`drop table if exists schema_user_id_map_tmp`
+  // Keep this helper table persistent to avoid race conditions across
+  // concurrent ensurePlatformSchema calls on pooled Neon connections.
   await sql`alter table users add column if not exists industry text`
   await sql`
     alter table users
