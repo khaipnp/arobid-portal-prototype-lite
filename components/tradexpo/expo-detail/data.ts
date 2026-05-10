@@ -107,3 +107,54 @@ export const boothFeatures = [
   ["Priority Featured Placement", false],
   ["Dedicated Account Manager", true]
 ] as const
+
+export const BOOTH_TIERS = [
+  {
+    id: "basic",
+    name: "Basic",
+    price: 500,
+    description:
+      "Essential exhibition features for small businesses starting their digital journey.",
+    features: [
+      ["Standard Floor Area", true],
+      ["3 Display Products", true],
+      ["1 Advertising Banner", true],
+      ["1 Standee", true],
+      ["Basic Support", false]
+    ],
+    image: "booth-basic.jpg"
+  },
+  {
+    id: "professional",
+    name: "Professional",
+    price: 1500,
+    description:
+      "Enhanced features and visibility for growing brands looking to expand their reach.",
+    features: [
+      ["Premium Floor Area", true],
+      ["7 Display Products", true],
+      ["3 Advertising Banners", true],
+      ["2 Standees", true],
+      ["GoLive: Video & Chat", false],
+      ["Priority Support", true]
+    ],
+    image: "booth-pro.jpg"
+  },
+  {
+    id: "premium",
+    name: "Premium",
+    price: 3000,
+    description:
+      "Ultimate exhibition experience with maximum visibility and advanced features for enterprise-level presence.",
+    features: [
+      ["VIP Floor Area", true],
+      ["Unlimited Products", true],
+      ["5 Advertising Banners", true],
+      ["4 Standees", true],
+      ["Brand Placement: Full Media Suite", false],
+      ["GoLive: Full Webinar Suite", false],
+      ["Dedicated Account Manager", true]
+    ],
+    image: "figma-booth-premium.png"
+  }
+] as const

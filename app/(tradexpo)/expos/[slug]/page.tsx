@@ -65,7 +65,7 @@ export default async function Page({
       <Audience />
       <Categories />
       <ParticipantValues />
-      <BoothTier />
+      <BoothTier slug={slug} />
       <TxFooter />
     </main>
   )
