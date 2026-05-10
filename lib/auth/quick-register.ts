@@ -16,9 +16,21 @@ export async function quickRegisterBuyer(fullName: string, email: string) {
   } else {
     userId = randomUUID()
     await sql`
-      insert into users (id, name, email, company, is_active)
-      values (${userId}, ${fullName}, ${normalizedEmail}, 'Guest Buyer', true)
+      insert into companies (id, name)
+      values ('comp-' || encode(sha256('Guest Buyer'::bytea), 'hex'), 'Guest Buyer')
+      on conflict (id) do nothing
     `
+    await sql`
+      insert into users (id, name, email, company_id, is_active)
+      values (
+        ${userId},
+        ${fullName},
+        ${normalizedEmail},
+        'comp-' || encode(sha256('Guest Buyer'::bytea), 'hex'),
+        true
+      )
+    `
+
     await sql`
       insert into user_roles (user_id, role_id)
       values (${userId}, 'buyer')

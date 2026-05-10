@@ -84,13 +84,38 @@ export async function ensurePlatformSchema() {
   `
 
   await sql`
-    create table if not exists exhibitor_catalog_products (
+    create table if not exists company_products (
       id text primary key,
+      company_id text not null references companies(id) on delete cascade,
       name text not null,
-      description text not null,
-      image_url text
+      description text,
+      price numeric(15, 2),
+      currency text default 'VND',
+      sku text,
+      main_image_url text,
+      gallery_urls jsonb default '[]'::jsonb,
+      category_id text references exhibitor_categories(id) on delete set null,
+      is_active boolean not null default true,
+      metadata jsonb default '{}'::jsonb,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
     )
   `
+
+  // Data migration: If old table exists, move products to a default company (Arobid)
+  await sql`
+    do $$
+    begin
+      if exists (select 1 from information_schema.tables where table_name = 'exhibitor_catalog_products') then
+        insert into company_products (id, company_id, name, description, main_image_url)
+        select id, 'comp-' || encode(sha256('Arobid'::bytea), 'hex'), name, description, image_url
+        from exhibitor_catalog_products
+        on conflict (id) do nothing;
+      end if;
+    end $$;
+  `
+
+  await sql`drop table if exists exhibitor_catalog_products cascade`
   await sql`
     create table if not exists exhibitor_categories (
       id text primary key,
@@ -99,6 +124,20 @@ export async function ensurePlatformSchema() {
       parent_id text references exhibitor_categories(id) on delete cascade,
       sort_order int not null default 0,
       is_active boolean not null default true
+    )
+  `
+  await sql`
+    create table if not exists companies (
+      id text primary key,
+      name text not null,
+      tax_id text,
+      logo_url text,
+      website text,
+      address text,
+      industry_id text references exhibitor_categories(id) on delete set null,
+      is_active boolean not null default true,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
     )
   `
   await sql`
@@ -255,12 +294,11 @@ export async function ensurePlatformSchema() {
     where user_id is null
   `
   await sql`
-    insert into users (id, name, email, company, is_active)
+    insert into users (id, name, email, is_active)
     select distinct
       sbr.user_id,
       sbr.user_id,
       sbr.user_id || '@placeholder.local',
-      'Unknown',
       true
     from seller_booth_registrations sbr
     left join users u on u.id = sbr.user_id
@@ -353,7 +391,7 @@ export async function ensurePlatformSchema() {
       id text primary key,
       name text not null,
       email text not null,
-      company text not null,
+      company_id text references companies(id) on delete set null,
       industry text,
       industry_category_id text references exhibitor_categories(id) on delete set null,
       job_title text,
@@ -625,9 +663,7 @@ export async function ensurePlatformSchema() {
       id text primary key,
       name text not null,
       email text not null,
-      company text not null,
-      industry text,
-      industry_category_id text references exhibitor_categories(id) on delete set null,
+      company_id text references companies(id) on delete set null,
       job_title text,
       phone text,
       website text,
@@ -636,27 +672,9 @@ export async function ensurePlatformSchema() {
       is_active boolean not null
     )
   `
-  await sql`alter table chat_users add column if not exists industry text`
-  await sql`
-    alter table chat_users
-    add column if not exists industry_category_id text
-  `
-  await sql`
-    do $$
-    begin
-      alter table chat_users
-      add constraint chat_users_industry_category_fk
-      foreign key (industry_category_id)
-      references exhibitor_categories(id)
-      on delete set null;
-    exception
-      when duplicate_object then null;
-    end $$;
-  `
-  await sql`
-    create index if not exists idx_chat_users_industry_category
-    on chat_users (industry_category_id)
-  `
+  await sql`alter table chat_users drop column if exists company`
+  await sql`alter table chat_users drop column if exists industry`
+  await sql`alter table chat_users drop column if exists industry_category_id`
   await sql`
     alter table chat_users
     add constraint chat_users_id_uuid_format_ck
@@ -666,14 +684,60 @@ export async function ensurePlatformSchema() {
   await sql`alter table chat_users validate constraint chat_users_id_uuid_format_ck`.catch(
     () => null
   )
+  await sql`alter table users add column if not exists company_id text references companies(id) on delete set null`
+  await sql`alter table chat_users add column if not exists company_id text references companies(id) on delete set null`
+
+  // Data migration: Create companies from existing user company strings
+  await sql`
+    do $$
+    begin
+      if exists (select 1 from information_schema.columns where table_name = 'users' and column_name = 'company') then
+        insert into companies (id, name)
+        select distinct
+          'comp-' || encode(sha256(company::bytea), 'hex'),
+          company
+        from users
+        where company is not null and company <> '' and company_id is null
+        on conflict (id) do nothing;
+
+        update users u
+        set company_id = 'comp-' || encode(sha256(company::bytea), 'hex')
+        where company_id is null and company is not null and company <> '';
+      end if;
+    end $$;
+  `
+
+  await sql`
+    create table if not exists company_categories (
+      company_id text not null references companies(id) on delete cascade,
+      category_id text not null references exhibitor_categories(id) on delete cascade,
+      primary key (company_id, category_id)
+    )
+  `
+
+  // Migrate existing industry_id from companies to company_categories
+  await sql`
+    do $$
+    begin
+      if exists (select 1 from information_schema.columns where table_name = 'companies' and column_name = 'industry_id') then
+        insert into company_categories (company_id, category_id)
+        select id, industry_id from companies
+        where industry_id is not null
+        on conflict do nothing;
+      end if;
+    end $$;
+  `
+
+  await sql`alter table companies drop column if exists industry_id`
+  await sql`alter table users drop column if exists industry`
+  await sql`alter table users drop column if exists industry_category_id`
+
   await sql`
     insert into users (
       id,
       name,
       email,
-      company,
-      industry,
-      industry_category_id,
+      company_id,
       job_title,
       phone,
       website,
@@ -685,9 +749,7 @@ export async function ensurePlatformSchema() {
       id,
       name,
       email,
-      company,
-      industry,
-      industry_category_id,
+      company_id,
       job_title,
       phone,
       website,
@@ -699,9 +761,7 @@ export async function ensurePlatformSchema() {
     set
       name = excluded.name,
       email = excluded.email,
-      company = excluded.company,
-      industry = excluded.industry,
-      industry_category_id = excluded.industry_category_id,
+      company_id = excluded.company_id,
       job_title = excluded.job_title,
       phone = excluded.phone,
       website = excluded.website,
@@ -710,12 +770,17 @@ export async function ensurePlatformSchema() {
       is_active = excluded.is_active
   `
   await sql`
-    insert into users (id, name, email, company, is_active)
+    insert into companies (id, name)
+    values ('comp-' || encode(sha256('Arobid'::bytea), 'hex'), 'Arobid')
+    on conflict (id) do nothing
+  `
+  await sql`
+    insert into users (id, name, email, company_id, is_active)
     values (
       ${CURRENT_USER_ID},
       'Khai Pham',
       'khaipham@arobid.com',
-      'Arobid',
+      'comp-' || encode(sha256('Arobid'::bytea), 'hex'),
       true
     )
     on conflict (id) do nothing
@@ -734,9 +799,7 @@ export async function ensurePlatformSchema() {
       id,
       name,
       email,
-      company,
-      industry,
-      industry_category_id,
+      company_id,
       job_title,
       phone,
       website,
@@ -748,9 +811,7 @@ export async function ensurePlatformSchema() {
       id,
       name,
       email,
-      company,
-      industry,
-      industry_category_id,
+      company_id,
       job_title,
       phone,
       website,
@@ -758,7 +819,17 @@ export async function ensurePlatformSchema() {
       avatar_url,
       is_active
     from users
-    on conflict (id) do nothing
+    on conflict (id) do update
+    set
+      name = excluded.name,
+      email = excluded.email,
+      company_id = excluded.company_id,
+      job_title = excluded.job_title,
+      phone = excluded.phone,
+      website = excluded.website,
+      location = excluded.location,
+      avatar_url = excluded.avatar_url,
+      is_active = excluded.is_active
   `
 
   await sql`
@@ -852,12 +923,11 @@ export async function ensurePlatformSchema() {
     )
   `
   await sql`
-    insert into users (id, name, email, company, is_active)
+    insert into users (id, name, email, is_active)
     select distinct
       n.user_id,
       n.user_id,
       n.user_id || '@placeholder.local',
-      'Unknown',
       true
     from notifications n
     left join users u on u.id = n.user_id

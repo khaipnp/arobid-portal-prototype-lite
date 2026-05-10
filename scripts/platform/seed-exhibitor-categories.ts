@@ -130,27 +130,22 @@ async function upsertCategories(rows: FlatCategory[]) {
   }
 }
 
-async function seedIndustryForExhibitors(leafCategoryIds: string[]) {
-  const exhibitors = (await sql`
-    select distinct cu.id
-    from chat_users cu
-    join seller_booth_registrations sbr on sbr.user_id = cu.id
-    order by cu.id asc
+async function seedIndustryForCompanies(leafCategoryIds: string[]) {
+  const companies = (await sql`
+    select distinct c.id
+    from companies c
+    join users u on u.company_id = c.id
+    join seller_booth_registrations sbr on sbr.user_id = u.id
+    order by c.id asc
   `) as { id: string }[]
 
   let seeded = 0
-  for (const [index, user] of exhibitors.entries()) {
+  for (const [index, company] of companies.entries()) {
     const leafId = leafCategoryIds[index % leafCategoryIds.length]
     await sql`
-      update chat_users cu
-      set
-        industry_category_id = ${leafId},
-        industry = ec.name
-      from exhibitor_categories ec
-      where
-        cu.id = ${user.id}
-        and ec.id = ${leafId}
-        and (cu.industry_category_id is null or length(trim(cu.industry_category_id)) = 0)
+      insert into company_categories (company_id, category_id)
+      values (${company.id}, ${leafId})
+      on conflict do nothing
     `
     seeded += 1
   }
@@ -164,7 +159,7 @@ async function main() {
   const leafCategoryIds = flat.filter((x) => x.level === 3).map((x) => x.id)
 
   await upsertCategories(flat)
-  const seededCount = await seedIndustryForExhibitors(leafCategoryIds)
+  const seededCount = await seedIndustryForCompanies(leafCategoryIds)
 
   // eslint-disable-next-line no-console
   console.log(
@@ -172,7 +167,7 @@ async function main() {
       {
         categoriesUpserted: flat.length,
         leafCategories: leafCategoryIds.length,
-        exhibitorsProcessed: seededCount
+        companiesSeeded: seededCount
       },
       null,
       2

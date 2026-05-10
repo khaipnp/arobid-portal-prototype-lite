@@ -15,7 +15,8 @@ export async function listChatUsers(userId?: string): Promise<ChatUser[]> {
   const rows = (
     userId
       ? await sql`
-    select u.* from users u
+    select u.*, c.name as company from users u
+    left join companies c on c.id = u.company_id
     where u.id in (
       select user_id from chat_conversation_members
       where conversation_id in (
@@ -27,13 +28,15 @@ export async function listChatUsers(userId?: string): Promise<ChatUser[]> {
     order by u.name asc
   `
       : await sql`
-    select * from users order by name asc
+    select u.*, c.name as company from users u
+    left join companies c on c.id = u.company_id
+    order by u.name asc
   `
   ) as {
     id: string
     name: string
     email: string
-    company: string
+    company: string | null
     job_title: string | null
     phone: string | null
     website: string | null
@@ -45,7 +48,7 @@ export async function listChatUsers(userId?: string): Promise<ChatUser[]> {
     id: r.id,
     name: r.name,
     email: r.email,
-    company: r.company,
+    company: r.company ?? "Individual",
     jobTitle: r.job_title ?? undefined,
     phone: r.phone ?? undefined,
     website: r.website ?? undefined,

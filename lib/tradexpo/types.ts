@@ -333,6 +333,23 @@ export interface ExhibitorCatalogProduct {
   imageUrl?: string
 }
 
+export interface CompanyProduct {
+  id: string
+  companyId: string
+  name: string
+  description?: string
+  price?: number
+  currency: string
+  sku?: string
+  mainImageUrl?: string
+  galleryUrls: string[]
+  categoryId?: string
+  isActive: boolean
+  metadata: Record<string, unknown>
+  createdAt: string
+  updatedAt: string
+}
+
 export type BoothPublishStatus = "Draft" | "Published"
 
 // ─── Core: Streaming Service ─────────────────────────────────────────────────
