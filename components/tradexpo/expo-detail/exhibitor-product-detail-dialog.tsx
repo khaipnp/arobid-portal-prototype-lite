@@ -65,7 +65,7 @@ export function ExhibitorProductDetailDialog({
                   <span className="rounded-full bg-[#e4e7ff] px-3 py-1 font-medium text-[#022582] text-xs">
                     NEW
                   </span>
-                  <span className="rounded-full bg-[#ed6203] px-3 py-1 font-medium text-white text-xs">
+                  <span className="rounded-full bg-legend px-3 py-1 font-medium text-white text-xs">
                     LIVE
                   </span>
                   <span className="rounded-full bg-[#fee2e2] px-3 py-1 font-medium text-[#dc2626] text-xs">
@@ -82,7 +82,7 @@ export function ExhibitorProductDetailDialog({
                   {selectedProduct.label}
                 </DialogTitle>
                 <div className="flex items-center gap-2 text-xs text-[#6b7280]">
-                  <div className="flex items-center gap-0.5 text-[#f59e0b]">
+                  <div className="flex items-center gap-0.5 text-yellow-500">
                     {Array.from({ length: 5 }).map((_, index) => (
                       <StarIcon
                         key={`rating-${index}`}
@@ -102,7 +102,7 @@ export function ExhibitorProductDetailDialog({
                       <button
                         key={`dialog-thumb-${item.image}`}
                         type="button"
-                        className={`relative size-[72px] shrink-0 overflow-hidden rounded-xl border transition md:size-[88px] ${
+                        className={`relative size-16.5 shrink-0 overflow-hidden rounded-xl border transition md:size-20 ${
                           active
                             ? "border-legend ring-1 ring-legend/25"
                             : "border-[#e5e7eb] hover:border-[#d1d5db]"
@@ -141,7 +141,7 @@ export function ExhibitorProductDetailDialog({
                   </button>
                   <button
                     type="button"
-                    className="py-3 font-medium text-[#030712] text-sm"
+                    className="py-3 font-medium text-foreground text-sm"
                   >
                     Technical Specifications
                   </button>
@@ -149,15 +149,15 @@ export function ExhibitorProductDetailDialog({
 
                 <div className="space-y-5 p-5">
                   <section className="space-y-3">
-                    <h4 className="font-semibold text-[#030712] text-xl">
+                    <h4 className="font-semibold text-foreground text-xl">
                       Product Overview
                     </h4>
-                    <p className="text-[#1f2937] text-sm leading-5">
+                    <p className="text-foreground text-sm leading-5">
                       The Galaxy Z Fold 6 features a sophisticated folding
                       design with Snapdragon 8 Gen 3 performance and
                       professional-grade camera capabilities.
                     </p>
-                    <ul className="list-disc space-y-1 pl-4 text-[#1f2937] text-sm leading-5">
+                    <ul className="list-disc space-y-1 pl-4 text-foreground text-sm leading-5">
                       <li>Galaxy AI is here for smarter multitasking.</li>
                       <li>Thinner and lighter foldable design.</li>
                       <li>Durable frame with optimized hinge structure.</li>
@@ -166,7 +166,7 @@ export function ExhibitorProductDetailDialog({
                   </section>
 
                   <section className="space-y-3">
-                    <h4 className="font-semibold text-[#030712] text-xl">
+                    <h4 className="font-semibold text-foreground text-xl">
                       Technical Specifications
                     </h4>
                     <div className="overflow-hidden rounded-xl border border-[#e5e7eb]">
@@ -192,14 +192,14 @@ export function ExhibitorProductDetailDialog({
                   </section>
 
                   <section className="space-y-3">
-                    <h4 className="font-semibold text-[#030712] text-base">
+                    <h4 className="font-semibold text-foreground text-base">
                       Returns Policy
                     </h4>
                     <div className="rounded-xl border border-[#e5e7eb]">
                       <div className="bg-[#f9fafb] px-4 py-3 text-sm">
                         Wholesale Return Policy
                       </div>
-                      <ul className="list-disc space-y-1 p-4 pl-8 text-[#1f2937] text-sm leading-5">
+                      <ul className="list-disc space-y-1 p-4 pl-8 text-foreground text-sm leading-5">
                         <li>
                           Manufacturing Defects: 30-day full refund or
                           replacement.
@@ -220,7 +220,7 @@ export function ExhibitorProductDetailDialog({
 
             <aside className="flex-1 space-y-4 rounded-2xl border border-muted h-fit p-4">
               <div className="space-y-3">
-                <p className="font-medium text-[#1f2937] text-sm">
+                <p className="font-medium text-foreground text-sm">
                   Price (MOQ)
                 </p>
                 <div className="grid grid-cols-2 gap-3">
@@ -231,9 +231,7 @@ export function ExhibitorProductDetailDialog({
                       </p>
                       <p
                         className={`font-semibold text-sm ${
-                          priceItem.featured
-                            ? "text-[#ed6203]"
-                            : "text-[#030712]"
+                          priceItem.featured ? "text-legend" : "text-foreground"
                         }`}
                       >
                         {priceItem.price}
@@ -244,7 +242,7 @@ export function ExhibitorProductDetailDialog({
               </div>
 
               <div className="space-y-2 border-[#e5e7eb] border-t pt-4">
-                <p className="font-medium text-[#1f2937] text-sm">Variants</p>
+                <p className="font-medium text-foreground text-sm">Variants</p>
                 <div className="flex flex-wrap gap-2">
                   {variantOptions.map((variant, index) => (
                     <button
@@ -252,8 +250,8 @@ export function ExhibitorProductDetailDialog({
                       type="button"
                       className={`rounded-lg border px-2.5 py-1.5 text-xs ${
                         index === 0
-                          ? "border-[#ed6203] bg-[#fff7ed] text-[#9a3412]"
-                          : "border-[#e5e7eb] text-[#1f2937]"
+                          ? "border-legend bg-[#fff7ed] text-[#9a3412]"
+                          : "border-[#e5e7eb] text-foreground"
                       }`}
                     >
                       {variant}
@@ -263,7 +261,7 @@ export function ExhibitorProductDetailDialog({
               </div>
 
               <div className="space-y-2 border-[#e5e7eb] border-t pt-4">
-                <p className="font-medium text-[#1f2937] text-sm">Quantity</p>
+                <p className="font-medium text-foreground text-sm">Quantity</p>
                 <div className="flex items-center gap-2">
                   <div className="flex h-10 w-[130px] items-center justify-between rounded-full border border-[#e5e7eb] px-2">
                     <button
