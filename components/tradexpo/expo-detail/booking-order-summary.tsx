@@ -38,7 +38,7 @@ export function BookingOrderSummary({
   const totalAmount = activeTier.price + serviceFee - discount / 25000 // Simplified for demo (assumes price is USD)
 
   return (
-    <div className="sticky top-8 flex w-full max-w-md h-fit flex-col gap-5 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+    <div className="sticky top-8 flex h-fit w-full max-w-md flex-col gap-5 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
       <h2 className="select-none font-semibold text-foreground text-xl">
         Order Summary
       </h2>
@@ -69,14 +69,14 @@ export function BookingOrderSummary({
           <span className="font-bold text-[10px] text-gray-500 uppercase tracking-wider">
             Hall
           </span>
-          <span className="font-medium text-foreground text-base">B</span>
+          <span className="font-medium text-base text-foreground">B</span>
         </div>
         <div className="h-8 w-px bg-gray-200" />
         <div className="flex flex-1 flex-col gap-1">
           <span className="font-bold text-[10px] text-gray-500 uppercase tracking-wider">
             Booth
           </span>
-          <span className="font-medium text-foreground text-base">
+          <span className="font-medium text-base text-foreground">
             {selectedLocation || "--"}
           </span>
         </div>

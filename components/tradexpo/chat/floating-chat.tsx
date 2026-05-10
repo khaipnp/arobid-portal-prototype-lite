@@ -49,10 +49,14 @@ type ConversationData = {
 
 type Props = {
   exhibitor: ExpoDetailExhibitor // The current exhibitor the user clicked "Chat Now" on
+  selectedProduct?: {
+    image: string
+    label: string
+  } | null
   onClose: () => void
 }
 
-export function FloatingChat({ exhibitor, onClose }: Props) {
+export function FloatingChat({ exhibitor, selectedProduct, onClose }: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [activeExhibitor, setActiveExhibitor] = useState<ChatPartner>({
@@ -70,6 +74,8 @@ export function FloatingChat({ exhibitor, onClose }: Props) {
 
   const [newMessage, setNewMessage] = useState("")
   const scrollRef = useRef<HTMLDivElement>(null)
+  const selectedVariant = "Rosé - 256GB | 12GB"
+  const selectedQuantity = 100
 
   const activeMessages = messagesMap[activeExhibitor.id] || []
 
@@ -86,6 +92,29 @@ export function FloatingChat({ exhibitor, onClose }: Props) {
       avatarUrl: exhibitor.avatarUrl
     })
   }, [exhibitor])
+
+  useEffect(() => {
+    if (!selectedProduct) return
+    setMessagesMap((prev) => {
+      const existing = prev[exhibitor.id] || []
+      const productSeedId = `product-seed-${exhibitor.id}-${selectedProduct.image}`
+      if (existing.some((msg) => msg.id === productSeedId)) {
+        return prev
+      }
+      return {
+        ...prev,
+        [exhibitor.id]: [
+          ...existing,
+          {
+            id: productSeedId,
+            senderId: exhibitor.id,
+            text: `You are asking about: ${selectedProduct.label}`,
+            timestamp: new Date()
+          }
+        ]
+      }
+    })
+  }, [exhibitor.id, selectedProduct])
 
   useEffect(() => {
     async function fetchConversations() {
@@ -234,7 +263,7 @@ export function FloatingChat({ exhibitor, onClose }: Props) {
   return (
     <div
       className={cn(
-        "fixed right-20 bottom-0 z-50 flex h-[550px] w-3xl flex-col overflow-hidden rounded-t-3xl border bg-legend shadow-2xl transition-all duration-500 ease-in-out"
+        "fixed right-20 bottom-0 z-70 flex h-138 w-3xl flex-col overflow-hidden rounded-t-3xl border bg-legend shadow-2xl transition-all duration-500 ease-in-out"
       )}
     >
       {/* Header */}
@@ -340,18 +369,16 @@ export function FloatingChat({ exhibitor, onClose }: Props) {
         {/* Main Chat Area */}
         <main className="flex flex-1 flex-col bg-white">
           {/* Thread Header */}
-          <div className="flex h-12 items-center justify-between border-b px-4">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-sm">
-                {activeExhibitor.company}
-              </span>
-              <span className="font-medium text-green-600 text-xs">
-                • Online
-              </span>
-            </div>
-            <Button variant="ghost" size="sm" className="h-8 text-xs">
-              View Profile
-            </Button>
+          <div className="flex h-fit min-h-12 items-center justify-between border-b px-4 py-2">
+            <span className="truncate font-semibold text-sm">
+              {activeExhibitor.company}
+            </span>
+            <Badge
+              variant="secondary"
+              className="font-medium text-green-600 text-xs"
+            >
+              • Online
+            </Badge>
           </div>
 
           {/* Messages */}
@@ -367,6 +394,31 @@ export function FloatingChat({ exhibitor, onClose }: Props) {
                       isOwn ? "items-end" : "items-start"
                     )}
                   >
+                    {selectedProduct ? (
+                      <div className="mb-2 flex w-full items-start gap-2 rounded-2xl border border-legend/50 bg-legend-50/30 px-2 py-3">
+                        <div className="relative size-14 shrink-0 overflow-hidden rounded-lg border-muted">
+                          <Image
+                            src={selectedProduct.image}
+                            alt={selectedProduct.label}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <span className="line-clamp-2 truncate font-medium text-foreground text-sm">
+                            {selectedProduct.label}
+                          </span>
+                          <div className="flex flex-col">
+                            <span className="text-muted-foreground text-xs">
+                              Variant: {selectedVariant}
+                            </span>
+                            <span className="text-muted-foreground text-xs">
+                              Quantity: {selectedQuantity}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ) : null}
                     <div
                       className={cn(
                         "max-w-[80%] rounded-2xl px-3.5 py-2 text-sm",

@@ -44,33 +44,15 @@ export async function seedPlatform() {
 
   const {
     mockBoothCustomizations,
-    mockBoothTemplateCustomizationConfigs,
     mockExhibitorCatalogProducts,
-    mockExpoBoothTemplateAssignments,
     mockExpoCategories,
     mockExpos,
-    mockGoLIVEEvents,
-    mockLiveComments,
-    mockNotifications,
-    mockSellerRegistrations,
-    mockStreamSessions
+    mockSellerRegistrations
   } = await import("@/scripts/fixtures/tradexpo")
-  const {
-    mockBankAccounts,
-    mockExpoPaymentConfigs,
-    mockOrders,
-    mockPaymentConfig,
-    mockTransactionLog
-  } = await import("@/scripts/fixtures/orders")
-  const { DEAL_ROOM_CURRENT_USER_ID } = await import(
-    "@/lib/deal-room/constants"
+  const { mockOrders } = await import("@/scripts/fixtures/orders")
+  const { mockChatUsers, mockConversations, mockMessages } = await import(
+    "@/scripts/fixtures/deal-room"
   )
-  const {
-    mockChatUsers,
-    mockConversations,
-    mockInitialUnreadCounts,
-    mockMessages
-  } = await import("@/scripts/fixtures/deal-room")
 
   console.log("Seeding Expo Categories...")
   for (const c of mockExpoCategories) {

@@ -7,6 +7,7 @@ import {
   SearchIcon,
   Trash2Icon
 } from "lucide-react"
+import Image from "next/image"
 import { useState } from "react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
@@ -75,7 +76,7 @@ export function ProductManagement({ initialProducts }: ProductManagementProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="font-bold text-3xl tracking-tight">
             Product Management
           </h1>
           <p className="text-muted-foreground">
@@ -98,7 +99,7 @@ export function ProductManagement({ initialProducts }: ProductManagementProps) {
               </CardDescription>
             </div>
             <div className="relative w-64">
-              <SearchIcon className="absolute left-2 top-2.5 size-4 text-muted-foreground" />
+              <SearchIcon className="absolute top-2.5 left-2 size-4 text-muted-foreground" />
               <Input
                 placeholder="Search products..."
                 className="pl-8"
@@ -132,9 +133,11 @@ export function ProductManagement({ initialProducts }: ProductManagementProps) {
                   <TableRow key={product.id}>
                     <TableCell>
                       {product.mainImageUrl ? (
-                        <img
+                        <Image
                           src={product.mainImageUrl}
                           alt={product.name}
+                          width={40}
+                          height={40}
                           className="size-10 rounded-md object-cover"
                         />
                       ) : (
@@ -147,7 +150,7 @@ export function ProductManagement({ initialProducts }: ProductManagementProps) {
                       <div className="flex flex-col">
                         <span>{product.name}</span>
                         {product.description && (
-                          <span className="line-clamp-1 text-muted-foreground text-xs font-normal">
+                          <span className="line-clamp-1 font-normal text-muted-foreground text-xs">
                             {product.description}
                           </span>
                         )}

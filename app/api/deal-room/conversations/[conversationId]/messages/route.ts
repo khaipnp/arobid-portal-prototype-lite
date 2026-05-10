@@ -19,7 +19,7 @@ export async function GET(_request: Request, { params }: Props) {
       conversation_id: string
       sender_id: string
       content: string
-      attachments: any[] | null
+      attachments: unknown[] | null
       status: Message["status"]
       sent_at: string | Date
       edited_at: string | Date | null

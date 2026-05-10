@@ -391,10 +391,7 @@ export function BoothTier({
           </div>
           <div className="mt-auto flex flex-wrap gap-3 pt-7">
             <Link href="#about">
-              <Button variant="secondary"
-              >
-                Explore Exhibitions
-              </Button>
+              <Button variant="secondary">Explore Exhibitions</Button>
             </Link>
 
             <Button
@@ -416,14 +413,14 @@ export function BoothTier({
             width={500}
             height={437}
             loading="eager"
-            className="absolute top-14 left-1/2 w-62 -translate-x-1/2 object-contain md:w-[300px]"
+            className="absolute top-14 left-1/2 w-62 -translate-x-1/2 object-contain md:w-75"
           />
           <div className="absolute top-1/2 left-1/2 grid size-18 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-[20px] bg-black/60 text-white backdrop-blur-sm">
             <BoxIcon className="size-10" />
           </div>
         </div>
       </div>
-      <div className="relative mt-16 min-h-[272px] overflow-hidden rounded-2xl bg-black">
+      <div className="relative mt-16 min-h-68 overflow-hidden rounded-2xl bg-black">
         <Image
           src={asset("figma-promo.png")}
           alt=""

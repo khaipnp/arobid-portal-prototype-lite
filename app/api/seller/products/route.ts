@@ -7,14 +7,12 @@ import {
   upsertCompanyProduct
 } from "@/lib/tradexpo/db/products"
 
-import type { CompanyProduct } from "@/lib/tradexpo/types"
-
 export async function GET() {
   try {
     const userId = await requireApiUserId()
     const user = await getAuthenticatedUserById(userId)
 
-    if (!user || !user.companyId) {
+    if (!user?.companyId) {
       return NextResponse.json(
         { error: "User is not associated with a company." },
         { status: 400 }
@@ -40,7 +38,7 @@ export async function POST(request: Request) {
     const userId = await requireApiUserId()
     const user = await getAuthenticatedUserById(userId)
 
-    if (!user || !user.companyId) {
+    if (!user?.companyId) {
       return NextResponse.json(
         { error: "User is not authorized to manage products." },
         { status: 403 }

@@ -12,12 +12,12 @@ import {
   ParticipantValues,
   Sponsors
 } from "@/components/tradexpo/expo-detail/sections"
+import { getCurrentSessionUserId } from "@/lib/auth/session"
 import {
   getExpoBySlug,
   getExpoHeroStatsByExpo,
   listExpoDetailExhibitorsByName
 } from "@/lib/tradexpo/db/platform-data"
-import { getCurrentSessionUserId } from "@/lib/auth/session"
 
 const VIRTUAL_LOBBY_URL_BY_EXPO_SLUG: Record<string, string> = {
   "food-farm-global-fair":

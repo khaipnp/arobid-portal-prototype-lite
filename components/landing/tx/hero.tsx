@@ -1,9 +1,9 @@
 "use client"
 
-import { Box } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import * as React from "react"
+import { VirtualLobbyDialog } from "@/components/tradexpo/expo-detail/virtual-lobby-dialog"
 
 import {
   Carousel,
@@ -20,6 +20,7 @@ export interface HeroExpoItem {
   slug: string
   detailHref: string
   actionHref?: string
+  virtualLobbyUrl?: string
   backgroundImage?: string
 }
 
@@ -104,13 +105,10 @@ export function Hero({ expos }: HeroProps) {
             </h1>
 
             <div className="mt-8 flex flex-wrap gap-4">
-              <Link
-                href={activeExpo.actionHref || "/seller"}
-                className="inline-flex h-10 w-44 items-center justify-center gap-2 rounded-full bg-legend font-medium text-white shadow-[0_1px_2px_rgba(0,0,0,0.2),0_0_0_1px_#f37b42]"
-              >
-                <Box className="size-5" />
-                Virtual Lobby
-              </Link>
+              <VirtualLobbyDialog
+                src={activeExpo.virtualLobbyUrl}
+                expoTitle={activeExpo.title}
+              />
               <Link
                 href={activeExpo.detailHref}
                 className="inline-flex h-10 w-44 items-center justify-center rounded-full border border-white bg-white/10 font-medium text-white backdrop-blur"

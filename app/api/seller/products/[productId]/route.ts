@@ -10,13 +10,13 @@ type Props = {
   params: Promise<{ productId: string }>
 }
 
-export async function DELETE(request: Request, { params }: Props) {
+export async function DELETE(_request: Request, { params }: Props) {
   try {
     const userId = await requireApiUserId()
     const user = await getAuthenticatedUserById(userId)
     const { productId } = await params
 
-    if (!user || !user.companyId) {
+    if (!user?.companyId) {
       return NextResponse.json({ error: "Unauthorized." }, { status: 403 })
     }
 
@@ -46,13 +46,13 @@ export async function DELETE(request: Request, { params }: Props) {
   }
 }
 
-export async function GET(request: Request, { params }: Props) {
+export async function GET(_request: Request, { params }: Props) {
   try {
     const userId = await requireApiUserId()
     const user = await getAuthenticatedUserById(userId)
     const { productId } = await params
 
-    if (!user || !user.companyId) {
+    if (!user?.companyId) {
       return NextResponse.json({ error: "Unauthorized." }, { status: 403 })
     }
 

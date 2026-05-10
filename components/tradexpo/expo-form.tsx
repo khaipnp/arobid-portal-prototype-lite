@@ -360,7 +360,8 @@ export function ExpoForm(props: ExpoFormProps) {
                   </Button>
                 </div>
               ) : (
-                <div
+                <button
+                  type="button"
                   className="flex aspect-video w-full max-w-md cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed bg-muted/30 transition-colors hover:bg-muted/50"
                   onClick={() => fileInputRef.current?.click()}
                   onKeyDown={(e) => {
@@ -369,8 +370,6 @@ export function ExpoForm(props: ExpoFormProps) {
                       fileInputRef.current?.click()
                     }
                   }}
-                  tabIndex={0}
-                  role="button"
                 >
                   {isUploading ? (
                     <Spinner />
@@ -382,7 +381,7 @@ export function ExpoForm(props: ExpoFormProps) {
                       </p>
                     </>
                   )}
-                </div>
+                </button>
               )}
               <input
                 type="file"
