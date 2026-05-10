@@ -7,9 +7,9 @@ import * as React from "react"
 
 import {
   Carousel,
-  type CarouselApi,
   CarouselContent,
-  CarouselItem
+  CarouselItem,
+  type CarouselApi,
 } from "@/components/ui/carousel"
 import { cn } from "@/lib/utils"
 import { asset } from "./data"
@@ -42,10 +42,10 @@ export function Hero({ expos }: HeroProps) {
 
     api.on("select", onSelect)
 
-    // Auto slide every 5 seconds
+    // Auto slide every 10 seconds
     const intervalId = setInterval(() => {
       api.scrollNext()
-    }, 5000)
+    }, 10000)
 
     return () => {
       api.off("select", onSelect)
@@ -66,7 +66,7 @@ export function Hero({ expos }: HeroProps) {
         className="absolute inset-0 size-full"
         opts={{ loop: true }}
       >
-        <CarouselContent className="ml-0 h-155">
+        <CarouselContent className="ml-0 h-154">
           {expos.map((expo, index) => (
             <CarouselItem key={expo.slug} className="relative pl-0">
               <div className="relative size-full">
@@ -85,16 +85,16 @@ export function Hero({ expos }: HeroProps) {
       </Carousel>
 
       {/* Static Overlay Layers */}
-      <div className="pointer-events-none absolute inset-0">
+      <div className="absolute inset-0 pointer-events-none">
         <div className="absolute inset-x-0 bottom-0 h-80 bg-linear-to-b from-black/0 to-black/80 backdrop-blur-[2px]" />
 
         <div className="container relative mx-auto flex h-full items-end justify-between gap-8 px-5 pb-10 md:pb-14">
           {/* Main Content - Updates based on activeExpo */}
-          <div className="pointer-events-auto max-w-3xl pb-8 text-white">
+          <div className="max-w-3xl pb-8 text-white pointer-events-auto">
             <p className="font-medium text-sm drop-shadow-lg transition-all duration-500">
               {activeExpo.dateLabel}
             </p>
-            <h1 className="mt-2 max-w-2xl font-medium text-4xl leading-[1.15] tracking-normal drop-shadow-xl transition-all duration-500 md:text-[36px]">
+            <h1 className="mt-2 max-w-2xl font-medium text-4xl leading-[1.15] tracking-normal drop-shadow-xl md:text-[36px] transition-all duration-500">
               {activeExpo.title}
             </h1>
 
@@ -108,7 +108,7 @@ export function Hero({ expos }: HeroProps) {
               </Link>
               <Link
                 href={activeExpo.detailHref}
-                className="inline-flex h-10 w-[178px] items-center justify-center rounded-full border border-white bg-white/10 font-medium text-white backdrop-blur"
+                className="inline-flex h-10 w-44 items-center justify-center rounded-full border border-white bg-white/10 font-medium text-white backdrop-blur"
               >
                 View Detail
               </Link>
@@ -126,12 +126,12 @@ export function Hero({ expos }: HeroProps) {
                 {expos.map((_, i) => (
                   <button
                     type="button"
-                    key={i}
+                    key={`hero-dot-${expos[i].slug}`}
                     className={cn(
                       "rounded-full transition-all duration-300",
                       current === i
                         ? "h-1.5 w-6 bg-white"
-                        : "size-1.5 bg-white/80"
+                        : "size-1.5 bg-white/80",
                     )}
                     onClick={() => api?.scrollTo(i)}
                     aria-label={`Go to slide ${i + 1}`}
@@ -146,6 +146,15 @@ export function Hero({ expos }: HeroProps) {
             <article
               className="pointer-events-auto mb-8 hidden size-56 cursor-pointer overflow-hidden rounded-2xl bg-white p-1 shadow-2xl transition-all duration-500 hover:scale-105 lg:block"
               onClick={() => api?.scrollNext()}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault()
+                  api?.scrollNext()
+                }
+              }}
+              tabIndex={0}
+              role="button"
+              aria-label={`Next expo: ${nextExpo.title}`}
             >
               <div className="relative h-28 w-full overflow-hidden rounded-xl">
                 <Image
