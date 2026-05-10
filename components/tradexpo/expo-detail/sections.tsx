@@ -128,7 +128,7 @@ export function Hero({
           </div>
         </div>
         <div className="absolute bottom-10 left-7 max-w-3xl text-white md:left-10">
-          <h1 className="max-w-2xl font-medium text-[32px] leading-[1.18] tracking-normal md:text-[36px] md:leading-11">
+          <h1 className="max-w-2xl font-medium text-3xl tracking-normal md:text-4xl md:leading-11">
             {expoTitle}
           </h1>
           <div className="mt-5 flex flex-wrap gap-2">
