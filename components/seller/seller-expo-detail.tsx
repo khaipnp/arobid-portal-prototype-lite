@@ -23,6 +23,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
+import { getAssetUrl } from "@/lib/image-utils"
 import type {
   BoothCustomization,
   BoothTemplate,
@@ -197,13 +198,14 @@ export function SellerExpoDetail({
                       <div className="flex items-center gap-2.5">
                         {template && (
                           <Image
-                            src={`https://picsum.photos/seed/${reg.boothTemplateId}/80/60`}
+                            src={getAssetUrl(null, reg.boothTemplateId, 80, 60)}
                             alt={template.name}
                             width={40}
                             height={30}
                             className="rounded border object-cover"
                           />
                         )}
+
                         <span className="text-sm">
                           {template?.name ?? reg.boothTemplateId}
                         </span>

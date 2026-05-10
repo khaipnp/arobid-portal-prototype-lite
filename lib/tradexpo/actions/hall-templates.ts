@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { sql } from "@/lib/db/neon"
+import { getAssetUrl } from "@/lib/image-utils"
 import type { HallTemplate, ModelAsset } from "@/lib/tradexpo/types"
 
 const REUPLOAD_UPDATED_BY = "Admin"
@@ -10,10 +11,6 @@ type AssetKind = "glb" | "thumbnail" | "blend"
 
 function newAssetId() {
   return `asset-${crypto.randomUUID()}`
-}
-
-function placeholderFileUrl(seed: string) {
-  return `https://picsum.photos/seed/${encodeURIComponent(seed)}/640/360`
 }
 
 type AssetRow = {
@@ -53,7 +50,7 @@ export async function reuploadHallTemplateAsset(
   const ext = kind === "thumbnail" ? "png" : kind === "blend" ? "blend" : "glb"
   const fileName = `re-upload-${kind}.${ext}`
   const assetId = newAssetId()
-  const fileUrl = placeholderFileUrl(assetId)
+  const fileUrl = getAssetUrl(null, assetId)
 
   await sql`
     insert into model_assets (id, file_name, file_url, kind, status, created_at)

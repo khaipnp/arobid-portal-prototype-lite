@@ -53,6 +53,7 @@ export default async function Page({
       <Breadcrumb />
       <Hero
         expoTitle={expo.name}
+        thumbnailUrl={expo.thumbnailUrl}
         startDateLabel={toLongDate(expo.startDate)}
         endDateLabel={toLongDate(expo.endDate)}
         virtualLobbyUrl={virtualLobbyUrl}

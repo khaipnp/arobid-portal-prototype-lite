@@ -44,6 +44,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
+import { getAssetUrl } from "@/lib/image-utils"
 import {
   toggleHallTemplateActive,
   toggleHallTemplatePublic
@@ -311,7 +312,7 @@ export function HallTemplateLibraryManager({
       fileUrl:
         kind === "blend"
           ? `https://example.com/files/${fileName}`
-          : `https://picsum.photos/seed/${createMockId("preview")}/640/360`,
+          : getAssetUrl(null, createMockId("preview")),
       createdAt: new Date().toISOString()
     }
   }
@@ -736,7 +737,12 @@ export function HallTemplateLibraryManager({
                           <Image
                             width={120}
                             height={120}
-                            src={thumbnail?.fileUrl}
+                            src={getAssetUrl(
+                              thumbnail?.fileUrl,
+                              template.id,
+                              120,
+                              120
+                            )}
                             alt={template.name}
                             className="rounded-md border object-cover"
                           />

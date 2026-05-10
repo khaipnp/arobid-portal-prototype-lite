@@ -1,8 +1,3 @@
-import { Play } from "lucide-react"
-import Image from "next/image"
-
-import { asset } from "./data"
-
 export function Introduction() {
   return (
     <section className="relative overflow-hidden bg-white px-5 py-16 text-center md:px-[78px]">
@@ -16,22 +11,17 @@ export function Introduction() {
           Delivering qualified leads for Sellers, smart sourcing for Buyers, and
           custom event solutions for Partners.
         </p>
-        <div className="relative mx-auto mt-10 max-w-[912px] rounded-3xl border border-white bg-white/50 p-2 shadow-sm backdrop-blur">
-          <Image
-            src={asset("intro-video.jpg")}
-            alt=""
-            width={896}
-            height={505}
-            className="aspect-[896/505] w-full rounded-2xl object-cover"
+        <div className="relative mx-auto mt-10 max-w-4xl rounded-3xl border border-white bg-white/50 p-2 shadow-sm backdrop-blur">
+          <video
+            src="https://pub-f9f549362b7a4bc2ad361c7ca1858854.r2.dev/arobid_video_4055941c-07e3-446a-9c42-0b614213d5bf_20260213064240_1770964909747.mp4"
+            autoPlay
+            muted
+            loop
+            playsInline
+            className="aspect-video w-full rounded-2xl object-cover"
           />
-          <button
-            type="button"
-            className="absolute inset-0 m-auto grid size-16 place-items-center rounded-full bg-white/55 text-white backdrop-blur"
-          >
-            <Play className="ml-1 size-8 fill-white" />
-          </button>
         </div>
-        <div className="mx-auto mt-6 grid max-w-[896px] grid-cols-2 gap-4 md:grid-cols-4">
+        <div className="mx-auto mt-6 grid max-w-4xl grid-cols-2 gap-4 md:grid-cols-4">
           {[
             ["95%", "AI Matching Precision"],
             ["90%", "Cost Optimization"],

@@ -51,6 +51,7 @@ import {
   TableRow
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
+import { getAssetUrl } from "@/lib/image-utils"
 import {
   toggleBoothTemplateActive,
   toggleBoothTemplatePublic
@@ -332,7 +333,7 @@ export function BoothTemplateLibraryManager({
       fileUrl:
         kind === "blend"
           ? `https://example.com/files/${fileName}`
-          : `https://picsum.photos/seed/${createMockId("preview")}/640/360`,
+          : getAssetUrl(null, createMockId("preview")),
       createdAt: new Date().toISOString()
     }
   }
@@ -762,7 +763,12 @@ export function BoothTemplateLibraryManager({
                         >
                           {/* biome-ignore lint/performance/noImgElement: thumbnail src is dynamic, next/image requires known dimensions */}
                           <img
-                            src={thumbnail?.fileUrl}
+                            src={getAssetUrl(
+                              thumbnail?.fileUrl,
+                              template.id,
+                              80,
+                              48
+                            )}
                             alt={template.name}
                             className="h-12 w-20 rounded-md border object-cover"
                           />

@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto"
 import { sql } from "@/lib/db/neon"
+import { getAssetUrl } from "@/lib/image-utils"
 import type {
   AdminNotification,
   BoothCustomization,
@@ -380,9 +381,7 @@ export async function createExpoWithHalls(
   const createdAt = new Date().toISOString()
   const startDateStr = start.toISOString().slice(0, 10)
   const endDateStr = end.toISOString().slice(0, 10)
-  const thumb =
-    input.thumbnailUrl.trim() ||
-    `https://picsum.photos/seed/${encodeURIComponent(expoId)}/640/360`
+  const thumb = getAssetUrl(input.thumbnailUrl, expoId)
 
   await sql`begin`
   try {
@@ -504,9 +503,7 @@ export async function updateExpoWithHalls(
   const startDateStr = start.toISOString().slice(0, 10)
   const endDateStr = end.toISOString().slice(0, 10)
   const slug = await uniqueExpoSlug(slugifyExpoName(input.name), expoId)
-  const thumb =
-    input.thumbnailUrl.trim() ||
-    `https://picsum.photos/seed/${encodeURIComponent(expoId)}/640/360`
+  const thumb = getAssetUrl(input.thumbnailUrl, expoId)
 
   await sql`begin`
   try {
