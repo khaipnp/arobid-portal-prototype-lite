@@ -2,14 +2,14 @@
 
 import { EyeIcon, LockKeyholeIcon, MailIcon } from "lucide-react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { Suspense, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 
-const FIGMA_EXPO_BACKGROUND = "/auth/login-background.png"
+const FIGMA_EXPO_BACKGROUND = "/auth/login-bg.jpg"
 
 type DemoLoginRole = "admin" | "partner" | "seller" | "buyer"
 
@@ -152,6 +152,8 @@ function DemoAccountPicker({
 
 function LoginPanel() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get("callbackUrl")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
@@ -168,7 +170,7 @@ function LoginPanel() {
       return
     }
 
-    router.replace(payload?.redirectPath ?? "/seller")
+    router.replace(callbackUrl ?? payload?.redirectPath ?? "/seller")
     router.refresh()
   }
 
@@ -299,9 +301,25 @@ export function LoginForm({ className }: { className?: string }) {
         className="absolute inset-0 bg-center bg-cover"
         style={{ backgroundImage: `url(${FIGMA_EXPO_BACKGROUND})` }}
       />
-      <div className="absolute inset-0 bg-[#022582]/90" />
-      <div className="relative flex min-h-screen items-center justify-center px-5 py-10 md:justify-end md:px-[12vw]">
-        <LoginPanel />
+      <div className="absolute inset-0 bg-[#022582]/70" />
+      <div className="relative flex flex-col md:flex-row min-h-screen items-center justify-center px-5 py-10 md:justify-end md:px-[12vw]">
+        <div className="flex-1 space-y-5">
+          <h3 className="text-3xl text-primary-foreground font-semibold">
+            Empowering B2B Global Trade
+          </h3>
+          <p className="text-lg text-primary-foreground max-w-md">
+            Unlock efficient global B2B trade. Connect with verified suppliers,
+            streamline your procurement processes, and manage transactions
+            securely on a unified digital infrastructure.
+          </p>
+        </div>
+        <Suspense
+          fallback={
+            <div className="w-full max-w-lg rounded-3xl bg-white h-150 animate-pulse" />
+          }
+        >
+          <LoginPanel />
+        </Suspense>
       </div>
     </main>
   )
