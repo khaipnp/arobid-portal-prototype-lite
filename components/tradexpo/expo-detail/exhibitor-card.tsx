@@ -6,8 +6,9 @@ import {
   StarIcon
 } from "lucide-react"
 import Image from "next/image"
-import type { ReactNode } from "react"
+import { type ReactNode, useState } from "react"
 import { toast } from "sonner"
+import { ExhibitorProductDetailDialog } from "@/components/tradexpo/expo-detail/exhibitor-product-detail-dialog"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import type { ExpoDetailExhibitor } from "@/lib/tradexpo/db/platform-data"
@@ -50,6 +51,11 @@ function MetaBadge({
 }
 
 export function ExhibitorCard({ exhibitor, onChatClick }: ExhibitorCardProps) {
+  const [selectedProduct, setSelectedProduct] = useState<{
+    image: string
+    label: string
+  } | null>(null)
+
   const productImages = productFallbackImages.map((image, index) => ({
     image,
     label: exhibitor.products[index] ?? `Featured product ${index + 1}`
@@ -120,9 +126,12 @@ export function ExhibitorCard({ exhibitor, onChatClick }: ExhibitorCardProps) {
 
         <div className="mt-3 grid grid-cols-4 gap-3">
           {productImages.map((item) => (
-            <div
+            <button
+              type="button"
               key={`${exhibitor.id}-${item.image}`}
-              className="relative aspect-square overflow-hidden rounded border border-[#e5e7eb]"
+              className="relative aspect-square overflow-hidden rounded-2xl border border-muted transition hover:border-legend"
+              onClick={() => setSelectedProduct(item)}
+              aria-label={`View product details: ${item.label}`}
             >
               <Image
                 src={item.image}
@@ -130,7 +139,7 @@ export function ExhibitorCard({ exhibitor, onChatClick }: ExhibitorCardProps) {
                 fill
                 className="object-cover"
               />
-            </div>
+            </button>
           ))}
         </div>
       </div>
@@ -151,6 +160,13 @@ export function ExhibitorCard({ exhibitor, onChatClick }: ExhibitorCardProps) {
           Send RFQ
         </Button>
       </div>
+
+      <ExhibitorProductDetailDialog
+        exhibitorCompany={exhibitor.company}
+        products={productImages}
+        selectedProduct={selectedProduct}
+        onSelectedProductChange={setSelectedProduct}
+      />
     </Card>
   )
 }
