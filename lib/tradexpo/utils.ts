@@ -6,7 +6,7 @@ import type {
   HallTemplate,
   ModelAsset,
   TemplateDerivedStatus,
-  TranslationRecord,
+  TranslationRecord
 } from "@/lib/tradexpo/types"
 
 export const GLB_ACCEPT = [".glb"]
@@ -20,11 +20,11 @@ export function createMockId(prefix: string) {
 export function getTranslationName(
   fallbackName: string,
   translations: TranslationRecord[],
-  locale: string,
+  locale: string
 ) {
   const shortLocale = locale.toLowerCase().split("-")[0]
   const translated = translations.find(
-    (item) => item.languageCode.toLowerCase() === shortLocale,
+    (item) => item.languageCode.toLowerCase() === shortLocale
   )
   return translated?.name || fallbackName
 }
@@ -36,21 +36,21 @@ export function getAssetMap(assets: ModelAsset[]) {
 function getRequiredAssetStatuses(
   assets: Record<string, ModelAsset | undefined>,
   glbAssetId: string,
-  thumbnailAssetId: string,
+  thumbnailAssetId: string
 ) {
   return [assets[glbAssetId]?.status, assets[thumbnailAssetId]?.status]
 }
 
 function hasStatus(
   statuses: Array<AssetStatus | undefined>,
-  status: AssetStatus,
+  status: AssetStatus
 ) {
   return statuses.some((item) => item === status)
 }
 
 export function getHallTemplateStatus(
   template: HallTemplate,
-  assets: Record<string, ModelAsset | undefined>,
+  assets: Record<string, ModelAsset | undefined>
 ): TemplateDerivedStatus {
   if (!template.isActive) {
     return "Inactive"
@@ -59,7 +59,7 @@ export function getHallTemplateStatus(
   const statuses = getRequiredAssetStatuses(
     assets,
     template.renderGlbAssetId,
-    template.thumbnailAssetId,
+    template.thumbnailAssetId
   )
 
   if (hasStatus(statuses, "failed")) {
@@ -79,7 +79,7 @@ export function getHallTemplateStatus(
 
 export function getBoothTemplateStatus(
   template: BoothTemplate,
-  assets: Record<string, ModelAsset | undefined>,
+  assets: Record<string, ModelAsset | undefined>
 ): TemplateDerivedStatus {
   if (!template.isActive) {
     return "Inactive"
@@ -88,7 +88,7 @@ export function getBoothTemplateStatus(
   const statuses = getRequiredAssetStatuses(
     assets,
     template.renderGlbAssetId,
-    template.thumbnailAssetId,
+    template.thumbnailAssetId
   )
 
   if (hasStatus(statuses, "failed")) {
@@ -111,7 +111,7 @@ export function canPublish(
     HallTemplate | BoothTemplate,
     "renderGlbAssetId" | "thumbnailAssetId"
   >,
-  assets: Record<string, ModelAsset | undefined>,
+  assets: Record<string, ModelAsset | undefined>
 ) {
   const glbStatus = assets[template.renderGlbAssetId]?.status
   const thumbnailStatus = assets[template.thumbnailAssetId]?.status
@@ -163,7 +163,7 @@ export function isValidFileName(fileName: string, kind: AssetKind) {
 export function formatDateTime(value: string) {
   return new Intl.DateTimeFormat("en-GB", {
     dateStyle: "medium",
-    timeStyle: "short",
+    timeStyle: "short"
   }).format(new Date(value))
 }
 
@@ -171,7 +171,7 @@ export function formatDateTime(value: string) {
 export function getExpoTimelinePhase(
   nowMs: number,
   startAtIso: string,
-  endAtIso: string,
+  endAtIso: string
 ): ExpoTimelinePhase {
   const start = new Date(startAtIso).getTime()
   const end = new Date(endAtIso).getTime()

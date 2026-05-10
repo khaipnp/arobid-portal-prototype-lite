@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   listExpos,
   listGoLIVEEvents,
-  listStreamSessions,
+  listStreamSessions
 } from "@/lib/tradexpo/db/platform-data"
 import type { ExpoStatus } from "@/lib/tradexpo/types"
 
@@ -19,21 +19,21 @@ const statusStyles: Record<ExpoStatus, string> = {
   Live: "border-emerald-300 bg-emerald-100 text-emerald-700",
   Ended: "border-zinc-300 bg-zinc-100 text-zinc-700",
   Archived: "border-purple-300 bg-purple-100 text-purple-700",
-  Canceled: "border-rose-300 bg-rose-100 text-rose-700",
+  Canceled: "border-rose-300 bg-rose-100 text-rose-700"
 }
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", {
     day: "2-digit",
     month: "short",
-    year: "numeric",
+    year: "numeric"
   })
 }
 
 export const dynamic = "force-dynamic"
 
 export default async function PartnerExpoDetailPage({
-  params,
+  params
 }: {
   params: Promise<{ expoId: string }>
 }) {
@@ -44,7 +44,7 @@ export default async function PartnerExpoDetailPage({
 
   const [initialGoLIVEEvents, initialStreamSessions] = await Promise.all([
     listGoLIVEEvents(),
-    listStreamSessions(),
+    listStreamSessions()
   ])
 
   return (
@@ -54,7 +54,7 @@ export default async function PartnerExpoDetailPage({
       breadcrumbs={[
         { label: "Dashboard", href: "/partner" },
         { label: "My Expos", href: "/partner/expos" },
-        { label: expo.name },
+        { label: expo.name }
       ]}
     >
       <div className="space-y-6">

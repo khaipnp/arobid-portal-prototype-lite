@@ -2,14 +2,14 @@ import {
   adminFeatures,
   adminModules,
   adminPermissions,
-  adminRoles,
+  adminRoles
 } from "@/lib/administration/mock-data"
 import type {
   AdminFeature,
   AdminModule,
   AdminPermission,
   AdminRole,
-  ListResponse,
+  ListResponse
 } from "@/lib/administration/types"
 import { sql } from "@/lib/db/neon"
 
@@ -187,8 +187,8 @@ export async function getAdministrationList(input: {
         page: safePage,
         pageSize,
         totalItems,
-        totalPages,
-      },
+        totalPages
+      }
     }
   }
 
@@ -225,8 +225,8 @@ export async function getAdministrationList(input: {
         page: safePage,
         pageSize,
         totalItems,
-        totalPages,
-      },
+        totalPages
+      }
     }
   }
 
@@ -263,8 +263,8 @@ export async function getAdministrationList(input: {
         page: safePage,
         pageSize,
         totalItems,
-        totalPages,
-      },
+        totalPages
+      }
     }
   }
 
@@ -306,7 +306,7 @@ export async function getAdministrationList(input: {
       page: safePage,
       pageSize,
       totalItems,
-      totalPages,
-    },
+      totalPages
+    }
   }
 }

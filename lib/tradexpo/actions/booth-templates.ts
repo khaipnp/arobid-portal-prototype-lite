@@ -32,13 +32,13 @@ function rowToAsset(row: AssetRow): ModelAsset {
     fileUrl: row.file_url,
     kind: row.kind,
     status: row.status,
-    createdAt: new Date(row.created_at).toISOString(),
+    createdAt: new Date(row.created_at).toISOString()
   }
 }
 
 export async function reuploadBoothTemplateAsset(
   templateId: string,
-  kind: AssetKind,
+  kind: AssetKind
 ): Promise<{
   asset: ModelAsset
   templateFields: Pick<
@@ -121,8 +121,8 @@ export async function reuploadBoothTemplateAsset(
       thumbnailAssetId: row.thumbnail_asset_id,
       sourceBlendAssetId: row.source_blend_asset_id ?? undefined,
       updatedBy: row.updated_by,
-      updatedAt: new Date(row.updated_at).toISOString(),
-    },
+      updatedAt: new Date(row.updated_at).toISOString()
+    }
   }
 }
 

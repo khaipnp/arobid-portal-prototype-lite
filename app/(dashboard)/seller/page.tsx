@@ -10,7 +10,7 @@ export default async function SellerDashboardPage() {
   const myExpoIds = [...new Set(registrations.map((r) => r.expoId))]
   const liveCount = registrations.filter((r) => r.status === "Live").length
   const pendingCount = registrations.filter(
-    (r) => r.status === "Pending Setup",
+    (r) => r.status === "Pending Setup"
   ).length
 
   return (

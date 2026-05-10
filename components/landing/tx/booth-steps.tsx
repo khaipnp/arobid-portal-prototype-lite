@@ -7,7 +7,7 @@ export function BoothSteps() {
     [Zap, "Find Your Show"],
     [BadgeCheck, "Pick Your Spot"],
     [CircleDollarSign, "Pick Solution Plan"],
-    [Plane, "Start Global Trading"],
+    [Plane, "Start Global Trading"]
   ] as const
 
   return (
@@ -33,8 +33,8 @@ export function BoothSteps() {
                     "text-emerald-500",
                     "text-sky-500",
                     "text-violet-500",
-                    "text-orange-500",
-                  ][index],
+                    "text-orange-500"
+                  ][index]
                 )}
               />
             </div>

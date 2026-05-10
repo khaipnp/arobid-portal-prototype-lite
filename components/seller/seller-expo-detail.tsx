@@ -7,7 +7,7 @@ import {
   CircleDashedIcon,
   CircleDotIcon,
   ClockIcon,
-  SettingsIcon,
+  SettingsIcon
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -21,7 +21,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from "@/components/ui/table"
 import type {
   BoothCustomization,
@@ -31,7 +31,7 @@ import type {
   GoLIVEEvent,
   SellerBoothRegistration,
   SellerBoothStatus,
-  StreamSession,
+  StreamSession
 } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
 
@@ -40,7 +40,7 @@ type SellerExpoViewStatus = "Upcoming" | "Live" | "Archive"
 const expoStatusStyles: Record<SellerExpoViewStatus, string> = {
   Upcoming: "border-amber-300 bg-amber-100 text-amber-700",
   Live: "border-emerald-300 bg-emerald-100 text-emerald-700",
-  Archive: "border-zinc-300 bg-zinc-100 text-zinc-700",
+  Archive: "border-zinc-300 bg-zinc-100 text-zinc-700"
 }
 
 function toSellerExpoViewStatus(status: ExpoStatus): SellerExpoViewStatus {
@@ -56,7 +56,7 @@ const boothStatusStyles: Record<SellerBoothStatus, string> = {
   Configured: "border-blue-300 bg-blue-100 text-blue-700",
   Approved: "border-teal-300 bg-teal-100 text-teal-700",
   Live: "border-emerald-300 bg-emerald-100 text-emerald-700",
-  Ended: "border-zinc-300 bg-zinc-100 text-zinc-700",
+  Ended: "border-zinc-300 bg-zinc-100 text-zinc-700"
 }
 
 const boothStatusIcon: Record<SellerBoothStatus, React.ReactNode> = {
@@ -64,12 +64,12 @@ const boothStatusIcon: Record<SellerBoothStatus, React.ReactNode> = {
   Configured: <CircleDotIcon className="h-3.5 w-3.5" />,
   Approved: <CheckCircle2Icon className="h-3.5 w-3.5" />,
   Live: <CheckCircle2Icon className="h-3.5 w-3.5" />,
-  Ended: <ClockIcon className="h-3.5 w-3.5" />,
+  Ended: <ClockIcon className="h-3.5 w-3.5" />
 }
 
 function formatDate(iso: string) {
   return new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" }).format(
-    new Date(iso),
+    new Date(iso)
   )
 }
 
@@ -90,7 +90,7 @@ export function SellerExpoDetail({
   boothTemplates,
   boothCustomizations,
   goLiveEvents,
-  streamSessions,
+  streamSessions
 }: Props) {
   const boothTemplateMap = React.useMemo(() => {
     const m = new Map<string, BoothTemplate>()
@@ -103,7 +103,7 @@ export function SellerExpoDetail({
     for (const c of boothCustomizations) {
       m.set(c.registrationId, {
         publishStatus: c.publishStatus,
-        hasTemplate: !!c.selectedBoothTemplateId,
+        hasTemplate: !!c.selectedBoothTemplateId
       })
     }
     return m
@@ -217,7 +217,7 @@ export function SellerExpoDetail({
                         variant="outline"
                         className={cn(
                           "flex w-fit items-center gap-1 text-xs",
-                          boothStatusStyles[reg.status],
+                          boothStatusStyles[reg.status]
                         )}
                       >
                         {boothStatusIcon[reg.status]}

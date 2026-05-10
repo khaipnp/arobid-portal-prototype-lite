@@ -8,7 +8,7 @@ export function Sponsors() {
     ["Microsoft", "sponsor-microsoft.svg"],
     ["Dropbox", "sponsor-dropbox.svg"],
     ["OpenAI", "sponsor-openai.svg"],
-    ["Claude", "sponsor-claude.svg"],
+    ["Claude", "sponsor-claude.svg"]
   ] as const
 
   return (

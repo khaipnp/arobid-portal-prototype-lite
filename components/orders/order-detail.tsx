@@ -4,13 +4,13 @@ import {
   ArrowLeftIcon,
   CopyIcon,
   DownloadIcon,
-  MailCheckIcon,
+  MailCheckIcon
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import {
   getOrderStatusLabel,
-  OrderStatusBadge,
+  OrderStatusBadge
 } from "@/components/orders/order-status-badge"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -18,14 +18,14 @@ import type {
   InvoiceStatus,
   Order,
   OrderStatus,
-  TransactionLogEntry,
+  TransactionLogEntry
 } from "@/lib/tradexpo/types"
 
 function formatVND(amount: number) {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
     currency: "VND",
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 0
   }).format(amount)
 }
 
@@ -35,7 +35,7 @@ function formatDate(iso: string) {
     month: "2-digit",
     year: "numeric",
     hour: "2-digit",
-    minute: "2-digit",
+    minute: "2-digit"
   })
 }
 
@@ -71,15 +71,15 @@ interface OrderDetailProps {
 export function OrderDetail({
   orderId,
   initialOrder,
-  initialTransactionLog,
+  initialTransactionLog
 }: OrderDetailProps) {
   const router = useRouter()
   const [order, setOrder] = useState<Order>(() => initialOrder)
   const [log, setLog] = useState<TransactionLogEntry[]>(() =>
     [...initialTransactionLog].sort(
       (a, b) =>
-        new Date(a.processedAt).getTime() - new Date(b.processedAt).getTime(),
-    ),
+        new Date(a.processedAt).getTime() - new Date(b.processedAt).getTime()
+    )
   )
   const [toast, setToast] = useState<string | null>(null)
   const [isProcessingInvoice, setIsProcessingInvoice] = useState(false)
@@ -95,7 +95,7 @@ export function OrderDetail({
       const response = await fetch(`/api/orders/${orderId}/invoice`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({ action })
       })
       if (!response.ok) {
         throw new Error("Unable to update invoice")
@@ -109,15 +109,15 @@ export function OrderDetail({
         [...prev, data.logEntry].sort(
           (a, b) =>
             new Date(a.processedAt).getTime() -
-            new Date(b.processedAt).getTime(),
-        ),
+            new Date(b.processedAt).getTime()
+        )
       )
       showToast(
         action === "export"
           ? "Invoice data exported."
           : action === "issue"
             ? "Invoice marked as issued."
-            : "Invoice marked as sent.",
+            : "Invoice marked as sent."
       )
     } catch {
       showToast("Unable to update invoice request.")
@@ -135,7 +135,7 @@ export function OrderDetail({
       `Invoice email: ${snapshot.invoiceEmail}`,
       `Tax code: ${snapshot.taxCode}`,
       `Address: ${snapshot.address}`,
-      snapshot.phoneNumber ? `Phone: ${snapshot.phoneNumber}` : null,
+      snapshot.phoneNumber ? `Phone: ${snapshot.phoneNumber}` : null
     ].filter(Boolean)
 
     await navigator.clipboard.writeText(lines.join("\n"))

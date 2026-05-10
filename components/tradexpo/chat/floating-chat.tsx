@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   Maximize2Icon,
@@ -6,99 +6,99 @@ import {
   PlusCircleIcon,
   SearchIcon,
   SendIcon,
-  XIcon,
-} from "lucide-react";
+  XIcon
+} from "lucide-react"
 
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState, useTransition } from "react";
-import { Avatar } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
+import Image from "next/image"
+import { useRouter } from "next/navigation"
+import { useEffect, useRef, useState, useTransition } from "react"
+import { Avatar } from "@/components/ui/avatar"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   InputGroup,
   InputGroupAddon,
-  InputGroupInput,
-} from "@/components/ui/input-group";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import type { ExpoDetailExhibitor } from "@/lib/tradexpo/db/platform-data";
-import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
-import { Spinner } from "@/components/ui/spinner";
+  InputGroupInput
+} from "@/components/ui/input-group"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Spinner } from "@/components/ui/spinner"
+import type { ExpoDetailExhibitor } from "@/lib/tradexpo/db/platform-data"
+import { cn } from "@/lib/utils"
 
 type Message = {
-  id: string;
-  senderId: string;
-  text: string;
-  timestamp: Date;
-};
+  id: string
+  senderId: string
+  text: string
+  timestamp: Date
+}
 
 type ChatPartner = {
-  id: string;
-  name: string;
-  company: string;
-  avatarUrl?: string;
-};
+  id: string
+  name: string
+  company: string
+  avatarUrl?: string
+}
 
 type ConversationData = {
-  id: string;
-  partner: ChatPartner;
-  lastMessage: string;
-  unreadCount: number;
-  lastActive: string;
-};
+  id: string
+  partner: ChatPartner
+  lastMessage: string
+  unreadCount: number
+  lastActive: string
+}
 
 type Props = {
-  exhibitor: ExpoDetailExhibitor; // The current exhibitor the user clicked "Chat Now" on
-  onClose: () => void;
-};
+  exhibitor: ExpoDetailExhibitor // The current exhibitor the user clicked "Chat Now" on
+  onClose: () => void
+}
 
 export function FloatingChat({ exhibitor, onClose }: Props) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
   const [activeExhibitor, setActiveExhibitor] = useState<ChatPartner>({
     id: exhibitor.id,
     name: exhibitor.name,
     company: exhibitor.company,
-    avatarUrl: exhibitor.avatarUrl,
-  });
-  const [conversations, setConversations] = useState<ConversationData[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [_isLoading, setIsLoading] = useState(true);
+    avatarUrl: exhibitor.avatarUrl
+  })
+  const [conversations, setConversations] = useState<ConversationData[]>([])
+  const [searchQuery, setSearchQuery] = useState("")
+  const [_isLoading, setIsLoading] = useState(true)
 
   // Map to store messages for each conversation/exhibitor
-  const [messagesMap, setMessagesMap] = useState<Record<string, Message[]>>({});
+  const [messagesMap, setMessagesMap] = useState<Record<string, Message[]>>({})
 
-  const [newMessage, setNewMessage] = useState("");
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [newMessage, setNewMessage] = useState("")
+  const scrollRef = useRef<HTMLDivElement>(null)
 
-  const activeMessages = messagesMap[activeExhibitor.id] || [];
+  const activeMessages = messagesMap[activeExhibitor.id] || []
 
   // Prefetch the deal room route to speed up redirection
   useEffect(() => {
-    router.prefetch("/seller/deal-room");
-  }, [router]);
+    router.prefetch("/seller/deal-room")
+  }, [router])
 
   useEffect(() => {
     setActiveExhibitor({
       id: exhibitor.id,
       name: exhibitor.name,
       company: exhibitor.company,
-      avatarUrl: exhibitor.avatarUrl,
-    });
-  }, [exhibitor]);
+      avatarUrl: exhibitor.avatarUrl
+    })
+  }, [exhibitor])
 
   useEffect(() => {
     async function fetchConversations() {
       try {
-        const res = await fetch("/api/tradexpo/chat/conversations");
-        const payload = await res.json();
+        const res = await fetch("/api/tradexpo/chat/conversations")
+        const payload = await res.json()
         if (payload.data) {
-          setConversations(payload.data);
+          setConversations(payload.data)
 
           // If the current exhibitor isn't in the list, add a virtual entry
           const exists = payload.data.some(
-            (c: ConversationData) => c.partner?.id === exhibitor.id,
-          );
+            (c: ConversationData) => c.partner?.id === exhibitor.id
+          )
           if (!exists) {
             setMessagesMap((prev) => ({
               ...prev,
@@ -107,36 +107,36 @@ export function FloatingChat({ exhibitor, onClose }: Props) {
                   id: "welcome-1",
                   senderId: exhibitor.id,
                   text: `Hello! Welcome to ${exhibitor.company}. How can we help you today?`,
-                  timestamp: new Date(),
-                },
-              ],
-            }));
+                  timestamp: new Date()
+                }
+              ]
+            }))
           }
         }
       } catch (err) {
-        console.error("Failed to fetch conversations", err);
+        console.error("Failed to fetch conversations", err)
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
     }
-    fetchConversations();
-  }, [exhibitor]);
+    fetchConversations()
+  }, [exhibitor])
 
   useEffect(() => {
     async function fetchMessages() {
-      if (!activeExhibitor.id) return;
+      if (!activeExhibitor.id) return
 
       // If it's a virtual entry (no real conversation ID yet), we might already have the welcome message
       const conversationId = conversations.find(
-        (c) => c.partner?.id === activeExhibitor.id,
-      )?.id;
+        (c) => c.partner?.id === activeExhibitor.id
+      )?.id
 
       if (conversationId) {
         try {
           const res = await fetch(
-            `/api/deal-room/conversations/${conversationId}/messages`,
-          );
-          const payload = await res.json();
+            `/api/deal-room/conversations/${conversationId}/messages`
+          )
+          const payload = await res.json()
           if (payload.messages) {
             setMessagesMap((prev) => ({
               ...prev,
@@ -144,23 +144,23 @@ export function FloatingChat({ exhibitor, onClose }: Props) {
                 id: m.id,
                 senderId: m.senderId,
                 text: m.content,
-                timestamp: new Date(m.sentAt),
-              })),
-            }));
+                timestamp: new Date(m.sentAt)
+              }))
+            }))
           }
         } catch (err) {
-          console.error("Failed to fetch messages", err);
+          console.error("Failed to fetch messages", err)
         }
       }
     }
-    fetchMessages();
-  }, [activeExhibitor.id, conversations]);
+    fetchMessages()
+  }, [activeExhibitor.id, conversations])
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollIntoView({ behavior: "smooth" });
+      scrollRef.current.scrollIntoView({ behavior: "smooth" })
     }
-  }, [activeMessages]);
+  }, [])
 
   const filteredConversations = [
     // Include current virtual conversation if not in list
@@ -172,42 +172,42 @@ export function FloatingChat({ exhibitor, onClose }: Props) {
               id: exhibitor.id,
               name: exhibitor.name,
               company: exhibitor.company,
-              avatarUrl: exhibitor.avatarUrl,
+              avatarUrl: exhibitor.avatarUrl
             },
             lastMessage:
               messagesMap[exhibitor.id]?.[0]?.text || "New conversation",
             unreadCount: 0,
-            lastActive: new Date().toISOString(),
-          },
+            lastActive: new Date().toISOString()
+          }
         ]
       : []),
-    ...conversations,
+    ...conversations
   ].filter(
     (c) =>
       c.partner?.company?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.partner?.name?.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+      c.partner?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  )
 
   const handleSend = () => {
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim()) return
 
     const userMsg: Message = {
       id: Date.now().toString(),
       senderId: "user-khai",
       text: newMessage,
-      timestamp: new Date(),
-    };
+      timestamp: new Date()
+    }
 
     setMessagesMap((prev) => ({
       ...prev,
-      [activeExhibitor.id]: [...(prev[activeExhibitor.id] || []), userMsg],
-    }));
-    setNewMessage("");
+      [activeExhibitor.id]: [...(prev[activeExhibitor.id] || []), userMsg]
+    }))
+    setNewMessage("")
 
     // Simulate response
     setTimeout(() => {
       setMessagesMap((prev) => {
-        const currentMsgs = prev[activeExhibitor.id] || [];
+        const currentMsgs = prev[activeExhibitor.id] || []
         return {
           ...prev,
           [activeExhibitor.id]: [
@@ -216,18 +216,18 @@ export function FloatingChat({ exhibitor, onClose }: Props) {
               id: (Date.now() + 1).toString(),
               senderId: activeExhibitor.id,
               text: "Our team will review your message and get back to you shortly.",
-              timestamp: new Date(),
-            },
-          ],
-        };
-      });
-    }, 1500);
-  };
+              timestamp: new Date()
+            }
+          ]
+        }
+      })
+    }, 1500)
+  }
 
   return (
     <div
       className={cn(
-        "fixed right-20 bottom-0 z-50 flex h-[550px] w-3xl flex-col overflow-hidden rounded-t-3xl border bg-legend shadow-2xl transition-all duration-500 ease-in-out",
+        "fixed right-20 bottom-0 z-50 flex h-[550px] w-3xl flex-col overflow-hidden rounded-t-3xl border bg-legend shadow-2xl transition-all duration-500 ease-in-out"
       )}
     >
       {/* Header */}
@@ -243,10 +243,10 @@ export function FloatingChat({ exhibitor, onClose }: Props) {
             className="rounded-full"
             disabled={isPending}
             onClick={(e) => {
-              e.stopPropagation();
+              e.stopPropagation()
               startTransition(() => {
-                router.push("/seller/deal-room");
-              });
+                router.push("/seller/deal-room")
+              })
             }}
           >
             {isPending ? <Spinner /> : <Maximize2Icon className="size-4" />}
@@ -256,8 +256,8 @@ export function FloatingChat({ exhibitor, onClose }: Props) {
             size="icon-sm"
             className="rounded-full"
             onClick={(e) => {
-              e.stopPropagation();
-              onClose();
+              e.stopPropagation()
+              onClose()
             }}
           >
             <XIcon className="size-4" />
@@ -283,14 +283,14 @@ export function FloatingChat({ exhibitor, onClose }: Props) {
           <ScrollArea className="flex-1">
             <div className="flex flex-col">
               {filteredConversations.map((conv) => {
-                const isActive = conv.partner?.id === activeExhibitor.id;
+                const isActive = conv.partner?.id === activeExhibitor.id
                 return (
                   <button
                     key={conv.id}
                     type="button"
                     className={cn(
                       "flex w-full items-center gap-3 border-muted-foreground/10 border-b px-3 py-3 text-left transition-colors hover:bg-white",
-                      isActive && "bg-white",
+                      isActive && "bg-white"
                     )}
                     onClick={() => setActiveExhibitor(conv.partner)}
                   >
@@ -319,12 +319,12 @@ export function FloatingChat({ exhibitor, onClose }: Props) {
                           </Badge>
                         )}
                       </div>
-                      <p className="text-xs text-muted-foreground line-clamp-2 truncate">
+                      <p className="line-clamp-2 truncate text-muted-foreground text-xs">
                         {conv.partner?.company}
                       </p>
                     </div>
                   </button>
-                );
+                )
               })}
             </div>
           </ScrollArea>
@@ -351,13 +351,13 @@ export function FloatingChat({ exhibitor, onClose }: Props) {
           <ScrollArea className="flex-1 bg-white p-4">
             <div className="flex flex-col gap-4">
               {activeMessages.map((msg) => {
-                const isOwn = msg.senderId === "user-khai";
+                const isOwn = msg.senderId === "user-khai"
                 return (
                   <div
                     key={msg.id}
                     className={cn(
                       "flex flex-col gap-1",
-                      isOwn ? "items-end" : "items-start",
+                      isOwn ? "items-end" : "items-start"
                     )}
                   >
                     <div
@@ -365,7 +365,7 @@ export function FloatingChat({ exhibitor, onClose }: Props) {
                         "max-w-[80%] rounded-2xl px-3.5 py-2 text-sm",
                         isOwn
                           ? "rounded-tr-none bg-primary text-primary-foreground shadow-sm"
-                          : "rounded-tl-none bg-[#f1f3f5] text-foreground",
+                          : "rounded-tl-none bg-[#f1f3f5] text-foreground"
                       )}
                     >
                       {msg.text}
@@ -373,11 +373,11 @@ export function FloatingChat({ exhibitor, onClose }: Props) {
                     <span className="px-1 text-[9px] text-muted-foreground/60">
                       {msg.timestamp.toLocaleTimeString([], {
                         hour: "2-digit",
-                        minute: "2-digit",
+                        minute: "2-digit"
                       })}
                     </span>
                   </div>
-                );
+                )
               })}
               <div ref={scrollRef} className="h-0" />
             </div>
@@ -387,8 +387,8 @@ export function FloatingChat({ exhibitor, onClose }: Props) {
           <div className="border-t p-3">
             <form
               onSubmit={(e) => {
-                e.preventDefault();
-                handleSend();
+                e.preventDefault()
+                handleSend()
               }}
               className="flex items-center gap-2"
             >
@@ -407,7 +407,7 @@ export function FloatingChat({ exhibitor, onClose }: Props) {
                 type="submit"
                 size="icon"
                 disabled={!newMessage.trim()}
-                className="bg-legend shrink-0 rounded-full shadow-lg transition-transform active:scale-95"
+                className="shrink-0 rounded-full bg-legend shadow-lg transition-transform active:scale-95"
               >
                 <SendIcon className="size-4" />
               </Button>
@@ -416,5 +416,5 @@ export function FloatingChat({ exhibitor, onClose }: Props) {
         </main>
       </div>
     </div>
-  );
+  )
 }

@@ -2,7 +2,7 @@ import { sql } from "@/lib/db/neon"
 import {
   mockVoucherBatches,
   mockVoucherCodes,
-  mockVoucherTargets,
+  mockVoucherTargets
 } from "@/lib/evoucher/mock-data"
 
 async function ensureSchema() {

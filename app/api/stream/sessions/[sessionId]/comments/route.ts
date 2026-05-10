@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import {
   createLiveComment,
-  listLiveCommentsBySession,
+  listLiveCommentsBySession
 } from "@/lib/tradexpo/db/platform-data"
 import type { LiveComment } from "@/lib/tradexpo/types"
 

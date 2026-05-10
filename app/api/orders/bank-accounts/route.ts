@@ -5,8 +5,8 @@ export async function POST(request: Request) {
   return NextResponse.json(
     {
       error:
-        "Bank account management is out of scope for Orders & Transactions. Prototype is VNPay-only.",
+        "Bank account management is out of scope for Orders & Transactions. Prototype is VNPay-only."
     },
-    { status: 410 },
+    { status: 410 }
   )
 }

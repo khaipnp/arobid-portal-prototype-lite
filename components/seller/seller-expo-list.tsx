@@ -5,7 +5,7 @@ import {
   ChevronRightIcon,
   SearchIcon,
   SignpostIcon,
-  StoreIcon,
+  StoreIcon
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -15,19 +15,19 @@ import { Button } from "@/components/ui/button"
 import {
   InputGroup,
   InputGroupAddon,
-  InputGroupInput,
+  InputGroupInput
 } from "@/components/ui/input-group"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from "@/components/ui/select"
 import type {
   Expo,
   ExpoStatus,
-  SellerBoothRegistration,
+  SellerBoothRegistration
 } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
 import {
@@ -36,7 +36,7 @@ import {
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
-  EmptyTitle,
+  EmptyTitle
 } from "../ui/empty"
 
 type SellerExpoViewStatus = "Upcoming" | "Live" | "Archive"
@@ -44,7 +44,7 @@ type SellerExpoViewStatus = "Upcoming" | "Live" | "Archive"
 const statusStyles: Record<SellerExpoViewStatus, string> = {
   Upcoming: "border-amber-300 bg-amber-100 text-amber-700",
   Live: "border-emerald-300 bg-emerald-100 text-emerald-700",
-  Archive: "border-zinc-300 bg-zinc-100 text-zinc-700",
+  Archive: "border-zinc-300 bg-zinc-100 text-zinc-700"
 }
 
 function toSellerExpoViewStatus(status: ExpoStatus): SellerExpoViewStatus {
@@ -57,7 +57,7 @@ function toSellerExpoViewStatus(status: ExpoStatus): SellerExpoViewStatus {
 
 function formatDate(iso: string) {
   return new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" }).format(
-    new Date(iso),
+    new Date(iso)
   )
 }
 
@@ -68,7 +68,7 @@ interface ExpoWithBooths {
 
 function buildData(
   expos: Expo[],
-  registrations: SellerBoothRegistration[],
+  registrations: SellerBoothRegistration[]
 ): ExpoWithBooths[] {
   const grouped = new Map<string, SellerBoothRegistration[]>()
   for (const reg of registrations) {
@@ -87,14 +87,14 @@ function buildData(
       return [
         {
           expo: { ...expo },
-          registrations,
-        },
+          registrations
+        }
       ]
     })
     .sort(
       (a, b) =>
         new Date(b.expo.startDate).getTime() -
-        new Date(a.expo.startDate).getTime(),
+        new Date(a.expo.startDate).getTime()
     )
 }
 
@@ -102,13 +102,13 @@ const ALL_STATUSES: SellerExpoViewStatus[] = ["Upcoming", "Live", "Archive"]
 
 export function SellerExpoList({
   initialExpos,
-  initialRegistrations,
+  initialRegistrations
 }: {
   initialExpos: Expo[]
   initialRegistrations: SellerBoothRegistration[]
 }) {
   const [data] = React.useState<ExpoWithBooths[]>(() =>
-    buildData(initialExpos, initialRegistrations),
+    buildData(initialExpos, initialRegistrations)
   )
   const [search, setSearch] = React.useState("")
   const [debouncedSearch, setDebouncedSearch] = React.useState("")
@@ -129,7 +129,7 @@ export function SellerExpoList({
     }
     if (statusFilter !== "All") {
       result = result.filter(
-        ({ expo }) => toSellerExpoViewStatus(expo.status) === statusFilter,
+        ({ expo }) => toSellerExpoViewStatus(expo.status) === statusFilter
       )
     }
     return result
@@ -211,7 +211,7 @@ export function SellerExpoList({
 
 function ExpoCard({
   expo,
-  registrations,
+  registrations
 }: {
   expo: Expo
   registrations: SellerBoothRegistration[]

@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     if (!fileName || !contentType || !kind) {
       return NextResponse.json(
         { error: "Missing required fields (fileName, contentType, kind)" },
-        { status: 400 },
+        { status: 400 }
       )
     }
 
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     const command = new PutObjectCommand({
       Bucket: R2_BUCKET_NAME,
       Key: key,
-      ContentType: contentType,
+      ContentType: contentType
     })
 
     const uploadUrl = await getSignedUrl(r2Client, command, { expiresIn: 3600 })
@@ -41,13 +41,13 @@ export async function POST(req: Request) {
       uploadUrl,
       fileUrl,
       key,
-      assetId: fileId,
+      assetId: fileId
     })
   } catch (error) {
     console.error("Error generating presigned URL:", error)
     return NextResponse.json(
       { error: "Failed to generate upload URL" },
-      { status: 500 },
+      { status: 500 }
     )
   }
 }

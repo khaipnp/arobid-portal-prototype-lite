@@ -8,7 +8,7 @@ import type {
   Order,
   OrderStatus,
   PaymentConfig,
-  TransactionLogEntry,
+  TransactionLogEntry
 } from "@/lib/tradexpo/types"
 
 function toIso(value: string | Date) {
@@ -23,7 +23,7 @@ function normalizeOrderStatusForStorage(status: OrderStatus): OrderStatus {
 }
 
 async function normalizeCustomerOrderStatuses(
-  customerId: string,
+  customerId: string
 ): Promise<void> {
   await sql`
     update orders
@@ -46,7 +46,7 @@ async function normalizeCustomerOrderStatuses(
 
 async function normalizeCustomerOrderStatusesForOrder(
   orderId: string,
-  customerId: string,
+  customerId: string
 ): Promise<void> {
   await sql`
     update orders
@@ -137,7 +137,7 @@ function rowToOrder(r: OrderRow): Order {
     sentBy: r.sent_by ?? undefined,
     expiresAt: r.expires_at ? toIso(r.expires_at) : undefined,
     createdAt: toIso(r.created_at),
-    updatedAt: toIso(r.updated_at),
+    updatedAt: toIso(r.updated_at)
   }
 }
 
@@ -206,7 +206,7 @@ export async function listBankAccounts(): Promise<BankAccount[]> {
     isPrimary: r.is_primary,
     isActive: r.is_active,
     createdAt: toIso(r.created_at),
-    updatedAt: toIso(r.updated_at),
+    updatedAt: toIso(r.updated_at)
   }))
 }
 
@@ -222,14 +222,14 @@ export async function getPlatformPaymentConfig(): Promise<PaymentConfig> {
   const r = rows[0]
   if (!r) {
     throw new Error(
-      "platform_payment_config missing — run bun run platform:seed",
+      "platform_payment_config missing — run bun run platform:seed"
     )
   }
   return {
     vnpayEnabled: r.vnpay_enabled,
     bankTransferEnabled: r.bank_transfer_enabled,
     updatedAt: toIso(r.updated_at),
-    updatedBy: r.updated_by,
+    updatedBy: r.updated_by
   }
 }
 
@@ -252,7 +252,7 @@ export async function listExpoPaymentConfigs(): Promise<ExpoPaymentConfig[]> {
     bankTransferEnabled: r.bank_transfer_enabled,
     bankAccountId: r.bank_account_id,
     updatedAt: toIso(r.updated_at),
-    updatedBy: r.updated_by,
+    updatedBy: r.updated_by
   }))
 }
 
@@ -280,7 +280,7 @@ export async function listCustomerOrders(customerId: string): Promise<Order[]> {
 
 export async function getCustomerOrder(
   orderId: string,
-  customerId: string,
+  customerId: string
 ): Promise<Order | null> {
   await expirePendingPaymentOrders()
   await normalizeCustomerOrderStatusesForOrder(orderId, customerId)
@@ -316,12 +316,12 @@ export async function listTransactionLog(): Promise<TransactionLogEntry[]> {
     actor: r.actor,
     note: r.note ?? undefined,
     rejectionReason: r.rejection_reason ?? undefined,
-    processedAt: toIso(r.processed_at),
+    processedAt: toIso(r.processed_at)
   }))
 }
 
 export async function listTransactionLogForOrder(
-  orderId: string,
+  orderId: string
 ): Promise<TransactionLogEntry[]> {
   const rows = (await sql`
     select * from transaction_log
@@ -345,13 +345,13 @@ export async function listTransactionLogForOrder(
     actor: r.actor,
     note: r.note ?? undefined,
     rejectionReason: r.rejection_reason ?? undefined,
-    processedAt: toIso(r.processed_at),
+    processedAt: toIso(r.processed_at)
   }))
 }
 
 export async function listCustomerTransactionLogForOrder(
   orderId: string,
-  customerId: string,
+  customerId: string
 ): Promise<TransactionLogEntry[]> {
   await normalizeCustomerOrderStatusesForOrder(orderId, customerId)
 
@@ -380,7 +380,7 @@ export async function listCustomerTransactionLogForOrder(
     actor: r.actor,
     note: r.note ?? undefined,
     rejectionReason: r.rejection_reason ?? undefined,
-    processedAt: toIso(r.processed_at),
+    processedAt: toIso(r.processed_at)
   }))
 }
 
@@ -421,7 +421,7 @@ export async function updatePlatformPaymentConfig(input: {
     vnpayEnabled: r.vnpay_enabled,
     bankTransferEnabled: r.bank_transfer_enabled,
     updatedAt: toIso(r.updated_at),
-    updatedBy: r.updated_by,
+    updatedBy: r.updated_by
   }
 }
 
@@ -476,7 +476,7 @@ export async function upsertExpoPaymentConfig(input: {
     bankTransferEnabled: r.bank_transfer_enabled,
     bankAccountId: r.bank_account_id,
     updatedAt: toIso(r.updated_at),
-    updatedBy: r.updated_by,
+    updatedBy: r.updated_by
   }
 }
 
@@ -534,7 +534,7 @@ export async function updateBankAccount(
     accountHolderName: string
     branch?: string
     isPrimary: boolean
-  },
+  }
 ): Promise<void> {
   await sql`begin`
   try {
@@ -578,7 +578,7 @@ export async function setPrimaryBankAccount(id: string): Promise<void> {
 
 export async function setBankAccountActiveState(
   id: string,
-  isActive: boolean,
+  isActive: boolean
 ): Promise<void> {
   await sql`
     update bank_accounts

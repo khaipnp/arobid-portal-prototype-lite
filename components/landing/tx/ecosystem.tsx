@@ -59,7 +59,7 @@ function EcosystemCard({
   icon,
   title,
   body,
-  action,
+  action
 }: {
   className: string
   icon: ReactNode
@@ -71,7 +71,7 @@ function EcosystemCard({
     <article
       className={cn(
         "absolute w-[248px] rounded-xl border border-white bg-white/60 p-6 shadow-2xl backdrop-blur-md",
-        className,
+        className
       )}
     >
       <div className="flex items-center gap-3 font-semibold">

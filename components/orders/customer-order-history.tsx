@@ -7,7 +7,7 @@ import {
   type CustomerOrderStatus,
   CustomerOrderStatusBadge,
   getCustomerOrderStatusLabel,
-  mapOrderStatusForCustomer,
+  mapOrderStatusForCustomer
 } from "@/components/orders/customer-order-status"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -16,7 +16,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from "@/components/ui/select"
 import {
   Table,
@@ -24,7 +24,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from "@/components/ui/table"
 import type { Order, OrderType } from "@/lib/tradexpo/types"
 
@@ -33,14 +33,14 @@ const ALL_STATUSES: Array<"All" | CustomerOrderStatus> = [
   "All",
   "Pending Payment",
   "Paid",
-  "Cancel",
+  "Cancel"
 ]
 
 function formatVND(amount: number) {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
     currency: "VND",
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 0
   }).format(amount)
 }
 
@@ -50,7 +50,7 @@ function formatDate(iso: string) {
     month: "2-digit",
     year: "numeric",
     hour: "2-digit",
-    minute: "2-digit",
+    minute: "2-digit"
   })
 }
 
@@ -66,7 +66,7 @@ function formatRemaining(ms: number) {
   }
 
   return `Payment expires in ${String(minutes).padStart(2, "0")}m ${String(
-    seconds,
+    seconds
   ).padStart(2, "0")}s`
 }
 
@@ -86,24 +86,24 @@ function getReferenceText(order: Order) {
     return {
       primary: order.expoName ?? order.referenceId,
       secondary:
-        boothParts.length > 0 ? boothParts.join(" · ") : order.referenceId,
+        boothParts.length > 0 ? boothParts.join(" · ") : order.referenceId
     }
   }
 
   return {
     primary: order.expoName ?? getOrderTypeLabel(order.orderType),
-    secondary: order.referenceId,
+    secondary: order.referenceId
   }
 }
 
 export function CustomerOrderHistory({
-  initialOrders,
+  initialOrders
 }: {
   initialOrders: Order[]
 }) {
   const router = useRouter()
   const [statusFilter, setStatusFilter] = useState<"All" | CustomerOrderStatus>(
-    "All",
+    "All"
   )
   const [page, setPage] = useState(1)
   const [nowMs, setNowMs] = useState(() => Date.now())
@@ -116,7 +116,7 @@ export function CustomerOrderHistory({
   const filtered = useMemo(() => {
     if (statusFilter === "All") return initialOrders
     return initialOrders.filter(
-      (order) => mapOrderStatusForCustomer(order.status) === statusFilter,
+      (order) => mapOrderStatusForCustomer(order.status) === statusFilter
     )
   }, [initialOrders, statusFilter])
 
@@ -124,7 +124,7 @@ export function CustomerOrderHistory({
   const currentPage = Math.min(page, totalPages)
   const pageItems = filtered.slice(
     (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE,
+    currentPage * PAGE_SIZE
   )
 
   function openOrder(orderId: string) {

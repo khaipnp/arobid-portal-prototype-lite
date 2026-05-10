@@ -4,7 +4,7 @@ import {
   listChatUsers,
   listConversations,
   listMessagesByConversation,
-  listUnreadCountsForUser,
+  listUnreadCountsForUser
 } from "@/lib/deal-room/db"
 
 interface Props {
@@ -19,12 +19,12 @@ export default async function ConversationPage({ params }: Props) {
     initialUsers,
     initialConversations,
     initialMessagesMap,
-    initialUnreadCounts,
+    initialUnreadCounts
   ] = await Promise.all([
     listChatUsers(),
     listConversations(),
     listMessagesByConversation(),
-    listUnreadCountsForUser(DEAL_ROOM_CURRENT_USER_ID),
+    listUnreadCountsForUser(DEAL_ROOM_CURRENT_USER_ID)
   ])
 
   return (

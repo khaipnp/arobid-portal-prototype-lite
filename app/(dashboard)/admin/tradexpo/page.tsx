@@ -3,11 +3,11 @@ import { TradeXpoOverview } from "@/components/tradexpo/tradexpo-overview"
 import { listBoothTemplates } from "@/lib/tradexpo/db/booth-templates"
 import {
   listHallTemplateAssets,
-  listHallTemplates,
+  listHallTemplates
 } from "@/lib/tradexpo/db/hall-templates"
 import {
   listAdminNotifications,
-  listExpos,
+  listExpos
 } from "@/lib/tradexpo/db/platform-data"
 
 export const dynamic = "force-dynamic"
@@ -19,7 +19,7 @@ export default async function TradeXpoDashboardPage() {
       listHallTemplates(),
       listBoothTemplates(),
       listExpos(),
-      listAdminNotifications(),
+      listAdminNotifications()
     ])
 
   return (
@@ -28,7 +28,7 @@ export default async function TradeXpoDashboardPage() {
       description="Manage hall templates, booth templates, and 3D slot configurations in one place."
       breadcrumbs={[
         { label: "Dashboard", href: "/dashboard" },
-        { label: "TradeXpo" },
+        { label: "TradeXpo" }
       ]}
     >
       <TradeXpoOverview

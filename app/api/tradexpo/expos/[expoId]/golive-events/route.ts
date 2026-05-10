@@ -20,7 +20,7 @@ export async function POST(request: Request, { params }: Props) {
   }
   await createGoLIVEEventWithSession({
     event: body.event,
-    streamSession: body.streamSession,
+    streamSession: body.streamSession
   })
   return NextResponse.json({ ok: true })
 }

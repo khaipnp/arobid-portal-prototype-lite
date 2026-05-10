@@ -9,7 +9,7 @@ import { Separator } from "@/components/ui/separator"
 import {
   listGoLIVEEvents,
   listLiveComments,
-  listStreamSessions,
+  listStreamSessions
 } from "@/lib/tradexpo/db/platform-data"
 
 interface Props {
@@ -22,7 +22,7 @@ const SESSION_TYPE_LABELS: Record<string, string> = {
   Keynote: "Keynote",
   Panel: "Panel",
   ProductDemo: "Product Demo",
-  Other: "Other",
+  Other: "Other"
 }
 
 export const dynamic = "force-dynamic"
@@ -32,7 +32,7 @@ export default async function WatchPage({ params }: Props) {
   const [streamSessions, goLiveEvents, liveComments] = await Promise.all([
     listStreamSessions(),
     listGoLIVEEvents(),
-    listLiveComments(),
+    listLiveComments()
   ])
 
   const session = streamSessions.find((s) => s.streamSessionId === sessionId)
@@ -44,7 +44,7 @@ export default async function WatchPage({ params }: Props) {
 
   const event = goLiveEvents.find((e) => e.streamSessionId === sessionId)
   const initialComments = liveComments.filter(
-    (c) => c.streamSessionId === sessionId && !c.isDeleted,
+    (c) => c.streamSessionId === sessionId && !c.isDeleted
   )
   const title = event?.title ?? "Live Session"
   const sessionType = event?.sessionType ?? "Other"
@@ -110,7 +110,7 @@ export default async function WatchPage({ params }: Props) {
                         day: "2-digit",
                         month: "short",
                         hour: "2-digit",
-                        minute: "2-digit",
+                        minute: "2-digit"
                       })}
                     </span>
                   )}

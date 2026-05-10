@@ -13,7 +13,7 @@ import { TxHeader } from "@/components/landing/tx-header"
 import {
   listExpoCardStats,
   listExpoCategories,
-  listExpos,
+  listExpos
 } from "@/lib/tradexpo/db/platform-data"
 
 function toHomeExpoStatus(status: string): HomeExpoCard["status"] {
@@ -30,7 +30,7 @@ function formatDateRange(startDate: string, endDate: string) {
   const fmt = new Intl.DateTimeFormat("en-US", {
     day: "2-digit",
     month: "short",
-    year: "numeric",
+    year: "numeric"
   })
   return `${fmt.format(start).toUpperCase()} - ${fmt.format(end).toUpperCase()}`
 }
@@ -63,7 +63,7 @@ function buildHomeExpoCards(
   statByExpoId: Map<
     string,
     Awaited<ReturnType<typeof listExpoCardStats>>[number]
-  >,
+  >
 ): HomeExpoCard[] {
   const sortedExpos = [...expos].sort((a, b) => {
     const statusRankDiff =
@@ -104,7 +104,7 @@ function buildHomeExpoCards(
       stats: [
         String(stat?.exhibitors ?? 0),
         String(stat?.visitors ?? 0),
-        String(stat?.products ?? 0),
+        String(stat?.products ?? 0)
       ],
       action: isLive ? "Virtual Lobby" : "Join as Exhibitor",
       disabled: status === "Archived",
@@ -112,7 +112,7 @@ function buildHomeExpoCards(
       detailHref,
       durationLabel: formatDateRange(expo.startDate, expo.endDate),
       countdown: status === "Archived" ? "Ended" : "TBA",
-      segment: segment || "General",
+      segment: segment || "General"
     }
   })
 }
@@ -121,17 +121,25 @@ export default async function Page() {
   const [expoRows, categoryRows, stats] = await Promise.all([
     listExpos(),
     listExpoCategories(),
-    listExpoCardStats(),
+    listExpoCardStats()
   ])
   const categoryNameById = new Map(categoryRows.map((c) => [c.id, c.name]))
   const statByExpoId = new Map(stats.map((item) => [item.expoId, item]))
   const expoCards = buildHomeExpoCards(expoRows, categoryNameById, statByExpoId)
   const categories = ["All Events", ...categoryRows.map((c) => c.name)]
 
+  const heroExpos = expoCards.map((card) => ({
+    title: card.title,
+    dateLabel: card.durationLabel,
+    slug: card.detailHref.split("/").pop() || "",
+    detailHref: card.detailHref,
+    backgroundImage: card.image || undefined
+  }))
+
   return (
     <main className="min-h-screen bg-white text-[#030712] [font-family:var(--font-tight)]">
       <TxHeader />
-      <Hero />
+      <Hero expos={heroExpos} />
       <Exhibitions categories={categories} expos={expoCards} />
       <Introduction />
       <Pricing />

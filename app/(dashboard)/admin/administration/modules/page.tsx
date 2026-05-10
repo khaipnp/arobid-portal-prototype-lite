@@ -11,7 +11,7 @@ export default async function AdministrationModulesPage() {
       breadcrumbs={[
         { label: "Admin", href: "/admin" },
         { label: "Administration", href: "/admin/administration/modules" },
-        { label: "Modules" },
+        { label: "Modules" }
       ]}
     >
       <AdministrationListPage entity="modules" initialData={initialData} />

@@ -1,11 +1,11 @@
 import type { Metadata } from "next"
 
 export const metadata: Metadata = {
-  title: "Watch — Arobid",
+  title: "Watch — Arobid"
 }
 
 export default function WatchLayout({
-  children,
+  children
 }: {
   children: React.ReactNode
 }) {

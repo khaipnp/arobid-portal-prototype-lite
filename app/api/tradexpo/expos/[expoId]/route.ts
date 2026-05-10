@@ -5,7 +5,7 @@ import {
   getExpoById,
   listExpoLayoutTemplates,
   updateExpoStatus,
-  updateExpoWithHalls,
+  updateExpoWithHalls
 } from "@/lib/tradexpo/db/platform-data"
 import { validateHallBlocks } from "@/lib/tradexpo/expo-create-validation"
 import type { ExpoHallDraft, ExpoStatus } from "@/lib/tradexpo/types"
@@ -51,7 +51,7 @@ export async function PUT(request: Request, { params }: Props) {
   if (!name || name.length > 255) {
     return NextResponse.json(
       { error: "Expo name is required (max 255 characters)." },
-      { status: 400 },
+      { status: 400 }
     )
   }
 
@@ -59,7 +59,7 @@ export async function PUT(request: Request, { params }: Props) {
   if (!description) {
     return NextResponse.json(
       { error: "Description is required." },
-      { status: 400 },
+      { status: 400 }
     )
   }
 
@@ -67,7 +67,7 @@ export async function PUT(request: Request, { params }: Props) {
   if (!expoTemplateId) {
     return NextResponse.json(
       { error: "Select an expo template." },
-      { status: 400 },
+      { status: 400 }
     )
   }
 
@@ -75,7 +75,7 @@ export async function PUT(request: Request, { params }: Props) {
   if (!templates.some((t) => t.id === expoTemplateId)) {
     return NextResponse.json(
       { error: "Invalid expo template." },
-      { status: 400 },
+      { status: 400 }
     )
   }
 
@@ -83,7 +83,7 @@ export async function PUT(request: Request, { params }: Props) {
   if (categoryIds.length === 0) {
     return NextResponse.json(
       { error: "Select at least one category." },
-      { status: 400 },
+      { status: 400 }
     )
   }
 
@@ -92,7 +92,7 @@ export async function PUT(request: Request, { params }: Props) {
   if (!startAt || !endAt) {
     return NextResponse.json(
       { error: "Start and end date/time are required." },
-      { status: 400 },
+      { status: 400 }
     )
   }
 
@@ -102,7 +102,7 @@ export async function PUT(request: Request, { params }: Props) {
   if (!ownerUserId || !ownerEmail) {
     return NextResponse.json(
       { error: "Search and select an expo owner account by email." },
-      { status: 400 },
+      { status: 400 }
     )
   }
 
@@ -124,7 +124,7 @@ export async function PUT(request: Request, { params }: Props) {
       timezone,
       ownerUserId,
       ownerEmail,
-      halls,
+      halls
     })
     return NextResponse.json({ ok: true })
   } catch (e) {

@@ -42,7 +42,7 @@ const USER_WORKSPACE_SEEDS: SeedItem[] = [
     type: "dm",
     title: "New message in Deal Room",
     body: "Alex sent you a message about the spring expo booth.",
-    deepLinkPath: "/seller/deal-room",
+    deepLinkPath: "/seller/deal-room"
   },
   {
     source: "tradexpo",
@@ -51,7 +51,7 @@ const USER_WORKSPACE_SEEDS: SeedItem[] = [
     body: "Check your booth checklist before the hall opens.",
     deepLinkPath: "/seller/my-expos",
     referenceId: "seed-expo-user-current",
-    referenceType: "expo",
+    referenceType: "expo"
   },
   {
     source: "orders",
@@ -60,15 +60,15 @@ const USER_WORKSPACE_SEEDS: SeedItem[] = [
     body: "Your booth add-on order was confirmed. View details anytime.",
     deepLinkPath: "/seller/orders",
     referenceId: "seed-order-1",
-    referenceType: "order",
+    referenceType: "order"
   },
   {
     source: "payment",
     type: "payout",
     title: "Payout scheduled",
     body: "A payout to your bank account is scheduled for next week.",
-    deepLinkPath: "/seller/host-dashboard",
-  },
+    deepLinkPath: "/seller/host-dashboard"
+  }
 ]
 
 const PARTNER_SEEDS: SeedItem[] = [
@@ -79,14 +79,14 @@ const PARTNER_SEEDS: SeedItem[] = [
     body: "An exhibitor submitted an application for your expo.",
     deepLinkPath: "/partner/expos",
     referenceId: "seed-app-1",
-    referenceType: "registration",
+    referenceType: "registration"
   },
   {
     source: "chat",
     type: "mention",
     title: "You were mentioned",
     body: "Operations tagged you in a conversation about hall layout.",
-    deepLinkPath: "/partner/expos",
+    deepLinkPath: "/partner/expos"
   },
   {
     source: "tradexpo",
@@ -95,8 +95,8 @@ const PARTNER_SEEDS: SeedItem[] = [
     body: "Your GoLIVE recap and viewer stats are ready to review.",
     deepLinkPath: "/partner/expos",
     referenceId: "seed-stream-1",
-    referenceType: "stream",
-  },
+    referenceType: "stream"
+  }
 ]
 
 function seedsForUser(userId: string): SeedItem[] {
@@ -113,8 +113,8 @@ function seedsForUser(userId: string): SeedItem[] {
       type: "system",
       title: "Welcome",
       body: "Notification seed for this user. Adjust scripts/notifications/seed.ts.",
-      deepLinkPath: "/",
-    },
+      deepLinkPath: "/"
+    }
   ]
 }
 
@@ -144,7 +144,7 @@ async function main() {
     for (const item of items) {
       const result = await publishNotification({
         userId,
-        ...item,
+        ...item
       })
       if (!result.deduped) {
         inserted += 1
@@ -154,7 +154,7 @@ async function main() {
   }
 
   console.log(
-    `Seeded notifications for: ${userIds.join(", ")} (new rows: ${inserted}).`,
+    `Seeded notifications for: ${userIds.join(", ")} (new rows: ${inserted}).`
   )
 }
 

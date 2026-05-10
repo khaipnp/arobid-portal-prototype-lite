@@ -4,7 +4,7 @@ import {
   listChatUsers,
   listConversations,
   listMessagesByConversation,
-  listUnreadCountsForUser,
+  listUnreadCountsForUser
 } from "@/lib/deal-room/db"
 
 export async function GET() {
@@ -14,19 +14,19 @@ export async function GET() {
         listChatUsers(),
         listConversations(),
         listMessagesByConversation(),
-        listUnreadCountsForUser(DEAL_ROOM_CURRENT_USER_ID),
-      ],
+        listUnreadCountsForUser(DEAL_ROOM_CURRENT_USER_ID)
+      ]
     )
 
     // Filter conversations where the current user is a member
     const userConversations = conversations.filter((c) =>
-      c.members.some((m) => m.userId === DEAL_ROOM_CURRENT_USER_ID),
+      c.members.some((m) => m.userId === DEAL_ROOM_CURRENT_USER_ID)
     )
 
     // Format the response for the Floating Chat
     const data = userConversations.map((conv) => {
       const otherMemberId = conv.members.find(
-        (m) => m.userId !== DEAL_ROOM_CURRENT_USER_ID,
+        (m) => m.userId !== DEAL_ROOM_CURRENT_USER_ID
       )?.userId
       const otherUser = users.find((u) => u.id === otherMemberId)
       const messages = messagesMap[conv.id] || []
@@ -39,12 +39,12 @@ export async function GET() {
               id: otherUser.id,
               name: otherUser.name,
               company: otherUser.company,
-              avatarUrl: otherUser.avatarUrl,
+              avatarUrl: otherUser.avatarUrl
             }
           : null,
         lastMessage: lastMessage?.content || "",
         unreadCount: unreadCounts[conv.id] || 0,
-        lastActive: lastMessage?.sentAt || conv.createdAt,
+        lastActive: lastMessage?.sentAt || conv.createdAt
       }
     })
 
@@ -53,7 +53,7 @@ export async function GET() {
     console.error("Error fetching chat conversations:", error)
     return NextResponse.json(
       { error: "Internal Server Error" },
-      { status: 500 },
+      { status: 500 }
     )
   }
 }

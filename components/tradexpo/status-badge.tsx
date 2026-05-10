@@ -7,7 +7,7 @@ const statusStyles: Record<TemplateDerivedStatus, string> = {
   Draft: "border-slate-300 bg-slate-100 text-slate-700",
   Published: "border-emerald-300 bg-emerald-100 text-emerald-700",
   Processing: "border-amber-300 bg-amber-100 text-amber-700",
-  Failed: "border-rose-300 bg-rose-100 text-rose-700",
+  Failed: "border-rose-300 bg-rose-100 text-rose-700"
 }
 
 export function StatusBadge({ status }: { status: TemplateDerivedStatus }) {

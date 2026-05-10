@@ -16,7 +16,7 @@ export async function getCurrentUserIdFromRequest(): Promise<string> {
 export async function userHasRole(
   userId: string,
   role: AppRole,
-  expoId?: string | null,
+  expoId?: string | null
 ): Promise<boolean> {
   await ensurePlatformSchema()
   const rows = expoId

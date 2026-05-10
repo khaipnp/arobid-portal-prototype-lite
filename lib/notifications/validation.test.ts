@@ -9,7 +9,7 @@ describe("parseNotificationEvent", () => {
     type: "message_received",
     title: "New message",
     body: "You have a new message",
-    deepLinkPath: "/chat/conversations/abc",
+    deepLinkPath: "/chat/conversations/abc"
   } as const
 
   test("accepts valid event payload", () => {
@@ -23,8 +23,8 @@ describe("parseNotificationEvent", () => {
     expect(() =>
       parseNotificationEvent({
         ...validPayload,
-        title: "",
-      }),
+        title: ""
+      })
     ).toThrow("missing required notification fields")
   })
 
@@ -32,8 +32,8 @@ describe("parseNotificationEvent", () => {
     expect(() =>
       parseNotificationEvent({
         ...validPayload,
-        body: "",
-      }),
+        body: ""
+      })
     ).toThrow("missing required notification fields")
   })
 
@@ -41,8 +41,8 @@ describe("parseNotificationEvent", () => {
     expect(() =>
       parseNotificationEvent({
         ...validPayload,
-        title: 123,
-      }),
+        title: 123
+      })
     ).toThrow("missing required notification fields")
   })
 
@@ -50,8 +50,8 @@ describe("parseNotificationEvent", () => {
     expect(() =>
       parseNotificationEvent({
         ...validPayload,
-        deepLinkPath: { path: "/chat" },
-      }),
+        deepLinkPath: { path: "/chat" }
+      })
     ).toThrow("missing required notification fields")
   })
 
@@ -59,8 +59,8 @@ describe("parseNotificationEvent", () => {
     expect(() =>
       parseNotificationEvent({
         ...validPayload,
-        title: "x".repeat(81),
-      }),
+        title: "x".repeat(81)
+      })
     ).toThrow("title must be <= 80 characters")
   })
 
@@ -68,8 +68,8 @@ describe("parseNotificationEvent", () => {
     expect(() =>
       parseNotificationEvent({
         ...validPayload,
-        body: "x".repeat(121),
-      }),
+        body: "x".repeat(121)
+      })
     ).toThrow("body must be <= 120 characters")
   })
 })

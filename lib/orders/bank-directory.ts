@@ -14,5 +14,5 @@ export const VIETNAMESE_BANKS = [
   { name: "HDBank", bin: "970437" },
   { name: "OCB", bin: "970448" },
   { name: "SHB", bin: "970443" },
-  { name: "SeABank", bin: "970440" },
+  { name: "SeABank", bin: "970440" }
 ] as const

@@ -23,13 +23,13 @@ async function readJson<T>(response: Response): Promise<T | null> {
 }
 
 export function NotificationsPageContent({
-  userId,
+  userId
 }: NotificationsPageContentProps) {
   const router = useRouter()
   const [notifications, setNotifications] = useState<NotificationRecord[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [busyNotificationId, setBusyNotificationId] = useState<string | null>(
-    null,
+    null
   )
   const [isMarkAllBusy, setIsMarkAllBusy] = useState(false)
 
@@ -41,8 +41,8 @@ export function NotificationsPageContent({
       const response = await fetch(
         `/api/notifications/unread-count?userId=${encodedUserId}`,
         {
-          cache: "no-store",
-        },
+          cache: "no-store"
+        }
       )
       const payload = await readJson<{ unreadCount: number }>(response)
       if (payload) {
@@ -58,11 +58,11 @@ export function NotificationsPageContent({
       const response = await fetch(
         `/api/notifications?userId=${encodedUserId}&limit=${LIST_LIMIT}`,
         {
-          cache: "no-store",
-        },
+          cache: "no-store"
+        }
       )
       const payload = await readJson<{ notifications: NotificationRecord[] }>(
-        response,
+        response
       )
       if (payload) {
         setNotifications(payload.notifications)
@@ -81,15 +81,15 @@ export function NotificationsPageContent({
       const response = await fetch(
         `/api/notifications/${notificationId}/read?userId=${encodedUserId}`,
         {
-          method: "PATCH",
-        },
+          method: "PATCH"
+        }
       )
       if (!response.ok) {
         return false
       }
       return true
     },
-    [encodedUserId],
+    [encodedUserId]
   )
 
   const deleteNotification = useCallback(
@@ -97,15 +97,15 @@ export function NotificationsPageContent({
       const response = await fetch(
         `/api/notifications/${notificationId}?userId=${encodedUserId}`,
         {
-          method: "DELETE",
-        },
+          method: "DELETE"
+        }
       )
       if (!response.ok) {
         return false
       }
       return true
     },
-    [encodedUserId],
+    [encodedUserId]
   )
 
   useEffect(() => {
@@ -125,8 +125,8 @@ export function NotificationsPageContent({
             current.map((item) =>
               item.notificationId === notification.notificationId
                 ? { ...item, isRead: true, readAt: new Date().toISOString() }
-                : item,
-            ),
+                : item
+            )
           )
           setUnreadCount((current) => Math.max(0, current - 1))
         }
@@ -141,7 +141,7 @@ export function NotificationsPageContent({
         await refreshListAndCount()
       }
     },
-    [markNotificationRead, refreshListAndCount, router],
+    [markNotificationRead, refreshListAndCount, router]
   )
 
   const handleDeleteSingle = useCallback(
@@ -150,8 +150,8 @@ export function NotificationsPageContent({
       try {
         setNotifications((current) =>
           current.filter(
-            (item) => item.notificationId !== notification.notificationId,
-          ),
+            (item) => item.notificationId !== notification.notificationId
+          )
         )
         if (!notification.isRead) {
           setUnreadCount((current) => Math.max(0, current - 1))
@@ -165,7 +165,7 @@ export function NotificationsPageContent({
         setBusyNotificationId(null)
       }
     },
-    [deleteNotification, refreshListAndCount],
+    [deleteNotification, refreshListAndCount]
   )
 
   const handleMarkAll = useCallback(async () => {
@@ -179,15 +179,15 @@ export function NotificationsPageContent({
         current.map((item) =>
           item.isRead
             ? item
-            : { ...item, isRead: true, readAt: optimisticReadAt },
-        ),
+            : { ...item, isRead: true, readAt: optimisticReadAt }
+        )
       )
       setUnreadCount(0)
       const response = await fetch(
         `/api/notifications/read-all?userId=${encodedUserId}`,
         {
-          method: "POST",
-        },
+          method: "POST"
+        }
       )
       if (!response.ok) {
         // Server rejected mark-all; refresh below reconciles optimistic state.

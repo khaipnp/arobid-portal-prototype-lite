@@ -1,15 +1,15 @@
-import { DEAL_ROOM_CURRENT_USER_ID } from "@/lib/deal-room/constants";
-import type { ChatUser, Conversation, Message } from "@/lib/deal-room/types";
+import { DEAL_ROOM_CURRENT_USER_ID } from "@/lib/deal-room/constants"
+import type { ChatUser, Conversation, Message } from "@/lib/deal-room/types"
 
-const now = new Date();
+const now = new Date()
 
 function isoOffset(minutes: number): string {
-  return new Date(now.getTime() - minutes * 60 * 1000).toISOString();
+  return new Date(now.getTime() - minutes * 60 * 1000).toISOString()
 }
 
 // ─── Current user ─────────────────────────────────────────────────────────────
 
-export const CURRENT_USER_ID = DEAL_ROOM_CURRENT_USER_ID;
+export const CURRENT_USER_ID = DEAL_ROOM_CURRENT_USER_ID
 
 // ─── Users ────────────────────────────────────────────────────────────────────
 
@@ -23,7 +23,7 @@ export const mockChatUsers: ChatUser[] = [
     phone: "+84 90 123 4567",
     website: "arobid.com",
     location: "Ho Chi Minh City, Vietnam",
-    isActive: true,
+    isActive: true
   },
   {
     id: "user-nguyen",
@@ -34,7 +34,7 @@ export const mockChatUsers: ChatUser[] = [
     phone: "+84 91 234 5678",
     website: "viettech.vn",
     location: "Hanoi, Vietnam",
-    isActive: true,
+    isActive: true
   },
   {
     id: "user-nina",
@@ -45,7 +45,7 @@ export const mockChatUsers: ChatUser[] = [
     phone: "+65 8123 4567",
     website: "medworld.asia",
     location: "Singapore",
-    isActive: true,
+    isActive: true
   },
   {
     id: "user-minh",
@@ -56,7 +56,7 @@ export const mockChatUsers: ChatUser[] = [
     phone: "+84 93 345 6789",
     website: "foodfarminc.com",
     location: "Can Tho, Vietnam",
-    isActive: true,
+    isActive: true
   },
   {
     id: "user-sarah",
@@ -66,7 +66,7 @@ export const mockChatUsers: ChatUser[] = [
     jobTitle: "Regional Sales Director",
     phone: "+84 94 456 7890",
     location: "Ho Chi Minh City, Vietnam",
-    isActive: true,
+    isActive: true
   },
   {
     id: "user-tommy",
@@ -77,9 +77,9 @@ export const mockChatUsers: ChatUser[] = [
     phone: "+84 98 567 8901",
     website: "cloudconnect.io",
     location: "Da Nang, Vietnam",
-    isActive: true,
-  },
-];
+    isActive: true
+  }
+]
 
 // ─── Conversations ─────────────────────────────────────────────────────────────
 
@@ -89,52 +89,52 @@ export const mockConversations: Conversation[] = [
     type: "direct",
     members: [
       { userId: "user-current", joinedAt: isoOffset(120), isArchived: false },
-      { userId: "user-nguyen", joinedAt: isoOffset(120), isArchived: false },
+      { userId: "user-nguyen", joinedAt: isoOffset(120), isArchived: false }
     ],
     createdAt: isoOffset(120),
-    isReadOnly: false,
+    isReadOnly: false
   },
   {
     id: "conv-002",
     type: "direct",
     members: [
       { userId: "user-current", joinedAt: isoOffset(200), isArchived: false },
-      { userId: "user-nina", joinedAt: isoOffset(200), isArchived: false },
+      { userId: "user-nina", joinedAt: isoOffset(200), isArchived: false }
     ],
     createdAt: isoOffset(200),
-    isReadOnly: false,
+    isReadOnly: false
   },
   {
     id: "conv-003",
     type: "direct",
     members: [
       { userId: "user-current", joinedAt: isoOffset(1500), isArchived: false },
-      { userId: "user-minh", joinedAt: isoOffset(1500), isArchived: false },
+      { userId: "user-minh", joinedAt: isoOffset(1500), isArchived: false }
     ],
     createdAt: isoOffset(1500),
-    isReadOnly: false,
+    isReadOnly: false
   },
   {
     id: "conv-004",
     type: "direct",
     members: [
       { userId: "user-current", joinedAt: isoOffset(500), isArchived: false },
-      { userId: "user-sarah", joinedAt: isoOffset(500), isArchived: false },
+      { userId: "user-sarah", joinedAt: isoOffset(500), isArchived: false }
     ],
     createdAt: isoOffset(500),
-    isReadOnly: false,
+    isReadOnly: false
   },
   {
     id: "conv-005",
     type: "direct",
     members: [
       { userId: "user-current", joinedAt: isoOffset(1000), isArchived: false },
-      { userId: "user-tommy", joinedAt: isoOffset(1000), isArchived: false },
+      { userId: "user-tommy", joinedAt: isoOffset(1000), isArchived: false }
     ],
     createdAt: isoOffset(1000),
-    isReadOnly: false,
-  },
-];
+    isReadOnly: false
+  }
+]
 
 // ─── Messages ─────────────────────────────────────────────────────────────────
 
@@ -150,7 +150,7 @@ export const mockMessages: Record<string, Message[]> = {
       status: "read",
       sentAt: isoOffset(118),
       isDeleted: false,
-      isSystemMessage: false,
+      isSystemMessage: false
     },
     {
       id: "msg-001-2",
@@ -162,7 +162,7 @@ export const mockMessages: Record<string, Message[]> = {
       status: "read",
       sentAt: isoOffset(115),
       isDeleted: false,
-      isSystemMessage: false,
+      isSystemMessage: false
     },
     {
       id: "msg-001-3",
@@ -176,13 +176,13 @@ export const mockMessages: Record<string, Message[]> = {
           fileName: "FoodFarmInc_Catalog_2025.pdf",
           fileUrl: "#",
           fileSize: 2_450_000,
-          fileType: "pdf",
-        },
+          fileType: "pdf"
+        }
       ],
       status: "read",
       sentAt: isoOffset(110),
       isDeleted: false,
-      isSystemMessage: false,
+      isSystemMessage: false
     },
     {
       id: "msg-001-4",
@@ -194,7 +194,7 @@ export const mockMessages: Record<string, Message[]> = {
       status: "read",
       sentAt: isoOffset(105),
       isDeleted: false,
-      isSystemMessage: false,
+      isSystemMessage: false
     },
     {
       id: "msg-001-5",
@@ -206,8 +206,8 @@ export const mockMessages: Record<string, Message[]> = {
       status: "read",
       sentAt: isoOffset(100),
       isDeleted: false,
-      isSystemMessage: false,
-    },
+      isSystemMessage: false
+    }
   ],
 
   "conv-002": [
@@ -221,7 +221,7 @@ export const mockMessages: Record<string, Message[]> = {
       status: "read",
       sentAt: isoOffset(195),
       isDeleted: false,
-      isSystemMessage: false,
+      isSystemMessage: false
     },
     {
       id: "msg-002-2",
@@ -233,7 +233,7 @@ export const mockMessages: Record<string, Message[]> = {
       status: "read",
       sentAt: isoOffset(180),
       isDeleted: false,
-      isSystemMessage: false,
+      isSystemMessage: false
     },
     {
       id: "msg-002-3",
@@ -245,7 +245,7 @@ export const mockMessages: Record<string, Message[]> = {
       status: "read",
       sentAt: isoOffset(160),
       isDeleted: false,
-      isSystemMessage: false,
+      isSystemMessage: false
     },
     {
       id: "msg-002-4",
@@ -257,7 +257,7 @@ export const mockMessages: Record<string, Message[]> = {
       status: "delivered",
       sentAt: isoOffset(45),
       isDeleted: false,
-      isSystemMessage: false,
+      isSystemMessage: false
     },
     {
       id: "msg-002-5",
@@ -269,8 +269,8 @@ export const mockMessages: Record<string, Message[]> = {
       status: "delivered",
       sentAt: isoOffset(30),
       isDeleted: false,
-      isSystemMessage: false,
-    },
+      isSystemMessage: false
+    }
   ],
 
   "conv-003": [
@@ -284,7 +284,7 @@ export const mockMessages: Record<string, Message[]> = {
       status: "read",
       sentAt: isoOffset(1450),
       isDeleted: false,
-      isSystemMessage: false,
+      isSystemMessage: false
     },
     {
       id: "msg-003-2",
@@ -296,7 +296,7 @@ export const mockMessages: Record<string, Message[]> = {
       status: "read",
       sentAt: isoOffset(1430),
       isDeleted: false,
-      isSystemMessage: false,
+      isSystemMessage: false
     },
     {
       id: "msg-003-3",
@@ -308,7 +308,7 @@ export const mockMessages: Record<string, Message[]> = {
       status: "read",
       sentAt: isoOffset(1420),
       isDeleted: false,
-      isSystemMessage: false,
+      isSystemMessage: false
     },
     {
       id: "msg-003-4",
@@ -320,8 +320,8 @@ export const mockMessages: Record<string, Message[]> = {
       status: "read",
       sentAt: isoOffset(1400),
       isDeleted: false,
-      isSystemMessage: false,
-    },
+      isSystemMessage: false
+    }
   ],
 
   "conv-004": [
@@ -335,8 +335,8 @@ export const mockMessages: Record<string, Message[]> = {
       status: "read",
       sentAt: isoOffset(490),
       isDeleted: false,
-      isSystemMessage: false,
-    },
+      isSystemMessage: false
+    }
   ],
 
   "conv-005": [
@@ -350,10 +350,10 @@ export const mockMessages: Record<string, Message[]> = {
       status: "read",
       sentAt: isoOffset(990),
       isDeleted: false,
-      isSystemMessage: false,
-    },
-  ],
-};
+      isSystemMessage: false
+    }
+  ]
+}
 
 // ─── Initial unread counts (per current user) ─────────────────────────────────
 
@@ -362,5 +362,5 @@ export const mockInitialUnreadCounts: Record<string, number> = {
   "conv-002": 2, // msg-002-4 and msg-002-5
   "conv-003": 0,
   "conv-004": 1,
-  "conv-005": 0,
-};
+  "conv-005": 0
+}

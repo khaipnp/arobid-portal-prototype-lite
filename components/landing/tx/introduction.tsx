@@ -36,7 +36,7 @@ export function Introduction() {
             ["95%", "AI Matching Precision"],
             ["90%", "Cost Optimization"],
             ["100%", "Verified Business Entities"],
-            ["60%", "Faster Decision Making"],
+            ["60%", "Faster Decision Making"]
           ].map(([value, label]) => (
             <div
               key={label}

@@ -8,7 +8,7 @@ export default function PartnerNotificationsPage() {
       description="Updates and alerts for your expo management."
       breadcrumbs={[
         { label: "Dashboard", href: "/partner" },
-        { label: "Notifications" },
+        { label: "Notifications" }
       ]}
     >
       <NotificationsPageContent userId="partner-1" />

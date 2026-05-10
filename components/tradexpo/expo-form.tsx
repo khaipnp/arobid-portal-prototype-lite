@@ -9,7 +9,7 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
+  CardTitle
 } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
@@ -19,20 +19,20 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
 import { useUpload } from "@/hooks/use-upload"
 import {
   EXPO_FORM_TIMEZONES,
-  toDatetimeLocalValue,
+  toDatetimeLocalValue
 } from "@/lib/tradexpo/expo-form-utils"
 import type {
   Expo,
   ExpoCategory,
   ExpoHall,
   ExpoLayoutTemplate,
-  HallTemplate,
+  HallTemplate
 } from "@/lib/tradexpo/types"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group"
 import { Spinner } from "../ui/spinner"
@@ -55,7 +55,7 @@ function newHallRow(index: number): HallFormRow {
     hallTemplateId: "",
     basicQty: 0,
     professionalQty: 0,
-    premiumQty: 0,
+    premiumQty: 0
   }
 }
 
@@ -67,7 +67,7 @@ function hallsToRows(halls: ExpoHall[]): HallFormRow[] {
     hallTemplateId: h.hallTemplateId,
     basicQty: h.basicQty,
     professionalQty: h.professionalQty,
-    premiumQty: h.premiumQty,
+    premiumQty: h.premiumQty
   }))
 }
 
@@ -91,23 +91,23 @@ export function ExpoForm(props: ExpoFormProps) {
   const isEdit = props.mode === "edit"
 
   const [name, setName] = React.useState(() =>
-    isEdit ? props.initialExpo.name : "",
+    isEdit ? props.initialExpo.name : ""
   )
   const [description, setDescription] = React.useState(() =>
-    isEdit ? (props.initialExpo.description ?? "") : "",
+    isEdit ? (props.initialExpo.description ?? "") : ""
   )
   const [thumbnailUrl, setThumbnailUrl] = React.useState(() =>
-    isEdit ? props.initialExpo.thumbnailUrl : "",
+    isEdit ? props.initialExpo.thumbnailUrl : ""
   )
   const [expoTemplateId, setExpoTemplateId] = React.useState(() =>
-    isEdit ? (props.initialExpo.expoTemplateId ?? "") : "",
+    isEdit ? (props.initialExpo.expoTemplateId ?? "") : ""
   )
   const [categoryIds, setCategoryIds] = React.useState<string[]>(() =>
-    isEdit ? props.initialExpo.categoryIds : [],
+    isEdit ? props.initialExpo.categoryIds : []
   )
   const [categoryQuery, setCategoryQuery] = React.useState("")
   const [timezone, setTimezone] = React.useState(() =>
-    isEdit ? (props.initialExpo.timezone ?? "Asia/Bangkok") : "Asia/Bangkok",
+    isEdit ? (props.initialExpo.timezone ?? "Asia/Bangkok") : "Asia/Bangkok"
   )
 
   const [startLocal, setStartLocal] = React.useState(() => {
@@ -116,7 +116,7 @@ export function ExpoForm(props: ExpoFormProps) {
         return toDatetimeLocalValue(new Date(props.initialExpo.startAt))
       }
       return toDatetimeLocalValue(
-        new Date(`${props.initialExpo.startDate}T12:00:00`),
+        new Date(`${props.initialExpo.startDate}T12:00:00`)
       )
     }
     return toDatetimeLocalValue(new Date())
@@ -127,7 +127,7 @@ export function ExpoForm(props: ExpoFormProps) {
         return toDatetimeLocalValue(new Date(props.initialExpo.endAt))
       }
       return toDatetimeLocalValue(
-        new Date(`${props.initialExpo.endDate}T12:00:00`),
+        new Date(`${props.initialExpo.endDate}T12:00:00`)
       )
     }
     const d = new Date()
@@ -138,16 +138,16 @@ export function ExpoForm(props: ExpoFormProps) {
   const [ownerQuery, setOwnerQuery] = React.useState(() =>
     isEdit
       ? (props.initialOwner?.email ?? props.initialExpo.ownerEmail ?? "")
-      : "",
+      : ""
   )
   const [ownerResults, setOwnerResults] = React.useState<OwnerPick[]>([])
   const [ownerPick, setOwnerPick] = React.useState<OwnerPick | null>(() =>
-    isEdit ? props.initialOwner : null,
+    isEdit ? props.initialOwner : null
   )
   const [ownerLoading, setOwnerLoading] = React.useState(false)
 
   const [halls, setHalls] = React.useState<HallFormRow[]>(() =>
-    isEdit ? hallsToRows(props.initialHalls) : [newHallRow(0)],
+    isEdit ? hallsToRows(props.initialHalls) : [newHallRow(0)]
   )
 
   const { uploadFile, isUploading } = useUpload()
@@ -176,7 +176,7 @@ export function ExpoForm(props: ExpoFormProps) {
       setOwnerLoading(true)
       try {
         const res = await fetch(
-          `/api/tradexpo/expo-owners/search?q=${encodeURIComponent(q)}`,
+          `/api/tradexpo/expo-owners/search?q=${encodeURIComponent(q)}`
         )
         const data = (await res.json()) as { users?: OwnerPick[] }
         setOwnerResults(data.users ?? [])
@@ -191,7 +191,7 @@ export function ExpoForm(props: ExpoFormProps) {
 
   function toggleCategory(id: string) {
     setCategoryIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     )
   }
 
@@ -205,7 +205,7 @@ export function ExpoForm(props: ExpoFormProps) {
 
   function updateHall(index: number, patch: Partial<HallFormRow>) {
     setHalls((prev) =>
-      prev.map((h, i) => (i === index ? { ...h, ...patch } : h)),
+      prev.map((h, i) => (i === index ? { ...h, ...patch } : h))
     )
   }
 
@@ -236,8 +236,8 @@ export function ExpoForm(props: ExpoFormProps) {
         hallTemplateId: h.hallTemplateId,
         basicQty: h.basicQty,
         professionalQty: h.professionalQty,
-        premiumQty: h.premiumQty,
-      })),
+        premiumQty: h.premiumQty
+      }))
     }
 
     setSubmitting(true)
@@ -246,7 +246,7 @@ export function ExpoForm(props: ExpoFormProps) {
         const res = await fetch(`/api/tradexpo/expos/${props.expoId}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+          body: JSON.stringify(payload)
         })
         const data = (await res.json()) as { ok?: boolean; error?: string }
         if (!res.ok) {
@@ -259,7 +259,7 @@ export function ExpoForm(props: ExpoFormProps) {
         const res = await fetch("/api/tradexpo/expos", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+          body: JSON.stringify(payload)
         })
         const data = (await res.json()) as { id?: string; error?: string }
         if (!res.ok) {
@@ -637,7 +637,7 @@ export function ExpoForm(props: ExpoFormProps) {
                       value={hall.basicQty}
                       onChange={(e) =>
                         updateHall(index, {
-                          basicQty: Number.parseInt(e.target.value, 10) || 0,
+                          basicQty: Number.parseInt(e.target.value, 10) || 0
                         })
                       }
                     />
@@ -651,7 +651,7 @@ export function ExpoForm(props: ExpoFormProps) {
                       onChange={(e) =>
                         updateHall(index, {
                           professionalQty:
-                            Number.parseInt(e.target.value, 10) || 0,
+                            Number.parseInt(e.target.value, 10) || 0
                         })
                       }
                     />
@@ -664,7 +664,7 @@ export function ExpoForm(props: ExpoFormProps) {
                       value={hall.premiumQty}
                       onChange={(e) =>
                         updateHall(index, {
-                          premiumQty: Number.parseInt(e.target.value, 10) || 0,
+                          premiumQty: Number.parseInt(e.target.value, 10) || 0
                         })
                       }
                     />

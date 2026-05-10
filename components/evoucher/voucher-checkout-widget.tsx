@@ -6,7 +6,7 @@ import {
   TicketCheckIcon,
   TicketXIcon,
   XCircleIcon,
-  XIcon,
+  XIcon
 } from "lucide-react"
 import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
@@ -17,12 +17,12 @@ import {
   applyDiscount,
   buildVoucherBatchView,
   formatDiscount,
-  formatVND,
+  formatVND
 } from "@/lib/evoucher/utils"
 import {
   InputGroup,
   InputGroupButton,
-  InputGroupInput,
+  InputGroupInput
 } from "../ui/input-group"
 import { Spinner } from "../ui/spinner"
 
@@ -54,13 +54,13 @@ export function VoucherCheckoutWidget({
   orderScopeType,
   orderScopeId,
   orderId,
-  onApplied,
+  onApplied
 }: VoucherCheckoutWidgetProps) {
   const [voucherBatches, setVoucherBatches] = useState<VoucherBatch[]>(() =>
-    batches.map((batch) => ({ ...batch })),
+    batches.map((batch) => ({ ...batch }))
   )
   const [voucherCodes, setVoucherCodes] = useState<VoucherCode[]>(() =>
-    codes.map((code) => ({ ...code })),
+    codes.map((code) => ({ ...code }))
   )
   const [inputCode, setInputCode] = useState("")
   const [loading, setLoading] = useState(false)
@@ -81,7 +81,7 @@ export function VoucherCheckoutWidget({
 
       // ── Try multi-use ──────────────────────────────────────────────────────
       const multiUseBatch = voucherBatches.find(
-        (b) => b.codeType === "multi-use" && b.multiUseCode === normalized,
+        (b) => b.codeType === "multi-use" && b.multiUseCode === normalized
       )
 
       if (!singleCode && !multiUseBatch) {
@@ -106,7 +106,7 @@ export function VoucherCheckoutWidget({
         }
         if (singleCode.status === "Locked") {
           setError(
-            "This voucher code is currently reserved by another transaction.",
+            "This voucher code is currently reserved by another transaction."
           )
           return
         }
@@ -165,7 +165,7 @@ export function VoucherCheckoutWidget({
       const finalTotal = applyDiscount(
         orderTotal,
         batch.discountType,
-        batch.discountValue,
+        batch.discountValue
       )
       const discountAmount = orderTotal - finalTotal
       const newApplied: AppliedVoucher = {
@@ -173,7 +173,7 @@ export function VoucherCheckoutWidget({
         batch,
         inputCode: normalized,
         discountAmount,
-        finalTotal,
+        finalTotal
       }
       setApplied(newApplied)
       setInputCode("")
@@ -222,7 +222,7 @@ export function VoucherCheckoutWidget({
               <span className="text-foreground">
                 {formatDiscount(
                   applied.batch.discountType,
-                  applied.batch.discountValue,
+                  applied.batch.discountValue
                 )}{" "}
                 off
               </span>
@@ -294,10 +294,10 @@ export function CheckoutOrderSummary({
   orderTotal,
   orderScopeType,
   orderScopeId,
-  orderId,
+  orderId
 }: OrderSummaryProps) {
   const [appliedVoucher, setAppliedVoucher] = useState<AppliedVoucher | null>(
-    null,
+    null
   )
   const [outcome, setOutcome] = useState<PaymentOutcome>(null)
   const [processing, setProcessing] = useState(false)
@@ -321,7 +321,7 @@ export function CheckoutOrderSummary({
             // Multi-use: finalize locked → redeemed
             appliedVoucher.batch.multiUseLockedCount = Math.max(
               0,
-              appliedVoucher.batch.multiUseLockedCount - 1,
+              appliedVoucher.batch.multiUseLockedCount - 1
             )
             appliedVoucher.batch.multiUseRedeemedCount += 1
           }
@@ -333,7 +333,7 @@ export function CheckoutOrderSummary({
           } else {
             appliedVoucher.batch.multiUseLockedCount = Math.max(
               0,
-              appliedVoucher.batch.multiUseLockedCount - 1,
+              appliedVoucher.batch.multiUseLockedCount - 1
             )
           }
         }
@@ -429,7 +429,7 @@ export function CheckoutOrderSummary({
               <Badge variant="outline" className="py-0 text-xs">
                 {formatDiscount(
                   appliedVoucher.batch.discountType,
-                  appliedVoucher.batch.discountValue,
+                  appliedVoucher.batch.discountValue
                 )}{" "}
                 off
               </Badge>

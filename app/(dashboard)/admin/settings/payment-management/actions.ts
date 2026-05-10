@@ -8,13 +8,13 @@ export async function savePlatformPaymentConfig(input: {
 }): Promise<PaymentConfig> {
   if (!input.vnpayEnabled) {
     throw new Error(
-      "VNPay is the only active payment method and cannot be disabled.",
+      "VNPay is the only active payment method and cannot be disabled."
     )
   }
 
   return updatePlatformPaymentConfig({
     vnpayEnabled: true,
     bankTransferEnabled: false,
-    updatedBy: "admin@arobid.com",
+    updatedBy: "admin@arobid.com"
   })
 }

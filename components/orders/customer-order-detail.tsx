@@ -7,14 +7,14 @@ import {
   type CustomerOrderStatus,
   CustomerOrderStatusBadge,
   getCustomerOrderStatusLabel,
-  mapOrderStatusForCustomer,
+  mapOrderStatusForCustomer
 } from "@/components/orders/customer-order-status"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import type {
   Order,
   OrderType,
-  TransactionLogEntry,
+  TransactionLogEntry
 } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
 
@@ -22,7 +22,7 @@ function formatVND(amount: number) {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
     currency: "VND",
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 0
   }).format(amount)
 }
 
@@ -32,7 +32,7 @@ function formatDate(iso: string) {
     month: "2-digit",
     year: "numeric",
     hour: "2-digit",
-    minute: "2-digit",
+    minute: "2-digit"
   })
 }
 
@@ -49,7 +49,7 @@ function formatRemaining(ms: number) {
 
   return `${String(minutes).padStart(2, "0")}m ${String(seconds).padStart(
     2,
-    "0",
+    "0"
   )}s`
 }
 
@@ -58,17 +58,17 @@ function bannerForStatus(status: CustomerOrderStatus) {
     case "Pending Payment":
       return {
         message: "Your payment is still in progress.",
-        className: "border-zinc-300 bg-zinc-50 text-zinc-700",
+        className: "border-zinc-300 bg-zinc-50 text-zinc-700"
       }
     case "Paid":
       return {
         message: "Payment confirmed.",
-        className: "border-emerald-300 bg-emerald-50 text-emerald-800",
+        className: "border-emerald-300 bg-emerald-50 text-emerald-800"
       }
     case "Cancel":
       return {
         message: "Payment was cancelled.",
-        className: "border-zinc-300 bg-zinc-50 text-zinc-700",
+        className: "border-zinc-300 bg-zinc-50 text-zinc-700"
       }
   }
 }
@@ -102,20 +102,20 @@ function referenceRows(order: Order): { label: string; value: string }[] {
       { label: "Order Type", value: getOrderTypeLabel(order.orderType) },
       { label: "Expo Name", value: order.expoName ?? order.referenceId },
       { label: "Booth Reference", value: order.boothRef ?? "Not specified" },
-      { label: "Tier", value: order.boothTier ?? "Not specified" },
+      { label: "Tier", value: order.boothTier ?? "Not specified" }
     ]
   }
 
   return [
     { label: "Order Type", value: getOrderTypeLabel(order.orderType) },
     { label: "Reference", value: order.expoName ?? order.referenceId },
-    { label: "Reference ID", value: order.referenceId },
+    { label: "Reference ID", value: order.referenceId }
   ]
 }
 
 export function CustomerOrderDetail({
   order,
-  transactionLog,
+  transactionLog
 }: {
   order: Order
   transactionLog: TransactionLogEntry[]
@@ -133,9 +133,9 @@ export function CustomerOrderDetail({
     () =>
       [...transactionLog].sort(
         (a, b) =>
-          new Date(a.processedAt).getTime() - new Date(b.processedAt).getTime(),
+          new Date(a.processedAt).getTime() - new Date(b.processedAt).getTime()
       ),
-    [transactionLog],
+    [transactionLog]
   )
 
   useEffect(() => {
@@ -257,7 +257,7 @@ export function CustomerOrderDetail({
                     <div
                       className={cn(
                         "mt-1 size-2.5 shrink-0 rounded-full",
-                        statusDotClass(entryStatus),
+                        statusDotClass(entryStatus)
                       )}
                     />
                     {index < sortedLog.length - 1 ? (

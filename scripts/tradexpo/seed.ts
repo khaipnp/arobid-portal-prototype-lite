@@ -7,7 +7,7 @@ import {
   mockHallSlotUsage,
   mockHallTemplateSlots,
   mockHallTemplates,
-  mockHallTemplateUsage,
+  mockHallTemplateUsage
 } from "@/lib/tradexpo/mock-data"
 
 async function ensureSchema() {

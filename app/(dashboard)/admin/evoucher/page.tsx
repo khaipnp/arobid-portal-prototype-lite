@@ -3,7 +3,7 @@ import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import {
   listVoucherBatches,
   listVoucherCodes,
-  listVoucherTargets,
+  listVoucherTargets
 } from "@/lib/evoucher/db"
 
 export const dynamic = "force-dynamic"
@@ -12,7 +12,7 @@ export default async function EVoucherPage() {
   const [batches, codes, targets] = await Promise.all([
     listVoucherBatches(),
     listVoucherCodes(),
-    listVoucherTargets(),
+    listVoucherTargets()
   ])
 
   return (

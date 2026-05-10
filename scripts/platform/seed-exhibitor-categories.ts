@@ -18,8 +18,8 @@ const CATEGORY_TREE: CategoryNode[] = [
         children: [
           { id: "cat-l3-fb-snacks", name: "Snacks & Confectionery" },
           { id: "cat-l3-fb-frozen-food", name: "Frozen Food" },
-          { id: "cat-l3-fb-canned-food", name: "Canned & Preserved Food" },
-        ],
+          { id: "cat-l3-fb-canned-food", name: "Canned & Preserved Food" }
+        ]
       },
       {
         id: "cat-l2-fb-beverages",
@@ -27,10 +27,10 @@ const CATEGORY_TREE: CategoryNode[] = [
         children: [
           { id: "cat-l3-fb-non-alcoholic", name: "Non-Alcoholic Drinks" },
           { id: "cat-l3-fb-coffee-tea", name: "Coffee & Tea" },
-          { id: "cat-l3-fb-functional", name: "Functional Beverages" },
-        ],
-      },
-    ],
+          { id: "cat-l3-fb-functional", name: "Functional Beverages" }
+        ]
+      }
+    ]
   },
   {
     id: "cat-l1-fashion-lifestyle",
@@ -42,8 +42,8 @@ const CATEGORY_TREE: CategoryNode[] = [
         children: [
           { id: "cat-l3-fl-men", name: "Men's Wear" },
           { id: "cat-l3-fl-women", name: "Women's Wear" },
-          { id: "cat-l3-fl-kids", name: "Kids' Wear" },
-        ],
+          { id: "cat-l3-fl-kids", name: "Kids' Wear" }
+        ]
       },
       {
         id: "cat-l2-fl-accessories",
@@ -51,10 +51,10 @@ const CATEGORY_TREE: CategoryNode[] = [
         children: [
           { id: "cat-l3-fl-bags", name: "Bags & Leather Goods" },
           { id: "cat-l3-fl-jewelry", name: "Jewelry & Watches" },
-          { id: "cat-l3-fl-footwear", name: "Footwear" },
-        ],
-      },
-    ],
+          { id: "cat-l3-fl-footwear", name: "Footwear" }
+        ]
+      }
+    ]
   },
   {
     id: "cat-l1-home-living",
@@ -66,8 +66,8 @@ const CATEGORY_TREE: CategoryNode[] = [
         children: [
           { id: "cat-l3-hl-office", name: "Office Furniture" },
           { id: "cat-l3-hl-residential", name: "Residential Furniture" },
-          { id: "cat-l3-hl-outdoor", name: "Outdoor Furniture" },
-        ],
+          { id: "cat-l3-hl-outdoor", name: "Outdoor Furniture" }
+        ]
       },
       {
         id: "cat-l2-hl-decor",
@@ -75,11 +75,11 @@ const CATEGORY_TREE: CategoryNode[] = [
         children: [
           { id: "cat-l3-hl-lighting", name: "Lighting" },
           { id: "cat-l3-hl-kitchenware", name: "Kitchenware" },
-          { id: "cat-l3-hl-textiles", name: "Home Textiles" },
-        ],
-      },
-    ],
-  },
+          { id: "cat-l3-hl-textiles", name: "Home Textiles" }
+        ]
+      }
+    ]
+  }
 ]
 
 type FlatCategory = {
@@ -93,7 +93,7 @@ type FlatCategory = {
 function flattenTree(
   nodes: CategoryNode[],
   level: number,
-  parentId: string | null,
+  parentId: string | null
 ): FlatCategory[] {
   const out: FlatCategory[] = []
   for (const [index, node] of nodes.entries()) {
@@ -102,7 +102,7 @@ function flattenTree(
       name: node.name,
       level,
       parentId,
-      sortOrder: index + 1,
+      sortOrder: index + 1
     })
     if (node.children && node.children.length > 0) {
       out.push(...flattenTree(node.children, level + 1, node.id))
@@ -172,11 +172,11 @@ async function main() {
       {
         categoriesUpserted: flat.length,
         leafCategories: leafCategoryIds.length,
-        exhibitorsProcessed: seededCount,
+        exhibitorsProcessed: seededCount
       },
       null,
-      2,
-    ),
+      2
+    )
   )
 }
 

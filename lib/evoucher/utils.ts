@@ -2,13 +2,13 @@ import type {
   VoucherBatch,
   VoucherBatchStatus,
   VoucherBatchView,
-  VoucherCode,
+  VoucherCode
 } from "./types"
 
 export function deriveVoucherBatchStatus(
   batch: VoucherBatch,
   lockedCount: number,
-  redeemedCount: number,
+  redeemedCount: number
 ): VoucherBatchStatus {
   if (batch.isRevoked) return "Revoked"
   const remaining = batch.issuedQuantity - lockedCount - redeemedCount
@@ -21,7 +21,7 @@ export function deriveVoucherBatchStatus(
 
 export function buildVoucherBatchView(
   batch: VoucherBatch,
-  codes: VoucherCode[],
+  codes: VoucherCode[]
 ): VoucherBatchView {
   let lockedCount: number
   let redeemedCount: number
@@ -41,20 +41,20 @@ export function buildVoucherBatchView(
   const derivedStatus = deriveVoucherBatchStatus(
     batch,
     lockedCount,
-    redeemedCount,
+    redeemedCount
   )
   return { ...batch, lockedCount, redeemedCount, remainingCount, derivedStatus }
 }
 
 export function formatDiscount(
   type: VoucherBatch["discountType"],
-  value: number,
+  value: number
 ): string {
   if (type === "percentage") return `${value}%`
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
     currency: "VND",
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 0
   }).format(value)
 }
 
@@ -62,7 +62,7 @@ export function formatVND(amount: number): string {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
     currency: "VND",
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 0
   }).format(amount)
 }
 
@@ -70,7 +70,7 @@ export function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("vi-VN", {
     day: "2-digit",
     month: "2-digit",
-    year: "numeric",
+    year: "numeric"
   })
 }
 
@@ -87,7 +87,7 @@ export function generateCodes(
   batchId: string,
   prefix: string,
   quantity: number,
-  existingCodes: Set<string> = new Set(),
+  existingCodes: Set<string> = new Set()
 ): VoucherCode[] {
   const codes: VoucherCode[] = []
   let attempts = 0
@@ -101,7 +101,7 @@ export function generateCodes(
         id: `code-${batchId}-${codes.length + 1}`,
         batchId,
         code,
-        status: "Available",
+        status: "Available"
       })
     }
   }
@@ -111,7 +111,7 @@ export function generateCodes(
 export function applyDiscount(
   orderTotal: number,
   type: VoucherBatch["discountType"],
-  value: number,
+  value: number
 ): number {
   if (type === "percentage") {
     return Math.round(orderTotal * (1 - value / 100))

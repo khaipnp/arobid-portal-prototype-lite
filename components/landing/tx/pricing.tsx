@@ -22,7 +22,7 @@ export function Pricing() {
               "relative overflow-hidden rounded-2xl border-2 bg-white/80 p-2 backdrop-blur-sm",
               plan.featured
                 ? "border-[#ed6203] shadow-[0_0_24px_rgba(0,0,0,0.08)]"
-                : "border-white",
+                : "border-white"
             )}
           >
             <div className="relative h-[166px] overflow-hidden rounded-xl">

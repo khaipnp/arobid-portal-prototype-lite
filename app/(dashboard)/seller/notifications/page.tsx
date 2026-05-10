@@ -9,7 +9,7 @@ export default function UserNotificationsPage() {
       description="Updates and alerts for your workspace activity."
       breadcrumbs={[
         { label: "Dashboard", href: "/seller" },
-        { label: "Notifications" },
+        { label: "Notifications" }
       ]}
     >
       <NotificationsPageContent userId={CURRENT_USER_ID} />

@@ -7,14 +7,14 @@ import { Button } from "@/components/ui/button"
 import {
   InputGroup,
   InputGroupAddon,
-  InputGroupInput,
+  InputGroupInput
 } from "@/components/ui/input-group"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from "@/components/ui/select"
 import type { ExpoDetailExhibitor } from "@/lib/tradexpo/db/platform-data"
 import { FloatingChat } from "../chat/floating-chat"
@@ -40,14 +40,14 @@ export function ExhibitorsSection({ expoName, initialExhibitors }: Props) {
     const tierPriority: Record<string, number> = {
       Premium: 1,
       Professional: 2,
-      Basic: 3,
+      Basic: 3
     }
 
     return [...items].sort(
       (a, b) =>
         (tierPriority[a.boothTier] ?? Number.MAX_SAFE_INTEGER) -
           (tierPriority[b.boothTier] ?? Number.MAX_SAFE_INTEGER) ||
-        a.company.localeCompare(b.company),
+        a.company.localeCompare(b.company)
     )
   }, [items])
 
@@ -58,7 +58,7 @@ export function ExhibitorsSection({ expoName, initialExhibitors }: Props) {
     if (category !== "all") query.set("category", category)
 
     fetch(`/api/tradexpo/exhibitors?${query.toString()}`, {
-      signal: controller.signal,
+      signal: controller.signal
     })
       .then((res) => res.json())
       .then((payload: { data?: ExpoDetailExhibitor[] }) => {

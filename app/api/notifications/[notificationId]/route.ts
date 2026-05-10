@@ -18,7 +18,7 @@ export async function DELETE(request: Request, { params }: Props) {
   if (!notificationId.trim()) {
     return NextResponse.json(
       { error: "Missing notificationId." },
-      { status: 400 },
+      { status: 400 }
     )
   }
 
@@ -27,7 +27,7 @@ export async function DELETE(request: Request, { params }: Props) {
     if (!result.found) {
       return NextResponse.json(
         { error: "Notification not found." },
-        { status: 404 },
+        { status: 404 }
       )
     }
     return NextResponse.json({ ok: true })
@@ -37,7 +37,7 @@ export async function DELETE(request: Request, { params }: Props) {
     }
     return NextResponse.json(
       { error: "Failed to delete notification." },
-      { status: 500 },
+      { status: 500 }
     )
   }
 }

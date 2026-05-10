@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import {
   InputGroup,
   InputGroupAddon,
-  InputGroupInput,
+  InputGroupInput
 } from "@/components/ui/input-group"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
@@ -15,7 +15,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from "@/components/ui/table"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type {
@@ -24,7 +24,7 @@ import type {
   AdminPermission,
   AdminRole,
   ListResponse,
-  PaginationMeta,
+  PaginationMeta
 } from "@/lib/administration/types"
 
 type EntityType = "modules" | "roles" | "features" | "permissions"
@@ -42,21 +42,21 @@ const TITLES: Record<EntityType, string> = {
   modules: "Modules",
   roles: "Roles",
   features: "Features",
-  permissions: "Permissions",
+  permissions: "Permissions"
 }
 
 const EMPTY_COPY: Record<EntityType, string> = {
   modules: "No modules found.",
   roles: "No roles found.",
   features: "No features found.",
-  permissions: "No permissions found.",
+  permissions: "No permissions found."
 }
 
 const TABLE_HEADERS: Record<EntityType, string[]> = {
   modules: ["Module", "Code", "Description"],
   roles: ["Role", "Module", "Description"],
   features: ["Feature", "Module", "Description"],
-  permissions: ["Permission", "Permission Code", "Description"],
+  permissions: ["Permission", "Permission Code", "Description"]
 }
 
 function isPermissionRecord(value: EntityRecord): value is AdminPermission {
@@ -64,13 +64,13 @@ function isPermissionRecord(value: EntityRecord): value is AdminPermission {
 }
 
 function isRecordWithModuleName(
-  value: EntityRecord,
+  value: EntityRecord
 ): value is AdminRole | AdminFeature | AdminPermission {
   return "moduleName" in value
 }
 
 function isRecordWithDescription(
-  value: AdminRole | AdminFeature | AdminPermission,
+  value: AdminRole | AdminFeature | AdminPermission
 ): value is AdminRole | AdminFeature {
   return "description" in value
 }
@@ -123,14 +123,14 @@ function renderRows(entity: EntityType, data: EntityRecord[]) {
 export function AdministrationListPage({
   entity,
   initialData,
-  moduleOptions = [],
+  moduleOptions = []
 }: AdministrationListPageProps) {
   const [rows, setRows] = useState<EntityRecord[]>(initialData?.data ?? [])
   const [meta, setMeta] = useState<PaginationMeta>({
     page: initialData?.meta.page ?? 1,
     pageSize: PAGE_SIZE,
     totalItems: initialData?.meta.totalItems ?? 0,
-    totalPages: initialData?.meta.totalPages ?? 1,
+    totalPages: initialData?.meta.totalPages ?? 1
   })
   const [searchInput, setSearchInput] = useState("")
   const [search, setSearch] = useState("")
@@ -161,14 +161,14 @@ export function AdministrationListPage({
           pageSize: String(PAGE_SIZE),
           search,
           moduleId: moduleFilter,
-          refresh: String(refreshKey),
+          refresh: String(refreshKey)
         })
         const response = await fetch(
           `/api/administration/${entity}?${params}`,
           {
             cache: "default",
-            signal: controller.signal,
-          },
+            signal: controller.signal
+          }
         )
         if (!response.ok) {
           throw new Error("Unable to load data")
@@ -223,7 +223,7 @@ export function AdministrationListPage({
     "skeleton-row-3",
     "skeleton-row-4",
     "skeleton-row-5",
-    "skeleton-row-6",
+    "skeleton-row-6"
   ]
 
   return (

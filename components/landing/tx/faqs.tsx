@@ -27,7 +27,7 @@ export function Faqs({ defaultOpenFaq = 1 }: FaqsProps) {
               key={tab}
               className={cn(
                 "h-12 text-sm",
-                index === 0 && "border-[#ed6203] border-b-2 text-[#ed6203]",
+                index === 0 && "border-[#ed6203] border-b-2 text-[#ed6203]"
               )}
             >
               {tab}
@@ -46,7 +46,7 @@ export function Faqs({ defaultOpenFaq = 1 }: FaqsProps) {
                   "w-full rounded-lg px-6 py-5 text-left text-sm",
                   open
                     ? "bg-white shadow-[0_0_24px_rgba(0,0,0,0.08)]"
-                    : "bg-[#f9fafb]",
+                    : "bg-[#f9fafb]"
                 )}
               >
                 <span className="flex items-center justify-between gap-4 font-medium">

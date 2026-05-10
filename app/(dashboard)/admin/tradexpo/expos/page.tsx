@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic"
 export default async function ExpoListPage() {
   const [initialExpos, initialCategories] = await Promise.all([
     listExpos(),
-    listExpoCategories(),
+    listExpoCategories()
   ])
 
   return (
@@ -17,7 +17,7 @@ export default async function ExpoListPage() {
       breadcrumbs={[
         { label: "Admin", href: "/admin" },
         { label: "TradeXpo", href: "/admin/tradexpo" },
-        { label: "Expo List" },
+        { label: "Expo List" }
       ]}
     >
       <ExpoListManager

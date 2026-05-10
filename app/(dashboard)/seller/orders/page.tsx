@@ -14,7 +14,7 @@ export default async function CustomerOrdersPage() {
       description="Track orders you placed on Arobid and review payment outcomes."
       breadcrumbs={[
         { label: "Dashboard", href: "/seller" },
-        { label: "Orders" },
+        { label: "Orders" }
       ]}
     >
       <CustomerOrderHistory initialOrders={initialOrders} />

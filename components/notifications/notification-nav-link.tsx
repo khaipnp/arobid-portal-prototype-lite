@@ -24,7 +24,7 @@ const POLL_MS = 10_000
 
 export function NotificationNavLink({
   userId,
-  href,
+  href
 }: NotificationNavLinkProps) {
   const pathname = usePathname()
   const [unreadCount, setUnreadCount] = useState(0)
@@ -38,8 +38,8 @@ export function NotificationNavLink({
       const response = await fetch(
         `/api/notifications/unread-count?userId=${encodedUserId}`,
         {
-          cache: "no-store",
-        },
+          cache: "no-store"
+        }
       )
       const payload = await readJson<{ unreadCount: number }>(response)
       if (payload) {

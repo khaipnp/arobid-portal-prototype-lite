@@ -35,7 +35,7 @@ export function NotificationItemRow({
   notification,
   isBusy = false,
   onRowClick,
-  onDelete,
+  onDelete
 }: NotificationItemRowProps) {
   const SourceIcon = getNotificationSourceIcon(notification.source)
   const relativeTime = getRelativeTimeLabel(notification.createdAt)
@@ -45,7 +45,7 @@ export function NotificationItemRow({
       className={cn(
         "w-full rounded-md border p-3 text-left transition-colors",
         "hover:bg-muted/60",
-        notification.isRead ? "bg-background" : "bg-muted/40",
+        notification.isRead ? "bg-background" : "bg-muted/40"
       )}
     >
       <div className="flex items-start gap-3">

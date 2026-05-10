@@ -5,7 +5,7 @@ import {
   ClockIcon,
   PlayCircleIcon,
   RadioIcon,
-  VideoIcon,
+  VideoIcon
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
@@ -16,7 +16,7 @@ import type {
   GoLIVEEvent,
   GoLIVEEventStatus,
   GoLIVESessionType,
-  StreamSession,
+  StreamSession
 } from "@/lib/tradexpo/types"
 
 type VisitorExpoStatus = "Upcoming" | "Live" | "Archive"
@@ -34,7 +34,7 @@ const SESSION_TYPE_LABELS: Record<GoLIVESessionType, string> = {
   Keynote: "Keynote",
   Panel: "Panel",
   ProductDemo: "Product Demo",
-  Other: "Other",
+  Other: "Other"
 }
 
 const _statusStyles: Record<GoLIVEEventStatus, string> = {
@@ -42,7 +42,7 @@ const _statusStyles: Record<GoLIVEEventStatus, string> = {
   Ready: "border-violet-300 bg-violet-50 text-violet-700",
   Live: "border-emerald-300 bg-emerald-50 text-emerald-700",
   Ended: "border-zinc-300 bg-zinc-100 text-zinc-600",
-  Canceled: "border-rose-300 bg-rose-50 text-rose-700",
+  Canceled: "border-rose-300 bg-rose-50 text-rose-700"
 }
 
 function formatSchedule(iso: string | null) {
@@ -51,7 +51,7 @@ function formatSchedule(iso: string | null) {
     day: "2-digit",
     month: "short",
     hour: "2-digit",
-    minute: "2-digit",
+    minute: "2-digit"
   })
 }
 
@@ -224,11 +224,11 @@ export function GoLIVESection({
   expoId,
   expoStatus,
   goLiveEvents,
-  streamSessions,
+  streamSessions
 }: Props) {
   const visitorStatus = toVisitorStatus(expoStatus)
   const allEvents = goLiveEvents.filter(
-    (e) => e.expoId === expoId && e.status !== "Canceled",
+    (e) => e.expoId === expoId && e.status !== "Canceled"
   )
 
   // Filter by expo visibility rules
@@ -238,7 +238,7 @@ export function GoLIVESection({
     }
     if (visitorStatus === "Archive") {
       const session = streamSessions.find(
-        (s) => s.streamSessionId === event.streamSessionId,
+        (s) => s.streamSessionId === event.streamSessionId
       )
       return (
         event.status === "Ended" && session?.replayEnabled && session?.replayUrl
@@ -256,16 +256,16 @@ export function GoLIVESection({
     Scheduled: 1,
     Ready: 2,
     Ended: 3,
-    Canceled: 4,
+    Canceled: 4
   }
   const sorted = [...eligibleEvents].sort(
-    (a, b) => sortOrder[a.status] - sortOrder[b.status],
+    (a, b) => sortOrder[a.status] - sortOrder[b.status]
   )
 
   const pairs = sorted
     .map((event) => {
       const session = streamSessions.find(
-        (s) => s.streamSessionId === event.streamSessionId,
+        (s) => s.streamSessionId === event.streamSessionId
       )
       return session ? { event, session } : null
     })

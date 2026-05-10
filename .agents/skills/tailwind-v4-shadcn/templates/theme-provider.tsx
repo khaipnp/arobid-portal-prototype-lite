@@ -3,7 +3,7 @@ import {
   type ReactNode,
   useContext,
   useEffect,
-  useState,
+  useState
 } from "react"
 
 type Theme = "dark" | "light" | "system"
@@ -21,7 +21,7 @@ type ThemeProviderState = {
 
 const initialState: ThemeProviderState = {
   theme: "system",
-  setTheme: () => null,
+  setTheme: () => null
 }
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState)
@@ -80,7 +80,7 @@ export function ThemeProvider({
         }
       }
       setTheme(theme)
-    },
+    }
   }
 
   return (

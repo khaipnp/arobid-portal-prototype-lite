@@ -2,7 +2,7 @@
 
 import {
   resetExpoPaymentConfig,
-  upsertExpoPaymentConfig,
+  upsertExpoPaymentConfig
 } from "@/lib/orders/db"
 import type { ExpoPaymentConfig } from "@/lib/tradexpo/types"
 
@@ -12,7 +12,7 @@ export async function saveExpoPaymentConfig(input: {
 }): Promise<ExpoPaymentConfig> {
   if (!input.vnpayEnabled) {
     throw new Error(
-      "VNPay is the only active payment method and cannot be disabled.",
+      "VNPay is the only active payment method and cannot be disabled."
     )
   }
 
@@ -21,12 +21,12 @@ export async function saveExpoPaymentConfig(input: {
     vnpayEnabled: true,
     bankTransferEnabled: false,
     bankAccountId: null,
-    updatedBy: "admin@arobid.com",
+    updatedBy: "admin@arobid.com"
   })
 }
 
 export async function resetExpoPaymentConfigToDefault(
-  expoId: string,
+  expoId: string
 ): Promise<void> {
   await resetExpoPaymentConfig(expoId)
 }

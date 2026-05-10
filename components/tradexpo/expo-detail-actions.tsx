@@ -12,7 +12,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialogTitle
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import type { ExpoStatus } from "@/lib/tradexpo/types"
@@ -23,7 +23,7 @@ export function ExpoDetailActions({
   expoId,
   name,
   ownerEmail,
-  status,
+  status
 }: {
   expoId: string
   name: string
@@ -45,7 +45,7 @@ export function ExpoDetailActions({
     try {
       if (confirmKind === "delete") {
         const res = await fetch(`/api/tradexpo/expos/${expoId}`, {
-          method: "DELETE",
+          method: "DELETE"
         })
         if (!res.ok) {
           setNotice({ type: "error", text: "Could not delete expo." })
@@ -61,7 +61,7 @@ export function ExpoDetailActions({
       const res = await fetch(`/api/tradexpo/expos/${expoId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: nextStatus }),
+        body: JSON.stringify({ status: nextStatus })
       })
       if (!res.ok) {
         setNotice({
@@ -69,7 +69,7 @@ export function ExpoDetailActions({
           text:
             confirmKind === "approve"
               ? "Could not approve expo."
-              : "Could not archive expo.",
+              : "Could not archive expo."
         })
         return
       }
@@ -77,12 +77,12 @@ export function ExpoDetailActions({
       if (confirmKind === "approve") {
         setNotice({
           type: "success",
-          text: `"${name}" is now Live. Approval notification sent to ${ownerEmail}.`,
+          text: `"${name}" is now Live. Approval notification sent to ${ownerEmail}.`
         })
       } else {
         setNotice({
           type: "success",
-          text: `"${name}" has been archived.`,
+          text: `"${name}" has been archived.`
         })
       }
       setConfirmKind(null)
@@ -100,21 +100,21 @@ export function ExpoDetailActions({
           title: "Approve expo?",
           description: `This will set "${name}" to Live and notify the owner at ${ownerEmail}.`,
           actionLabel: "Approve",
-          destructive: false,
+          destructive: false
         }
       : confirmKind === "archive"
         ? {
             title: "Archive expo?",
             description: `"${name}" will be archived and removed from the public listing.`,
             actionLabel: "Archive",
-            destructive: false,
+            destructive: false
           }
         : confirmKind === "delete"
           ? {
               title: "Delete expo?",
               description: `This will permanently delete "${name}". This action cannot be undone.`,
               actionLabel: "Delete",
-              destructive: true,
+              destructive: true
             }
           : null
 

@@ -7,19 +7,24 @@ import { cn } from "@/lib/utils"
 import "./globals.css"
 import { Toaster } from "@/components/ui/sonner"
 
-const googleSans = Google_Sans({ subsets: ["latin"], variable: "--font-sans" })
+const googleSans = Google_Sans({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  adjustFontFallback: false
+})
 const googleSansFlex = Google_Sans_Flex({
   subsets: ["latin"],
   variable: "--font-tight",
+  adjustFontFallback: false
 })
 
 const fontMono = Geist_Mono({
   subsets: ["latin"],
-  variable: "--font-mono",
+  variable: "--font-mono"
 })
 
 export default function RootLayout({
-  children,
+  children
 }: Readonly<{
   children: React.ReactNode
 }>) {
@@ -32,7 +37,7 @@ export default function RootLayout({
         fontMono.variable,
         "font-sans",
         googleSans.variable,
-        googleSansFlex.variable,
+        googleSansFlex.variable
       )}
     >
       <body>

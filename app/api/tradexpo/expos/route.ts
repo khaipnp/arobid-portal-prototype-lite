@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 import {
   createExpoWithHalls,
-  listExpoLayoutTemplates,
+  listExpoLayoutTemplates
 } from "@/lib/tradexpo/db/platform-data"
 import { validateHallBlocks } from "@/lib/tradexpo/expo-create-validation"
 import type { ExpoHallDraft } from "@/lib/tradexpo/types"
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
   if (!name || name.length > 255) {
     return NextResponse.json(
       { error: "Expo name is required (max 255 characters)." },
-      { status: 400 },
+      { status: 400 }
     )
   }
 
@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   if (!description) {
     return NextResponse.json(
       { error: "Description is required." },
-      { status: 400 },
+      { status: 400 }
     )
   }
 
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
   if (!expoTemplateId) {
     return NextResponse.json(
       { error: "Select an expo template." },
-      { status: 400 },
+      { status: 400 }
     )
   }
 
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
   if (!templates.some((t) => t.id === expoTemplateId)) {
     return NextResponse.json(
       { error: "Invalid expo template." },
-      { status: 400 },
+      { status: 400 }
     )
   }
 
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
   if (categoryIds.length === 0) {
     return NextResponse.json(
       { error: "Select at least one category." },
-      { status: 400 },
+      { status: 400 }
     )
   }
 
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
   if (!startAt || !endAt) {
     return NextResponse.json(
       { error: "Start and end date/time are required." },
-      { status: 400 },
+      { status: 400 }
     )
   }
 
@@ -78,7 +78,7 @@ export async function POST(request: Request) {
   if (!Number.isNaN(startMs) && startMs < now - 60_000) {
     return NextResponse.json(
       { error: "Start date/time cannot be in the past." },
-      { status: 400 },
+      { status: 400 }
     )
   }
 
@@ -88,7 +88,7 @@ export async function POST(request: Request) {
   if (!ownerUserId || !ownerEmail) {
     return NextResponse.json(
       { error: "Search and select an expo owner account by email." },
-      { status: 400 },
+      { status: 400 }
     )
   }
 
@@ -110,7 +110,7 @@ export async function POST(request: Request) {
       timezone,
       ownerUserId,
       ownerEmail,
-      halls,
+      halls
     })
     return NextResponse.json({ id: result.id })
   } catch (e) {

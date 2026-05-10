@@ -7,7 +7,7 @@ import {
   listNotifications,
   markAllNotificationsRead,
   markNotificationRead,
-  publishNotification,
+  publishNotification
 } from "@/lib/notifications/service"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 
@@ -38,14 +38,14 @@ describe("notification schema", () => {
       "reference_type",
       "is_read",
       "created_at",
-      "read_at",
+      "read_at"
     ]
     for (const column of requiredColumns) {
       expect(columnNames.has(column)).toBe(true)
     }
 
     const notificationId = rows.find(
-      (row) => row.column_name === "notification_id",
+      (row) => row.column_name === "notification_id"
     )
     expect(notificationId?.data_type).toBe("uuid")
 
@@ -66,14 +66,14 @@ describe("notification schema", () => {
     expect(indexNames.has("idx_notifications_dedupe_lookup")).toBe(true)
 
     const dedupeIndex = indexRows.find(
-      (row) => row.indexname === "idx_notifications_dedupe_lookup",
+      (row) => row.indexname === "idx_notifications_dedupe_lookup"
     )
     expect(dedupeIndex).toBeDefined()
     expect(dedupeIndex?.indexdef).toContain(
-      "(user_id, source, type, reference_id, created_at DESC)",
+      "(user_id, source, type, reference_id, created_at DESC)"
     )
     expect(dedupeIndex?.indexdef).toContain(
-      "WHERE ((reference_id IS NOT NULL) AND (reference_type IS NOT NULL))",
+      "WHERE ((reference_id IS NOT NULL) AND (reference_type IS NOT NULL))"
     )
   })
 })
@@ -93,7 +93,7 @@ describe("NotificationService", () => {
       body: "message body",
       deepLinkPath: "/seller/deal-room",
       referenceId: "conv-1",
-      referenceType: "Conversation",
+      referenceType: "Conversation"
     })
 
     const second = await publishNotification({
@@ -104,7 +104,7 @@ describe("NotificationService", () => {
       body: "message body",
       deepLinkPath: "/seller/deal-room",
       referenceId: "conv-1",
-      referenceType: "Conversation",
+      referenceType: "Conversation"
     })
 
     expect(first.deduped).toBe(false)
@@ -126,7 +126,7 @@ describe("NotificationService", () => {
       type: "message_received",
       title: "New message",
       body: "message body",
-      deepLinkPath: "/seller/deal-room",
+      deepLinkPath: "/seller/deal-room"
     })
     const second = await publishNotification({
       userId: "seller-1",
@@ -134,7 +134,7 @@ describe("NotificationService", () => {
       type: "message_received",
       title: "Another message",
       body: "message body",
-      deepLinkPath: "/seller/deal-room",
+      deepLinkPath: "/seller/deal-room"
     })
 
     expect(first.deduped).toBe(false)
@@ -161,7 +161,7 @@ describe("NotificationService", () => {
         body: "message body",
         deepLinkPath: "/seller/deal-room",
         referenceId: "conv-window",
-        referenceType: "Conversation",
+        referenceType: "Conversation"
       })
 
       await sql`
@@ -178,7 +178,7 @@ describe("NotificationService", () => {
         body: "message body",
         deepLinkPath: "/seller/deal-room",
         referenceId: "conv-window",
-        referenceType: "Conversation",
+        referenceType: "Conversation"
       })
 
       expect(second.deduped).toBe(false)
@@ -207,7 +207,7 @@ describe("NotificationService", () => {
       type: "payment_confirmed",
       title: "Payment confirmed",
       body: "Order paid",
-      deepLinkPath: "/seller/orders",
+      deepLinkPath: "/seller/orders"
     })
 
     const unreadBefore = await getUnreadCount("seller-2")
@@ -215,11 +215,11 @@ describe("NotificationService", () => {
 
     const firstRead = await markNotificationRead(
       "seller-2",
-      created.notificationId,
+      created.notificationId
     )
     const secondRead = await markNotificationRead(
       "seller-2",
-      created.notificationId,
+      created.notificationId
     )
 
     expect(firstRead.found).toBe(true)
@@ -242,11 +242,11 @@ describe("NotificationService", () => {
       type: "payment_confirmed",
       title: "Payment confirmed",
       body: "Order paid",
-      deepLinkPath: "/seller/orders",
+      deepLinkPath: "/seller/orders"
     })
 
     await expect(
-      markNotificationRead("seller-2b", "not-a-valid-uuid"),
+      markNotificationRead("seller-2b", "not-a-valid-uuid")
     ).rejects.toThrow("invalid notification id")
     expect(await getUnreadCount("seller-2b")).toBe(1)
   })
@@ -258,7 +258,7 @@ describe("NotificationService", () => {
       type: "payment_confirmed",
       title: "Unread notification",
       body: "Order paid",
-      deepLinkPath: "/seller/orders",
+      deepLinkPath: "/seller/orders"
     })
     const read = await publishNotification({
       userId: "seller-5",
@@ -266,7 +266,7 @@ describe("NotificationService", () => {
       type: "message_received",
       title: "Read notification",
       body: "Message received",
-      deepLinkPath: "/seller/deal-room",
+      deepLinkPath: "/seller/deal-room"
     })
     await markNotificationRead("seller-5", read.notificationId)
 
@@ -274,7 +274,7 @@ describe("NotificationService", () => {
 
     const unreadDelete = await deleteNotification(
       "seller-5",
-      unread.notificationId,
+      unread.notificationId
     )
     expect(unreadDelete.found).toBe(true)
     expect(unreadDelete.deleted).toBe(true)
@@ -295,11 +295,11 @@ describe("NotificationService", () => {
       type: "payment_confirmed",
       title: "Payment confirmed",
       body: "Order paid",
-      deepLinkPath: "/seller/orders",
+      deepLinkPath: "/seller/orders"
     })
 
     await expect(
-      deleteNotification("seller-6", "not-a-valid-uuid"),
+      deleteNotification("seller-6", "not-a-valid-uuid")
     ).rejects.toThrow("invalid notification id")
     expect(await getUnreadCount("seller-6")).toBe(1)
   })
@@ -311,7 +311,7 @@ describe("NotificationService", () => {
       type: "payment_confirmed",
       title: "One",
       body: "Order paid",
-      deepLinkPath: "/seller/orders",
+      deepLinkPath: "/seller/orders"
     })
     const createdTwo = await publishNotification({
       userId: "seller-4",
@@ -319,7 +319,7 @@ describe("NotificationService", () => {
       type: "payment_confirmed",
       title: "Two",
       body: "Order paid",
-      deepLinkPath: "/seller/orders",
+      deepLinkPath: "/seller/orders"
     })
 
     await sql`
@@ -338,7 +338,7 @@ describe("NotificationService", () => {
 
     const secondPage = await listNotifications("seller-4", {
       limit: 1,
-      cursor: `${firstRow?.createdAt}|${firstRow?.notificationId}`,
+      cursor: `${firstRow?.createdAt}|${firstRow?.notificationId}`
     })
     expect(secondPage).toHaveLength(1)
     expect(secondPage[0]?.notificationId).not.toBe(firstRow?.notificationId)
@@ -351,7 +351,7 @@ describe("NotificationService", () => {
       type: "payment_confirmed",
       title: "Payment confirmed",
       body: "Order paid",
-      deepLinkPath: "/seller/orders",
+      deepLinkPath: "/seller/orders"
     })
     await publishNotification({
       userId: "seller-3",
@@ -359,7 +359,7 @@ describe("NotificationService", () => {
       type: "expo_updated",
       title: "Expo updated",
       body: "Your expo draft changed",
-      deepLinkPath: "/seller/expos",
+      deepLinkPath: "/seller/expos"
     })
 
     expect(await getUnreadCount("seller-3")).toBe(2)

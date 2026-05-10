@@ -1,14 +1,14 @@
-import { sql } from "@/lib/db/neon";
+import { sql } from "@/lib/db/neon"
 import type {
   ChatUser,
   Conversation,
   ConversationMember,
   Message,
-  MessageAttachment,
-} from "@/lib/deal-room/types";
+  MessageAttachment
+} from "@/lib/deal-room/types"
 
 function toIso(value: string | Date) {
-  return new Date(value).toISOString();
+  return new Date(value).toISOString()
 }
 
 export async function listChatUsers(userId?: string): Promise<ChatUser[]> {
@@ -30,17 +30,17 @@ export async function listChatUsers(userId?: string): Promise<ChatUser[]> {
     select * from users order by name asc
   `
   ) as {
-    id: string;
-    name: string;
-    email: string;
-    company: string;
-    job_title: string | null;
-    phone: string | null;
-    website: string | null;
-    location: string | null;
-    avatar_url: string | null;
-    is_active: boolean;
-  }[];
+    id: string
+    name: string
+    email: string
+    company: string
+    job_title: string | null
+    phone: string | null
+    website: string | null
+    location: string | null
+    avatar_url: string | null
+    is_active: boolean
+  }[]
   return rows.map((r) => ({
     id: r.id,
     name: r.name,
@@ -51,12 +51,12 @@ export async function listChatUsers(userId?: string): Promise<ChatUser[]> {
     website: r.website ?? undefined,
     location: r.location ?? undefined,
     avatarUrl: r.avatar_url ?? undefined,
-    isActive: r.is_active,
-  }));
+    isActive: r.is_active
+  }))
 }
 
 export async function listConversations(
-  userId?: string,
+  userId?: string
 ): Promise<
   (Conversation & { lastMessage?: string; lastMessageAt?: string })[]
 > {
@@ -78,33 +78,33 @@ export async function listConversations(
     from chat_conversations order by created_at desc
   `
   ) as {
-    id: string;
-    type: Conversation["type"];
-    created_at: string | Date;
-    is_read_only: boolean;
-    last_message?: string;
-    last_message_at?: string | Date;
-  }[];
+    id: string
+    type: Conversation["type"]
+    created_at: string | Date
+    is_read_only: boolean
+    last_message?: string
+    last_message_at?: string | Date
+  }[]
 
   const memberRows = (await sql`
     select * from chat_conversation_members
     where conversation_id in (select id from chat_conversations)
   `) as {
-    conversation_id: string;
-    user_id: string;
-    joined_at: string | Date;
-    is_archived: boolean;
-  }[];
+    conversation_id: string
+    user_id: string
+    joined_at: string | Date
+    is_archived: boolean
+  }[]
 
-  const membersByConv = new Map<string, ConversationMember[]>();
+  const membersByConv = new Map<string, ConversationMember[]>()
   for (const m of memberRows) {
-    const list = membersByConv.get(m.conversation_id) ?? [];
+    const list = membersByConv.get(m.conversation_id) ?? []
     list.push({
       userId: m.user_id,
       joinedAt: toIso(m.joined_at),
-      isArchived: m.is_archived,
-    });
-    membersByConv.set(m.conversation_id, list);
+      isArchived: m.is_archived
+    })
+    membersByConv.set(m.conversation_id, list)
   }
 
   return convRows.map((r) => ({
@@ -114,12 +114,12 @@ export async function listConversations(
     createdAt: toIso(r.created_at),
     isReadOnly: r.is_read_only,
     lastMessage: r.last_message,
-    lastMessageAt: r.last_message_at ? toIso(r.last_message_at) : undefined,
-  }));
+    lastMessageAt: r.last_message_at ? toIso(r.last_message_at) : undefined
+  }))
 }
 
 export async function listMessagesByConversation(
-  userId?: string,
+  userId?: string
 ): Promise<Record<string, Message[]>> {
   const rows = (
     userId
@@ -133,21 +133,21 @@ export async function listMessagesByConversation(
     select * from chat_messages order by sent_at asc
   `
   ) as {
-    id: string;
-    conversation_id: string;
-    sender_id: string;
-    content: string;
-    attachments: MessageAttachment[];
-    status: Message["status"];
-    sent_at: string | Date;
-    edited_at: string | Date | null;
-    is_deleted: boolean;
-    is_system_message: boolean;
-  }[];
+    id: string
+    conversation_id: string
+    sender_id: string
+    content: string
+    attachments: MessageAttachment[]
+    status: Message["status"]
+    sent_at: string | Date
+    edited_at: string | Date | null
+    is_deleted: boolean
+    is_system_message: boolean
+  }[]
 
-  const out: Record<string, Message[]> = {};
+  const out: Record<string, Message[]> = {}
   for (const r of rows) {
-    const list = out[r.conversation_id] ?? [];
+    const list = out[r.conversation_id] ?? []
     list.push({
       id: r.id,
       conversationId: r.conversation_id,
@@ -158,35 +158,35 @@ export async function listMessagesByConversation(
       sentAt: toIso(r.sent_at),
       editedAt: r.edited_at ? toIso(r.edited_at) : undefined,
       isDeleted: r.is_deleted,
-      isSystemMessage: r.is_system_message,
-    });
-    out[r.conversation_id] = list;
+      isSystemMessage: r.is_system_message
+    })
+    out[r.conversation_id] = list
   }
-  return out;
+  return out
 }
 
 export async function listUnreadCountsForUser(
-  userId: string,
+  userId: string
 ): Promise<Record<string, number>> {
   const rows = (await sql`
     select conversation_id, unread_count from chat_unread_counts
     where user_id = ${userId}
-  `) as { conversation_id: string; unread_count: number }[];
-  const out: Record<string, number> = {};
+  `) as { conversation_id: string; unread_count: number }[]
+  const out: Record<string, number> = {}
   for (const r of rows) {
-    out[r.conversation_id] = Number(r.unread_count);
+    out[r.conversation_id] = Number(r.unread_count)
   }
-  return out;
+  return out
 }
 
 export async function createMessage(input: {
-  id: string;
-  conversationId: string;
-  senderId: string;
-  content: string;
-  attachments: MessageAttachment[];
-  status: Message["status"];
-  sentAt: string;
+  id: string
+  conversationId: string
+  senderId: string
+  content: string
+  attachments: MessageAttachment[]
+  status: Message["status"]
+  sentAt: string
 }): Promise<void> {
   await sql`
     insert into chat_messages (
@@ -213,14 +213,14 @@ export async function createMessage(input: {
       false,
       false
     )
-  `;
+  `
 }
 
 export async function updateMessageContent(input: {
-  messageId: string;
-  conversationId: string;
-  content: string;
-  editedAt: string;
+  messageId: string
+  conversationId: string
+  content: string
+  editedAt: string
 }): Promise<void> {
   await sql`
     update chat_messages
@@ -229,12 +229,12 @@ export async function updateMessageContent(input: {
       and conversation_id = ${input.conversationId}
       and is_deleted = false
       and is_system_message = false
-  `;
+  `
 }
 
 export async function softDeleteMessage(input: {
-  messageId: string;
-  conversationId: string;
+  messageId: string
+  conversationId: string
 }): Promise<void> {
   await sql`
     update chat_messages
@@ -242,17 +242,17 @@ export async function softDeleteMessage(input: {
     where id = ${input.messageId}
       and conversation_id = ${input.conversationId}
       and is_system_message = false
-  `;
+  `
 }
 
 export async function archiveConversationForUser(input: {
-  conversationId: string;
-  userId: string;
+  conversationId: string
+  userId: string
 }): Promise<void> {
   await sql`
     update chat_conversation_members
     set is_archived = true
     where conversation_id = ${input.conversationId}
       and user_id = ${input.userId}
-  `;
+  `
 }

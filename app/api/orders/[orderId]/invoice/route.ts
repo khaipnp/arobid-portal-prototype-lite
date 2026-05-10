@@ -3,7 +3,7 @@ import { listOrders, updateInvoiceProcessing } from "@/lib/orders/db"
 import type {
   InvoiceStatus,
   Order,
-  TransactionLogEntry,
+  TransactionLogEntry
 } from "@/lib/tradexpo/types"
 
 interface Props {
@@ -12,7 +12,7 @@ interface Props {
 
 function applyInvoiceAction(
   order: Order,
-  action: "export" | "issue" | "send",
+  action: "export" | "issue" | "send"
 ): {
   nextStatus: InvoiceStatus
   patch: Partial<Order>
@@ -32,7 +32,7 @@ function applyInvoiceAction(
         exportedAt: now,
         exportedBy: "admin@arobid.com",
         exportBatchId,
-        updatedAt: now,
+        updatedAt: now
       },
       logEntry: {
         id: `tx-${order.id}-invoice-export-${Date.now()}`,
@@ -41,8 +41,8 @@ function applyInvoiceAction(
         status: order.status,
         actor: "Admin (admin@arobid.com)",
         note: `Invoice data exported (${exportBatchId})`,
-        processedAt: now,
-      },
+        processedAt: now
+      }
     }
   }
 
@@ -54,7 +54,7 @@ function applyInvoiceAction(
         invoiceStatus: "issued",
         issuedAt: now,
         issuedBy: "finance@arobid.com",
-        updatedAt: now,
+        updatedAt: now
       },
       logEntry: {
         id: `tx-${order.id}-invoice-issued-${Date.now()}`,
@@ -63,8 +63,8 @@ function applyInvoiceAction(
         status: order.status,
         actor: "Finance/Admin (finance@arobid.com)",
         note: "Invoice marked as issued",
-        processedAt: now,
-      },
+        processedAt: now
+      }
     }
   }
 
@@ -75,7 +75,7 @@ function applyInvoiceAction(
       invoiceStatus: "sent",
       sentAt: now,
       sentBy: "finance@arobid.com",
-      updatedAt: now,
+      updatedAt: now
     },
     logEntry: {
       id: `tx-${order.id}-invoice-sent-${Date.now()}`,
@@ -84,8 +84,8 @@ function applyInvoiceAction(
       status: order.status,
       actor: "Finance/Admin (finance@arobid.com)",
       note: "Invoice marked as sent",
-      processedAt: now,
-    },
+      processedAt: now
+    }
   }
 }
 
@@ -108,7 +108,7 @@ export async function POST(request: Request, { params }: Props) {
   if (!update) {
     return NextResponse.json(
       { error: "Action is not allowed." },
-      { status: 400 },
+      { status: 400 }
     )
   }
 
@@ -126,12 +126,12 @@ export async function POST(request: Request, { params }: Props) {
       id: update.logEntry.id,
       actor: update.logEntry.actor,
       note: update.logEntry.note ?? "",
-      processedAt: update.logEntry.processedAt,
-    },
+      processedAt: update.logEntry.processedAt
+    }
   })
 
   return NextResponse.json({
     order: { ...order, ...update.patch },
-    logEntry: update.logEntry,
+    logEntry: update.logEntry
   })
 }

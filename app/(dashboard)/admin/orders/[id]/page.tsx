@@ -23,7 +23,7 @@ export default async function OrderDetailPage({ params }: Props) {
       breadcrumbs={[
         { label: "Admin", href: "/admin" },
         { label: "Orders", href: "/admin/orders" },
-        { label: id },
+        { label: id }
       ]}
     >
       <OrderDetail

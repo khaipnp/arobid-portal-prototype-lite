@@ -6,7 +6,7 @@ import {
   listExpos,
   listGoLIVEEvents,
   listSellerBoothRegistrations,
-  listStreamSessions,
+  listStreamSessions
 } from "@/lib/tradexpo/db/platform-data"
 import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
@@ -25,14 +25,14 @@ export default async function SellerExpoDetailPage({ params }: Props) {
     boothTemplates,
     boothCustomizations,
     goLiveEvents,
-    streamSessions,
+    streamSessions
   ] = await Promise.all([
     listExpos(),
     listSellerBoothRegistrations(CURRENT_USER_ID),
     listBoothTemplates(),
     listBoothCustomizations(),
     listGoLIVEEvents(),
-    listStreamSessions(),
+    listStreamSessions()
   ])
 
   const expo = expos.find((e) => e.id === expoId) ?? null
@@ -45,7 +45,7 @@ export default async function SellerExpoDetailPage({ params }: Props) {
       breadcrumbs={[
         { label: "Dashboard", href: "/seller" },
         { label: "My Expos", href: "/seller/my-expos" },
-        { label: expo?.name ?? expoId },
+        { label: expo?.name ?? expoId }
       ]}
     >
       <SellerExpoDetail

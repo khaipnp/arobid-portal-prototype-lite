@@ -14,8 +14,8 @@ async function testConnection() {
         Bucket: R2_BUCKET_NAME,
         Key: testKey,
         Body: "Hello Cloudflare R2 from Gemini CLI!",
-        ContentType: "text/plain",
-      }),
+        ContentType: "text/plain"
+      })
     )
     console.log("✅ Upload thành công!")
 
@@ -24,8 +24,8 @@ async function testConnection() {
     const listResponse = await r2Client.send(
       new ListObjectsV2Command({
         Bucket: R2_BUCKET_NAME,
-        MaxKeys: 5,
-      }),
+        MaxKeys: 5
+      })
     )
 
     console.log("✅ Danh sách tệp (tối đa 5):")

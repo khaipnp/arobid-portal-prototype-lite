@@ -13,7 +13,7 @@ export async function PATCH(request: Request, { params }: Props) {
   }
   await archiveConversationForUser({
     conversationId,
-    userId: body.userId,
+    userId: body.userId
   })
   return NextResponse.json({ ok: true })
 }

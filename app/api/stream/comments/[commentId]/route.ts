@@ -17,7 +17,7 @@ export async function DELETE(request: Request, { params }: Props) {
   await softDeleteLiveComment({
     liveCommentId: commentId,
     deletedByUserId: body.deletedByUserId,
-    deletedAt: body.deletedAt,
+    deletedAt: body.deletedAt
   })
   return NextResponse.json({ ok: true })
 }

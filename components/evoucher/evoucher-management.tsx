@@ -7,7 +7,7 @@ import {
   EllipsisVerticalIcon,
   FilterXIcon,
   PlusIcon,
-  SearchIcon,
+  SearchIcon
 } from "lucide-react"
 import { useMemo, useState } from "react"
 import {
@@ -18,7 +18,7 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialogTitle
 } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -27,7 +27,7 @@ import {
   CommandEmpty,
   CommandInput,
   CommandItem,
-  CommandList,
+  CommandList
 } from "@/components/ui/command"
 import {
   Dialog,
@@ -35,28 +35,28 @@ import {
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
+  DialogTitle
 } from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger,
+  PopoverTrigger
 } from "@/components/ui/popover"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
+  SelectValue
 } from "@/components/ui/select"
 import {
   Table,
@@ -64,7 +64,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
+  TableRow
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
 import type {
@@ -75,14 +75,14 @@ import type {
   VoucherCode,
   VoucherCodeType,
   VoucherScope,
-  VoucherTarget,
+  VoucherTarget
 } from "@/lib/evoucher/types"
 import {
   buildVoucherBatchView,
   displayCode,
   formatDate,
   formatDiscount,
-  generateCodes,
+  generateCodes
 } from "@/lib/evoucher/utils"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group"
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
@@ -100,7 +100,7 @@ function VoucherStatusBadge({ status }: { status: VoucherBatchStatus }) {
     Active: { label: "Active", variant: "default" },
     Expired: { label: "Expired", variant: "secondary" },
     Depleted: { label: "Depleted", variant: "outline" },
-    Revoked: { label: "Revoked", variant: "destructive" },
+    Revoked: { label: "Revoked", variant: "destructive" }
   }
   const { label, variant } = map[status]
   return <Badge variant={variant}>{label}</Badge>
@@ -124,7 +124,7 @@ function CodeTypeCard({
   description,
   disabled,
   label,
-  onClick,
+  onClick
 }: {
   active: boolean
   badge: string
@@ -174,7 +174,7 @@ function DiscountTypeBadge({ type }: { type: DiscountType }) {
 function exportBatchCSV(
   batch: VoucherBatch,
   codes: VoucherCode[],
-  remainingCount: number,
+  remainingCount: number
 ) {
   const today = new Date().toISOString().slice(0, 10)
   const discount =
@@ -203,7 +203,7 @@ function exportBatchCSV(
       discount,
       batch.issuedQuantity,
       remainingCount,
-      `"${batch.description ?? ""}"`,
+      `"${batch.description ?? ""}"`
     ].join(",")
     csv = [header, row].join("\n")
   } else {
@@ -219,8 +219,8 @@ function exportBatchCSV(
         batch.validUntil,
         discount,
         `"${batch.description ?? ""}"`,
-        c.status,
-      ].join(","),
+        c.status
+      ].join(",")
     )
     csv = [header, ...rows].join("\n")
   }
@@ -263,7 +263,7 @@ const emptyForm: FormState = {
   issuedQuantity: "",
   discountType: "",
   discountValue: "",
-  description: "",
+  description: ""
 }
 
 // ─── Create / Edit Dialog ─────────────────────────────────────────────────────
@@ -287,7 +287,7 @@ function VoucherFormDialog({
   existingMultiUseCodes,
   existingCodes,
   targets,
-  onSave,
+  onSave
 }: VoucherFormDialogProps) {
   const isEdit = editing !== null
   const hasRedemptions = isEdit ? editing.redeemedCount > 0 : false
@@ -306,7 +306,7 @@ function VoucherFormDialog({
         issuedQuantity: String(editing.issuedQuantity),
         discountType: editing.discountType,
         discountValue: String(editing.discountValue),
-        description: editing.description ?? "",
+        description: editing.description ?? ""
       }
     }
     return emptyForm
@@ -318,14 +318,14 @@ function VoucherFormDialog({
 
   const filteredTargets = useMemo(
     () => targets.filter((t) => t.type === form.applicableTo),
-    [form.applicableTo, targets],
+    [form.applicableTo, targets]
   )
   const [targetPickerOpen, setTargetPickerOpen] = useState(false)
   const [targetSearch, setTargetSearch] = useState("")
 
   const selectedTarget = useMemo(
     () => targets.find((t) => t.id === form.targetId) ?? null,
-    [form.targetId, targets],
+    [form.targetId, targets]
   )
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
@@ -413,7 +413,7 @@ function VoucherFormDialog({
           ? editing.discountValue
           : Number(form.discountValue),
         description: form.description,
-        updatedAt: now,
+        updatedAt: now
       }
       // Single-use: generate delta codes. Multi-use: just raise counter (no new codes).
       const deltaCodes =
@@ -425,8 +425,8 @@ function VoucherFormDialog({
               new Set(
                 existingCodes
                   .filter((c) => c.batchId === editing.id)
-                  .map((c) => c.code),
-              ),
+                  .map((c) => c.code)
+              )
             )
           : []
       onSave(updatedBatch, deltaCodes)
@@ -460,7 +460,7 @@ function VoucherFormDialog({
         description: form.description || undefined,
         isRevoked: false,
         createdAt: now,
-        updatedAt: now,
+        updatedAt: now
       }
       const newCodes =
         codeType === "single-use"
@@ -538,7 +538,7 @@ function VoucherFormDialog({
                 display:
                   form.codeType === "single-use" || (!isEdit && !form.codeType)
                     ? undefined
-                    : "none",
+                    : "none"
               }}
             >
               {form.codeType === "single-use" && (
@@ -850,21 +850,21 @@ interface EVoucherManagementProps {
 export function EVoucherManagement({
   initialBatches,
   initialCodes,
-  targets,
+  targets
 }: EVoucherManagementProps) {
   const [batches, setBatches] = useState<VoucherBatch[]>(() =>
-    initialBatches.map((b) => ({ ...b })),
+    initialBatches.map((b) => ({ ...b }))
   )
   const [codes, setCodes] = useState<VoucherCode[]>(() =>
-    initialCodes.map((c) => ({ ...c })),
+    initialCodes.map((c) => ({ ...c }))
   )
 
   // Filters
   const [statusFilter, setStatusFilter] = useState<VoucherBatchStatus | "all">(
-    "all",
+    "all"
   )
   const [codeTypeFilter, setCodeTypeFilter] = useState<VoucherCodeType | "all">(
-    "all",
+    "all"
   )
   const [scopeFilter, setScopeFilter] = useState<VoucherScope | "all">("all")
   const [search, setSearch] = useState("")
@@ -873,16 +873,16 @@ export function EVoucherManagement({
 
   const [formOpen, setFormOpen] = useState(false)
   const [editingBatch, setEditingBatch] = useState<VoucherBatchView | null>(
-    null,
+    null
   )
   const [revokeTarget, setRevokeTarget] = useState<VoucherBatchView | null>(
-    null,
+    null
   )
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
   const views = useMemo<VoucherBatchView[]>(
     () => batches.map((b) => buildVoucherBatchView(b, codes)),
-    [batches, codes],
+    [batches, codes]
   )
 
   const filtered = useMemo(() => {
@@ -916,9 +916,9 @@ export function EVoucherManagement({
       new Set(
         batches
           .filter((b) => b.codeType === "single-use")
-          .map((b) => b.codePrefix.toUpperCase()),
+          .map((b) => b.codePrefix.toUpperCase())
       ),
-    [batches],
+    [batches]
   )
 
   const existingMultiUseCodes = useMemo(
@@ -926,9 +926,9 @@ export function EVoucherManagement({
       new Set(
         batches
           .filter((b) => b.codeType === "multi-use")
-          .map((b) => b.multiUseCode.toUpperCase()),
+          .map((b) => b.multiUseCode.toUpperCase())
       ),
-    [batches],
+    [batches]
   )
 
   function handleSave(updatedBatch: VoucherBatch, deltaCodes: VoucherCode[]) {
@@ -949,7 +949,7 @@ export function EVoucherManagement({
     setSuccessMsg(
       isNew
         ? `${updatedBatch.codeType === "multi-use" ? "Multi-use code" : "Batch"} "${updatedBatch.name}" created.${updatedBatch.codeType === "single-use" ? ` ${updatedBatch.issuedQuantity} codes generated.` : ""}`
-        : `"${updatedBatch.name}" updated.${deltaCodes.length > 0 ? ` ${deltaCodes.length} new codes generated.` : ""}`,
+        : `"${updatedBatch.name}" updated.${deltaCodes.length > 0 ? ` ${deltaCodes.length} new codes generated.` : ""}`
     )
     setTimeout(() => setSuccessMsg(null), 4000)
     setFormOpen(false)
@@ -964,8 +964,8 @@ export function EVoucherManagement({
       prev.map((b) =>
         b.id === revokeTarget.id
           ? { ...b, isRevoked: true, updatedAt: new Date().toISOString() }
-          : b,
-      ),
+          : b
+      )
     )
     setSuccessMsg(`"${revokeTarget.name}" has been revoked.`)
     setTimeout(() => setSuccessMsg(null), 4000)
@@ -1240,8 +1240,8 @@ export function EVoucherManagement({
             editingBatch
               ? new Set(
                   [...existingPrefixes].filter(
-                    (p) => p !== editingBatch.codePrefix.toUpperCase(),
-                  ),
+                    (p) => p !== editingBatch.codePrefix.toUpperCase()
+                  )
                 )
               : existingPrefixes
           }
@@ -1249,8 +1249,8 @@ export function EVoucherManagement({
             editingBatch
               ? new Set(
                   [...existingMultiUseCodes].filter(
-                    (c) => c !== editingBatch.multiUseCode.toUpperCase(),
-                  ),
+                    (c) => c !== editingBatch.multiUseCode.toUpperCase()
+                  )
                 )
               : existingMultiUseCodes
           }
