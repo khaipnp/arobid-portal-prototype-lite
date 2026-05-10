@@ -11,6 +11,7 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { usePathname, useRouter } from "next/navigation"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { getAssetUrl } from "@/lib/image-utils"
@@ -279,7 +280,7 @@ export function Categories() {
 
 export function ParticipantValues() {
   return (
-    <section className="bg-[#f9fafb] px-4 py-16 md:px-[78px]">
+    <section className="bg-[#f9fafb] px-4 py-16 md:px-20">
       <div className="container mx-auto text-center">
         <h2 className="font-semibold text-[32px] leading-10">
           Exclusive Values for Each Participant
@@ -318,12 +319,29 @@ export function ParticipantValues() {
   )
 }
 
-export function BoothTier({ slug }: { slug: string }) {
+export function BoothTier({
+  slug,
+  isAuthenticated
+}: {
+  slug: string
+  isAuthenticated: boolean
+}) {
+  const router = useRouter()
+  const pathname = usePathname()
   const [activeTierId, setActiveTierId] = useState<
     (typeof BOOTH_TIERS)[number]["id"]
   >(BOOTH_TIERS[2].id) // Default to Premium
   const activeTier =
     BOOTH_TIERS.find((t) => t.id === activeTierId) || BOOTH_TIERS[2]
+
+  const handleBookNow = () => {
+    if (!isAuthenticated) {
+      const loginUrl = `/login?callbackUrl=${encodeURIComponent(pathname)}`
+      router.push(loginUrl)
+      return
+    }
+    router.push(`/expos/${slug}/booking?tier=${activeTier.id}`)
+  }
 
   return (
     <section id="booths" className="container mx-auto px-4 py-16 md:px-0">
@@ -355,7 +373,7 @@ export function BoothTier({ slug }: { slug: string }) {
           <h3 className="font-semibold text-2xl leading-8">
             {activeTier.name} Booth
           </h3>
-          <p className="mt-2 text-[#6b7280] text-sm leading-5">
+          <p className="mt-2 text-muted-foreground text-sm leading-5">
             {activeTier.description}
           </p>
           <p className="mt-7 font-medium text-2xl leading-8">
@@ -364,7 +382,7 @@ export function BoothTier({ slug }: { slug: string }) {
           <div className="mt-5 grid gap-x-6 gap-y-2 md:grid-cols-2">
             {activeTier.features.map(([feature, strong]) => (
               <div key={feature} className="flex items-center gap-3 text-sm">
-                <CheckIcon className="size-4 text-[#16a34a]" />
+                <CheckIcon className="size-4 text-green-600" />
                 <span className={strong ? "font-semibold" : undefined}>
                   {feature}
                 </span>
@@ -372,18 +390,20 @@ export function BoothTier({ slug }: { slug: string }) {
             ))}
           </div>
           <div className="mt-auto flex flex-wrap gap-3 pt-7">
-            <button
-              type="button"
-              className="h-10 rounded-full bg-[#f3f4f6] px-6 font-medium text-foreground text-sm"
-            >
-              Explore Exhibitions
-            </button>
-            <Link
-              href={`/expos/${slug}/booking?tier=${activeTier.id}`}
-              className="inline-flex h-10 items-center justify-center rounded-full bg-legend px-10 font-medium text-sm text-white shadow-[0_1px_2px_rgba(0,0,0,0.2),0_0_0_1px_#f37b42]"
+            <Link href="#about">
+              <Button variant="secondary"
+              >
+                Explore Exhibitions
+              </Button>
+            </Link>
+
+            <Button
+              variant="default"
+              onClick={handleBookNow}
+              className="bg-legend hover:bg-legend-600"
             >
               Book Now
-            </Link>
+            </Button>
           </div>
         </div>
         <div className="relative min-h-90 overflow-hidden rounded-2xl bg-[#f3f4f6]">
@@ -396,7 +416,7 @@ export function BoothTier({ slug }: { slug: string }) {
             width={500}
             height={437}
             loading="eager"
-            className="absolute top-[58px] left-1/2 w-62 -translate-x-1/2 object-contain md:w-[300px]"
+            className="absolute top-14 left-1/2 w-62 -translate-x-1/2 object-contain md:w-[300px]"
           />
           <div className="absolute top-1/2 left-1/2 grid size-18 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-[20px] bg-black/60 text-white backdrop-blur-sm">
             <BoxIcon className="size-10" />
@@ -417,11 +437,11 @@ export function BoothTier({ slug }: { slug: string }) {
             Your road to big deals starts at the 2026 Expos.
           </p>
           <Link
-            href="/seller"
+            href="/rfq"
             className="mt-6 inline-flex h-10 items-center gap-2 rounded-full bg-legend px-6 font-medium text-sm text-white"
           >
             <SendIcon className="size-4" />
-            Register Booth Lite
+            Make an RFQ
           </Link>
         </div>
       </div>

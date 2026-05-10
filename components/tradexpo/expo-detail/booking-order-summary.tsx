@@ -38,8 +38,10 @@ export function BookingOrderSummary({
   const totalAmount = activeTier.price + serviceFee - discount / 25000 // Simplified for demo (assumes price is USD)
 
   return (
-    <div className="sticky top-8 flex w-full max-w-[400px] flex-col gap-5 rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-      <h2 className="font-medium text-[#030712] text-xl">Order Summary</h2>
+    <div className="sticky top-8 flex w-full max-w-md h-fit flex-col gap-5 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      <h2 className="select-none font-semibold text-foreground text-xl">
+        Order Summary
+      </h2>
 
       {/* Expo Info */}
       <div className="flex items-stretch gap-3">
@@ -63,39 +65,37 @@ export function BookingOrderSummary({
 
       {/* Hall & Booth Info */}
       <div className="flex items-end gap-4 self-stretch">
-        <div className="flex w-[107px] flex-col gap-1">
+        <div className="flex flex-1 flex-col gap-1">
           <span className="font-bold text-[10px] text-gray-500 uppercase tracking-wider">
             Hall
           </span>
-          <span className="font-medium text-[#1F2937] text-base">B</span>
+          <span className="font-medium text-foreground text-base">B</span>
         </div>
         <div className="h-8 w-px bg-gray-200" />
-        <div className="flex w-[107px] flex-col gap-1">
+        <div className="flex flex-1 flex-col gap-1">
           <span className="font-bold text-[10px] text-gray-500 uppercase tracking-wider">
             Booth
           </span>
-          <span className="font-medium text-[#1F2937] text-base">
+          <span className="font-medium text-foreground text-base">
             {selectedLocation || "--"}
           </span>
         </div>
-        <button className="ml-auto font-medium text-legend text-sm hover:underline">
-          Booth benefits
-        </button>
       </div>
 
       {/* E-Voucher Section */}
       <div className="flex flex-col gap-2">
-        <label className="font-medium text-[#030712] text-sm">E-voucher</label>
+        <label className="font-medium text-foreground text-sm">E-voucher</label>
         <div className="flex gap-2">
           <Input
             placeholder="Enter voucher code"
             value={voucher}
             onChange={(e) => setVoucher(e.target.value)}
-            className="h-10 border-gray-200 text-sm focus-visible:ring-legend"
+            className="rounded-full"
           />
           <Button
             variant="secondary"
-            className="h-10 rounded-full bg-[#FFEAE1] px-6 font-medium text-legend hover:bg-[#FFDCC5]"
+            size="lg"
+            className="rounded-full bg-legend-100 text-legend hover:bg-legend-200"
           >
             Apply
           </Button>
