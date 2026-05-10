@@ -138,7 +138,7 @@ export function BookingContent({ expo }: { expo: BookingExpo }) {
                 className="flex w-fit items-center gap-1 font-medium text-muted-foreground text-sm transition-colors hover:text-foreground"
               >
                 <ChevronLeftIcon className="size-4" />
-                Back to Expo Detail
+                Expo Detail
               </button>
             </AlertDialogTrigger>
             <AlertDialogContent className="bg-white">
@@ -154,10 +154,10 @@ export function BookingContent({ expo }: { expo: BookingExpo }) {
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                 <AlertDialogAction
-                  className="bg-legend hover:bg-legend-600"
+                  className="bg-legend! hover:bg-legend-600"
                   onClick={() => router.push(expoDetailPath)}
                 >
-                  Leave
+                  Yes, I'm sure
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
@@ -168,12 +168,12 @@ export function BookingContent({ expo }: { expo: BookingExpo }) {
             className="flex w-fit items-center gap-1 font-medium text-muted-foreground text-sm transition-colors hover:text-foreground"
           >
             <ChevronLeftIcon className="size-4" />
-            Back to Expo Detail
+            Expo Detail
           </Link>
         )}
 
         <div className="flex flex-col justify-between gap-6 md:flex-row md:items-center">
-          <h1 className="font-bold text-3xl text-[#030712] tracking-tight">
+          <h1 className="font-bold text-3xl text-foreground tracking-tight">
             Book a Booth
           </h1>
           <div className="flex items-center gap-3">
@@ -205,7 +205,7 @@ export function BookingContent({ expo }: { expo: BookingExpo }) {
                   <div
                     className={cn(
                       "mx-4 h-0.5 w-10 -translate-y-3 rounded-full transition-colors",
-                      step > s.id ? "bg-[#16a34a]" : "bg-gray-100"
+                      step > s.id ? "bg-green-500" : "bg-gray-100"
                     )}
                   />
                 )}
