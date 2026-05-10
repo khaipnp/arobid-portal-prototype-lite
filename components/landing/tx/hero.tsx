@@ -12,6 +12,7 @@ import {
   type CarouselApi,
 } from "@/components/ui/carousel"
 import { cn } from "@/lib/utils"
+import { getAssetUrl } from "@/lib/image-utils"
 import { asset } from "./data"
 
 export interface HeroExpoItem {
@@ -71,7 +72,7 @@ export function Hero({ expos }: HeroProps) {
             <CarouselItem key={expo.slug} className="relative pl-0">
               <div className="relative size-full">
                 <Image
-                  src={expo.backgroundImage || asset("hero-bg.jpg")}
+                  src={getAssetUrl(expo.backgroundImage, expo.title, 1920, 1080)}
                   alt={expo.title}
                   fill
                   priority={index === 0}
@@ -158,7 +159,7 @@ export function Hero({ expos }: HeroProps) {
             >
               <div className="relative h-28 w-full overflow-hidden rounded-xl">
                 <Image
-                  src={nextExpo.backgroundImage || asset("hero-card.jpg")}
+                  src={getAssetUrl(nextExpo.backgroundImage, nextExpo.title, 400, 225)}
                   alt=""
                   fill
                   className="object-cover"

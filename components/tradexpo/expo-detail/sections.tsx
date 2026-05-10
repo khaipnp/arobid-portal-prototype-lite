@@ -11,6 +11,7 @@ import Image from "next/image"
 import Link from "next/link"
 
 import { cn } from "@/lib/utils"
+import { getAssetUrl } from "@/lib/image-utils"
 
 import {
   asset,
@@ -51,12 +52,14 @@ export function Hero({
   expoTitle = "Vietnam International Furniture Manufacturing & Wood Expo (VIFMW) #1",
   startDateLabel = "April 15, 2026",
   endDateLabel = "April 17, 2026",
+  thumbnailUrl,
   virtualLobbyUrl,
   stats
 }: {
   expoTitle?: string
   startDateLabel?: string
   endDateLabel?: string
+  thumbnailUrl?: string
   virtualLobbyUrl?: string
   stats?: {
     exhibitors: number
@@ -76,7 +79,7 @@ export function Hero({
     <section className="bg-linear-to-b from-white via-25% via-[#ffe0d2] to-white pb-0">
       <div className="container relative mx-auto min-h-[60vh] overflow-hidden rounded-2xl">
         <Image
-          src={asset("figma-hero.png")}
+          src={getAssetUrl(thumbnailUrl, expoTitle, 1284, 722)}
           alt=""
           fill
           priority
@@ -135,12 +138,12 @@ export function Hero({
             <VirtualLobbyDialog src={virtualLobbyUrl} expoTitle={expoTitle} />
             <Link
               href="/seller"
-              className="inline-flex h-10 w-[178px] items-center justify-center rounded-full border border-white bg-white/10 font-medium text-white backdrop-blur"
+              className="inline-flex h-10 w-44 items-center justify-center rounded-full border border-white bg-white/10 font-medium text-white backdrop-blur"
             >
               Join as Exhibitor
             </Link>
           </div>
-          <div className="mt-9 grid max-w-[630px] grid-cols-2 gap-y-4 divide-white/20 md:grid-cols-4 md:divide-x">
+          <div className="mt-9 grid max-w-155 grid-cols-2 gap-y-4 divide-white/20 md:grid-cols-4 md:divide-x">
             {heroStats.map(([value, label]) => (
               <div key={label} className="first:pl-0 md:px-5">
                 <p className="font-medium text-2xl leading-8">{value}</p>
@@ -168,7 +171,7 @@ export function About({
         <p className="text-foreground text-sm leading-6">{description}</p>
         <a
           href="#booths"
-          className="mt-4 inline-flex items-center gap-1 font-medium text-[#ed6203] text-sm"
+          className="mt-4 inline-flex items-center gap-1 font-medium text-legend text-sm"
         >
           View more
           <ArrowRightIcon className="size-4" />
@@ -193,7 +196,7 @@ export function Sponsors() {
               alt={name}
               width={150}
               height={32}
-              className="h-7 max-w-[150px] object-contain"
+              className="h-7 max-w-37 object-contain"
             />
           ))}
           <span className="font-bold text-2xl">HubSpot</span>
@@ -369,13 +372,13 @@ export function BoothTier() {
             </button>
             <button
               type="button"
-              className="h-10 rounded-full bg-[#ed6203] px-10 font-medium text-sm text-white shadow-[0_1px_2px_rgba(0,0,0,0.2),0_0_0_1px_#f37b42]"
+              className="h-10 rounded-full bg-legend px-10 font-medium text-sm text-white shadow-[0_1px_2px_rgba(0,0,0,0.2),0_0_0_1px_#f37b42]"
             >
               Book Now
             </button>
           </div>
         </div>
-        <div className="relative min-h-[360px] overflow-hidden rounded-2xl bg-[#f3f4f6]">
+        <div className="relative min-h-90 overflow-hidden rounded-2xl bg-[#f3f4f6]">
           <p className="absolute top-8 left-1/2 -translate-x-1/2 font-semibold text-xl">
             Premium
           </p>
@@ -385,9 +388,9 @@ export function BoothTier() {
             width={500}
             height={437}
             loading="eager"
-            className="absolute top-[58px] left-1/2 w-[250px] -translate-x-1/2 object-contain md:w-[300px]"
+            className="absolute top-[58px] left-1/2 w-62 -translate-x-1/2 object-contain md:w-[300px]"
           />
-          <div className="absolute top-1/2 left-1/2 grid size-[72px] -translate-x-1/2 -translate-y-1/2 place-items-center rounded-[20px] bg-black/60 text-white backdrop-blur-sm">
+          <div className="absolute top-1/2 left-1/2 grid size-18 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-[20px] bg-black/60 text-white backdrop-blur-sm">
             <BoxIcon className="size-10" />
           </div>
         </div>
@@ -407,7 +410,7 @@ export function BoothTier() {
           </p>
           <Link
             href="/seller"
-            className="mt-6 inline-flex h-10 items-center gap-2 rounded-full bg-[#ed6203] px-6 font-medium text-sm text-white"
+            className="mt-6 inline-flex h-10 items-center gap-2 rounded-full bg-legend px-6 font-medium text-sm text-white"
           >
             <SendIcon className="size-4" />
             Register Booth Lite
