@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import { TxFooter } from "@/components/landing/tx-footer"
 import { TxHeader } from "@/components/landing/tx-header"
+import { BroadcastBFM } from "@/components/tradexpo/expo-detail/broadcast-bfm"
 import { ExhibitorsSection } from "@/components/tradexpo/expo-detail/exhibitors-section"
 import {
   About,
@@ -46,6 +47,15 @@ export default async function Page({
     listExpoDetailExhibitorsByName(expo.name),
     getExpoHeroStatsByExpo({ id: expo.id, name: expo.name })
   ])
+  const bfmBroadcastItems = exhibitors
+    .filter((exhibitor) => exhibitor.products.length > 0)
+    .slice(0, 6)
+    .map((exhibitor) => ({
+      id: `bfm-${exhibitor.id}`,
+      companyName: exhibitor.company,
+      productName: exhibitor.products[0],
+      ctaHref: "/bfm"
+    }))
   const virtualLobbyUrl = VIRTUAL_LOBBY_URL_BY_EXPO_SLUG[expo.slug ?? slug]
   const userId = await getCurrentSessionUserId()
 
@@ -72,6 +82,7 @@ export default async function Page({
       <Categories />
       <ParticipantValues />
       <BoothTier slug={slug} isAuthenticated={!!userId} />
+      <BroadcastBFM items={bfmBroadcastItems} />
       <TxFooter />
     </main>
   )
