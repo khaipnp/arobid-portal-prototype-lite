@@ -386,7 +386,7 @@ export function SellerExpoDetail({
                             alt={rfq.productName}
                             width={64}
                             height={64}
-                            className="aspect-square size-12 rounded-2xl border"
+                            className="aspect-square size-12 rounded-2xl border border-muted-foreground/40"
                           />
 
                           {/* RFQ Details */}
