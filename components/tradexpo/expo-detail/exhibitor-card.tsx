@@ -74,10 +74,14 @@ export function ExhibitorCard({ exhibitor, onChatClick }: ExhibitorCardProps) {
         <h3 className="min-w-0 flex-1 select-none font-semibold text-foreground text-sm">
           {exhibitor.company}
         </h3>
-        <HeartIcon
-          className="size-6 cursor-pointer fill-muted text-muted"
+        <Button
+          variant="ghost"
+          className="hover:bg-transparent cursor-pointer"
+          size="icon"
           onClick={() => toast("You added the exhibitor to your favorites!")}
-        />
+        >
+          <HeartIcon className="size-6 fill-muted text-muted" />
+        </Button>
       </div>
 
       <div className="flex flex-wrap items-center gap-x-1.5 gap-y-2 text-muted-foreground text-xs">
