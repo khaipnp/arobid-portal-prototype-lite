@@ -4,11 +4,12 @@ import { ArrowRight, RadarIcon } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 
-type BFMBroadcastItem = {
+export type BFMBroadcastItem = {
   id: string
   companyName: string
   productName: string
   ctaHref: string
+  logoUrl?: string
 }
 
 function trackBroadcastEvent(
@@ -38,10 +39,6 @@ export function BroadcastBFM({ items }: { items: BFMBroadcastItem[] }) {
   }, [isPaused, items.length])
 
   useEffect(() => {
-    setActiveIndex(0)
-  }, [items])
-
-  useEffect(() => {
     if (!activeBroadcast) return
     trackBroadcastEvent("broadcast_impression", {
       broadcast_id: activeBroadcast.id,
@@ -55,6 +52,7 @@ export function BroadcastBFM({ items }: { items: BFMBroadcastItem[] }) {
     <>
       <section
         aria-live="polite"
+        aria-label="Buyer Find and Match broadcast"
         className="fixed inset-x-0 bottom-0 z-50 hidden bg-legend text-white shadow-2xl md:block"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
@@ -88,7 +86,7 @@ export function BroadcastBFM({ items }: { items: BFMBroadcastItem[] }) {
                 target: activeBroadcast.ctaHref
               })
             }
-            className="inline-flex h-8 shrink-0 items-center rounded-full bg-white px-4 font-medium text-sm text-legend transition-colors hover:bg-legend-50"
+            className="inline-flex h-8 shrink-0 items-center rounded-full bg-white px-4 font-medium text-legend text-sm transition-colors hover:bg-legend-50"
           >
             Open Buyer Find & Match
             <ArrowRight className="size-4" />

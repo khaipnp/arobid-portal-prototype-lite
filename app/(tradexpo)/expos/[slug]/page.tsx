@@ -54,7 +54,8 @@ export default async function Page({
       id: `bfm-${exhibitor.id}`,
       companyName: exhibitor.company,
       productName: exhibitor.products[0],
-      ctaHref: "/bfm"
+      ctaHref: "/bfm",
+      logoUrl: exhibitor.logoUrl
     }))
   const virtualLobbyUrl = VIRTUAL_LOBBY_URL_BY_EXPO_SLUG[expo.slug ?? slug]
   const userId = await getCurrentSessionUserId()
@@ -70,6 +71,7 @@ export default async function Page({
         endDateLabel={toLongDate(expo.endDate)}
         virtualLobbyUrl={virtualLobbyUrl}
         stats={heroStats}
+        bfmItems={bfmBroadcastItems}
       />
       <About title={expo.name} description={expo.description} />
       <Sponsors />

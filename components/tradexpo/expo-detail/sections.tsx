@@ -13,6 +13,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useState } from "react"
+import type { BFMBroadcastItem } from "@/components/tradexpo/expo-detail/broadcast-bfm"
 import { Button } from "@/components/ui/button"
 import { getAssetUrl } from "@/lib/image-utils"
 import { cn } from "@/lib/utils"
@@ -57,13 +58,15 @@ export function Hero({
   endDateLabel = "April 17, 2026",
   thumbnailUrl,
   virtualLobbyUrl,
-  stats
+  stats,
+  bfmItems
 }: {
   expoTitle?: string
   startDateLabel?: string
   endDateLabel?: string
   thumbnailUrl?: string
   virtualLobbyUrl?: string
+  bfmItems?: BFMBroadcastItem[]
   stats?: {
     exhibitors: number
     visitors: number
@@ -135,7 +138,11 @@ export function Hero({
             {expoTitle}
           </h1>
           <div className="mt-5 flex flex-wrap gap-2">
-            <VirtualLobbyDialog src={virtualLobbyUrl} expoTitle={expoTitle} />
+            <VirtualLobbyDialog
+              src={virtualLobbyUrl}
+              expoTitle={expoTitle}
+              bfmItems={bfmItems}
+            />
             <Link href="#booths">
               <Button variant="secondary" size="lg">
                 Join as Exhibitor
