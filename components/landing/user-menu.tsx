@@ -1,6 +1,14 @@
 "use client"
 
-import { LayoutDashboard, LogOut, User } from "lucide-react"
+import {
+  BellIcon,
+  CogIcon,
+  HeartIcon,
+  LayoutDashboard,
+  ListChecksIcon,
+  MessageCircleMoreIcon,
+  User
+} from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -33,8 +41,14 @@ export function UserMenu({ user }: UserMenuProps) {
 
   const getDashboardPath = () => {
     if (user.roles.includes("admin")) return "/admin"
-    if (user.roles.includes("exhibitor")) return "/partner"
+    if (user.roles.includes("partner")) return "/partner"
     return "/seller"
+  }
+
+  const getNotificationPath = () => {
+    if (user.roles.includes("admin")) return "/admin/notifications"
+    if (user.roles.includes("partner")) return "/partner/notifications"
+    return "/seller/notifications"
   }
 
   return (
@@ -49,32 +63,93 @@ export function UserMenu({ user }: UserMenuProps) {
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="font-medium text-sm leading-none">{user.name}</p>
-            <p className="text-muted-foreground text-xs leading-none">
-              {user.email}
-            </p>
-          </div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link href={getDashboardPath()}>
-            <LayoutDashboard className="mr-2 h-4 w-4" />
-            <span>Dashboard</span>
+      <DropdownMenuContent
+        className="w-64 px-0 py-3 rounded-2xl"
+        align="end"
+        forceMount
+      >
+        <DropdownMenuItem asChild className="px-4 py-2.25 rounded-none gap-2">
+          <Link href={getNotificationPath()}>
+            <BellIcon strokeWidth="2" />
+            <span className="font-medium">Notifications</span>
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/profile">
-            <User className="mr-2 h-4 w-4" />
-            <span>Profile</span>
-          </Link>
-        </DropdownMenuItem>
+        {!user.roles.includes("admin") && (
+          <>
+            <DropdownMenuItem
+              asChild
+              className="px-4 py-2.25 rounded-none gap-2"
+            >
+              <Link href="/seller/deal-room">
+                <MessageCircleMoreIcon strokeWidth="2" />
+                <span className="font-medium">Deal Room</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              asChild
+              className="px-4 py-2.25 rounded-none gap-2"
+            >
+              <Link href="/seller/deal-room">
+                <ListChecksIcon strokeWidth="2" />
+                <span className="font-medium">RFQ Hub</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              asChild
+              className="px-4 py-2.25 rounded-none gap-2"
+            >
+              <Link href="/seller/deal-room">
+                <HeartIcon strokeWidth="2" />
+                <span className="font-medium">Wishlist</span>
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              asChild
+              className="px-4 rounded-none py-2.25 gap-2"
+            >
+              <Link href="/profile">
+                <User strokeWidth="2" />
+                <span className="font-medium">Profile</span>
+              </Link>
+            </DropdownMenuItem>
+          </>
+        )}
+
+        {/* User Workspace */}
+
+        {/* Partner Portal */}
+        {user.roles.includes("partner") && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="pl-4">Portal</DropdownMenuLabel>
+            <DropdownMenuItem
+              className="px-4 rounded-none py-2.25 gap-2"
+              asChild
+            >
+              <Link href={getDashboardPath()}>
+                <LayoutDashboard strokeWidth="2" />
+                <span className="font-medium">Dashboard</span>
+              </Link>
+            </DropdownMenuItem>
+
+            <DropdownMenuItem
+              className="px-4 rounded-none py-2.25 gap-2"
+              asChild
+            >
+              <Link href="/partner/settings">
+                <CogIcon strokeWidth="2" />
+                <span className="font-medium">Settings</span>
+              </Link>
+            </DropdownMenuItem>
+          </>
+        )}
+
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout}>
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Log out</span>
+        <DropdownMenuItem
+          onClick={handleLogout}
+          className="px-4 rounded-none py-2.25 gap-2"
+        >
+          <span className="font-normal">Log out</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

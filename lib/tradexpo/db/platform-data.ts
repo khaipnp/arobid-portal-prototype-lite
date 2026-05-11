@@ -162,6 +162,16 @@ export async function listExpos(): Promise<Expo[]> {
   return rows.map(rowToExpo)
 }
 
+export async function listExposByOwner(ownerUserId: string): Promise<Expo[]> {
+  const rows = (await sql`
+    select *
+    from expos
+    where owner_user_id = ${ownerUserId}
+    order by created_at desc
+  `) as ExpoRow[]
+  return rows.map(rowToExpo)
+}
+
 export async function getExpoBySlug(slug: string): Promise<Expo | null> {
   const bySlug = (await sql`
     select * from expos where slug = ${slug} limit 1
@@ -425,6 +435,12 @@ export async function createExpoWithHalls(
       )
     `
 
+    await sql`
+      insert into user_roles (user_id, role_id, expo_id)
+      values (${input.ownerUserId}, 'partner', null)
+      on conflict do nothing
+    `
+
     let order = 0
     for (const hall of input.halls) {
       const hallId = `expo-hall-${randomUUID()}`
@@ -525,6 +541,12 @@ export async function updateExpoWithHalls(
         start_at = ${start.toISOString()},
         end_at = ${end.toISOString()}
       where id = ${expoId}
+    `
+
+    await sql`
+      insert into user_roles (user_id, role_id, expo_id)
+      values (${input.ownerUserId}, 'partner', null)
+      on conflict do nothing
     `
 
     await sql`

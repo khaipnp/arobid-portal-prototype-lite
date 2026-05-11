@@ -67,7 +67,7 @@ export function ExhibitorCardActions({
   ]
 
   return (
-    <div className="flex pt-0.5 border-t">
+    <div className="flex border-t pt-0.5">
       <Button
         type="button"
         variant="ghost"
@@ -97,7 +97,7 @@ export function ExhibitorCardActions({
             Share
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-sm rounded-4xl p-6">
+        <DialogContent className="rounded-4xl p-6 sm:max-w-sm">
           <DialogHeader>
             <DialogTitle className="sr-only">
               Share {exhibitorCompany}
@@ -133,7 +133,7 @@ export function ExhibitorCardActions({
                     alt={item.label ?? ""}
                     width={1000}
                     height={1000}
-                    className="border border-gray-200 object-cover size-10 rounded-full"
+                    className="size-10 rounded-full border border-gray-200 object-cover"
                   />
                 </a>
               ))}

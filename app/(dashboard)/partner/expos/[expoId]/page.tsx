@@ -3,15 +3,13 @@ import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import { GoLIVEManager } from "@/components/tradexpo/golive-manager"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { requireRole } from "@/lib/auth/rbac"
 import {
-  listExpos,
+  getExpoById,
   listGoLIVEEvents,
   listStreamSessions
 } from "@/lib/tradexpo/db/platform-data"
 import type { ExpoStatus } from "@/lib/tradexpo/types"
-
-// Partner sở hữu các expo này trong prototype
-const PARTNER_EXPO_IDS = ["expo-003", "expo-015", "expo-001", "expo-004"]
 
 const statusStyles: Record<ExpoStatus, string> = {
   Draft: "border-slate-300 bg-slate-100 text-slate-700",
@@ -38,9 +36,9 @@ export default async function PartnerExpoDetailPage({
   params: Promise<{ expoId: string }>
 }) {
   const { expoId } = await params
-  const expos = await listExpos()
-  const expo = expos.find((e) => e.id === expoId)
-  if (!expo || !PARTNER_EXPO_IDS.includes(expoId)) notFound()
+  const userId = await requireRole("partner")
+  const expo = await getExpoById(expoId)
+  if (!expo || expo.ownerUserId !== userId) notFound()
 
   const [initialGoLIVEEvents, initialStreamSessions] = await Promise.all([
     listGoLIVEEvents(),

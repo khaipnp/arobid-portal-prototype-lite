@@ -54,17 +54,29 @@ export function AppSidebar({
   ...props
 }: AppSidebarProps) {
   const activePortalName = portals.find((p) => p.url === `/${portal}`)?.name
+  const canSwitchPortals = (user.roles ?? []).includes("sys_admin")
   const canManageSeller = (user.roles ?? []).includes("seller")
+  const canUseDealRoom =
+    (user.roles ?? []).includes("seller") || (user.roles ?? []).includes("buyer")
 
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <PortalSwitcher portals={portals} activePortalName={activePortalName} />
+        <PortalSwitcher
+          portals={portals}
+          activePortalName={activePortalName}
+          canSwitchPortals={canSwitchPortals}
+        />
       </SidebarHeader>
       <SidebarContent>
         {portal === "admin" && <NavAdmin />}
         {portal === "partner" && <NavPartner />}
-        {portal === "seller" && <NavSeller canManageSeller={canManageSeller} />}
+        {portal === "seller" && (
+          <NavSeller
+            canManageSeller={canManageSeller}
+            canUseDealRoom={canUseDealRoom}
+          />
+        )}
       </SidebarContent>
       <SidebarFooter>
         <NavUser user={user} />

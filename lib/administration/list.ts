@@ -95,6 +95,7 @@ async function ensureAdministrationSchema() {
   await sql`
     insert into admin_roles (id, name, module_id, description)
     values
+      ('role-sys-admin', 'SYS_ADMIN', 'module-b2b', 'Can switch portals and administer platform-wide settings.'),
       ('role-buyer', 'BUYER', 'module-b2b', 'Can discover and place orders for products.'),
       ('role-seller', 'SELLER', 'module-b2b', 'Can create and manage products and quotations.'),
       ('role-expo-owner', 'EXPO_OWNER', 'module-tradexpo', 'Can create and operate expo events.'),

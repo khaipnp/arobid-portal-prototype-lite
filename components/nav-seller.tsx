@@ -55,7 +55,13 @@ const buyer = [
   }
 ]
 
-export function NavSeller({ canManageSeller }: { canManageSeller: boolean }) {
+export function NavSeller({
+  canManageSeller,
+  canUseDealRoom
+}: {
+  canManageSeller: boolean
+  canUseDealRoom: boolean
+}) {
   return (
     <SidebarGroup>
       <SidebarMenu>
@@ -70,19 +76,21 @@ export function NavSeller({ canManageSeller }: { canManageSeller: boolean }) {
         <NotificationNavLink href="/seller/notifications" />
       </SidebarMenu>
 
+      {canUseDealRoom ? (
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Link href="/seller/deal-room">
+                <MessageCircleIcon />
+                <span>Deal Room</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      ) : null}
+
       {canManageSeller ? (
         <>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/seller/deal-room">
-                  <MessageCircleIcon />
-                  <span>Deal Room</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton asChild>

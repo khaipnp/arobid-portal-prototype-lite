@@ -3,7 +3,14 @@ import { redirect } from "next/navigation"
 import { getCurrentSessionUserId } from "@/lib/auth/session"
 import { sql } from "@/lib/db/neon"
 
-export const APP_ROLES = ["admin", "seller", "buyer", "exhibitor"] as const
+export const APP_ROLES = [
+  "sys_admin",
+  "admin",
+  "partner",
+  "seller",
+  "buyer",
+  "exhibitor"
+] as const
 export type AppRole = (typeof APP_ROLES)[number]
 
 export async function getCurrentUserIdFromRequest(): Promise<string> {
@@ -23,6 +30,18 @@ export async function userHasRole(
   role: AppRole,
   expoId?: string | null
 ): Promise<boolean> {
+  if (role !== "sys_admin") {
+    const sysAdminRows = (await sql`
+      select 1
+      from user_roles
+      where user_id = ${userId}
+        and role_id = 'sys_admin'
+        and expo_id is null
+      limit 1
+    `) as { "?column?": number }[]
+    if (sysAdminRows.length > 0) return true
+  }
+
   const rows = expoId
     ? ((await sql`
         select 1

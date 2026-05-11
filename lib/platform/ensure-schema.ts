@@ -650,7 +650,9 @@ export async function ensurePlatformSchema() {
   await sql`
     insert into roles (id, name)
     values
+      ('sys_admin', 'System Admin'),
       ('admin', 'Admin'),
+      ('partner', 'Partner'),
       ('seller', 'Seller'),
       ('buyer', 'Buyer'),
       ('exhibitor', 'Exhibitor')
@@ -788,10 +790,11 @@ export async function ensurePlatformSchema() {
   await sql`
     insert into user_roles (user_id, role_id, expo_id)
     values
+      (${CURRENT_USER_ID}, 'sys_admin', null),
       (${CURRENT_USER_ID}, 'admin', null),
+      (${CURRENT_USER_ID}, 'partner', null),
       (${CURRENT_USER_ID}, 'seller', null),
-      (${CURRENT_USER_ID}, 'buyer', null),
-      (${CURRENT_USER_ID}, 'exhibitor', null)
+      (${CURRENT_USER_ID}, 'buyer', null)
     on conflict do nothing
   `
   await sql`
