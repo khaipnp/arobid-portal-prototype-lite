@@ -1,11 +1,27 @@
 "use client"
 
-import { ChevronDownIcon, ChevronUpIcon, UsersIcon } from "lucide-react"
+import {
+  ChevronDownIcon,
+  ChevronUpIcon,
+  SearchIcon,
+  UsersIcon,
+  XCircleIcon
+} from "lucide-react"
 import Image from "next/image"
 import { useEffect, useMemo, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { ExpoDetailExhibitor } from "@/lib/tradexpo/db/platform-data"
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput
+} from "@/components/ui/input-group"
+
+function getExhibitorDisplayName(exhibitor: ExpoDetailExhibitor) {
+  return exhibitor.company || exhibitor.name || "Unnamed exhibitor"
+}
 
 export function VirtualLobbyExhibitorsOverlay({
   items,
@@ -32,7 +48,9 @@ export function VirtualLobbyExhibitorsOverlay({
     )
 
     for (const tier of Object.keys(grouped)) {
-      grouped[tier].sort((a, b) => a.company.localeCompare(b.company))
+      grouped[tier].sort((a, b) =>
+        getExhibitorDisplayName(a).localeCompare(getExhibitorDisplayName(b))
+      )
     }
 
     return grouped
@@ -46,16 +64,17 @@ export function VirtualLobbyExhibitorsOverlay({
   }, [exhibitorsByTier, tierOrder])
 
   const defaultTier = tierOrder[0]
-  const totalExhibitors = items.length
   const normalizedSearch = search.trim().toLowerCase()
   const filteredByTier = useMemo(() => {
     if (!normalizedSearch) return exhibitorsByTier
     const result: Record<string, ExpoDetailExhibitor[]> = {}
     for (const tier of tabTiers) {
       result[tier] = (exhibitorsByTier[tier] ?? []).filter((exhibitor) => {
+        const company = getExhibitorDisplayName(exhibitor).toLowerCase()
+        const category = (exhibitor.category ?? "").toLowerCase()
         return (
-          exhibitor.company.toLowerCase().includes(normalizedSearch) ||
-          exhibitor.category.toLowerCase().includes(normalizedSearch)
+          company.includes(normalizedSearch) ||
+          category.includes(normalizedSearch)
         )
       })
     }
@@ -78,8 +97,8 @@ export function VirtualLobbyExhibitorsOverlay({
           isCollapsed ? "" : "border-white/15 border-b"
         }`}
       >
-        <span className="inline-flex select-none items-center gap-1 px-2 font-medium text-sm text-primary-foreground">
-          <UsersIcon className="size-3.5" />
+        <span className="inline-flex select-none items-center gap-2 px-2 font-semibold text-primary-foreground text-sm">
+          <UsersIcon className="size-4" />
           Exhibitors
         </span>
         <button
@@ -98,16 +117,31 @@ export function VirtualLobbyExhibitorsOverlay({
         </button>
       </div>
       <div className={isCollapsed ? "hidden" : "pt-3"}>
-        <Input
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search exhibitor..."
-          className="mb-3 h-8 border-white/20 bg-white/10 text-white placeholder:text-white/60 rounded-full"
-        />
+        <InputGroup className="mb-3 h-8 rounded-full border-white/20 bg-white/10 text-white placeholder:text-white/60">
+          <InputGroupAddon>
+            <SearchIcon />
+          </InputGroupAddon>
+          <InputGroupInput
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search exhibitor..."
+          />
+          {search && (
+            <InputGroupAddon align="inline-end">
+              <InputGroupButton
+                variant="ghost"
+                className="shadow-none hover:bg-transparent! cursor-pointer"
+                onClick={() => setSearch("")}
+              >
+                <XCircleIcon className="text-white" />
+              </InputGroupButton>
+            </InputGroupAddon>
+          )}
+        </InputGroup>
         <Tabs defaultValue={defaultTier}>
           <TabsList className="w-full">
             {tabTiers.map((tier) => (
-              <TabsTrigger key={tier} value={tier}>
+              <TabsTrigger key={tier} value={tier} className="text-[13px]">
                 {tier} ({filteredByTier[tier]?.length ?? 0})
               </TabsTrigger>
             ))}
@@ -118,23 +152,26 @@ export function VirtualLobbyExhibitorsOverlay({
                 {(filteredByTier[tier] ?? []).map((exhibitor) => (
                   <div
                     key={exhibitor.id}
-                    className="flex items-center gap-2 rounded-lg bg-white/10 p-2 text-primary-foreground"
+                    className="flex items-center gap-2 rounded-lg bg-white/10 p-2 text-primary-foreground border border-transparent
+                    hover:border-white/30 transition-all duration-300 hover:cursor-pointer"
                   >
                     {exhibitor.logoUrl ? (
                       <Image
                         src={exhibitor.logoUrl}
-                        alt={`${exhibitor.company} logo`}
+                        alt={`${getExhibitorDisplayName(exhibitor)} logo`}
                         width={512}
                         height={512}
                         className="size-12 shrink-0 rounded-lg bg-white object-contain"
                       />
                     ) : (
                       <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 font-semibold text-[11px] uppercase">
-                        {exhibitor.company.slice(0, 1)}
+                        {getExhibitorDisplayName(exhibitor).slice(0, 1)}
                       </span>
                     )}
                     <div className="min-w-0">
-                      <p className="font-medium text-sm">{exhibitor.company}</p>
+                      <p className="select-none font-medium text-sm">
+                        {getExhibitorDisplayName(exhibitor)}
+                      </p>
                     </div>
                   </div>
                 ))}
