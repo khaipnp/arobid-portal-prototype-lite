@@ -63,13 +63,14 @@ export function VirtualLobbyBfmOverlay({
       aria-live="polite"
       className="pointer-events-none absolute bottom-6 left-6 hidden md:block"
     >
-      <div
+      <section
+        aria-label="Buyer Find and Match chat feed"
         className="pointer-events-auto w-[360px] overflow-hidden rounded-3xl border border-white/25 bg-black/40 text-white shadow-xl backdrop-blur-md"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
         <div className="flex items-center gap-2 border-white/15 border-b px-3 py-2">
-          <span className="inline-flex h-6 items-center gap-1 rounded-full bg-legend-100 px-2 font-medium text-legend text-xs select-none">
+          <span className="inline-flex h-6 select-none items-center gap-1 rounded-full bg-legend-100 px-2 font-medium text-legend text-xs">
             <RadarIcon className="size-3.5" />
             LIVE
           </span>
@@ -79,7 +80,7 @@ export function VirtualLobbyBfmOverlay({
           {chatItems.map((item) => (
             <div
               key={`${item.id}-${item.productName}`}
-              className="flex animate-[bfm-slide-up_320ms_ease-out] items-start gap-2 rounded-lg bg-white/10 px-3 py-2 cursor-pointer"
+              className="flex animate-[bfm-slide-up_320ms_ease-out] cursor-pointer items-start gap-2 rounded-lg bg-white/10 px-3 py-2"
             >
               {item.logoUrl ? (
                 <Image
@@ -90,7 +91,7 @@ export function VirtualLobbyBfmOverlay({
                   className="mt-0.5 h-7 w-7 shrink-0 rounded-full bg-white object-cover"
                 />
               ) : (
-                <span className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 font-semibold text-[11px] text-[#fbd38d] uppercase">
+                <span className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 font-semibold text-[#fbd38d] text-[11px] uppercase">
                   {item.companyName.slice(0, 1)}
                 </span>
               )}
@@ -104,7 +105,7 @@ export function VirtualLobbyBfmOverlay({
             </div>
           ))}
         </div>
-      </div>
+      </section>
       <style jsx global>{`
         @keyframes bfm-slide-up {
           from {
