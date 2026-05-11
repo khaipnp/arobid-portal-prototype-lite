@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation"
 import { TxFooter } from "@/components/landing/tx-footer"
 import { TxHeader } from "@/components/landing/tx-header"
+import { BroadcastBFM } from "@/components/tradexpo/expo-detail/broadcast-bfm"
 import { ExhibitorsSection } from "@/components/tradexpo/expo-detail/exhibitors-section"
 import {
   About,
@@ -72,6 +73,7 @@ export default async function Page({
       <Categories />
       <ParticipantValues />
       <BoothTier slug={slug} isAuthenticated={!!userId} />
+      <BroadcastBFM />
       <TxFooter />
     </main>
   )
