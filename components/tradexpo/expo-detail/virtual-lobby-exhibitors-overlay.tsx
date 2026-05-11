@@ -9,7 +9,6 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import { useEffect, useMemo, useState } from "react"
-import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { ExpoDetailExhibitor } from "@/lib/tradexpo/db/platform-data"
 import {
@@ -130,7 +129,7 @@ export function VirtualLobbyExhibitorsOverlay({
             <InputGroupAddon align="inline-end">
               <InputGroupButton
                 variant="ghost"
-                className="shadow-none hover:bg-transparent! cursor-pointer"
+                className="cursor-pointer shadow-none hover:bg-transparent!"
                 onClick={() => setSearch("")}
               >
                 <XCircleIcon className="text-white" />
@@ -152,8 +151,7 @@ export function VirtualLobbyExhibitorsOverlay({
                 {(filteredByTier[tier] ?? []).map((exhibitor) => (
                   <div
                     key={exhibitor.id}
-                    className="flex items-center gap-2 rounded-lg bg-white/10 p-2 text-primary-foreground border border-transparent
-                    hover:border-white/30 transition-all duration-300 hover:cursor-pointer"
+                    className="flex items-center gap-2 rounded-lg border border-transparent bg-white/10 p-2 text-primary-foreground transition-all duration-300 hover:cursor-pointer hover:border-white/30"
                   >
                     {exhibitor.logoUrl ? (
                       <Image
