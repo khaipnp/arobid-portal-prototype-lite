@@ -11,19 +11,23 @@ import {
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog"
+import type { ExpoDetailExhibitor } from "@/lib/tradexpo/db/platform-data"
 import type { BFMBroadcastItem } from "./broadcast-bfm"
 import { VirtualLobbyBfmOverlay } from "./virtual-lobby-bfm-overlay"
+import { VirtualLobbyExhibitorsOverlay } from "./virtual-lobby-exhibitors-overlay"
 
 type VirtualLobbyDialogProps = {
   src?: string
   expoTitle?: string
   bfmItems?: BFMBroadcastItem[]
+  exhibitors?: ExpoDetailExhibitor[]
 }
 
 export function VirtualLobbyDialog({
   src = "https://arobidglobal.shapespark.com/foodexpo2025_lobby/",
   expoTitle = "Virtual Lobby",
-  bfmItems = []
+  bfmItems = [],
+  exhibitors = []
 }: VirtualLobbyDialogProps) {
   const autoplaySrc = src.includes("#") ? `${src}&autoplay` : `${src}#autoplay`
   const [open, setOpen] = useState(false)
@@ -78,6 +82,7 @@ export function VirtualLobbyDialog({
             allow="gyroscope; accelerometer; xr-spatial-tracking; vr;"
             allowFullScreen
           />
+          <VirtualLobbyExhibitorsOverlay items={exhibitors} open={open} />
           <VirtualLobbyBfmOverlay items={bfmItems} open={open} />
         </div>
       </DialogContent>

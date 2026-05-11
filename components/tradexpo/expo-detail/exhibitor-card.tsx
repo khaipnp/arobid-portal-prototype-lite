@@ -8,6 +8,7 @@ import {
 import Image from "next/image"
 import { type ReactNode, useState } from "react"
 import { toast } from "sonner"
+import { ExhibitorCardActions } from "@/components/tradexpo/expo-detail/exhibitor-card-actions"
 import { ExhibitorProductDetailDialog } from "@/components/tradexpo/expo-detail/exhibitor-product-detail-dialog"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -62,26 +63,18 @@ export function ExhibitorCard({ exhibitor, onChatClick }: ExhibitorCardProps) {
   }))
 
   return (
-    <Card className="rounded-xl border-0 bg-white px-5 py-4 shadow-none">
+    <Card className="rounded-3xl bg-white px-5 py-4">
       <div className="flex h-12 items-center gap-3">
         <Image
           src={exhibitor.logoUrl ?? asset("figma-company-logo.png")}
           alt={exhibitor.company}
-          width={50}
-          height={50}
-          className="size-12 rounded-full border object-cover"
+          width={1000}
+          height={1000}
+          className="size-12 bg-white rounded-full border object-contain"
         />
         <h3 className="min-w-0 flex-1 select-none font-semibold text-foreground text-sm">
           {exhibitor.company}
         </h3>
-        <Button
-          variant="ghost"
-          className="cursor-pointer hover:bg-transparent"
-          size="icon"
-          onClick={() => toast("You added the exhibitor to your favorites!")}
-        >
-          <HeartIcon className="size-6 fill-muted text-muted" />
-        </Button>
       </div>
 
       <div className="flex flex-wrap items-center gap-x-1.5 gap-y-2 text-muted-foreground text-xs">
@@ -148,22 +141,11 @@ export function ExhibitorCard({ exhibitor, onChatClick }: ExhibitorCardProps) {
         </div>
       </div>
 
-      <div className="mt-5 grid grid-cols-2 gap-3">
-        <Button
-          type="button"
-          variant="secondary"
-          className="rounded-full"
-          onClick={() => onChatClick?.(null)}
-        >
-          Chat Now
-        </Button>
-        <Button
-          type="button"
-          className="rounded-full bg-legend text-white hover:bg-legend-600"
-        >
-          Send RFQ
-        </Button>
-      </div>
+      <ExhibitorCardActions
+        exhibitorId={exhibitor.id}
+        exhibitorCompany={exhibitor.company}
+        onChatClick={() => onChatClick?.(null)}
+      />
 
       <ExhibitorProductDetailDialog
         exhibitorCompany={exhibitor.company}

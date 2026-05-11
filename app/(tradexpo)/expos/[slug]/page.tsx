@@ -72,6 +72,7 @@ export default async function Page({
         virtualLobbyUrl={virtualLobbyUrl}
         stats={heroStats}
         bfmItems={bfmBroadcastItems}
+        exhibitors={exhibitors}
       />
       <About title={expo.name} description={expo.description} />
       <Sponsors />
