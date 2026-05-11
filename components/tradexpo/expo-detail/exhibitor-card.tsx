@@ -65,17 +65,17 @@ export function ExhibitorCard({ exhibitor, onChatClick }: ExhibitorCardProps) {
     <Card className="rounded-xl border-0 bg-white px-5 py-4 shadow-none">
       <div className="flex h-12 items-center gap-3">
         <Image
-          src={exhibitor.avatarUrl ?? asset("figma-company-logo.png")}
+          src={exhibitor.logoUrl ?? asset("figma-company-logo.png")}
           alt={exhibitor.company}
           width={50}
           height={50}
-          className="size-12 rounded-full object-cover"
+          className="size-12 rounded-full border object-cover"
         />
         <h3 className="min-w-0 flex-1 select-none font-semibold text-foreground text-sm">
           {exhibitor.company}
         </h3>
         <HeartIcon
-          className="size-7 fill-muted text-muted"
+          className="size-6 cursor-pointer fill-muted text-muted"
           onClick={() => toast("You added the exhibitor to your favorites!")}
         />
       </div>
@@ -89,13 +89,13 @@ export function ExhibitorCard({ exhibitor, onChatClick }: ExhibitorCardProps) {
         </span>
         <Dot />
         <MetaBadge
-          className="bg-[#ffefe6] text-[#663014]"
+          className="bg-amber-100 text-amber-900"
           icon={<RocketIcon className="size-3" />}
           label="Pioneer"
         />
         <Dot />
         <MetaBadge
-          className="bg-[#e9e7ff] text-[#2c0f79]"
+          className="bg-purple-100 text-purple-900"
           icon={<GemIcon className="size-3" />}
           label="Diamond"
         />
