@@ -6,6 +6,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { BoothTierBadge } from "./booth-tier-badge"
 
@@ -102,51 +103,28 @@ export function BookingOrderSummary({
         </div>
       </div>
 
-      {/* TradeCredit Section */}
-      <div className="flex items-center gap-3">
-        <Image
-          src="/landing/booking/trade-credit-coin.svg"
-          alt=""
-          width={24}
-          height={24}
-        />
-        <div className="flex flex-1 flex-col">
-          <span className="font-medium text-[#030712] text-sm">
-            VND 150 Off
-          </span>
-          <span className="text-[11px] text-gray-500">
-            Applied with your 3 TradeCredit
-          </span>
-        </div>
-        <Switch
-          checked={useTradeCredit}
-          onCheckedChange={setUseTradeCredit}
-          className="data-[state=checked]:bg-legend"
-        />
-      </div>
-
       <div className="flex items-center gap-2">
-        <Checkbox id="invoice" />
-        <label
+        <Checkbox id="invoice" className="data-checked:bg-legend" />
+        <Label
           htmlFor="invoice"
-          className="cursor-pointer font-medium text-[#030712] text-sm"
+          className="cursor-pointer font-medium text-foreground text-sm"
         >
           Invoice and Contact Info
-        </label>
+        </Label>
       </div>
 
       {/* Price Details */}
       <div className="flex flex-col gap-3 rounded-xl bg-[#F9FAFB] p-4">
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-500">Booth Price</span>
-            <span className="font-medium text-[#1F2937]">
+            <span className="text-muted-foreground">Booth Price</span>
+            <span className="font-medium text-foreground">
               ${activeTier.price.toLocaleString()}
             </span>
           </div>
           <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-500">Discount</span>
-            <span className="font-medium text-[#1F2937]">
+            <span className="text-muted-foreground">Discount</span>
+            <span className="font-medium text-foreground">
               {discount > 0 ? `-$${(discount / 25000).toLocaleString()}` : "-"}
             </span>
           </div>
@@ -155,10 +133,29 @@ export function BookingOrderSummary({
         <div className="border-gray-300 border-t border-dashed" />
 
         <div className="flex items-center justify-between">
-          <span className="text-gray-500 text-sm">Total Amount</span>
-          <span className="font-medium text-[#1F2937] text-xl">
+          <span className="text-muted-foreground text-sm">Total Amount</span>
+          <span className="font-medium text-foreground text-xl">
             ${totalAmount.toLocaleString()}
           </span>
+        </div>
+
+        {/* TradeCredit Section */}
+        <div className="flex items-center gap-2">
+          <Image
+            src="/landing/booking/trade-credit-coin.svg"
+            alt=""
+            width={512}
+            height={512}
+            className="size-9"
+          />
+          <div className="flex flex-1 flex-col">
+            <span className="text-xs text-muted-foreground">
+              Booking successful. You will receive
+            </span>
+            <span className="font-medium text-foreground text-sm">
+              <span className="text-legend font-semibold">150</span> TradeCredit
+            </span>
+          </div>
         </div>
       </div>
 
@@ -169,9 +166,9 @@ export function BookingOrderSummary({
             id="terms"
             checked={acceptTerms}
             onCheckedChange={(val) => setAcceptTerms(val as boolean)}
-            className="mt-0.5 data-checked:bg-legend"
+            className="data-checked:bg-legend"
           />
-          <label
+          <Label
             htmlFor="terms"
             className="cursor-pointer text-foreground text-xs leading-relaxed"
           >
@@ -179,7 +176,7 @@ export function BookingOrderSummary({
             <Link href="#" className="font-medium underline">
               Terms and Conditions
             </Link>
-          </label>
+          </Label>
         </div>
         <Button
           className="h-12 w-full rounded-full bg-legend font-medium text-sm shadow-legend/10 shadow-lg hover:bg-legend-600"
