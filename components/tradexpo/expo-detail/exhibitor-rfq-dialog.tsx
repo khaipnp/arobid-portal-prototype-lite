@@ -1,6 +1,6 @@
 "use client"
 
-import { CalendarIcon, CheckIcon, UploadIcon } from "lucide-react"
+import { CalendarIcon, UploadIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -71,7 +71,7 @@ export function ExhibitorRfqDialog({
                         </p>
                         <button
                           type="button"
-                          className="flex h-28 w-full flex-col items-center justify-center rounded-lg border border-dashed border-muted-foreground/40 bg-muted/20"
+                          className="flex h-28 w-full flex-col items-center justify-center rounded-lg border border-muted-foreground/40 border-dashed bg-muted/20"
                         >
                           <UploadIcon className="mb-2 size-5 text-muted-foreground" />
                           <p className="font-medium text-sm">Upload image</p>
@@ -85,7 +85,7 @@ export function ExhibitorRfqDialog({
                 </div>
               </section>
 
-              <section className="space-y-3 border-t border-muted pt-4">
+              <section className="space-y-3 border-muted border-t pt-4">
                 <h3 className="flex items-center gap-2 font-semibold text-base">
                   Quantity & Pricing
                 </h3>
@@ -145,7 +145,7 @@ export function ExhibitorRfqDialog({
               </div>
             </div>
           </div>
-          <div className="flex justify-end gap-2 pb-1 pt-2 border-t">
+          <div className="flex justify-end gap-2 border-t pt-2 pb-1">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>

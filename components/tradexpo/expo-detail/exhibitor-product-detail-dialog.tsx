@@ -1,9 +1,6 @@
 "use client"
 
-import {
-  MessageCircleIcon,
-  StarIcon
-} from "lucide-react"
+import { MessageCircleIcon, StarIcon } from "lucide-react"
 import Image from "next/image"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -132,7 +129,7 @@ export function ExhibitorProductDetailDialog({
                 })}
               </div>
 
-              <div className="relative order-1 aspect-[16/10] overflow-hidden rounded-2xl border border-muted md:order-2">
+              <div className="relative order-1 aspect-3/2 overflow-hidden rounded-2xl border border-muted md:order-2">
                 <Image
                   src={selectedProduct.image}
                   alt={selectedProduct.label}

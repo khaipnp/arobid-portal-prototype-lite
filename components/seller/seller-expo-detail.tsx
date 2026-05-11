@@ -21,6 +21,7 @@ import { GoLIVESection } from "@/components/tradexpo/golive-section"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Table,
   TableBody,
@@ -42,6 +43,7 @@ import type {
   StreamSession
 } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
+import { Label } from "../ui/label"
 
 type SellerExpoViewStatus = "Upcoming" | "Live" | "Archive"
 
@@ -81,6 +83,13 @@ function formatDate(iso: string) {
   )
 }
 
+function formatDateTime(iso: string) {
+  return new Intl.DateTimeFormat("en-GB", {
+    dateStyle: "medium",
+    timeStyle: "short"
+  }).format(new Date(iso))
+}
+
 function StatCard({
   title,
   value,
@@ -106,7 +115,7 @@ function StatCard({
         <div className="flex items-baseline gap-2">
           <div className="font-bold text-2xl">{value}</div>
           {trend && (
-            <div className="flex items-center text-emerald-600 text-xs font-medium">
+            <div className="flex items-center font-medium text-emerald-600 text-xs">
               <TrendingUpIcon className="mr-0.5 h-3 w-3" />
               {trend}
             </div>
@@ -210,6 +219,41 @@ export function SellerExpoDetail({
     }
   }, [expoId, streamSessions, boothCustomizations, productMap])
 
+  const latestRfqs = React.useMemo(() => {
+    const statuses = ["New", "Quoted", "Closed"] as const
+    const displayedProductIds = Array.from(
+      new Set(boothCustomizations.flatMap((c) => c.products.map((p) => p.id)))
+    )
+    const expoProducts = displayedProductIds
+      .map((id) => productMap.get(id))
+      .filter((p): p is CompanyProduct => !!p)
+
+    const total = Math.max(4, Math.min(10, expoProducts.length * 2 || 6))
+
+    return Array.from({ length: total }).map((_, index) => {
+      const createdAt = new Date(
+        Date.now() - (index * 7 + (seed % 5)) * 60 * 60 * 1000
+      )
+      const expiredAt = new Date(
+        createdAt.getTime() + (30 + (index % 3) * 30) * 24 * 60 * 60 * 1000
+      )
+      const product = expoProducts[index % expoProducts.length]
+      const status = statuses[index % statuses.length]
+
+      return {
+        id: `rfq-${expoId}-${index + 1}`,
+        buyerCompany: `Buyer Company ${index + 1}`,
+        productName: product?.name ?? `Product ${index + 1}`,
+        productImage: product?.mainImageUrl ?? expo?.thumbnailUrl ?? "",
+        quantity: (index + 1) * 10,
+        targetPrice: `${(1000 + index * 75).toLocaleString()} USD`,
+        createdAt: createdAt.toISOString(),
+        expiredAt: expiredAt.toISOString(),
+        status
+      }
+    })
+  }, [boothCustomizations, expo?.thumbnailUrl, expoId, productMap, seed])
+
   if (!expo) {
     return (
       <p className="py-12 text-center text-muted-foreground text-sm">
@@ -260,46 +304,133 @@ export function SellerExpoDetail({
 
       {/* Stats Widgets */}
       {displayStatus !== "Upcoming" && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <StatCard
-            title="Booth Visitors"
-            value={stats.visitors.toLocaleString()}
-            icon={<UsersIcon className="h-4 w-4" />}
-            trend={`${(seed % 15) + 5}%`}
-            description="Unique visitors across booths"
-          />
-          <StatCard
-            title="Product Clicks"
-            value={stats.clicks.toLocaleString()}
-            icon={<PackageIcon className="h-4 w-4" />}
-            trend={`${(seed % 10) + 2}%`}
-            description="Catalog engagement"
-          />
-          <StatCard
-            title="New Leads"
-            value={stats.leads}
-            icon={<MessageSquareIcon className="h-4 w-4" />}
-            trend={`${(seed % 20) + 10}%`}
-            description="Inquiries & contacts"
-          />
-          <StatCard
-            title="Peak Viewers"
-            value={stats.streamViews.toLocaleString()}
-            icon={<EyeIcon className="h-4 w-4" />}
-            description="Max concurrent on streams"
-          />
-          <StatCard
-            title="Most Viewed Product"
-            value={stats.topViewed?.name ?? "N/A"}
-            icon={<EyeIcon className="h-4 w-4" />}
-            description={`${stats.topViewedCount} views`}
-          />
-          <StatCard
-            title="Top RFQ Product"
-            value={stats.topRFQ?.name ?? "N/A"}
-            icon={<MessageSquareIcon className="h-4 w-4" />}
-            description={`${stats.topRFQCount} quotation requests`}
-          />
+        <div className="flex items-start gap-4">
+          <div className="flex w-2/3 flex-col space-y-4">
+            <h3 className="font-semibold text-base">Stats</h3>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              <StatCard
+                title="Booth Visitors"
+                value={stats.visitors.toLocaleString()}
+                icon={<UsersIcon className="h-4 w-4" />}
+                trend={`${(seed % 15) + 5}%`}
+                description="Unique visitors across booths"
+              />
+              <StatCard
+                title="Product Clicks"
+                value={stats.clicks.toLocaleString()}
+                icon={<PackageIcon className="h-4 w-4" />}
+                trend={`${(seed % 10) + 2}%`}
+                description="Catalog engagement"
+              />
+              <StatCard
+                title="New Leads"
+                value={stats.leads}
+                icon={<MessageSquareIcon className="h-4 w-4" />}
+                trend={`${(seed % 20) + 10}%`}
+                description="Inquiries & contacts"
+              />
+              <StatCard
+                title="Peak Viewers"
+                value={stats.streamViews.toLocaleString()}
+                icon={<EyeIcon className="h-4 w-4" />}
+                description="Max concurrent on streams"
+              />
+              <StatCard
+                title="Most Viewed Product"
+                value={stats.topViewed?.name ?? "N/A"}
+                icon={<EyeIcon className="h-4 w-4" />}
+                description={`${stats.topViewedCount} views`}
+              />
+              <StatCard
+                title="Top RFQ Product"
+                value={stats.topRFQ?.name ?? "N/A"}
+                icon={<MessageSquareIcon className="h-4 w-4" />}
+                description={`${stats.topRFQCount} quotation requests`}
+              />
+            </div>
+          </div>
+
+          {/* Latest RFQ with scroll */}
+          <section className="flex w-1/3 flex-col space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-base">Latest RFQ</h3>
+              <Badge variant="outline">{latestRfqs.length} RFQs</Badge>
+            </div>
+            <div className="overflow-hidden rounded-lg border">
+              <ScrollArea className="h-74">
+                <div className="divide-y">
+                  {latestRfqs.map((rfq) => (
+                    <div
+                      key={rfq.id}
+                      className="flex w-full cursor-pointer gap-3 px-3 py-2 hover:bg-muted/50"
+                    >
+                      <div className="flex min-w-0 flex-1 flex-col space-y-3 py-1">
+                        <div className="flex w-full items-center justify-between">
+                          <p className="line-clamp-1 flex-1 font-medium text-foreground text-sm">
+                            {rfq.buyerCompany}
+                          </p>
+                          <Badge
+                            variant="ghost"
+                            className={cn(
+                              rfq.status === "New" && "text-blue-700",
+                              rfq.status === "Quoted" && "text-amber-700",
+                              rfq.status === "Closed" && "text-zinc-700"
+                            )}
+                          >
+                            {rfq.status}
+                          </Badge>
+                        </div>
+                        <div className="flex gap-2">
+                          <Image
+                            src={rfq.productImage}
+                            alt={rfq.productName}
+                            width={64}
+                            height={64}
+                            className="aspect-square size-12 rounded-2xl border border-muted-foreground/40"
+                          />
+
+                          {/* RFQ Details */}
+                          <div className="flex flex-1 flex-col gap-1">
+                            <p className="line-clamp-1 text-sm">
+                              {rfq.productName}
+                            </p>
+                            <div className="flex justify-between">
+                              <div className="flex flex-col gap-0.5">
+                                <Label className="font-normal text-muted-foreground text-xs">
+                                  Created
+                                </Label>
+                                <p className="text-foreground text-xs">
+                                  {formatDateTime(rfq.createdAt)}
+                                </p>
+                              </div>
+
+                              <div className="flex flex-col gap-0.5">
+                                <Label className="font-normal text-muted-foreground text-xs">
+                                  Quantity:
+                                </Label>
+                                <p className="text-foreground text-xs">
+                                  {rfq.quantity}
+                                </p>
+                              </div>
+
+                              <div className="flex flex-col gap-0.5">
+                                <Label className="font-normal text-muted-foreground text-xs">
+                                  Expired date:
+                                </Label>
+                                <p className="text-foreground text-xs">
+                                  {formatDate(rfq.expiredAt)}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
+          </section>
         </div>
       )}
 

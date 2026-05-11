@@ -76,7 +76,7 @@ export function ExhibitorCard({ exhibitor, onChatClick }: ExhibitorCardProps) {
         </h3>
         <Button
           variant="ghost"
-          className="hover:bg-transparent cursor-pointer"
+          className="cursor-pointer hover:bg-transparent"
           size="icon"
           onClick={() => toast("You added the exhibitor to your favorites!")}
         >
