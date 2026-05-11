@@ -26,6 +26,7 @@ export type ExpoDetailExhibitor = {
   id: string
   name: string
   company: string
+  logoUrl?: string
   avatarUrl?: string
   category: string
   boothTier: string
@@ -743,6 +744,7 @@ export async function listExpoDetailExhibitorsByName(
         join exhibitor_categories cat on cat.id = cc.category_id
         where cc.company_id = comp.id
       ) as category,
+      nullif(comp.logo_url, '') as logo_url,
       cu.avatar_url,
       'Vietnam'::text as country,
       coalesce(bc.products, '[]'::jsonb) as products
@@ -769,6 +771,7 @@ export async function listExpoDetailExhibitorsByName(
     name: string
     company: string | null
     category: string
+    logo_url: string | null
     avatar_url: string | null
     country: string
     products: unknown
@@ -789,6 +792,7 @@ export async function listExpoDetailExhibitorsByName(
       id: row.id,
       name: row.name,
       company: row.company ?? row.name,
+      logoUrl: row.logo_url ?? undefined,
       avatarUrl: row.avatar_url ?? undefined,
       category: row.category,
       boothTier: normalizeBoothTier(row.booth_tier),

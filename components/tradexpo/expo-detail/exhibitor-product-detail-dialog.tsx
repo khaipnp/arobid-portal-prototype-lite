@@ -1,9 +1,14 @@
 "use client"
 
-import { MessageCircleIcon, StarIcon } from "lucide-react"
+import {
+  MessageCircleIcon,
+  StarIcon
+} from "lucide-react"
 import Image from "next/image"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { ExhibitorRfqDialog } from "./exhibitor-rfq-dialog"
 
 type ProductItem = {
   image: string
@@ -25,6 +30,8 @@ export function ExhibitorProductDetailDialog({
   onSelectedProductChange,
   onChatNow
 }: ExhibitorProductDetailDialogProps) {
+  const [isRfqDialogOpen, setIsRfqDialogOpen] = useState(false)
+
   const priceRanges = [
     { range: "100 - 499 pieces", price: "VND 759,005", featured: true },
     { range: "500 - 1,999 pieces", price: "VND 748,851" },
@@ -72,7 +79,7 @@ export function ExhibitorProductDetailDialog({
                 <span className="rounded-full bg-legend px-3 py-1 font-medium text-white text-xs">
                   LIVE
                 </span>
-                <span className="rounded-full bg-[#fee2e2] px-3 py-1 font-medium text-[#dc2626] text-xs">
+                <span className="rounded-full bg-[#fee2e2] px-3 py-1 font-medium text-orange-700 text-xs">
                   TOP DEAL
                 </span>
               </div>
@@ -301,6 +308,7 @@ export function ExhibitorProductDetailDialog({
               <Button
                 type="button"
                 className="rounded-full bg-legend text-white hover:bg-legend-600"
+                onClick={() => setIsRfqDialogOpen(true)}
               >
                 Send RFQ
               </Button>
@@ -308,6 +316,11 @@ export function ExhibitorProductDetailDialog({
           </aside>
         </div>
       </div>
+      <ExhibitorRfqDialog
+        open={isRfqDialogOpen}
+        selectedProduct={selectedProduct}
+        onClose={() => setIsRfqDialogOpen(false)}
+      />
     </div>
   )
 }
