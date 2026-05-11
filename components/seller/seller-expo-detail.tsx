@@ -8,7 +8,6 @@ import {
   CircleDotIcon,
   ClockIcon,
   EyeIcon,
-  FileTextIcon,
   MessageSquareIcon,
   PackageIcon,
   SettingsIcon,
@@ -116,7 +115,7 @@ function StatCard({
         <div className="flex items-baseline gap-2">
           <div className="font-bold text-2xl">{value}</div>
           {trend && (
-            <div className="flex items-center text-emerald-600 text-xs font-medium">
+            <div className="flex items-center font-medium text-emerald-600 text-xs">
               <TrendingUpIcon className="mr-0.5 h-3 w-3" />
               {trend}
             </div>
@@ -306,7 +305,7 @@ export function SellerExpoDetail({
       {/* Stats Widgets */}
       {displayStatus !== "Upcoming" && (
         <div className="flex items-start gap-4">
-          <div className="w-2/3 flex flex-col space-y-4">
+          <div className="flex w-2/3 flex-col space-y-4">
             <h3 className="font-semibold text-base">Stats</h3>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <StatCard
@@ -352,7 +351,7 @@ export function SellerExpoDetail({
           </div>
 
           {/* Latest RFQ with scroll */}
-          <section className="w-1/3 flex flex-col space-y-4">
+          <section className="flex w-1/3 flex-col space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold text-base">Latest RFQ</h3>
               <Badge variant="outline">{latestRfqs.length} RFQs</Badge>
@@ -363,11 +362,11 @@ export function SellerExpoDetail({
                   {latestRfqs.map((rfq) => (
                     <div
                       key={rfq.id}
-                      className="w-full cursor-pointer flex gap-3 px-3 py-2 hover:bg-muted/50"
+                      className="flex w-full cursor-pointer gap-3 px-3 py-2 hover:bg-muted/50"
                     >
-                      <div className="flex-1 flex flex-col min-w-0 space-y-3 py-1">
-                        <div className="w-full flex justify-between items-center">
-                          <p className="flex-1 line-clamp-1 text-foreground text-sm font-medium">
+                      <div className="flex min-w-0 flex-1 flex-col space-y-3 py-1">
+                        <div className="flex w-full items-center justify-between">
+                          <p className="line-clamp-1 flex-1 font-medium text-foreground text-sm">
                             {rfq.buyerCompany}
                           </p>
                           <Badge
@@ -387,17 +386,17 @@ export function SellerExpoDetail({
                             alt={rfq.productName}
                             width={64}
                             height={64}
-                            className="size-12 border aspect-square rounded-2xl"
+                            className="aspect-square size-12 rounded-2xl border"
                           />
 
                           {/* RFQ Details */}
-                          <div className="flex-1 flex flex-col gap-1">
+                          <div className="flex flex-1 flex-col gap-1">
                             <p className="line-clamp-1 text-sm">
                               {rfq.productName}
                             </p>
                             <div className="flex justify-between">
                               <div className="flex flex-col gap-0.5">
-                                <Label className="text-muted-foreground text-xs font-normal">
+                                <Label className="font-normal text-muted-foreground text-xs">
                                   Created
                                 </Label>
                                 <p className="text-foreground text-xs">
@@ -406,7 +405,7 @@ export function SellerExpoDetail({
                               </div>
 
                               <div className="flex flex-col gap-0.5">
-                                <Label className="text-muted-foreground text-xs font-normal">
+                                <Label className="font-normal text-muted-foreground text-xs">
                                   Quantity:
                                 </Label>
                                 <p className="text-foreground text-xs">
@@ -415,7 +414,7 @@ export function SellerExpoDetail({
                               </div>
 
                               <div className="flex flex-col gap-0.5">
-                                <Label className="text-muted-foreground text-xs font-normal">
+                                <Label className="font-normal text-muted-foreground text-xs">
                                   Expired date:
                                 </Label>
                                 <p className="text-foreground text-xs">
