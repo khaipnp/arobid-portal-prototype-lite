@@ -118,9 +118,10 @@ export function VirtualLobbyExhibitorsOverlay({
       <div className={isCollapsed ? "hidden" : "pt-3"}>
         <InputGroup className="mb-3 h-8 rounded-full border-white/20 bg-white/10 text-white placeholder:text-white/60">
           <InputGroupAddon>
-            <SearchIcon />
+            <SearchIcon className="text-white/60" />
           </InputGroupAddon>
           <InputGroupInput
+            className="placeholder:text-white/60"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search exhibitor..."
