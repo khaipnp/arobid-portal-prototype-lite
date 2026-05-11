@@ -105,23 +105,23 @@ export function VirtualLobbyBfmOverlay({
           {chatItems.map((item) => (
             <div
               key={`${item.id}-${item.productName}`}
-              className="flex animate-[bfm-slide-up_320ms_ease-out] cursor-pointer items-start gap-2 rounded-lg bg-white/10 px-3 py-2"
+              className="flex animate-[bfm-slide-up_320ms_ease-out] cursor-pointer items-start gap-2 rounded-lg bg-white/10 p-2"
             >
               {item.logoUrl ? (
                 <Image
                   src={item.logoUrl}
                   alt={`${item.companyName} logo`}
-                  width={28}
-                  height={28}
-                  className="mt-0.5 h-7 w-7 shrink-0 rounded-full bg-white object-cover"
+                  width={1000}
+                  height={1000}
+                  className="size-10 shrink-0 rounded-lg bg-white object-contain"
                 />
               ) : (
                 <span className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-white/20 font-semibold text-[#fbd38d] text-[11px] uppercase">
                   {item.companyName.slice(0, 1)}
                 </span>
               )}
-              <p className="pt-0.5 text-[13px] leading-5">
-                <span className="font-semibold text-[#fbd38d]">
+              <p className="pt-0.5 text-[13px]">
+                <span className="font-semibold text-legend-200">
                   {item.companyName}
                 </span>
                 {` looking for matches around `}

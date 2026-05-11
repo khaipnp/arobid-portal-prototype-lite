@@ -16,6 +16,7 @@ import { useState } from "react"
 import type { BFMBroadcastItem } from "@/components/tradexpo/expo-detail/broadcast-bfm"
 import { Button } from "@/components/ui/button"
 import { getAssetUrl } from "@/lib/image-utils"
+import type { ExpoDetailExhibitor } from "@/lib/tradexpo/db/platform-data"
 import { cn } from "@/lib/utils"
 import {
   asset,
@@ -59,7 +60,8 @@ export function Hero({
   thumbnailUrl,
   virtualLobbyUrl,
   stats,
-  bfmItems
+  bfmItems,
+  exhibitors = []
 }: {
   expoTitle?: string
   startDateLabel?: string
@@ -67,6 +69,7 @@ export function Hero({
   thumbnailUrl?: string
   virtualLobbyUrl?: string
   bfmItems?: BFMBroadcastItem[]
+  exhibitors?: ExpoDetailExhibitor[]
   stats?: {
     exhibitors: number
     visitors: number
@@ -142,6 +145,7 @@ export function Hero({
               src={virtualLobbyUrl}
               expoTitle={expoTitle}
               bfmItems={bfmItems}
+              exhibitors={exhibitors}
             />
             <Link href="#booths">
               <Button variant="secondary" size="lg">

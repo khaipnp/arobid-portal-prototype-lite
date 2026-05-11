@@ -99,7 +99,9 @@ export function ExhibitorCardActions({
         </DialogTrigger>
         <DialogContent className="sm:max-w-sm rounded-4xl p-6">
           <DialogHeader>
-            <DialogTitle />
+            <DialogTitle className="sr-only">
+              Share {exhibitorCompany}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="mx-auto flex w-fit flex-col items-center gap-2 rounded-xl p-3">
