@@ -1,12 +1,17 @@
 import { PartnerExpoList } from "@/components/partner/partner-expo-list"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
-import { listExpos, listGoLIVEEvents } from "@/lib/tradexpo/db/platform-data"
+import { requireRole } from "@/lib/auth/rbac"
+import {
+  listExposByOwner,
+  listGoLIVEEvents
+} from "@/lib/tradexpo/db/platform-data"
 
 export const dynamic = "force-dynamic"
 
 export default async function PartnerExposPage() {
+  const userId = await requireRole("partner")
   const [expos, goLiveEvents] = await Promise.all([
-    listExpos(),
+    listExposByOwner(userId),
     listGoLIVEEvents()
   ])
 

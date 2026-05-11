@@ -3,8 +3,8 @@ import { authenticateByEmailPassword } from "@/lib/auth/service"
 import { createAuthSession } from "@/lib/auth/session"
 
 function getRedirectPath(roles: string[]) {
-  if (roles.includes("admin")) return "/admin"
-  if (roles.includes("exhibitor")) return "/partner"
+  if (roles.includes("sys_admin") || roles.includes("admin")) return "/admin"
+  if (roles.includes("partner")) return "/partner"
   return "/seller"
 }
 

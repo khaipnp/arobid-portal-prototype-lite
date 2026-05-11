@@ -62,7 +62,9 @@ export async function revokeCurrentAuthSession() {
   cookieStore.delete(AUTH_SESSION_COOKIE)
 }
 
-export async function getCurrentSessionUserId(): Promise<string | null> {
+export async function getCurrentSessionUserId(options?: {
+  clearInvalidCookie?: boolean
+}): Promise<string | null> {
   const cookieStore = await cookies()
   const sessionId = cookieStore.get(AUTH_SESSION_COOKIE)?.value
   if (!sessionId) return null
@@ -78,7 +80,9 @@ export async function getCurrentSessionUserId(): Promise<string | null> {
 
   const userId = rows[0]?.user_id ?? null
   if (!userId) {
-    cookieStore.delete(AUTH_SESSION_COOKIE)
+    if (options?.clearInvalidCookie) {
+      cookieStore.delete(AUTH_SESSION_COOKIE)
+    }
     return null
   }
 

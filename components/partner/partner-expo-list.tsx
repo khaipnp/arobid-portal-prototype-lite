@@ -8,9 +8,6 @@ import { Button } from "@/components/ui/button"
 import type { Expo, ExpoStatus, GoLIVEEvent } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
 
-// Partner sở hữu các expo này trong prototype
-const PARTNER_EXPO_IDS = ["expo-003", "expo-015", "expo-001", "expo-004"]
-
 const statusStyles: Record<ExpoStatus, string> = {
   Draft: "border-slate-300 bg-slate-100 text-slate-700",
   "Pending Review": "border-amber-300 bg-amber-100 text-amber-700",
@@ -29,14 +26,12 @@ function formatDate(iso: string) {
 }
 
 export function PartnerExpoList({
-  expos: allExpos,
+  expos,
   goLiveEvents
 }: {
   expos: Expo[]
   goLiveEvents: GoLIVEEvent[]
 }) {
-  const expos = allExpos.filter((e) => PARTNER_EXPO_IDS.includes(e.id))
-
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {expos.map((expo) => {

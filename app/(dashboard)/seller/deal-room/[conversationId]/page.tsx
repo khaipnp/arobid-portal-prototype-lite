@@ -1,5 +1,5 @@
 import { DealRoomManager } from "@/components/deal-room/deal-room-manager"
-import { requireRole } from "@/lib/auth/rbac"
+import { requireAnyRole } from "@/lib/auth/rbac"
 import {
   listChatUsers,
   listConversations,
@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic"
 
 export default async function ConversationPage({ params }: Props) {
   const { conversationId } = await params
-  const userId = await requireRole("seller")
+  const userId = await requireAnyRole(["seller", "buyer"])
   const [
     initialUsers,
     initialConversations,
