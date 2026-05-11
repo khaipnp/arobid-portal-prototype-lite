@@ -6,35 +6,10 @@ import { useEffect, useMemo, useState } from "react"
 
 type BFMBroadcastItem = {
   id: string
-  buyerName: string
-  category: string
-  location: string
+  companyName: string
+  productName: string
   ctaHref: string
 }
-
-const BFM_BROADCASTS: BFMBroadcastItem[] = [
-  {
-    id: "bfm-buyer-01",
-    buyerName: "Nordic Build Supply",
-    category: "Construction Materials",
-    location: "Denmark",
-    ctaHref: "/bfm"
-  },
-  {
-    id: "bfm-buyer-02",
-    buyerName: "Apex Interior Group",
-    category: "Furniture & Interiors",
-    location: "Singapore",
-    ctaHref: "/bfm"
-  },
-  {
-    id: "bfm-buyer-03",
-    buyerName: "Kansai Smart Habitat",
-    category: "Smart Building Solutions",
-    location: "Japan",
-    ctaHref: "/bfm"
-  }
-]
 
 function trackBroadcastEvent(
   eventName: "broadcast_impression" | "broadcast_click" | "broadcast_dismiss",
@@ -46,21 +21,25 @@ function trackBroadcastEvent(
   va("event", { name: eventName, ...payload })
 }
 
-export function BroadcastBFM() {
+export function BroadcastBFM({ items }: { items: BFMBroadcastItem[] }) {
   const [activeIndex, setActiveIndex] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
   const activeBroadcast = useMemo(
-    () => BFM_BROADCASTS[activeIndex],
-    [activeIndex]
+    () => items[activeIndex],
+    [items, activeIndex]
   )
 
   useEffect(() => {
-    if (isPaused || BFM_BROADCASTS.length <= 1) return
+    if (isPaused || items.length <= 1) return
     const timer = window.setInterval(() => {
-      setActiveIndex((prevIndex) => (prevIndex + 1) % BFM_BROADCASTS.length)
+      setActiveIndex((prevIndex) => (prevIndex + 1) % items.length)
     }, 5000)
     return () => window.clearInterval(timer)
-  }, [isPaused])
+  }, [isPaused, items.length])
+
+  useEffect(() => {
+    setActiveIndex(0)
+  }, [items])
 
   useEffect(() => {
     if (!activeBroadcast) return
@@ -76,7 +55,7 @@ export function BroadcastBFM() {
     <>
       <section
         aria-live="polite"
-        className="fixed inset-x-0 bottom-0 z-50 hidden border-[#fed7aa] border-t bg-legend text-white shadow-2xl md:block"
+        className="fixed inset-x-0 bottom-0 z-50 hidden bg-legend text-white shadow-2xl md:block"
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
       >
@@ -90,13 +69,14 @@ export function BroadcastBFM() {
               BFM
             </span>
             <p className="text-sm leading-5">
-              <span className="font-semibold">{activeBroadcast.buyerName}</span>
-              {` is looking for `}
-              <span className="font-semibold">{activeBroadcast.category}</span>
-              {` suppliers in this expo · `}
-              <span className="text-primary-foreground">
-                {activeBroadcast.location}
+              <span className="font-semibold">
+                {activeBroadcast.companyName}
               </span>
+              {` is showcasing `}
+              <span className="font-semibold">
+                {activeBroadcast.productName}
+              </span>
+              {` in this expo. Find your match now.`}
             </p>
           </div>
           <Link
