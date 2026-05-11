@@ -770,7 +770,7 @@ export async function listExpoDetailExhibitorsByName(
     booth_ref: string
     name: string
     company: string | null
-    category: string
+    category: string | null
     logo_url: string | null
     avatar_url: string | null
     country: string
@@ -794,7 +794,7 @@ export async function listExpoDetailExhibitorsByName(
       company: row.company ?? row.name,
       logoUrl: row.logo_url ?? undefined,
       avatarUrl: row.avatar_url ?? undefined,
-      category: row.category,
+      category: row.category ?? "",
       boothTier: normalizeBoothTier(row.booth_tier),
       boothRef: row.booth_ref,
       country: row.country,

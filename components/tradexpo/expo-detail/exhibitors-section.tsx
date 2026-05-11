@@ -107,7 +107,13 @@ export function ExhibitorsSection({
   }
 
   const categories = useMemo(() => {
-    return Array.from(new Set(initialExhibitors.map((x) => x.category))).sort()
+    return Array.from(
+      new Set(
+        initialExhibitors
+          .map((x) => x.category.trim())
+          .filter((category) => category.length > 0)
+      )
+    ).sort()
   }, [initialExhibitors])
 
   const sortedItems = useMemo(() => {
