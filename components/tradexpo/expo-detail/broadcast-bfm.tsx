@@ -4,11 +4,12 @@ import { ArrowRight, RadarIcon } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 
-type BFMBroadcastItem = {
+export type BFMBroadcastItem = {
   id: string
   companyName: string
   productName: string
   ctaHref: string
+  logoUrl?: string
 }
 
 function trackBroadcastEvent(

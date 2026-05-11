@@ -11,15 +11,19 @@ import {
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog"
+import type { BFMBroadcastItem } from "./broadcast-bfm"
+import { VirtualLobbyBfmOverlay } from "./virtual-lobby-bfm-overlay"
 
 type VirtualLobbyDialogProps = {
   src?: string
   expoTitle?: string
+  bfmItems?: BFMBroadcastItem[]
 }
 
 export function VirtualLobbyDialog({
   src = "https://arobidglobal.shapespark.com/foodexpo2025_lobby/",
-  expoTitle = "Virtual Lobby"
+  expoTitle = "Virtual Lobby",
+  bfmItems = []
 }: VirtualLobbyDialogProps) {
   const autoplaySrc = src.includes("#") ? `${src}&autoplay` : `${src}#autoplay`
   const [open, setOpen] = useState(false)
@@ -49,7 +53,7 @@ export function VirtualLobbyDialog({
         <DialogDescription className="sr-only">
           Interactive 3D virtual lobby
         </DialogDescription>
-        <div className="flex flex-col">
+        <div className="relative flex flex-col">
           <div className="flex h-16 items-center justify-between bg-white px-4 lg:px-8">
             {/*Title*/}
             <h2 className="select-none font-semibold text-lg">{expoTitle}</h2>
@@ -74,6 +78,7 @@ export function VirtualLobbyDialog({
             allow="gyroscope; accelerometer; xr-spatial-tracking; vr;"
             allowFullScreen
           />
+          <VirtualLobbyBfmOverlay items={bfmItems} open={open} />
         </div>
       </DialogContent>
     </Dialog>
