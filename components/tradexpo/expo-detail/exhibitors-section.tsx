@@ -204,7 +204,7 @@ export function ExhibitorsSection({
       )}
 
       <AlertDialog open={showAuthDialog} onOpenChange={setShowAuthDialog}>
-        <AlertDialogContent className="sm:max-w-[425px]">
+        <AlertDialogContent className="sm:max-w-sm">
           <AlertDialogHeader>
             <AlertDialogTitle>Quick Login</AlertDialogTitle>
             <AlertDialogDescription>
