@@ -121,15 +121,10 @@ export function ExhibitorCardActions({
               {shareItems.map((item) => (
                 <a
                   key={item.label}
-                  href={item.href ?? "#"}
-                  target={item.href ? "_blank" : undefined}
-                  rel={item.href ? "noreferrer" : undefined}
+                  href={item.href}
+                  target="_blank"
+                  rel="noreferrer"
                   className="flex flex-col items-center gap-1"
-                  onClick={(event) => {
-                    if (!item.onClick) return
-                    event.preventDefault()
-                    void item.onClick()
-                  }}
                 >
                   <Image
                     src={item.logoUrl ?? ""}
