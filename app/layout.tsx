@@ -1,7 +1,6 @@
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Geist_Mono, Google_Sans, Google_Sans_Flex } from "next/font/google"
-import { ThemeProvider } from "@/components/theme-provider"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import "./globals.css"
@@ -31,7 +30,6 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      suppressHydrationWarning
       className={cn(
         "antialiased",
         fontMono.variable,
@@ -42,10 +40,8 @@ export default function RootLayout({
     >
       <body>
         <TooltipProvider>
-          <ThemeProvider>
-            {children}
-            <Toaster />
-          </ThemeProvider>
+          {children}
+          <Toaster />
         </TooltipProvider>
         <SpeedInsights />
         <Analytics />

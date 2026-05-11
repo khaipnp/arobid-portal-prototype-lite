@@ -4,14 +4,10 @@ import {
   BellIcon,
   ChevronsUpDownIcon,
   LogOutIcon,
-  MonitorIcon,
-  MoonIcon,
-  SunIcon,
   UserCircleIcon
 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useTheme } from "next-themes"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
   DropdownMenu,
@@ -19,8 +15,6 @@ import {
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
@@ -41,7 +35,6 @@ export function NavUser({
   }
 }) {
   const { isMobile } = useSidebar()
-  const { theme, setTheme } = useTheme()
   const router = useRouter()
 
   async function handleLogout() {
@@ -106,25 +99,6 @@ export function NavUser({
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuLabel>Theme</DropdownMenuLabel>
-            <DropdownMenuRadioGroup
-              value={theme ?? "system"}
-              onValueChange={(value) => setTheme(value)}
-            >
-              <DropdownMenuRadioItem value="light">
-                <SunIcon />
-                Light
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="dark">
-                <MoonIcon />
-                Dark
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="system">
-                <MonitorIcon />
-                Follow System
-              </DropdownMenuRadioItem>
-            </DropdownMenuRadioGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
               <LogOutIcon />
