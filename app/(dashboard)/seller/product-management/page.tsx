@@ -10,12 +10,12 @@ import {
 } from "@/components/ui/breadcrumb"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
-import { requireAnyRole } from "@/lib/auth/rbac"
+import { requireRole } from "@/lib/auth/rbac"
 import { getAuthenticatedUserById } from "@/lib/auth/service"
 import { listCompanyProducts } from "@/lib/tradexpo/db/products"
 
 export default async function SellerProductsPage() {
-  const userId = await requireAnyRole(["seller", "exhibitor"])
+  const userId = await requireRole("seller")
   const user = await getAuthenticatedUserById(userId)
 
   if (!user?.companyId) {

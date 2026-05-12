@@ -90,7 +90,7 @@ export function VirtualLobbyBfmOverlay({
                 : "Collapse buyer recommendations"
             }
             onClick={() => setIsCollapsed((prev) => !prev)}
-            className="cursor-pointer inline-flex h-7 w-7 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/15 hover:text-white"
+            className="inline-flex size-7 cursor-pointer items-center justify-center rounded-full text-white/80 transition-colors hover:bg-white/15 hover:text-white"
           >
             {isCollapsed ? (
               <ChevronUpIcon className="size-4" />

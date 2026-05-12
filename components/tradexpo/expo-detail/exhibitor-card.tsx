@@ -1,16 +1,8 @@
-import {
-  ArrowRightIcon,
-  GemIcon,
-  HeartIcon,
-  RocketIcon,
-  StarIcon
-} from "lucide-react"
+import { ArrowRightIcon, GemIcon, RocketIcon, StarIcon } from "lucide-react"
 import Image from "next/image"
 import { type ReactNode, useState } from "react"
-import { toast } from "sonner"
 import { ExhibitorCardActions } from "@/components/tradexpo/expo-detail/exhibitor-card-actions"
 import { ExhibitorProductDetailDialog } from "@/components/tradexpo/expo-detail/exhibitor-product-detail-dialog"
-import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import type { ExpoDetailExhibitor } from "@/lib/tradexpo/db/platform-data"
 
@@ -70,7 +62,7 @@ export function ExhibitorCard({ exhibitor, onChatClick }: ExhibitorCardProps) {
           alt={exhibitor.company}
           width={1000}
           height={1000}
-          className="size-12 bg-white rounded-full border object-contain"
+          className="size-12 rounded-full border bg-white object-contain"
         />
         <h3 className="min-w-0 flex-1 select-none font-semibold text-foreground text-sm">
           {exhibitor.company}

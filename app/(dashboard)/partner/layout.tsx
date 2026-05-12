@@ -8,7 +8,7 @@ export default async function PartnerLayout({
 }: {
   children: React.ReactNode
 }) {
-  const userId = await requireRole("exhibitor")
+  const userId = await requireRole("partner")
   const user = await getAuthenticatedUserById(userId)
 
   return (

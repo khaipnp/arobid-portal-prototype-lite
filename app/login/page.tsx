@@ -13,8 +13,10 @@ export default async function LoginPage({
   if (userId) {
     if (callbackUrl) redirect(callbackUrl)
     const user = await getAuthenticatedUserById(userId)
-    if (user?.roles.includes("admin")) redirect("/admin")
-    if (user?.roles.includes("exhibitor")) redirect("/partner")
+    if (user?.roles.includes("sys_admin") || user?.roles.includes("admin")) {
+      redirect("/admin")
+    }
+    if (user?.roles.includes("partner")) redirect("/partner")
     redirect("/seller")
   }
 

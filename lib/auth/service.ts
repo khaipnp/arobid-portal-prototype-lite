@@ -13,7 +13,7 @@ export type DemoLoginRole = (typeof DEMO_LOGIN_ROLES)[number]
 
 type DemoAccount = {
   role: DemoLoginRole
-  appRole: AppRole
+  appRoles: AppRole[]
   userId: string
   name: string
   email: string
@@ -23,7 +23,7 @@ type DemoAccount = {
 export const DEMO_ACCOUNTS: DemoAccount[] = [
   {
     role: "admin",
-    appRole: "admin",
+    appRoles: ["sys_admin", "admin", "partner", "seller", "buyer"],
     userId: "11111111-1111-4111-8111-111111111111",
     name: "Khai Pham",
     email: "khaipham@arobid.com",
@@ -31,7 +31,7 @@ export const DEMO_ACCOUNTS: DemoAccount[] = [
   },
   {
     role: "partner",
-    appRole: "exhibitor",
+    appRoles: ["partner"],
     userId: "88888888-8888-4888-8888-888888888888",
     name: "Partner Demo",
     email: "partner.demo@arobid.com",
@@ -39,7 +39,7 @@ export const DEMO_ACCOUNTS: DemoAccount[] = [
   },
   {
     role: "seller",
-    appRole: "seller",
+    appRoles: ["seller"],
     userId: "99999999-9999-4999-8999-999999999999",
     name: "Seller Demo",
     email: "seller.demo@arobid.com",
@@ -47,7 +47,7 @@ export const DEMO_ACCOUNTS: DemoAccount[] = [
   },
   {
     role: "buyer",
-    appRole: "buyer",
+    appRoles: ["buyer"],
     userId: "aaaaaaa1-aaaa-4aaa-8aaa-aaaaaaaaaaa1",
     name: "Buyer Demo",
     email: "buyer.demo@arobid.com",
@@ -64,8 +64,10 @@ export type AuthenticatedUser = {
 }
 
 function toRedirectPath(input: { roles: AppRole[] }) {
-  if (input.roles.includes("admin")) return "/admin"
-  if (input.roles.includes("exhibitor")) return "/partner"
+  if (input.roles.includes("sys_admin") || input.roles.includes("admin")) {
+    return "/admin"
+  }
+  if (input.roles.includes("partner")) return "/partner"
   return "/seller"
 }
 
@@ -97,15 +99,17 @@ export async function ensureDemoAccounts() {
     await sql`
       delete from user_roles
       where user_id = ${account.userId}
-        and role_id <> ${account.appRole}
+        and not (role_id = any(${account.appRoles}::text[]))
         and expo_id is null
     `
 
-    await sql`
-      insert into user_roles (user_id, role_id, expo_id)
-      values (${account.userId}, ${account.appRole}, null)
-      on conflict do nothing
-    `
+    for (const appRole of account.appRoles) {
+      await sql`
+        insert into user_roles (user_id, role_id, expo_id)
+        values (${account.userId}, ${appRole}, null)
+        on conflict do nothing
+      `
+    }
 
     await sql`
       insert into auth_identities (id, user_id, email, password_hash, is_active)

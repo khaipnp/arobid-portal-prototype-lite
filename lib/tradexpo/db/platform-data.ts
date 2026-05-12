@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto"
 import { sql } from "@/lib/db/neon"
 import { getAssetUrl } from "@/lib/image-utils"
+import { ensureCoHostPartnerAssignment } from "@/lib/partner/db"
 import type {
   AdminNotification,
   BoothCustomization,
@@ -158,6 +159,16 @@ function rowToExpo(r: ExpoRow): Expo {
 export async function listExpos(): Promise<Expo[]> {
   const rows = (await sql`
     select * from expos order by created_at desc
+  `) as ExpoRow[]
+  return rows.map(rowToExpo)
+}
+
+export async function listExposByOwner(ownerUserId: string): Promise<Expo[]> {
+  const rows = (await sql`
+    select *
+    from expos
+    where owner_user_id = ${ownerUserId}
+    order by created_at desc
   `) as ExpoRow[]
   return rows.map(rowToExpo)
 }
@@ -425,6 +436,18 @@ export async function createExpoWithHalls(
       )
     `
 
+    await sql`
+      insert into user_roles (user_id, role_id, expo_id)
+      values (${input.ownerUserId}, 'partner', null)
+      on conflict do nothing
+    `
+
+    await ensureCoHostPartnerAssignment({
+      userId: input.ownerUserId,
+      userEmail: input.ownerEmail,
+      expoId
+    })
+
     let order = 0
     for (const hall of input.halls) {
       const hallId = `expo-hall-${randomUUID()}`
@@ -526,6 +549,19 @@ export async function updateExpoWithHalls(
         end_at = ${end.toISOString()}
       where id = ${expoId}
     `
+
+    await sql`
+      insert into user_roles (user_id, role_id, expo_id)
+      values (${input.ownerUserId}, 'partner', null)
+      on conflict do nothing
+    `
+
+    await ensureCoHostPartnerAssignment({
+      userId: input.ownerUserId,
+      userEmail: input.ownerEmail,
+      expoId,
+      replaceExisting: true
+    })
 
     await sql`
       delete from expo_halls where expo_id = ${expoId}

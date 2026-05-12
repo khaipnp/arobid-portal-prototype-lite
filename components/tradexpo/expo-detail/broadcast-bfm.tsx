@@ -62,11 +62,11 @@ export function BroadcastBFM({ items }: { items: BFMBroadcastItem[] }) {
             key={activeBroadcast.id}
             className="flex flex-1 animate-[bfm-slide-up_320ms_ease-out] items-center gap-3"
           >
-            <span className="select-none inline-flex h-7 items-center gap-1 rounded-full bg-legend-100 px-2 font-medium text-legend text-xs">
+            <span className="inline-flex h-7 select-none items-center gap-1 rounded-full bg-legend-100 px-2 font-medium text-legend text-xs">
               <RadarIcon className="size-4" />
               Buyer Recommendations
             </span>
-            <p className="text-sm leading-5 select-none">
+            <p className="select-none text-sm leading-5">
               <span className="font-semibold">
                 {activeBroadcast.companyName}
               </span>
