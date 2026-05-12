@@ -1,25 +1,21 @@
+import { Backpack } from "lucide-react"
+import Link from "next/link"
 import { notFound } from "next/navigation"
+import { PartnerExpoDetailOverview } from "@/components/partner/partner-expo-detail-overview"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import { GoLIVEManager } from "@/components/tradexpo/golive-manager"
-import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { requireRole } from "@/lib/auth/rbac"
-import { getPartnerAssignedExpo } from "@/lib/partner/db"
+import {
+  getPartnerAssignedExpo,
+  getPartnerExpoOperationsDetail
+} from "@/lib/partner/db"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 import {
   listGoLIVEEvents,
   listStreamSessions
 } from "@/lib/tradexpo/db/platform-data"
-import type { ExpoStatus } from "@/lib/tradexpo/types"
-
-const statusStyles: Record<ExpoStatus, string> = {
-  Draft: "border-slate-300 bg-slate-100 text-slate-700",
-  "Pending Review": "border-amber-300 bg-amber-100 text-amber-700",
-  Live: "border-emerald-300 bg-emerald-100 text-emerald-700",
-  Ended: "border-zinc-300 bg-zinc-100 text-zinc-700",
-  Archived: "border-purple-300 bg-purple-100 text-purple-700",
-  Canceled: "border-rose-300 bg-rose-100 text-rose-700"
-}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", {
@@ -41,80 +37,49 @@ export default async function PartnerExpoDetailPage({
   const userId = await requireRole("partner")
   const assignedExpo = await getPartnerAssignedExpo(userId, expoId)
   if (!assignedExpo) notFound()
-  const { expo, assignment } = assignedExpo
+  const { expo } = assignedExpo
 
-  const [initialGoLIVEEvents, initialStreamSessions] = await Promise.all([
-    listGoLIVEEvents(),
-    listStreamSessions()
-  ])
+  const [operations, initialGoLIVEEvents, initialStreamSessions] =
+    await Promise.all([
+      getPartnerExpoOperationsDetail(userId, expoId),
+      listGoLIVEEvents(),
+      listStreamSessions()
+    ])
+
+  if (!operations) notFound()
 
   return (
     <DashboardShell
       title={expo.name}
-      description={`${formatDate(expo.startDate)} – ${formatDate(expo.endDate)}`}
+      description={`${formatDate(expo.startDate)} - ${formatDate(expo.endDate)}`}
       breadcrumbs={[
         { label: "Dashboard", href: "/partner" },
         { label: "My Expos", href: "/partner/expos" },
         { label: expo.name }
       ]}
+      showBackButton
     >
-      <div className="space-y-6">
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge variant="outline" className={statusStyles[expo.status]}>
-            {expo.status}
-          </Badge>
-        </div>
+      <Tabs defaultValue="overview" className="gap-4">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="golive">GoLIVE</TabsTrigger>
+        </TabsList>
 
-        <Tabs defaultValue="overview">
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="golive">GoLIVE</TabsTrigger>
-          </TabsList>
+        <TabsContent value="overview">
+          <PartnerExpoDetailOverview
+            assignedExpo={assignedExpo}
+            operations={operations}
+          />
+        </TabsContent>
 
-          <TabsContent value="overview" className="mt-6">
-            <div className="max-w-2xl rounded-lg border p-5">
-              <h2 className="mb-4 font-semibold text-muted-foreground text-sm uppercase tracking-wide">
-                Expo Information
-              </h2>
-              <div className="grid grid-cols-2 gap-y-3 text-sm">
-                <span className="text-muted-foreground">Expo ID</span>
-                <span className="font-mono text-xs">{expo.id}</span>
-
-                <span className="text-muted-foreground">
-                  Partner Organization
-                </span>
-                <span>{assignment.partnerOrganization.name}</span>
-
-                <span className="text-muted-foreground">
-                  Primary Representative
-                </span>
-                <span>{expo.ownerEmail}</span>
-
-                <span className="text-muted-foreground">Start Date</span>
-                <span>{formatDate(expo.startDate)}</span>
-
-                <span className="text-muted-foreground">End Date</span>
-                <span>{formatDate(expo.endDate)}</span>
-
-                <span className="text-muted-foreground">Status</span>
-                <Badge
-                  variant="outline"
-                  className={`w-fit text-xs ${statusStyles[expo.status]}`}
-                >
-                  {expo.status}
-                </Badge>
-              </div>
-            </div>
-          </TabsContent>
-          <TabsContent value="golive" className="mt-6">
-            <GoLIVEManager
-              expoId={expoId}
-              initialGoLIVEEvents={initialGoLIVEEvents}
-              initialStreamSessions={initialStreamSessions}
-            />
-          </TabsContent>
-        </Tabs>
-      </div>
+        <TabsContent value="golive">
+          <GoLIVEManager
+            expoId={expoId}
+            initialGoLIVEEvents={initialGoLIVEEvents}
+            initialStreamSessions={initialStreamSessions}
+          />
+        </TabsContent>
+      </Tabs>
     </DashboardShell>
   )
 }

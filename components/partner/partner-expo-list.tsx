@@ -5,7 +5,6 @@ import Image from "next/image"
 import Link from "next/link"
 import * as React from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
@@ -15,7 +14,6 @@ import {
 } from "@/components/ui/select"
 import type { PartnerAssignedExpo } from "@/lib/partner/db"
 import type { ExpoStatus } from "@/lib/tradexpo/types"
-import { cn } from "@/lib/utils"
 import { ExpoStatusBadge } from "../tradexpo/status-badge"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group"
 
@@ -32,7 +30,6 @@ const EXPO_STATUSES: (ExpoStatus | "All")[] = [
   "Draft",
   "Pending Review",
   "Live",
-  "Ended",
   "Archived",
   "Canceled"
 ]
@@ -61,7 +58,7 @@ export function PartnerExpoList({
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-        <InputGroup className="rounded-full max-w-3xs">
+        <InputGroup className="max-w-3xs rounded-full">
           <InputGroupAddon>
             <SearchIcon />
           </InputGroupAddon>

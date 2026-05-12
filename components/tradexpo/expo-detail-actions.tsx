@@ -118,8 +118,7 @@ export function ExpoDetailActions({
             }
           : null
 
-  const canArchive =
-    status !== "Archived" && status !== "Canceled" && status !== "Ended"
+  const canArchive = status !== "Archived" && status !== "Canceled"
 
   return (
     <div className="space-y-3">

@@ -8,7 +8,7 @@ import {
   WalletCardsIcon
 } from "lucide-react"
 import Link from "next/link"
-import { type ReactNode, useMemo, useState } from "react"
+import { type ReactNode, useState } from "react"
 import {
   Bar,
   BarChart,
@@ -92,7 +92,6 @@ const statusColors: Record<string, string> = {
   Draft: "var(--muted-foreground)",
   "Pending Review": "var(--chart-5)",
   Live: "var(--chart-2)",
-  Ended: "var(--chart-3)",
   Archived: "var(--chart-4)",
   Canceled: "var(--destructive)"
 }
@@ -171,13 +170,6 @@ export function PartnerDashboard({
   }))
   const [selectedExpoId, setSelectedExpoId] = useState(
     metrics.expoMetrics[0]?.expoId ?? ""
-  )
-
-  const selectedExpo = useMemo(
-    () =>
-      metrics.expoMetrics.find((item) => item.expoId === selectedExpoId) ??
-      metrics.expoMetrics[0],
-    [metrics.expoMetrics, selectedExpoId]
   )
 
   const hasExpoMetrics = metrics.expoMetrics.length > 0

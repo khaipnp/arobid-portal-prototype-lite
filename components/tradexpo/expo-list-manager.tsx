@@ -62,7 +62,6 @@ const ALL_STATUSES: ExpoStatus[] = [
   "Draft",
   "Pending Review",
   "Live",
-  "Ended",
   "Archived",
   "Canceled"
 ]
@@ -71,7 +70,6 @@ const statusStyles: Record<ExpoStatus, string> = {
   Draft: "border-slate-300 bg-slate-100 text-slate-700",
   "Pending Review": "border-amber-300 bg-amber-100 text-amber-700",
   Live: "border-emerald-300 bg-emerald-100 text-emerald-700",
-  Ended: "border-zinc-300 bg-zinc-100 text-zinc-700",
   Archived: "border-purple-300 bg-purple-100 text-purple-700",
   Canceled: "border-rose-300 bg-rose-100 text-rose-700"
 }

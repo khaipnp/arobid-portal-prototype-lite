@@ -23,7 +23,7 @@ export async function ensurePlatformSchema() {
 
     // If the latest migration is applied, we can assume everything before it is also applied
     // This is a fast-path for cold starts
-    if (appliedNames.has("partner_org_schema_v1")) {
+    if (appliedNames.has("expo_status_no_ended_v1")) {
       platformSchemaReady = true
       return
     }
@@ -60,6 +60,7 @@ export async function ensurePlatformSchema() {
       created_at timestamptz not null
     )
   `
+  await migrateExpoStatusSchema()
 
   await sql`
     create table if not exists admin_notifications (
@@ -95,6 +96,15 @@ export async function ensurePlatformSchema() {
     select name from platform_schema_migrations
   `) as { name: string }[]
   const appliedNames = new Set(migrationApplied.map((m) => m.name))
+
+  if (!appliedNames.has("expo_status_no_ended_v1")) {
+    await migrateExpoStatusSchema()
+    await sql`
+      insert into platform_schema_migrations (name)
+      values ('expo_status_no_ended_v1')
+      on conflict (name) do update set applied_at = now()
+    `
+  }
 
   if (!appliedNames.has("expos_slug_v1")) {
     await sql`alter table expos add column if not exists slug text`
@@ -1009,15 +1019,34 @@ export async function ensurePlatformSchema() {
 
   await migrateExpoManagementSchema()
   await migratePartnerOrganizationSchema()
+  await migrateExpoStatusSchema()
 
   // Record final migration to enable fast-path on next boot
   await sql`
     insert into platform_schema_migrations (name)
-    values ('partner_org_schema_v1')
+    values ('expo_status_no_ended_v1')
     on conflict (name) do update set applied_at = now();
   `
 
   platformSchemaReady = true
+}
+
+async function migrateExpoStatusSchema() {
+  await sql`
+    update expos
+    set status = 'Archived'
+    where status = 'Ended'
+  `
+
+  await sql`
+    alter table expos drop constraint if exists expos_status_ck
+  `
+
+  await sql`
+    alter table expos
+    add constraint expos_status_ck
+    check (status in ('Draft', 'Pending Review', 'Live', 'Archived', 'Canceled'))
+  `
 }
 
 async function migratePartnerOrganizationSchema() {

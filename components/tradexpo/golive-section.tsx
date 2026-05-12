@@ -23,8 +23,7 @@ type VisitorExpoStatus = "Upcoming" | "Live" | "Archive"
 
 function toVisitorStatus(status: ExpoStatus): VisitorExpoStatus {
   if (status === "Live") return "Live"
-  if (status === "Ended" || status === "Archived" || status === "Canceled")
-    return "Archive"
+  if (status === "Archived" || status === "Canceled") return "Archive"
   return "Upcoming"
 }
 

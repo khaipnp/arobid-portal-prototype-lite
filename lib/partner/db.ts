@@ -84,6 +84,47 @@ export type PartnerDashboardMetrics = {
   boothTierBreakdown: PartnerDashboardBreakdownItem[]
 }
 
+export type PartnerExpoTierBreakdown = {
+  tier: string
+  capacity: number
+  sold: number
+  published: number
+}
+
+export type PartnerExpoHallBreakdown = {
+  id: string
+  name: string
+  capacity: number
+  basicQty: number
+  professionalQty: number
+  premiumQty: number
+}
+
+export type PartnerExpoRegistrationStatusBreakdown = {
+  status: string
+  value: number
+}
+
+export type PartnerExpoOperationsDetail = {
+  summary: {
+    totalBooths: number
+    soldBooths: number
+    unsoldBooths: number
+    boothUtilization: number
+    publishedBooths: number
+    goLiveEvents: number
+    liveSessions: number
+    peakViewers: number
+    comments: number
+    revenue: number
+    visitors: number
+    products: number
+  }
+  tierBreakdown: PartnerExpoTierBreakdown[]
+  hallBreakdown: PartnerExpoHallBreakdown[]
+  registrationStatusBreakdown: PartnerExpoRegistrationStatusBreakdown[]
+}
+
 type PartnerExpoRow = {
   id: string
   slug?: string | null
@@ -92,7 +133,7 @@ type PartnerExpoRow = {
   owner_email: string
   start_date: string | Date
   end_date: string | Date
-  status: ExpoStatus
+  status: string
   category_ids: string[]
   created_at: string | Date
   description?: string
@@ -118,6 +159,20 @@ function toDateOnly(value: string | Date) {
   return new Date(value).toISOString().slice(0, 10)
 }
 
+function normalizePartnerExpoStatus(status: string): ExpoStatus {
+  if (
+    status === "Draft" ||
+    status === "Pending Review" ||
+    status === "Live" ||
+    status === "Archived" ||
+    status === "Canceled"
+  ) {
+    return status
+  }
+
+  return "Archived"
+}
+
 function rowToExpo(row: PartnerExpoRow): Expo {
   const startAt = row.start_at ? toIso(row.start_at) : undefined
   const endAt = row.end_at ? toIso(row.end_at) : undefined
@@ -136,7 +191,7 @@ function rowToExpo(row: PartnerExpoRow): Expo {
       : toDateOnly(row.end_date),
     startAt,
     endAt,
-    status: row.status,
+    status: normalizePartnerExpoStatus(row.status),
     categoryIds: row.category_ids,
     createdAt: toIso(row.created_at),
     description: row.description,
@@ -169,7 +224,9 @@ export function resolvePartnerCapabilities(
   return [...turnkey, "manage_tenant_settings", "manage_partner_users"]
 }
 
-function rowToAssignedExpo(row: PartnerExpoRow): PartnerAssignedExpo {
+function rowToAssignedExpo(
+  row: PartnerExpoRow
+): Omit<PartnerAssignedExpo, "goLiveCount"> {
   return {
     expo: rowToExpo(row),
     assignment: {
@@ -273,6 +330,208 @@ export async function getPartnerAssignedExpo(
     : null
 }
 
+export async function getPartnerExpoOperationsDetail(
+  userId: string,
+  expoId: string
+): Promise<PartnerExpoOperationsDetail | null> {
+  const assignedRows = (await sql`
+    select e.id, e.name
+    from partner_memberships pm
+    inner join partner_organizations po on po.id = pm.partner_org_id
+    inner join partner_expo_assignments pea on pea.partner_org_id = po.id
+    inner join expos e on e.id = pea.expo_id
+    where pm.user_id = ${userId}
+      and e.id = ${expoId}
+      and pm.status = 'active'
+      and po.status = 'active'
+    limit 1
+  `) as { id: string; name: string }[]
+
+  const assigned = assignedRows[0]
+  if (!assigned) return null
+
+  const summaryRows = (await sql`
+    with hall_capacity as (
+      select
+        coalesce(sum(basic_qty + professional_qty + premium_qty), 0)::int as total_booths
+      from expo_halls
+      where expo_id = ${expoId}
+    ),
+    booth_stats as (
+      select
+        count(*)::int as sold_booths,
+        count(*) filter (where bc.publish_status = 'Published')::int as published_booths,
+        coalesce(sum(jsonb_array_length(coalesce(bc.products, '[]'::jsonb))), 0)::int as products
+      from seller_booth_registrations sbr
+      left join booth_customizations bc on bc.registration_id = sbr.id
+      where sbr.expo_id = ${expoId}
+    ),
+    golive_stats as (
+      select
+        count(*) filter (where gle.status <> 'Canceled')::int as go_live_events,
+        count(*) filter (where ss.status = 'Live')::int as live_sessions,
+        coalesce(sum(ss.peak_viewer_count), 0)::int as peak_viewers
+      from go_live_events gle
+      left join stream_sessions ss on ss.stream_session_id = gle.stream_session_id
+      where gle.expo_id = ${expoId}
+    ),
+    comment_stats as (
+      select count(lc.live_comment_id)::int as comments
+      from go_live_events gle
+      inner join live_comments lc on lc.stream_session_id = gle.stream_session_id
+      where gle.expo_id = ${expoId}
+        and lc.is_deleted = false
+    ),
+    order_stats as (
+      select
+        count(distinct customer_id)::int as visitors,
+        coalesce(sum(amount) filter (where status = 'Paid'), 0)::numeric as revenue
+      from orders
+      where expo_name = ${assigned.name}
+    )
+    select
+      coalesce(hc.total_booths, 0)::int as total_booths,
+      coalesce(bs.sold_booths, 0)::int as sold_booths,
+      greatest(coalesce(hc.total_booths, bs.sold_booths, 0) - coalesce(bs.sold_booths, 0), 0)::int as unsold_booths,
+      coalesce(bs.published_booths, 0)::int as published_booths,
+      coalesce(bs.products, 0)::int as products,
+      coalesce(gs.go_live_events, 0)::int as go_live_events,
+      coalesce(gs.live_sessions, 0)::int as live_sessions,
+      coalesce(gs.peak_viewers, 0)::int as peak_viewers,
+      coalesce(cs.comments, 0)::int as comments,
+      coalesce(os.visitors, 0)::int as visitors,
+      coalesce(os.revenue, 0)::numeric as revenue
+    from hall_capacity hc
+    cross join booth_stats bs
+    cross join golive_stats gs
+    cross join comment_stats cs
+    cross join order_stats os
+  `) as {
+    total_booths: number | string
+    sold_booths: number | string
+    unsold_booths: number | string
+    published_booths: number | string
+    products: number | string
+    go_live_events: number | string
+    live_sessions: number | string
+    peak_viewers: number | string
+    comments: number | string
+    visitors: number | string
+    revenue: number | string
+  }[]
+
+  const tierRows = (await sql`
+    with capacity as (
+      select 'Basic' as tier, coalesce(sum(basic_qty), 0)::int as capacity
+      from expo_halls
+      where expo_id = ${expoId}
+      union all
+      select 'Professional' as tier, coalesce(sum(professional_qty), 0)::int as capacity
+      from expo_halls
+      where expo_id = ${expoId}
+      union all
+      select 'Premium' as tier, coalesce(sum(premium_qty), 0)::int as capacity
+      from expo_halls
+      where expo_id = ${expoId}
+    ),
+    sold as (
+      select
+        case
+          when lower(booth_tier) in ('pro', 'professional') then 'Professional'
+          when lower(booth_tier) = 'premium' then 'Premium'
+          else 'Basic'
+        end as tier,
+        count(*)::int as sold,
+        count(*) filter (where bc.publish_status = 'Published')::int as published
+      from seller_booth_registrations sbr
+      left join booth_customizations bc on bc.registration_id = sbr.id
+      where sbr.expo_id = ${expoId}
+      group by 1
+    )
+    select
+      c.tier,
+      c.capacity,
+      coalesce(s.sold, 0)::int as sold,
+      coalesce(s.published, 0)::int as published
+    from capacity c
+    left join sold s on s.tier = c.tier
+    order by case c.tier when 'Basic' then 1 when 'Professional' then 2 else 3 end
+  `) as {
+    tier: string
+    capacity: number | string
+    sold: number | string
+    published: number | string
+  }[]
+
+  const hallRows = (await sql`
+    select
+      id,
+      hall_name,
+      basic_qty,
+      professional_qty,
+      premium_qty,
+      (basic_qty + professional_qty + premium_qty)::int as capacity
+    from expo_halls
+    where expo_id = ${expoId}
+    order by sort_order asc
+  `) as {
+    id: string
+    hall_name: string
+    basic_qty: number | string
+    professional_qty: number | string
+    premium_qty: number | string
+    capacity: number | string
+  }[]
+
+  const statusRows = (await sql`
+    select status, count(*)::int as value
+    from seller_booth_registrations
+    where expo_id = ${expoId}
+    group by status
+    order by value desc, status asc
+  `) as { status: string; value: number | string }[]
+
+  const summaryRow = summaryRows[0]
+  const totalBooths = toNumber(summaryRow?.total_booths)
+  const soldBooths = toNumber(summaryRow?.sold_booths)
+
+  return {
+    summary: {
+      totalBooths,
+      soldBooths,
+      unsoldBooths: toNumber(summaryRow?.unsold_booths),
+      boothUtilization:
+        totalBooths > 0 ? Math.round((soldBooths / totalBooths) * 100) : 0,
+      publishedBooths: toNumber(summaryRow?.published_booths),
+      goLiveEvents: toNumber(summaryRow?.go_live_events),
+      liveSessions: toNumber(summaryRow?.live_sessions),
+      peakViewers: toNumber(summaryRow?.peak_viewers),
+      comments: toNumber(summaryRow?.comments),
+      revenue: toNumber(summaryRow?.revenue),
+      visitors: toNumber(summaryRow?.visitors),
+      products: toNumber(summaryRow?.products)
+    },
+    tierBreakdown: tierRows.map((row) => ({
+      tier: row.tier,
+      capacity: toNumber(row.capacity),
+      sold: toNumber(row.sold),
+      published: toNumber(row.published)
+    })),
+    hallBreakdown: hallRows.map((row) => ({
+      id: row.id,
+      name: row.hall_name,
+      capacity: toNumber(row.capacity),
+      basicQty: toNumber(row.basic_qty),
+      professionalQty: toNumber(row.professional_qty),
+      premiumQty: toNumber(row.premium_qty)
+    })),
+    registrationStatusBreakdown: statusRows.map((row) => ({
+      status: row.status,
+      value: toNumber(row.value)
+    }))
+  }
+}
+
 export async function getPartnerDashboardMetrics(
   userId: string
 ): Promise<PartnerDashboardMetrics> {
@@ -360,7 +619,7 @@ export async function getPartnerDashboardMetrics(
   `) as {
     id: string
     name: string
-    status: ExpoStatus
+    status: string
     start_date: string | Date
     end_date: string | Date
     total_booths: number | string
@@ -423,7 +682,7 @@ export async function getPartnerDashboardMetrics(
     return {
       expoId: row.id,
       expoName: row.name,
-      status: row.status,
+      status: normalizePartnerExpoStatus(row.status),
       startDate: toDateOnly(row.start_date),
       endDate: toDateOnly(row.end_date),
       totalBooths,
