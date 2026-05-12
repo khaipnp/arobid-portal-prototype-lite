@@ -3,17 +3,13 @@ import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import { requireRole } from "@/lib/auth/rbac"
 import { listPartnerAssignedExpos } from "@/lib/partner/db"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
-import { listGoLIVEEvents } from "@/lib/tradexpo/db/platform-data"
 
 export const dynamic = "force-dynamic"
 
 export default async function PartnerExposPage() {
   await ensurePlatformSchema()
   const userId = await requireRole("partner")
-  const [assignedExpos, goLiveEvents] = await Promise.all([
-    listPartnerAssignedExpos(userId),
-    listGoLIVEEvents()
-  ])
+  const assignedExpos = await listPartnerAssignedExpos(userId)
 
   return (
     <DashboardShell
@@ -24,10 +20,7 @@ export default async function PartnerExposPage() {
         { label: "My Expos" }
       ]}
     >
-      <PartnerExpoList
-        assignedExpos={assignedExpos}
-        goLiveEvents={goLiveEvents}
-      />
+      <PartnerExpoList assignedExpos={assignedExpos} />
     </DashboardShell>
   )
 }

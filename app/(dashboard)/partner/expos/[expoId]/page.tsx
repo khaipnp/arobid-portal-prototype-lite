@@ -63,9 +63,6 @@ export default async function PartnerExpoDetailPage({
           <Badge variant="outline" className={statusStyles[expo.status]}>
             {expo.status}
           </Badge>
-          <Badge variant="secondary">
-            {assignment.partnershipModel.replace("_", "-")}
-          </Badge>
         </div>
 
         <Tabs defaultValue="overview">

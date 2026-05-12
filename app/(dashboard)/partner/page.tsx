@@ -1,26 +1,23 @@
+import { PartnerDashboard } from "@/components/partner/partner-dashboard"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
+import { requireRole } from "@/lib/auth/rbac"
+import { getPartnerDashboardMetrics } from "@/lib/partner/db"
+import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 
-export default function PartnerDashboardPage() {
+export const dynamic = "force-dynamic"
+
+export default async function PartnerDashboardPage() {
+  await ensurePlatformSchema()
+  const userId = await requireRole("partner")
+  const metrics = await getPartnerDashboardMetrics(userId)
+
   return (
     <DashboardShell
       title="Partner Dashboard"
-      description="Manage your expo events and exhibitors."
+      description="Track expo inventory, booth performance, GoLIVE reach, and partner revenue."
       breadcrumbs={[{ label: "Dashboard" }]}
     >
-      <div className="grid gap-4 md:grid-cols-2">
-        <section className="rounded-xl border bg-card p-4">
-          <h2 className="font-semibold text-base">My Events</h2>
-          <p className="mt-1 text-muted-foreground text-sm">
-            View and manage your upcoming and past expo events.
-          </p>
-        </section>
-        <section className="rounded-xl border bg-card p-4">
-          <h2 className="font-semibold text-base">Exhibitors</h2>
-          <p className="mt-1 text-muted-foreground text-sm">
-            Manage exhibitor invitations and applications for your events.
-          </p>
-        </section>
-      </div>
+      <PartnerDashboard metrics={metrics} />
     </DashboardShell>
   )
 }

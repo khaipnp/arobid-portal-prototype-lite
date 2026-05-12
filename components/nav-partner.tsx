@@ -24,18 +24,8 @@ const expoOwnerLinks = [
     icon: <CalendarIcon />
   },
   {
-    name: "GoLIVE",
-    url: "/partner/expos",
-    icon: <RadioIcon />
-  },
-  {
-    name: "Exhibitors",
-    url: "#",
-    icon: <UsersIcon />
-  },
-  {
     name: "Settings",
-    url: "#",
+    url: "/partner/settings",
     icon: <Settings2Icon />
   }
 ]

@@ -13,7 +13,10 @@ import { config } from "dotenv"
 config({ path: resolve(process.cwd(), ".env.local") })
 config({ path: resolve(process.cwd(), ".env") })
 
-const DEFAULT_USERS = ["user-current", "partner-1"] as const
+const DEFAULT_USERS = [
+  "11111111-1111-4111-8111-111111111111", // user-current
+  "88888888-8888-4888-8888-888888888888" // partner-1 (demo partner account)
+] as const
 
 function parseUserList(): string[] {
   const raw = process.env.NOTIFICATION_SEED_USERS?.trim()
@@ -100,10 +103,10 @@ const PARTNER_SEEDS: SeedItem[] = [
 ]
 
 function seedsForUser(userId: string): SeedItem[] {
-  if (userId === "partner-1") {
+  if (userId === "88888888-8888-4888-8888-888888888888") {
     return PARTNER_SEEDS
   }
-  if (userId === "user-current") {
+  if (userId === "11111111-1111-4111-8111-111111111111") {
     return USER_WORKSPACE_SEEDS
   }
   // Default: small generic set (valid paths)

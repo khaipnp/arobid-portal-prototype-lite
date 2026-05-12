@@ -6,6 +6,37 @@ let platformSchemaReady = false
 /** Creates platform tables (expos, orders, chat, streaming) for Neon. Idempotent. */
 export async function ensurePlatformSchema() {
   if (platformSchemaReady) return
+
+  // 1. Check if core schema is already initialized to skip basic setup
+  const coreInitialized = (await sql`
+    select exists (
+      select 1 from information_schema.tables
+      where table_name = 'platform_schema_migrations'
+    )
+  `) as { exists: boolean }[]
+
+  if (coreInitialized[0]?.exists) {
+    const migrationApplied = (await sql`
+      select name from platform_schema_migrations
+    `) as { name: string }[]
+    const appliedNames = new Set(migrationApplied.map((m) => m.name))
+
+    // If the latest migration is applied, we can assume everything before it is also applied
+    // This is a fast-path for cold starts
+    if (appliedNames.has("partner_org_schema_v1")) {
+      platformSchemaReady = true
+      return
+    }
+  }
+
+  // 2. Initialize Core Tables (Individual calls to avoid NeonDbError)
+  await sql`
+    create table if not exists platform_schema_migrations (
+      name text primary key,
+      applied_at timestamptz not null default now()
+    )
+  `
+
   await sql`
     create table if not exists expo_categories (
       id text primary key,
@@ -28,30 +59,6 @@ export async function ensurePlatformSchema() {
       category_ids jsonb not null,
       created_at timestamptz not null
     )
-  `
-  await sql`alter table expos add column if not exists slug text`
-  await sql`
-    update expos
-    set slug = trim(both '-' from regexp_replace(lower(name), '[^a-z0-9]+', '-', 'g'))
-    where slug is null or length(trim(slug)) = 0
-  `
-  await sql`
-    update expos
-    set slug = slug || '-' || right(id, 6)
-    where id in (
-      select id
-      from (
-        select id, slug, row_number() over (partition by slug order by created_at asc, id asc) as rn
-        from expos
-        where slug is not null
-      ) t
-      where t.rn > 1
-    )
-  `
-  await sql`
-    create unique index if not exists idx_expos_slug_unique
-    on expos (slug)
-    where slug is not null
   `
 
   await sql`
@@ -83,6 +90,39 @@ export async function ensurePlatformSchema() {
     )
   `
 
+  // 3. Sequential Migrations/Updates (Only run if not applied)
+  const migrationApplied = (await sql`
+    select name from platform_schema_migrations
+  `) as { name: string }[]
+  const appliedNames = new Set(migrationApplied.map((m) => m.name))
+
+  if (!appliedNames.has("expos_slug_v1")) {
+    await sql`alter table expos add column if not exists slug text`
+    await sql`
+      update expos
+      set slug = trim(both '-' from regexp_replace(lower(name), '[^a-z0-9]+', '-', 'g'))
+      where slug is null or length(trim(slug)) = 0
+    `
+    await sql`
+      update expos
+      set slug = slug || '-' || right(id, 6)
+      where id in (
+        select id
+        from (
+          select id, slug, row_number() over (partition by slug order by created_at asc, id asc) as rn
+          from expos
+          where slug is not null
+        ) t
+        where t.rn > 1
+      )
+    `
+    await sql`
+      create unique index if not exists idx_expos_slug_unique
+      on expos (slug)
+      where slug is not null
+    `
+    await sql`insert into platform_schema_migrations (name) values ('expos_slug_v1') on conflict do nothing`
+  }
   await sql`
     create table if not exists company_products (
       id text primary key,
@@ -969,6 +1009,14 @@ export async function ensurePlatformSchema() {
 
   await migrateExpoManagementSchema()
   await migratePartnerOrganizationSchema()
+
+  // Record final migration to enable fast-path on next boot
+  await sql`
+    insert into platform_schema_migrations (name)
+    values ('partner_org_schema_v1')
+    on conflict (name) do update set applied_at = now();
+  `
+
   platformSchemaReady = true
 }
 
