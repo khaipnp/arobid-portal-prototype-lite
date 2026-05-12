@@ -4,8 +4,9 @@ import { GoLIVEManager } from "@/components/tradexpo/golive-manager"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { requireRole } from "@/lib/auth/rbac"
+import { getPartnerAssignedExpo } from "@/lib/partner/db"
+import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 import {
-  getExpoById,
   listGoLIVEEvents,
   listStreamSessions
 } from "@/lib/tradexpo/db/platform-data"
@@ -36,9 +37,11 @@ export default async function PartnerExpoDetailPage({
   params: Promise<{ expoId: string }>
 }) {
   const { expoId } = await params
+  await ensurePlatformSchema()
   const userId = await requireRole("partner")
-  const expo = await getExpoById(expoId)
-  if (!expo || expo.ownerUserId !== userId) notFound()
+  const assignedExpo = await getPartnerAssignedExpo(userId, expoId)
+  if (!assignedExpo) notFound()
+  const { expo, assignment } = assignedExpo
 
   const [initialGoLIVEEvents, initialStreamSessions] = await Promise.all([
     listGoLIVEEvents(),
@@ -56,9 +59,12 @@ export default async function PartnerExpoDetailPage({
       ]}
     >
       <div className="space-y-6">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Badge variant="outline" className={statusStyles[expo.status]}>
             {expo.status}
+          </Badge>
+          <Badge variant="secondary">
+            {assignment.partnershipModel.replace("_", "-")}
           </Badge>
         </div>
 
@@ -77,7 +83,14 @@ export default async function PartnerExpoDetailPage({
                 <span className="text-muted-foreground">Expo ID</span>
                 <span className="font-mono text-xs">{expo.id}</span>
 
-                <span className="text-muted-foreground">Owner</span>
+                <span className="text-muted-foreground">
+                  Partner Organization
+                </span>
+                <span>{assignment.partnerOrganization.name}</span>
+
+                <span className="text-muted-foreground">
+                  Primary Representative
+                </span>
                 <span>{expo.ownerEmail}</span>
 
                 <span className="text-muted-foreground">Start Date</span>

@@ -797,6 +797,7 @@ export async function ensurePlatformSchema() {
       (${CURRENT_USER_ID}, 'buyer', null)
     on conflict do nothing
   `
+
   await sql`
     insert into chat_users (
       id,
@@ -967,6 +968,164 @@ export async function ensurePlatformSchema() {
   `
 
   await migrateExpoManagementSchema()
+  await migratePartnerOrganizationSchema()
+  platformSchemaReady = true
+}
+
+async function migratePartnerOrganizationSchema() {
+  await sql`
+    create table if not exists partner_organizations (
+      id text primary key,
+      name text not null,
+      model text not null default 'co_host',
+      status text not null default 'active',
+      primary_user_id text references users(id) on delete set null,
+      branding jsonb not null default '{}'::jsonb,
+      settings jsonb not null default '{}'::jsonb,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    do $$
+    begin
+      alter table partner_organizations
+      add constraint partner_organizations_model_ck
+      check (model in ('co_host', 'turnkey', 'tenant'));
+    exception
+      when duplicate_object then null;
+    end $$;
+  `
+  await sql`
+    do $$
+    begin
+      alter table partner_organizations
+      add constraint partner_organizations_status_ck
+      check (status in ('active', 'inactive'));
+    exception
+      when duplicate_object then null;
+    end $$;
+  `
+
+  await sql`
+    create table if not exists partner_memberships (
+      partner_org_id text not null references partner_organizations(id) on delete cascade,
+      user_id text not null references users(id) on delete cascade,
+      role text not null default 'primary_representative',
+      status text not null default 'active',
+      created_at timestamptz not null default now(),
+      primary key (partner_org_id, user_id)
+    )
+  `
+  await sql`
+    do $$
+    begin
+      alter table partner_memberships
+      add constraint partner_memberships_role_ck
+      check (role in ('primary_representative', 'admin', 'operator', 'analyst'));
+    exception
+      when duplicate_object then null;
+    end $$;
+  `
+  await sql`
+    do $$
+    begin
+      alter table partner_memberships
+      add constraint partner_memberships_status_ck
+      check (status in ('active', 'inactive'));
+    exception
+      when duplicate_object then null;
+    end $$;
+  `
+  await sql`
+    create index if not exists idx_partner_memberships_user
+    on partner_memberships (user_id)
+  `
+
+  await sql`
+    create table if not exists partner_expo_assignments (
+      partner_org_id text not null references partner_organizations(id) on delete cascade,
+      expo_id text not null references expos(id) on delete cascade,
+      partnership_model text not null default 'co_host',
+      capabilities jsonb not null default '{}'::jsonb,
+      assigned_at timestamptz not null default now(),
+      primary key (partner_org_id, expo_id)
+    )
+  `
+  await sql`
+    do $$
+    begin
+      alter table partner_expo_assignments
+      add constraint partner_expo_assignments_model_ck
+      check (partnership_model in ('co_host', 'turnkey', 'tenant'));
+    exception
+      when duplicate_object then null;
+    end $$;
+  `
+  await sql`
+    create index if not exists idx_partner_expo_assignments_expo
+    on partner_expo_assignments (expo_id)
+  `
+
+  await sql`
+    insert into partner_organizations (
+      id,
+      name,
+      model,
+      status,
+      primary_user_id,
+      created_at,
+      updated_at
+    )
+    select distinct
+      'partner-org-' || encode(sha256(e.owner_user_id::bytea), 'hex'),
+      coalesce(nullif(u.name, ''), e.owner_email),
+      'co_host',
+      'active',
+      e.owner_user_id,
+      now(),
+      now()
+    from expos e
+    inner join users u on u.id = e.owner_user_id
+    where e.owner_user_id is not null
+    on conflict (id) do update
+    set
+      name = excluded.name,
+      primary_user_id = excluded.primary_user_id,
+      updated_at = now()
+  `
+  await sql`
+    insert into partner_memberships (partner_org_id, user_id, role, status)
+    select distinct
+      'partner-org-' || encode(sha256(e.owner_user_id::bytea), 'hex'),
+      e.owner_user_id,
+      'primary_representative',
+      'active'
+    from expos e
+    inner join users u on u.id = e.owner_user_id
+    where e.owner_user_id is not null
+    on conflict (partner_org_id, user_id) do update
+    set
+      role = excluded.role,
+      status = excluded.status
+  `
+  await sql`
+    insert into partner_expo_assignments (
+      partner_org_id,
+      expo_id,
+      partnership_model,
+      capabilities
+    )
+    select distinct
+      'partner-org-' || encode(sha256(e.owner_user_id::bytea), 'hex'),
+      e.id,
+      'co_host',
+      '{}'::jsonb
+    from expos e
+    inner join users u on u.id = e.owner_user_id
+    where e.owner_user_id is not null
+    on conflict (partner_org_id, expo_id) do nothing
+  `
 }
 
 /** Idempotent columns/tables for Create Expo + hall configuration (US-02 / US-03). */
@@ -1065,5 +1224,4 @@ async function migrateExpoManagementSchema() {
       created_at timestamptz not null default now()
     )
   `
-  platformSchemaReady = true
 }

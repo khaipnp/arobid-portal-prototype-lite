@@ -5,7 +5,8 @@ import Image from "next/image"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import type { Expo, ExpoStatus, GoLIVEEvent } from "@/lib/tradexpo/types"
+import type { PartnerAssignedExpo } from "@/lib/partner/db"
+import type { ExpoStatus, GoLIVEEvent } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
 
 const statusStyles: Record<ExpoStatus, string> = {
@@ -26,15 +27,15 @@ function formatDate(iso: string) {
 }
 
 export function PartnerExpoList({
-  expos,
+  assignedExpos,
   goLiveEvents
 }: {
-  expos: Expo[]
+  assignedExpos: PartnerAssignedExpo[]
   goLiveEvents: GoLIVEEvent[]
 }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {expos.map((expo) => {
+      {assignedExpos.map(({ expo, assignment }) => {
         const goLIVECount = goLiveEvents.filter(
           (e) => e.expoId === expo.id && e.status !== "Canceled"
         ).length
@@ -82,6 +83,11 @@ export function PartnerExpoList({
                   </span>
                 </div>
               )}
+
+              <div className="text-muted-foreground text-xs">
+                {assignment.partnerOrganization.name} ·{" "}
+                {assignment.partnershipModel.replace("_", "-")}
+              </div>
 
               <Button asChild size="sm" variant="outline" className="w-full">
                 <Link href={`/partner/expos/${expo.id}`}>Manage Expo</Link>

@@ -169,4 +169,85 @@ describe("platform schema consistency", () => {
       await sql`delete from expos where id = 'test-expo-scope'`
     }
   })
+
+  test("lists partner portal expos through organization assignments", async () => {
+    const { sql } = await import("@/lib/db/neon")
+    const { ensureCoHostPartnerAssignment, listPartnerAssignedExpos } =
+      await import("@/lib/partner/db")
+    const { ensurePlatformSchema } = await import(
+      "@/lib/platform/ensure-schema"
+    )
+
+    await ensurePlatformSchema()
+
+    await sql`delete from partner_expo_assignments where expo_id = 'test-expo-partner-assignment'`
+    await sql`delete from partner_memberships where user_id = 'cccccccc-cccc-4ccc-8ccc-ccccccccccc3'`
+    await sql`delete from partner_organizations where primary_user_id = 'cccccccc-cccc-4ccc-8ccc-ccccccccccc3'`
+    await sql`delete from expos where id = 'test-expo-partner-assignment'`
+    await sql`delete from users where id = 'cccccccc-cccc-4ccc-8ccc-ccccccccccc3'`
+
+    try {
+      await sql`
+        insert into users (id, name, email, is_active)
+        values (
+          'cccccccc-cccc-4ccc-8ccc-ccccccccccc3',
+          'Partner Test User',
+          'partner-test@example.com',
+          true
+        )
+      `
+
+      await sql`
+        insert into expos (
+          id,
+          name,
+          thumbnail_url,
+          owner_email,
+          start_date,
+          end_date,
+          status,
+          category_ids,
+          created_at,
+          owner_user_id
+        )
+        values (
+          'test-expo-partner-assignment',
+          'Partner Assignment Test Expo',
+          'https://example.com/thumb.png',
+          'partner-test@example.com',
+          current_date,
+          current_date + interval '1 day',
+          'Live',
+          '[]'::jsonb,
+          now(),
+          'cccccccc-cccc-4ccc-8ccc-ccccccccccc3'
+        )
+      `
+
+      await ensureCoHostPartnerAssignment({
+        userId: "cccccccc-cccc-4ccc-8ccc-ccccccccccc3",
+        userEmail: "partner-test@example.com",
+        expoId: "test-expo-partner-assignment"
+      })
+
+      const assignedExpos = await listPartnerAssignedExpos(
+        "cccccccc-cccc-4ccc-8ccc-ccccccccccc3"
+      )
+
+      expect(assignedExpos.map((item) => item.expo.id)).toContain(
+        "test-expo-partner-assignment"
+      )
+      expect(
+        assignedExpos.find(
+          (item) => item.expo.id === "test-expo-partner-assignment"
+        )?.assignment.partnerOrganization.model
+      ).toBe("co_host")
+    } finally {
+      await sql`delete from partner_expo_assignments where expo_id = 'test-expo-partner-assignment'`
+      await sql`delete from partner_memberships where user_id = 'cccccccc-cccc-4ccc-8ccc-ccccccccccc3'`
+      await sql`delete from partner_organizations where primary_user_id = 'cccccccc-cccc-4ccc-8ccc-ccccccccccc3'`
+      await sql`delete from expos where id = 'test-expo-partner-assignment'`
+      await sql`delete from users where id = 'cccccccc-cccc-4ccc-8ccc-ccccccccccc3'`
+    }
+  })
 })
