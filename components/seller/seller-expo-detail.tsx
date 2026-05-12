@@ -55,7 +55,7 @@ const expoStatusStyles: Record<SellerExpoViewStatus, string> = {
 
 function toSellerExpoViewStatus(status: ExpoStatus): SellerExpoViewStatus {
   if (status === "Live") return "Live"
-  if (status === "Ended" || status === "Archived" || status === "Canceled") {
+  if (status === "Archived" || status === "Canceled") {
     return "Archive"
   }
   return "Upcoming"

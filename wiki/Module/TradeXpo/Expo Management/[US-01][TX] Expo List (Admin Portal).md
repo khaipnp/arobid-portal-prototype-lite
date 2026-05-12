@@ -26,7 +26,7 @@ The system provides filters and search functions for Admin to quickly query data
 
 | Search Bar | Text | Partial match for Expo Name or Exact match for Manager Email. |
 | --- | --- | --- |
-| Status | Dropdown | Options: All, Draft, Pending Review, Live, Ended, Archived, Canceled. |
+| Status | Dropdown | Options: All, Draft, Pending Review, Live, Archived, Canceled. |
 | Categories | Multi-select | Filter by Industry Categories (Levels 1-4). |
 | Time | Date Picker | Filter by "Start Date" or "End Date" duration. |
 

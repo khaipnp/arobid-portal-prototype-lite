@@ -1,5 +1,7 @@
 "use client"
 
+import { ChevronLeftIcon } from "lucide-react"
+import { useRouter } from "next/navigation"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,6 +12,7 @@ import {
 } from "@/components/ui/breadcrumb"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import { Button } from "../ui/button"
 
 interface Crumb {
   label: string
@@ -21,13 +24,15 @@ interface DashboardShellProps {
   description?: string
   breadcrumbs: Crumb[]
   children: React.ReactNode
+  showBackButton?: boolean
 }
 
 export function DashboardShell({
   title,
   description,
   breadcrumbs,
-  children
+  children,
+  showBackButton
 }: DashboardShellProps) {
   const lastIndex = breadcrumbs.length - 1
 
@@ -62,14 +67,33 @@ export function DashboardShell({
       </header>
 
       <div className="flex flex-1 flex-col gap-4 p-4 pt-4">
-        <section>
-          <h1 className="font-semibold text-lg">{title}</h1>
-          {description ? (
-            <p className="mt-1 text-muted-foreground text-sm">{description}</p>
-          ) : null}
-        </section>
+        <div className="flex gap-4 items-center">
+          {showBackButton ? <BackButton /> : null}
+          <section>
+            <h1 className="font-semibold text-lg leading-none">{title}</h1>
+            {description ? (
+              <p className="text-muted-foreground text-sm">{description}</p>
+            ) : null}
+          </section>
+        </div>
         {children}
       </div>
     </>
+  )
+}
+
+function BackButton() {
+  const router = useRouter()
+
+  return (
+    <Button
+      type="button"
+      variant="secondary"
+      size="icon"
+      aria-label="Go back"
+      onClick={() => router.back()}
+    >
+      <ChevronLeftIcon />
+    </Button>
   )
 }

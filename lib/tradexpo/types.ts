@@ -100,7 +100,6 @@ export type ExpoStatus =
   | "Draft"
   | "Pending Review"
   | "Live"
-  | "Ended"
   | "Archived"
   | "Canceled"
 

@@ -28,7 +28,6 @@ const statusStyles: Record<ExpoStatus, string> = {
   Draft: "border-zinc-300 bg-zinc-100 text-zinc-600",
   "Pending Review": "border-amber-300 bg-amber-100 text-amber-700",
   Live: "border-emerald-300 bg-emerald-100 text-emerald-700",
-  Ended: "border-blue-300 bg-blue-100 text-blue-700",
   Archived: "border-zinc-300 bg-zinc-100 text-zinc-500",
   Canceled: "border-rose-300 bg-rose-100 text-rose-700"
 }

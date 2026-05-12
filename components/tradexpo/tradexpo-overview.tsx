@@ -70,7 +70,6 @@ const EXPO_STATUS_ORDER: ExpoStatus[] = [
   "Live",
   "Pending Review",
   "Draft",
-  "Ended",
   "Archived",
   "Canceled"
 ]
@@ -79,7 +78,6 @@ const STATUS_COLOR: Record<ExpoStatus, string> = {
   Live: "bg-emerald-500",
   "Pending Review": "bg-amber-400",
   Draft: "bg-slate-400",
-  Ended: "bg-zinc-400",
   Archived: "bg-purple-400",
   Canceled: "bg-rose-400"
 }
@@ -88,7 +86,6 @@ const STATUS_TEXT: Record<ExpoStatus, string> = {
   Live: "text-emerald-700",
   "Pending Review": "text-amber-700",
   Draft: "text-slate-600",
-  Ended: "text-zinc-600",
   Archived: "text-purple-700",
   Canceled: "text-rose-700"
 }
@@ -374,8 +371,11 @@ function RemindersPanel({
     })
     .sort((a, b) => daysUntil(a.startDate) - daysUntil(b.startDate))
 
-  const endedUnarchived = expos.filter(
-    (e) => e.status === "Ended" && daysUntil(e.endDate) < -7
+  const archivableFinished = expos.filter(
+    (e) =>
+      e.status !== "Archived" &&
+      e.status !== "Canceled" &&
+      daysUntil(e.endDate) < -7
   )
 
   const failedTemplates = [
@@ -390,7 +390,7 @@ function RemindersPanel({
   const hasAny =
     pendingApproval.length > 0 ||
     startingSoon.length > 0 ||
-    endedUnarchived.length > 0 ||
+    archivableFinished.length > 0 ||
     failedTemplates.length > 0
 
   return (
@@ -465,15 +465,15 @@ function RemindersPanel({
             </div>
           )}
 
-          {endedUnarchived.length > 0 && (
+          {archivableFinished.length > 0 && (
             <div className="rounded-lg border border-zinc-200 bg-zinc-50/60 p-3 dark:border-zinc-700 dark:bg-zinc-900/40">
               <p className="flex items-center gap-1.5 font-medium text-sm text-zinc-600 dark:text-zinc-400">
                 <ArchiveIcon className="h-4 w-4" />
-                {endedUnarchived.length} ended expo
-                {endedUnarchived.length > 1 ? "s" : ""} to archive
+                {archivableFinished.length} finished expo
+                {archivableFinished.length > 1 ? "s" : ""} to archive
               </p>
               <ul className="mt-2 space-y-1">
-                {endedUnarchived.map((expo) => (
+                {archivableFinished.map((expo) => (
                   <li
                     key={expo.id}
                     className="truncate text-muted-foreground text-xs"

@@ -423,7 +423,7 @@ export const mockExpos: Expo[] = [
     ownerEmail: "info@autodrivesea.com",
     startDate: isoDate(-90),
     endDate: isoDate(-85),
-    status: "Ended",
+    status: "Archived",
     categoryIds: ["cat-manufacturing", "cat-auto"],
     createdAt: isoOffset(200)
   },
@@ -500,7 +500,7 @@ export const mockExpos: Expo[] = [
     ownerEmail: "ops@smartmfg.vn",
     startDate: isoDate(-60),
     endDate: isoDate(-57),
-    status: "Ended",
+    status: "Archived",
     categoryIds: ["cat-manufacturing"],
     createdAt: isoOffset(150)
   },
@@ -1160,7 +1160,7 @@ export const mockGoLIVEEvents: GoLIVEEvent[] = [
     createdAt: isoOffset(100),
     updatedAt: isoOffset(100)
   },
-  // expo-004 (AutoDrive Expo — Ended)
+  // expo-004 (AutoDrive Expo — Archived)
   {
     goLiveEventId: "gl-006",
     expoId: "expo-004",

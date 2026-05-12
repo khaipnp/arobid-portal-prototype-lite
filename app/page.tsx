@@ -18,7 +18,7 @@ import {
 
 function toHomeExpoStatus(status: string): HomeExpoCard["status"] {
   if (status === "Live") return "Live"
-  if (status === "Ended" || status === "Archived" || status === "Canceled") {
+  if (status === "Archived" || status === "Canceled") {
     return "Archived"
   }
   return "Upcoming"
