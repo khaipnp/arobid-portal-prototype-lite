@@ -92,7 +92,7 @@ export function PartnerExpoList({
 
       {filteredExpos.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-          {filteredExpos.map(({ expo, assignment, goLiveCount }) => {
+          {filteredExpos.map(({ expo, goLiveCount }) => {
             return (
               <div
                 key={expo.id}
