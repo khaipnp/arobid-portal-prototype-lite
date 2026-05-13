@@ -20,7 +20,7 @@ interface Crumb {
 }
 
 interface DashboardShellProps {
-  title: string
+  title?: string
   description?: string
   breadcrumbs: Crumb[]
   children: React.ReactNode
@@ -66,16 +66,18 @@ export function DashboardShell({
         </div>
       </header>
 
-      <div className="flex flex-1 flex-col gap-4 p-4 pt-4">
-        <div className="flex items-center gap-4">
-          {showBackButton ? <BackButton /> : null}
-          <section>
-            <h1 className="font-semibold text-lg leading-none">{title}</h1>
-            {description ? (
-              <p className="text-muted-foreground text-sm">{description}</p>
-            ) : null}
-          </section>
-        </div>
+      <div className="flex flex-1 flex-col">
+        {title && (
+          <div className="flex items-center gap-4 p-4">
+            {showBackButton ? <BackButton /> : null}
+            <section>
+              <h1 className="font-semibold text-xl">{title}</h1>
+              {description ? (
+                <p className="text-muted-foreground text-sm">{description}</p>
+              ) : null}
+            </section>
+          </div>
+        )}
         {children}
       </div>
     </>

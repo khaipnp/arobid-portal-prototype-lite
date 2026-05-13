@@ -34,11 +34,12 @@ import {
   HoverCardContent,
   HoverCardTrigger
 } from "@/components/ui/hover-card"
-import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
 import type { ChatUser, Conversation, Message } from "@/lib/deal-room/types"
 import { cn } from "@/lib/utils"
+import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group"
+import { Tabs, TabsList, TabsTrigger } from "../ui/tabs"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const MAX_ATTACHMENTS_PER_MESSAGE = 5
@@ -347,8 +348,6 @@ export function DealRoomManager({
       return new Date(bTime).getTime() - new Date(aTime).getTime()
     })
 
-  const totalUnread = Object.values(unreadCounts).reduce((s, n) => s + n, 0)
-
   // ── Handlers ──
   function selectConversation(id: string) {
     setActiveConversationId(id)
@@ -590,51 +589,31 @@ export function DealRoomManager({
 
   // ── Render ──
   return (
-    <div className="flex h-[calc(100vh-0px)] overflow-hidden">
+    <div className="flex flex-1 overflow-hidden">
       {/* ── Left panel: Conversation list ── */}
       <aside className="flex w-72 shrink-0 flex-col border-r bg-sidebar">
-        {/* Header */}
-        <div className="flex h-14 items-center justify-between border-b px-4">
-          <div className="flex items-center gap-2">
-            <MessageCircleIcon className="size-4 text-muted-foreground" />
-            <span className="font-semibold text-sm">Deal Room</span>
-            {totalUnread > 0 && (
-              <Badge className="h-4 min-w-4 rounded-full px-1 text-xs">
-                {totalUnread}
-              </Badge>
-            )}
-          </div>
-        </div>
-
         {/* Search */}
         <div className="p-2">
-          <div className="relative">
-            <SearchIcon className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
+          <InputGroup className="h-8 rounded-full text-xs">
+            <InputGroupAddon>
+              <SearchIcon className="size-3.5" />
+            </InputGroupAddon>
+            <InputGroupInput
               placeholder="Search by name or company..."
-              className="h-8 pl-8 text-xs"
               value={inboxSearch}
               onChange={(e) => setInboxSearch(e.target.value)}
             />
-          </div>
-          <div className="mt-2 grid grid-cols-2 gap-1 rounded-md bg-muted p-1">
-            <Button
-              variant={inboxFilter === "active" ? "default" : "ghost"}
-              size="sm"
-              className="h-7 text-xs"
-              onClick={() => setInboxFilter("active")}
-            >
-              Inbox
-            </Button>
-            <Button
-              variant={inboxFilter === "archived" ? "default" : "ghost"}
-              size="sm"
-              className="h-7 text-xs"
-              onClick={() => setInboxFilter("archived")}
-            >
-              Archived
-            </Button>
-          </div>
+          </InputGroup>
+          <Tabs
+            value={inboxFilter}
+            onValueChange={(v) => setInboxFilter(v as "active" | "archived")}
+            className="mt-2"
+          >
+            <TabsList>
+              <TabsTrigger value="active">Inbox</TabsTrigger>
+              <TabsTrigger value="archived">Archived</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
 
         {/* List */}

@@ -92,10 +92,10 @@ export function Hero({
           alt=""
           fill
           priority
-          sizes="(min-width: 1280px) 1284px, 100vw"
+          sizes="aspect-2/1"
           className="object-cover"
         />
-        <div className="absolute inset-x-0 bottom-0 h-64 bg-linear-to-b from-black/0 to-black/80 backdrop-blur-xs" />
+        <div className="absolute inset-x-0 bottom-0 h-64 bg-linear-to-b from-black/10 to-black/20 backdrop-blur-[2px]" />
         <div className="absolute right-7 bottom-6 hidden w-2xs md:block">
           <div className="z-10 mx-auto flex w-max items-center gap-3 rounded-full bg-[#01175c] py-1.5 pr-5 pl-1.5">
             <span className="inline-flex h-6 items-center gap-1 rounded-full bg-green-600 px-3 font-medium text-white text-xs">

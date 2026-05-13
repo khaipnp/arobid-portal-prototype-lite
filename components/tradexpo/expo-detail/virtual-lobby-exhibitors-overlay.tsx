@@ -93,7 +93,7 @@ export function VirtualLobbyExhibitorsOverlay({
     <div className="pointer-events-auto absolute bottom-2 left-2 z-40 w-sm rounded-4xl border border-muted/20 bg-black/50 p-3 shadow-xl backdrop-blur-2xl">
       <div
         className={`flex items-center justify-between px-1 ${
-          isCollapsed ? "" : "border-white/15 border-b"
+          isCollapsed ? "" : "border-white/15"
         }`}
       >
         <span className="inline-flex select-none items-center gap-2 px-2 font-semibold text-primary-foreground text-sm">
@@ -124,7 +124,7 @@ export function VirtualLobbyExhibitorsOverlay({
             className="placeholder:text-white/60"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search exhibitor..."
+            placeholder="Search Exhibitor..."
           />
           {search && (
             <InputGroupAddon align="inline-end">

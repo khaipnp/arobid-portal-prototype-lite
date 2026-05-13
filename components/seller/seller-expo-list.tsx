@@ -136,7 +136,7 @@ export function SellerExpoList({
   }, [data, debouncedSearch, statusFilter])
 
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-4 px-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <InputGroup className="max-w-sm">
           <InputGroupInput
