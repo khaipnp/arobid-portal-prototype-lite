@@ -17,6 +17,7 @@ const productFallbackImages = [
 
 type ExhibitorCardProps = {
   exhibitor: ExpoDetailExhibitor
+  isAuthenticated?: boolean
   onChatClick?: (product?: { image: string; label: string } | null) => void
 }
 
@@ -43,7 +44,11 @@ function MetaBadge({
   )
 }
 
-export function ExhibitorCard({ exhibitor, onChatClick }: ExhibitorCardProps) {
+export function ExhibitorCard({
+  exhibitor,
+  isAuthenticated = false,
+  onChatClick
+}: ExhibitorCardProps) {
   const [selectedProduct, setSelectedProduct] = useState<{
     image: string
     label: string
@@ -136,6 +141,8 @@ export function ExhibitorCard({ exhibitor, onChatClick }: ExhibitorCardProps) {
       <ExhibitorCardActions
         exhibitorId={exhibitor.id}
         exhibitorCompany={exhibitor.company}
+        isAuthenticated={isAuthenticated}
+        initialIsWishlisted={exhibitor.isWishlisted}
         onChatClick={() => onChatClick?.(null)}
       />
 

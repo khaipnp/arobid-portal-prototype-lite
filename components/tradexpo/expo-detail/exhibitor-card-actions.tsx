@@ -12,21 +12,71 @@ import {
   DialogTitle,
   DialogTrigger
 } from "@/components/ui/dialog"
+import { cn } from "@/lib/utils"
 
 type ExhibitorCardActionsProps = {
   exhibitorId: string
   exhibitorCompany: string
+  isAuthenticated?: boolean
+  initialIsWishlisted?: boolean
   onChatClick?: () => void
 }
 
 export function ExhibitorCardActions({
   exhibitorId,
   exhibitorCompany,
+  isAuthenticated = false,
+  initialIsWishlisted = false,
   onChatClick
 }: ExhibitorCardActionsProps) {
   const [shareOpen, setShareOpen] = useState(false)
+  const [isWishlisted, setIsWishlisted] = useState(initialIsWishlisted)
+  const [isWishlistPending, setIsWishlistPending] = useState(false)
   const shareUrl = `https://arobid.com/exhibitor/${exhibitorId}`
   const shareText = `Check out ${exhibitorCompany} at TradeXpo`
+
+  const toggleWishlist = async () => {
+    if (!isAuthenticated) {
+      toast.error("Please login to save exhibitors to your wishlist")
+      return
+    }
+
+    const nextValue = !isWishlisted
+    setIsWishlisted(nextValue)
+    setIsWishlistPending(true)
+    try {
+      const res = await fetch(
+        nextValue
+          ? "/api/wishlist/exhibitors"
+          : `/api/wishlist/exhibitors?registrationId=${encodeURIComponent(exhibitorId)}`,
+        {
+          method: nextValue ? "POST" : "DELETE",
+          headers: nextValue ? { "Content-Type": "application/json" } : {},
+          body: nextValue
+            ? JSON.stringify({ registrationId: exhibitorId })
+            : undefined
+        }
+      )
+
+      if (!res.ok) {
+        setIsWishlisted(!nextValue)
+        const payload = await res.json().catch(() => null)
+        toast.error(payload?.error ?? "Could not update wishlist")
+        return
+      }
+
+      toast.success(
+        nextValue
+          ? "Exhibitor saved to your wishlist"
+          : "Exhibitor removed from your wishlist"
+      )
+    } catch (_err) {
+      setIsWishlisted(!nextValue)
+      toast.error("Could not update wishlist")
+    } finally {
+      setIsWishlistPending(false)
+    }
+  }
 
   const shareItems = [
     {
@@ -71,11 +121,16 @@ export function ExhibitorCardActions({
       <Button
         type="button"
         variant="ghost"
-        className="flex-1 rounded-lg font-medium text-muted-foreground hover:text-foreground"
-        onClick={() => toast("You added the exhibitor to your wishlist")}
+        className={cn(
+          "flex-1 rounded-lg font-medium text-muted-foreground hover:text-foreground",
+          isWishlisted && "text-rose-600 hover:text-rose-700"
+        )}
+        disabled={isWishlistPending}
+        aria-pressed={isWishlisted}
+        onClick={toggleWishlist}
       >
-        <HeartIcon />
-        Wishlist
+        <HeartIcon className={cn(isWishlisted && "fill-current")} />
+        {isWishlisted ? "Saved" : "Wishlist"}
       </Button>
       <Button
         type="button"

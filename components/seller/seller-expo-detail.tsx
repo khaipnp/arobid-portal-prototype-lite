@@ -300,7 +300,7 @@ export function SellerExpoDetail({
             <DetailRow
               label="Registered contact"
               value={
-                <span className="inline-flex flex-col items-end">
+                <span className="inline-flex flex-col items-end text-right">
                   <span className="inline-flex items-center gap-1.5">
                     <UserRoundIcon className="size-3.5 text-muted-foreground" />
                     {sellerProfile?.name ?? "Not available"}

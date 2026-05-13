@@ -378,7 +378,7 @@ export function BankAccountManager({
       </div>
 
       {error && (
-        <Alert variant="alert">
+        <Alert variant="destructive">
           <AlertCircleIcon />
           <AlertTitle>Alert</AlertTitle>
           <AlertDescription>{error}</AlertDescription>

@@ -12,6 +12,8 @@ import type {
   TransactionLogEntry
 } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
+import { Alert, AlertDescription } from "../ui/alert"
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
 
 function formatVND(amount: number) {
   return new Intl.NumberFormat("vi-VN", {
@@ -139,7 +141,7 @@ export function CustomerOrderDetail({
   }, [hasExpiryCountdown])
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 px-4">
       <div
         className={cn("rounded-lg border px-4 py-3 text-sm", banner.className)}
       >
@@ -152,28 +154,26 @@ export function CustomerOrderDetail({
       </div>
 
       <div className="grid gap-5 lg:grid-cols-2">
-        <section className="space-y-4 rounded-lg border p-5">
-          <h2 className="font-semibold text-muted-foreground text-sm uppercase tracking-wide">
-            Reference
-          </h2>
-          <div className="grid grid-cols-2 gap-y-3 text-sm">
+        <Card>
+          <CardHeader>
+            <CardTitle>Reference</CardTitle>
+          </CardHeader>
+
+          <CardContent className="grid grid-cols-2 gap-y-2 text-sm">
             {referenceRows(order).map((row) => (
               <Fragment key={row.label}>
                 <span className="text-muted-foreground">{row.label}</span>
                 <span>{row.value}</span>
               </Fragment>
             ))}
-          </div>
-        </section>
+          </CardContent>
+        </Card>
 
-        <section className="space-y-4 rounded-lg border p-5">
-          <h2 className="font-semibold text-muted-foreground text-sm uppercase tracking-wide">
-            Payment Result
-          </h2>
-          <p className="text-sm">
-            {resultMessage(customerStatus, order.orderType)}
-          </p>
-          <div className="grid grid-cols-2 gap-y-3 text-sm">
+        <Card>
+          <CardHeader>
+            <CardTitle>Payment Result</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-y-2 text-sm">
             <span className="text-muted-foreground">Payment Method</span>
             <span>VNPay</span>
 
@@ -186,8 +186,8 @@ export function CustomerOrderDetail({
                 <span>{formatDate(order.paidAt)}</span>
               </>
             ) : null}
-          </div>
-        </section>
+          </CardContent>
+        </Card>
       </div>
 
       <section className="space-y-4 rounded-lg border p-5">

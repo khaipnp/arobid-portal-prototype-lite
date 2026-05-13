@@ -15,6 +15,17 @@ function toIso(value: string | Date) {
   return new Date(value).toISOString()
 }
 
+const DEFAULT_LIST_LIMIT = 100
+const DEFAULT_LOG_LIMIT = 500
+
+function normalizeLimit(
+  limit: number | undefined,
+  fallback = DEFAULT_LIST_LIMIT
+) {
+  if (typeof limit !== "number" || !Number.isFinite(limit)) return fallback
+  return Math.max(1, Math.min(1000, Math.floor(limit)))
+}
+
 function normalizeOrderStatusForStorage(status: OrderStatus): OrderStatus {
   if (status === "Failed" || status === "Expired") {
     return "Cancelled"
@@ -256,26 +267,46 @@ export async function listExpoPaymentConfigs(): Promise<ExpoPaymentConfig[]> {
   }))
 }
 
-export async function listOrders(): Promise<Order[]> {
+export async function listOrders(options?: {
+  limit?: number
+}): Promise<Order[]> {
   await expirePendingPaymentOrders()
 
+  const limit = normalizeLimit(options?.limit)
   const rows = (await sql`
-    select * from orders order by created_at desc
+    select * from orders order by created_at desc limit ${limit}
   `) as OrderRow[]
   return rows.map(rowToOrder)
 }
 
-export async function listCustomerOrders(customerId: string): Promise<Order[]> {
+export async function listCustomerOrders(
+  customerId: string,
+  options?: { limit?: number }
+): Promise<Order[]> {
   await expirePendingPaymentOrders()
   await normalizeCustomerOrderStatuses(customerId)
 
+  const limit = normalizeLimit(options?.limit)
   const rows = (await sql`
     select *
     from orders
     where customer_id = ${customerId}
     order by created_at desc
+    limit ${limit}
   `) as OrderRow[]
   return rows.map(rowToOrder)
+}
+
+export async function getOrderById(orderId: string): Promise<Order | null> {
+  await expirePendingPaymentOrders()
+
+  const rows = (await sql`
+    select *
+    from orders
+    where id = ${orderId}
+    limit 1
+  `) as OrderRow[]
+  return rows[0] ? rowToOrder(rows[0]) : null
 }
 
 export async function getCustomerOrder(
@@ -295,9 +326,12 @@ export async function getCustomerOrder(
   return rows[0] ? rowToOrder(rows[0]) : null
 }
 
-export async function listTransactionLog(): Promise<TransactionLogEntry[]> {
+export async function listTransactionLog(options?: {
+  limit?: number
+}): Promise<TransactionLogEntry[]> {
+  const limit = normalizeLimit(options?.limit, DEFAULT_LOG_LIMIT)
   const rows = (await sql`
-    select * from transaction_log order by processed_at asc
+    select * from transaction_log order by processed_at desc limit ${limit}
   `) as {
     id: string
     order_id: string
@@ -308,7 +342,7 @@ export async function listTransactionLog(): Promise<TransactionLogEntry[]> {
     rejection_reason: string | null
     processed_at: string | Date
   }[]
-  return rows.map((r) => ({
+  return rows.reverse().map((r) => ({
     id: r.id,
     orderId: r.order_id,
     type: r.type,

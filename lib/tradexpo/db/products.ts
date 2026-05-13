@@ -5,6 +5,15 @@ function toIso(value: string | Date) {
   return new Date(value).toISOString()
 }
 
+const DEFAULT_LIST_LIMIT = 200
+
+function normalizeLimit(limit: number | undefined) {
+  if (typeof limit !== "number" || !Number.isFinite(limit)) {
+    return DEFAULT_LIST_LIMIT
+  }
+  return Math.max(1, Math.min(1000, Math.floor(limit)))
+}
+
 type ProductRow = {
   id: string
   company_id: string
@@ -42,12 +51,15 @@ function rowToProduct(r: ProductRow): CompanyProduct {
 }
 
 export async function listCompanyProducts(
-  companyId: string
+  companyId: string,
+  options?: { limit?: number }
 ): Promise<CompanyProduct[]> {
+  const limit = normalizeLimit(options?.limit)
   const rows = (await sql`
     select * from company_products
     where company_id = ${companyId}
     order by created_at desc
+    limit ${limit}
   `) as ProductRow[]
   return rows.map(rowToProduct)
 }

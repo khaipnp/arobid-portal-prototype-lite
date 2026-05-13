@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { listOrders, updateInvoiceProcessing } from "@/lib/orders/db"
+import { getOrderById, updateInvoiceProcessing } from "@/lib/orders/db"
 import type {
   InvoiceStatus,
   Order,
@@ -98,8 +98,7 @@ export async function POST(request: Request, { params }: Props) {
     return NextResponse.json({ error: "Action is required." }, { status: 400 })
   }
 
-  const orders = await listOrders()
-  const order = orders.find((entry) => entry.id === orderId)
+  const order = await getOrderById(orderId)
   if (!order) {
     return NextResponse.json({ error: "Order not found." }, { status: 404 })
   }

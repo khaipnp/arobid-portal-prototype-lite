@@ -2,6 +2,7 @@
 
 import {
   DotIcon,
+  HeartIcon,
   LayoutDashboardIcon,
   MessageCircleIcon,
   ReceiptTextIcon,
@@ -88,6 +89,17 @@ export function NavSeller({
           </SidebarMenuItem>
         </SidebarMenu>
       ) : null}
+
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton asChild>
+            <Link href="/seller/wishlist">
+              <HeartIcon />
+              <span>Wishlist</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
 
       {canManageSeller ? (
         <SidebarMenu>

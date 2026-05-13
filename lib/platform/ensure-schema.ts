@@ -16,7 +16,7 @@ export async function ensurePlatformSchema() {
 
     // If the latest migration is applied, we can assume everything before it is also applied
     // This is a fast-path for cold starts
-    if (appliedNames.has("expo_status_no_ended_v1")) {
+    if (appliedNames.has("demo_perf_indexes_v1")) {
       platformSchemaReady = true
       return
     }
@@ -1012,18 +1012,95 @@ export async function ensurePlatformSchema() {
     where reference_id is not null and reference_type is not null
   `
 
+  await sql`
+    create table if not exists user_wishlist_exhibitors (
+      user_id text not null references users(id) on delete cascade,
+      registration_id text not null references seller_booth_registrations(id) on delete cascade,
+      created_at timestamptz not null default now(),
+      primary key (user_id, registration_id)
+    )
+  `
+
+  await sql`
+    create index if not exists idx_user_wishlist_exhibitors_created
+    on user_wishlist_exhibitors (user_id, created_at desc)
+  `
+
   await migrateExpoManagementSchema()
   await migratePartnerOrganizationSchema()
   await migrateExpoStatusSchema()
+  await createDemoPerformanceIndexes()
 
   // Record final migration to enable fast-path on next boot
   await sql`
     insert into platform_schema_migrations (name)
-    values ('expo_status_no_ended_v1')
+    values ('demo_perf_indexes_v1')
     on conflict (name) do update set applied_at = now();
   `
 
   platformSchemaReady = true
+}
+
+async function createDemoPerformanceIndexes() {
+  await sql`
+    create index if not exists idx_orders_customer_created
+    on orders (customer_id, created_at desc)
+  `
+  await sql`
+    create index if not exists idx_orders_pending_expiry
+    on orders (payment_method, status, expires_at)
+    where status = 'Pending Payment' and expires_at is not null
+  `
+  await sql`
+    create index if not exists idx_orders_expo_name_status
+    on orders (expo_name, status)
+    where expo_name is not null
+  `
+  await sql`
+    create index if not exists idx_transaction_log_order_processed
+    on transaction_log (order_id, processed_at asc)
+  `
+  await sql`
+    create index if not exists idx_expos_owner_created
+    on expos (owner_user_id, created_at desc)
+    where owner_user_id is not null
+  `
+  await sql`
+    create index if not exists idx_expos_created
+    on expos (created_at desc)
+  `
+  await sql`
+    create index if not exists idx_expo_halls_expo_sort
+    on expo_halls (expo_id, sort_order asc)
+  `
+  await sql`
+    create index if not exists idx_seller_booth_registrations_expo_purchased
+    on seller_booth_registrations (expo_id, purchased_at desc)
+  `
+  await sql`
+    create index if not exists idx_go_live_events_expo_scheduled
+    on go_live_events (expo_id, scheduled_start_at desc)
+  `
+  await sql`
+    create index if not exists idx_go_live_events_stream_session
+    on go_live_events (stream_session_id)
+  `
+  await sql`
+    create index if not exists idx_live_comments_session_created
+    on live_comments (stream_session_id, created_at asc)
+  `
+  await sql`
+    create index if not exists idx_stream_sessions_created
+    on stream_sessions (created_at desc)
+  `
+  await sql`
+    create index if not exists idx_company_products_company_created
+    on company_products (company_id, created_at desc)
+  `
+  await sql`
+    create index if not exists idx_admin_notifications_created
+    on admin_notifications (created_at desc)
+  `
 }
 
 async function migrateExpoStatusSchema() {

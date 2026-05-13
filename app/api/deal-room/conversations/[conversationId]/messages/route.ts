@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server"
-import { sql } from "@/lib/db/neon"
-import { createMessage } from "@/lib/deal-room/db"
+import { requireApiUserId } from "@/lib/auth/api-user"
+import {
+  createMessage,
+  isConversationMember,
+  listConversationMessages
+} from "@/lib/deal-room/db"
 import type { Message } from "@/lib/deal-room/types"
 
 interface Props {
@@ -10,38 +14,17 @@ interface Props {
 export async function GET(_request: Request, { params }: Props) {
   const { conversationId } = await params
   try {
-    const rows = (await sql`
-      select * from chat_messages
-      where conversation_id = ${conversationId}
-      order by sent_at asc
-    `) as {
-      id: string
-      conversation_id: string
-      sender_id: string
-      content: string
-      attachments: unknown[] | null
-      status: Message["status"]
-      sent_at: string | Date
-      edited_at: string | Date | null
-      is_deleted: boolean
-      is_system_message: boolean
-    }[]
-
-    const messages = rows.map((r) => ({
-      id: r.id,
-      conversationId: r.conversation_id,
-      senderId: r.sender_id,
-      content: r.content,
-      attachments: r.attachments ?? [],
-      status: r.status,
-      sentAt: new Date(r.sent_at).toISOString(),
-      editedAt: r.edited_at ? new Date(r.edited_at).toISOString() : undefined,
-      isDeleted: r.is_deleted,
-      isSystemMessage: r.is_system_message
-    }))
+    const userId = await requireApiUserId()
+    const messages = await listConversationMessages({
+      conversationId,
+      userId
+    })
 
     return NextResponse.json({ messages })
   } catch (error) {
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized." }, { status: 401 })
+    }
     console.error("Error fetching messages:", error)
     return NextResponse.json(
       { error: "Internal Server Error" },
@@ -51,26 +34,51 @@ export async function GET(_request: Request, { params }: Props) {
 }
 
 export async function POST(request: Request, { params }: Props) {
-  const { conversationId } = await params
-  const body = (await request.json()) as {
-    id?: string
-    senderId?: string
-    content?: string
-    attachments?: Message["attachments"]
-    status?: Message["status"]
-    sentAt?: string
+  try {
+    const { conversationId } = await params
+    const userId = await requireApiUserId()
+    const body = (await request.json()) as {
+      id?: string
+      senderId?: string
+      content?: string
+      attachments?: Message["attachments"]
+      status?: Message["status"]
+      sentAt?: string
+    }
+    if (!body.id || !body.senderId || !body.sentAt) {
+      return NextResponse.json({ error: "Invalid payload." }, { status: 400 })
+    }
+    if (body.senderId !== userId) {
+      return NextResponse.json({ error: "Forbidden." }, { status: 403 })
+    }
+    const canAccessConversation = await isConversationMember({
+      conversationId,
+      userId
+    })
+    if (!canAccessConversation) {
+      return NextResponse.json(
+        { error: "Conversation not found." },
+        { status: 404 }
+      )
+    }
+    await createMessage({
+      id: body.id,
+      conversationId,
+      senderId: userId,
+      content: body.content ?? "",
+      attachments: body.attachments ?? [],
+      status: body.status ?? "sent",
+      sentAt: body.sentAt
+    })
+    return NextResponse.json({ ok: true })
+  } catch (error) {
+    if (error instanceof Error && error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized." }, { status: 401 })
+    }
+    console.error("Error creating message:", error)
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    )
   }
-  if (!body.id || !body.senderId || !body.sentAt) {
-    return NextResponse.json({ error: "Invalid payload." }, { status: 400 })
-  }
-  await createMessage({
-    id: body.id,
-    conversationId,
-    senderId: body.senderId,
-    content: body.content ?? "",
-    attachments: body.attachments ?? [],
-    status: body.status ?? "sent",
-    sentAt: body.sentAt
-  })
-  return NextResponse.json({ ok: true })
 }

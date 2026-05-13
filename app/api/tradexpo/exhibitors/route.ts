@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server"
 
+import { getCurrentSessionUserId } from "@/lib/auth/session"
+import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 import { listExpoDetailExhibitorsByName } from "@/lib/tradexpo/db/platform-data"
 
 export async function GET(request: Request) {
+  await ensurePlatformSchema()
   const url = new URL(request.url)
   const expoName = (url.searchParams.get("expoName") ?? "").trim()
   const search = (url.searchParams.get("search") ?? "").trim().toLowerCase()
@@ -12,7 +15,8 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "expoName is required" }, { status: 400 })
   }
 
-  const rows = await listExpoDetailExhibitorsByName(expoName)
+  const userId = await getCurrentSessionUserId()
+  const rows = await listExpoDetailExhibitorsByName(expoName, { userId })
   const filtered = rows.filter((item) => {
     const matchedSearch =
       !search ||

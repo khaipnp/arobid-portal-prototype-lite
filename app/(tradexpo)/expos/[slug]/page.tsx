@@ -14,6 +14,7 @@ import {
   Sponsors
 } from "@/components/tradexpo/expo-detail/sections"
 import { getCurrentSessionUserId } from "@/lib/auth/session"
+import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 import {
   getExpoBySlug,
   getExpoHeroStatsByExpo,
@@ -40,11 +41,13 @@ export default async function Page({
   params: Promise<{ slug: string }>
 }) {
   const { slug } = await params
+  await ensurePlatformSchema()
   const expo = await getExpoBySlug(slug)
   if (!expo) notFound()
 
+  const userId = await getCurrentSessionUserId()
   const [exhibitors, heroStats] = await Promise.all([
-    listExpoDetailExhibitorsByName(expo.name),
+    listExpoDetailExhibitorsByName(expo.name, { userId }),
     getExpoHeroStatsByExpo({ id: expo.id, name: expo.name })
   ])
   const bfmBroadcastItems = exhibitors
@@ -58,7 +61,6 @@ export default async function Page({
       logoUrl: exhibitor.logoUrl
     }))
   const virtualLobbyUrl = VIRTUAL_LOBBY_URL_BY_EXPO_SLUG[expo.slug ?? slug]
-  const userId = await getCurrentSessionUserId()
 
   return (
     <main className="min-h-screen scroll-smooth bg-white text-foreground [font-family:var(--font-tight)]">
