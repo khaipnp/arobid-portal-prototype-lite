@@ -52,6 +52,15 @@ function toIsoDateTime(value: string | Date) {
   return new Date(value).toISOString()
 }
 
+const DEFAULT_LIST_LIMIT = 500
+
+function normalizeLimit(limit: number | undefined) {
+  if (typeof limit !== "number" || !Number.isFinite(limit)) {
+    return DEFAULT_LIST_LIMIT
+  }
+  return Math.max(1, Math.min(1000, Math.floor(limit)))
+}
+
 function mapBatch(row: VoucherBatchRow): VoucherBatch {
   return {
     id: row.id,
@@ -97,26 +106,38 @@ function mapTarget(row: VoucherTargetRow): VoucherTarget {
   }
 }
 
-export async function listVoucherBatches(): Promise<VoucherBatch[]> {
+export async function listVoucherBatches(options?: {
+  limit?: number
+}): Promise<VoucherBatch[]> {
+  const limit = normalizeLimit(options?.limit)
   const rows = (await sql`
     select * from voucher_batches
     order by updated_at desc
+    limit ${limit}
   `) as VoucherBatchRow[]
   return rows.map(mapBatch)
 }
 
-export async function listVoucherCodes(): Promise<VoucherCode[]> {
+export async function listVoucherCodes(options?: {
+  limit?: number
+}): Promise<VoucherCode[]> {
+  const limit = normalizeLimit(options?.limit)
   const rows = (await sql`
     select * from voucher_codes
     order by id asc
+    limit ${limit}
   `) as VoucherCodeRow[]
   return rows.map(mapCode)
 }
 
-export async function listVoucherTargets(): Promise<VoucherTarget[]> {
+export async function listVoucherTargets(options?: {
+  limit?: number
+}): Promise<VoucherTarget[]> {
+  const limit = normalizeLimit(options?.limit)
   const rows = (await sql`
     select * from voucher_targets
     order by type asc, name asc
+    limit ${limit}
   `) as VoucherTargetRow[]
   return rows.map(mapTarget)
 }

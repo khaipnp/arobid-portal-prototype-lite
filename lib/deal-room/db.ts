@@ -11,6 +11,31 @@ function toIso(value: string | Date) {
   return new Date(value).toISOString()
 }
 
+const DEFAULT_MESSAGE_LIMIT = 500
+
+function normalizeLimit(
+  limit: number | undefined,
+  fallback = DEFAULT_MESSAGE_LIMIT
+) {
+  if (typeof limit !== "number" || !Number.isFinite(limit)) return fallback
+  return Math.max(1, Math.min(1000, Math.floor(limit)))
+}
+
+export async function isConversationMember(input: {
+  conversationId: string
+  userId: string
+}): Promise<boolean> {
+  const rows = (await sql`
+    select 1 as exists
+    from chat_conversation_members
+    where conversation_id = ${input.conversationId}
+      and user_id = ${input.userId}
+    limit 1
+  `) as { exists: number }[]
+
+  return rows.length > 0
+}
+
 export async function listChatUsers(userId?: string): Promise<ChatUser[]> {
   const rows = (
     userId
@@ -122,18 +147,30 @@ export async function listConversations(
 }
 
 export async function listMessagesByConversation(
-  userId?: string
+  userId?: string,
+  options?: { limit?: number }
 ): Promise<Record<string, Message[]>> {
+  const limit = normalizeLimit(options?.limit)
   const rows = (
     userId
       ? await sql`
-    select m.* from chat_messages m
-    join chat_conversation_members ccm on ccm.conversation_id = m.conversation_id
-    where ccm.user_id = ${userId}
-    order by m.sent_at asc
+    select *
+    from (
+      select m.*
+      from chat_messages m
+      join chat_conversation_members ccm on ccm.conversation_id = m.conversation_id
+      where ccm.user_id = ${userId}
+      order by m.sent_at desc
+      limit ${limit}
+    ) recent_messages
+    order by sent_at asc
   `
       : await sql`
-    select * from chat_messages order by sent_at asc
+    select *
+    from (
+      select * from chat_messages order by sent_at desc limit ${limit}
+    ) recent_messages
+    order by sent_at asc
   `
   ) as {
     id: string
@@ -166,6 +203,52 @@ export async function listMessagesByConversation(
     out[r.conversation_id] = list
   }
   return out
+}
+
+export async function listConversationMessages(input: {
+  conversationId: string
+  userId: string
+  limit?: number
+}): Promise<Message[]> {
+  const limit = normalizeLimit(input.limit)
+  const rows = (await sql`
+    select *
+    from (
+      select m.*
+      from chat_messages m
+      join chat_conversation_members ccm
+        on ccm.conversation_id = m.conversation_id
+       and ccm.user_id = ${input.userId}
+      where m.conversation_id = ${input.conversationId}
+      order by m.sent_at desc
+      limit ${limit}
+    ) recent_messages
+    order by sent_at asc
+  `) as {
+    id: string
+    conversation_id: string
+    sender_id: string
+    content: string
+    attachments: MessageAttachment[]
+    status: Message["status"]
+    sent_at: string | Date
+    edited_at: string | Date | null
+    is_deleted: boolean
+    is_system_message: boolean
+  }[]
+
+  return rows.map((r) => ({
+    id: r.id,
+    conversationId: r.conversation_id,
+    senderId: r.sender_id,
+    content: r.content,
+    attachments: r.attachments ?? [],
+    status: r.status,
+    sentAt: toIso(r.sent_at),
+    editedAt: r.edited_at ? toIso(r.edited_at) : undefined,
+    isDeleted: r.is_deleted,
+    isSystemMessage: r.is_system_message
+  }))
 }
 
 export async function listUnreadCountsForUser(

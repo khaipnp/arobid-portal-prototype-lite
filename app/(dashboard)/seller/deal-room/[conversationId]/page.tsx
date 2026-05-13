@@ -24,7 +24,7 @@ export default async function ConversationPage({ params }: Props) {
   ] = await Promise.all([
     listChatUsers(userId),
     listConversations(userId),
-    listMessagesByConversation(),
+    listMessagesByConversation(userId),
     listUnreadCountsForUser(userId)
   ])
 

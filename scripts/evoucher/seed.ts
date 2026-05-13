@@ -54,6 +54,18 @@ async function ensureSchema() {
   await sql`
     create index if not exists voucher_codes_batch_id_idx on voucher_codes(batch_id)
   `
+  await sql`
+    create index if not exists voucher_batches_updated_at_idx
+    on voucher_batches(updated_at desc)
+  `
+  await sql`
+    create index if not exists voucher_codes_status_id_idx
+    on voucher_codes(status, id asc)
+  `
+  await sql`
+    create index if not exists voucher_targets_type_name_idx
+    on voucher_targets(type asc, name asc)
+  `
 }
 
 async function clearData() {

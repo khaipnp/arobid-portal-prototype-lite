@@ -90,6 +90,17 @@ function toDateOnly(value: string | Date) {
   return new Date(value).toISOString().slice(0, 10)
 }
 
+const DEFAULT_LIST_LIMIT = 100
+const DEFAULT_ACTIVITY_LIMIT = 500
+
+function normalizeLimit(
+  limit: number | undefined,
+  fallback = DEFAULT_LIST_LIMIT
+) {
+  if (typeof limit !== "number" || !Number.isFinite(limit)) return fallback
+  return Math.max(1, Math.min(1000, Math.floor(limit)))
+}
+
 function slugifyExpoName(name: string) {
   return name
     .toLowerCase()
@@ -158,9 +169,10 @@ function rowToExpo(r: ExpoRow): Expo {
   }
 }
 
-export async function listExpos(): Promise<Expo[]> {
+export async function listExpos(options?: { limit?: number }): Promise<Expo[]> {
+  const limit = normalizeLimit(options?.limit)
   const rows = (await sql`
-    select * from expos order by created_at desc
+    select * from expos order by created_at desc limit ${limit}
   `) as ExpoRow[]
   return rows.map(rowToExpo)
 }
@@ -619,9 +631,12 @@ export async function deleteExpo(expoId: string): Promise<void> {
   await sql`delete from expos where id = ${expoId}`
 }
 
-export async function listAdminNotifications(): Promise<AdminNotification[]> {
+export async function listAdminNotifications(options?: {
+  limit?: number
+}): Promise<AdminNotification[]> {
+  const limit = normalizeLimit(options?.limit)
   const rows = (await sql`
-    select * from admin_notifications order by created_at desc
+    select * from admin_notifications order by created_at desc limit ${limit}
   `) as NotifRow[]
   return rows.map((r) => ({
     id: r.id,
@@ -707,13 +722,16 @@ export async function listExhibitorCatalogProducts(): Promise<
 }
 
 export async function listSellerBoothRegistrations(
-  userId: string
+  userId: string,
+  options?: { limit?: number }
 ): Promise<SellerBoothRegistration[]> {
+  const limit = normalizeLimit(options?.limit)
   const rows = (await sql`
     select *
     from seller_booth_registrations
     where user_id = ${userId}
     order by purchased_at desc
+    limit ${limit}
   `) as {
     id: string
     user_id: string
@@ -846,9 +864,12 @@ export async function listExpoDetailExhibitorsByName(
   })
 }
 
-export async function listStreamSessions(): Promise<StreamSession[]> {
+export async function listStreamSessions(options?: {
+  limit?: number
+}): Promise<StreamSession[]> {
+  const limit = normalizeLimit(options?.limit)
   const rows = (await sql`
-    select * from stream_sessions order by created_at desc
+    select * from stream_sessions order by created_at desc limit ${limit}
   `) as {
     stream_session_id: string
     status: StreamSession["status"]
@@ -923,43 +944,15 @@ export async function getStreamSessionById(
   }
 }
 
-export async function listLiveComments(): Promise<LiveComment[]> {
+export async function listLiveComments(options?: {
+  limit?: number
+}): Promise<LiveComment[]> {
+  const limit = normalizeLimit(options?.limit, DEFAULT_ACTIVITY_LIMIT)
   const rows = (await sql`
-    select * from live_comments order by created_at asc
-  `) as {
-    live_comment_id: string
-    stream_session_id: string
-    author_user_id: string | null
-    author_display_name: string | null
-    guest_display_name: string | null
-    guest_email: string | null
-    comment_text: string
-    is_deleted: boolean
-    created_at: string | Date
-    deleted_at: string | Date | null
-    deleted_by_user_id: string | null
-  }[]
-  return rows.map((r) => ({
-    liveCommentId: r.live_comment_id,
-    streamSessionId: r.stream_session_id,
-    authorUserId: r.author_user_id,
-    authorDisplayName: r.author_display_name,
-    guestDisplayName: r.guest_display_name,
-    guestEmail: r.guest_email,
-    commentText: r.comment_text,
-    isDeleted: r.is_deleted,
-    createdAt: toIso(r.created_at),
-    deletedAt: r.deleted_at ? toIso(r.deleted_at) : null,
-    deletedByUserId: r.deleted_by_user_id
-  }))
-}
-
-export async function listLiveCommentsBySession(
-  streamSessionId: string
-): Promise<LiveComment[]> {
-  const rows = (await sql`
-    select * from live_comments
-    where stream_session_id = ${streamSessionId}
+    select *
+    from (
+      select * from live_comments order by created_at desc limit ${limit}
+    ) recent_comments
     order by created_at asc
   `) as {
     live_comment_id: string
@@ -989,9 +982,54 @@ export async function listLiveCommentsBySession(
   }))
 }
 
-export async function listGoLIVEEvents(): Promise<GoLIVEEvent[]> {
+export async function listLiveCommentsBySession(
+  streamSessionId: string,
+  options?: { limit?: number }
+): Promise<LiveComment[]> {
+  const limit = normalizeLimit(options?.limit, DEFAULT_ACTIVITY_LIMIT)
   const rows = (await sql`
-    select * from go_live_events order by scheduled_start_at desc nulls last
+    select *
+    from (
+      select * from live_comments
+      where stream_session_id = ${streamSessionId}
+      order by created_at desc
+      limit ${limit}
+    ) recent_comments
+    order by created_at asc
+  `) as {
+    live_comment_id: string
+    stream_session_id: string
+    author_user_id: string | null
+    author_display_name: string | null
+    guest_display_name: string | null
+    guest_email: string | null
+    comment_text: string
+    is_deleted: boolean
+    created_at: string | Date
+    deleted_at: string | Date | null
+    deleted_by_user_id: string | null
+  }[]
+  return rows.map((r) => ({
+    liveCommentId: r.live_comment_id,
+    streamSessionId: r.stream_session_id,
+    authorUserId: r.author_user_id,
+    authorDisplayName: r.author_display_name,
+    guestDisplayName: r.guest_display_name,
+    guestEmail: r.guest_email,
+    commentText: r.comment_text,
+    isDeleted: r.is_deleted,
+    createdAt: toIso(r.created_at),
+    deletedAt: r.deleted_at ? toIso(r.deleted_at) : null,
+    deletedByUserId: r.deleted_by_user_id
+  }))
+}
+
+export async function listGoLIVEEvents(options?: {
+  limit?: number
+}): Promise<GoLIVEEvent[]> {
+  const limit = normalizeLimit(options?.limit)
+  const rows = (await sql`
+    select * from go_live_events order by scheduled_start_at desc nulls last limit ${limit}
   `) as {
     go_live_event_id: string
     expo_id: string

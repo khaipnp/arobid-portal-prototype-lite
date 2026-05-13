@@ -14,7 +14,7 @@ export async function GET() {
       [
         listChatUsers(userId),
         listConversations(userId),
-        listMessagesByConversation(),
+        listMessagesByConversation(userId),
         listUnreadCountsForUser(userId)
       ]
     )
