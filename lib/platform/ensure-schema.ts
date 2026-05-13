@@ -20,7 +20,7 @@ export async function ensurePlatformSchema() {
       platformSchemaReady = true
       return
     }
-  } catch (e) {
+  } catch (_e) {
     // Table might not exist yet, proceed with initialization
   }
 
