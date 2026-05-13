@@ -132,7 +132,7 @@ export function CustomerOrderHistory({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 px-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <Select
           value={statusFilter}

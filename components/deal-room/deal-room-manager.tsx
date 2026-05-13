@@ -39,6 +39,7 @@ import { Textarea } from "@/components/ui/textarea"
 import type { ChatUser, Conversation, Message } from "@/lib/deal-room/types"
 import { cn } from "@/lib/utils"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group"
+import { Tabs, TabsList, TabsTrigger } from "../ui/tabs"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const MAX_ATTACHMENTS_PER_MESSAGE = 5
@@ -588,7 +589,7 @@ export function DealRoomManager({
 
   // ── Render ──
   return (
-    <div className="flex h-full overflow-hidden">
+    <div className="flex flex-1 overflow-hidden">
       {/* ── Left panel: Conversation list ── */}
       <aside className="flex w-72 shrink-0 flex-col border-r bg-sidebar">
         {/* Search */}
@@ -603,24 +604,16 @@ export function DealRoomManager({
               onChange={(e) => setInboxSearch(e.target.value)}
             />
           </InputGroup>
-          <div className="mt-2 grid grid-cols-2 gap-1 rounded-md bg-muted p-1">
-            <Button
-              variant={inboxFilter === "active" ? "default" : "ghost"}
-              size="sm"
-              className="h-7 text-xs"
-              onClick={() => setInboxFilter("active")}
-            >
-              Inbox
-            </Button>
-            <Button
-              variant={inboxFilter === "archived" ? "default" : "ghost"}
-              size="sm"
-              className="h-7 text-xs"
-              onClick={() => setInboxFilter("archived")}
-            >
-              Archived
-            </Button>
-          </div>
+          <Tabs
+            value={inboxFilter}
+            onValueChange={setInboxFilter}
+            className="mt-2"
+          >
+            <TabsList>
+              <TabsTrigger value="active">Inbox</TabsTrigger>
+              <TabsTrigger value="archived">Archived</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
 
         {/* List */}

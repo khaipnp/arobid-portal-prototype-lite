@@ -1,4 +1,5 @@
 import { DealRoomManager } from "@/components/deal-room/deal-room-manager"
+import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import { requireAnyRole } from "@/lib/auth/rbac"
 import {
   listChatUsers,
@@ -18,12 +19,19 @@ export default async function DealRoomPage() {
     ])
 
   return (
-    <DealRoomManager
-      initialUsers={initialUsers}
-      initialConversations={initialConversations}
-      initialMessagesMap={{}}
-      initialUnreadCounts={initialUnreadCounts}
-      currentUserId={userId}
-    />
+    <DashboardShell
+      breadcrumbs={[
+        { label: "Dashboard", href: "/seller" },
+        { label: "Deal Room" }
+      ]}
+    >
+      <DealRoomManager
+        initialUsers={initialUsers}
+        initialConversations={initialConversations}
+        initialMessagesMap={{}}
+        initialUnreadCounts={initialUnreadCounts}
+        currentUserId={userId}
+      />
+    </DashboardShell>
   )
 }
