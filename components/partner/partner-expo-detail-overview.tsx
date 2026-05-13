@@ -2,6 +2,7 @@ import {
   ActivityIcon,
   Building2Icon,
   CalendarDaysIcon,
+  Edit3Icon,
   ExternalLinkIcon,
   RadioIcon,
   StoreIcon,
@@ -177,6 +178,9 @@ export function PartnerExpoDetailOverview({
 }) {
   const { expo, assignment, goLiveCount } = assignedExpo
   const publicHref = publicExpoHref(expo.slug)
+  const canEditDraft =
+    expo.status === "Draft" &&
+    assignment.capabilities.includes("edit_expo_content")
   const timelineLabel = getTimelineLabel(expo.startDate, expo.endDate)
   const daysLabel = getDaysLabel(expo.startDate, expo.endDate)
   const primaryCapability = assignment.capabilities
@@ -252,6 +256,14 @@ export function PartnerExpoDetailOverview({
                     <Link href={publicHref}>
                       <ExternalLinkIcon />
                       Public page
+                    </Link>
+                  </Button>
+                ) : null}
+                {canEditDraft ? (
+                  <Button asChild size="sm" variant="outline">
+                    <Link href={`/partner/expos/${expo.id}/edit`}>
+                      <Edit3Icon />
+                      Edit draft
                     </Link>
                   </Button>
                 ) : null}

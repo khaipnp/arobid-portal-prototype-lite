@@ -10,6 +10,13 @@ import type {
 } from "@/lib/tradexpo/types"
 import { CURRENT_USER_PROFILE } from "@/lib/user/current-user"
 
+const SELLER_DEMO_PROFILE = {
+  id: "99999999-9999-4999-8999-999999999999",
+  name: "Seller Demo",
+  email: "seller.demo@arobid.com",
+  company: "Arobid Demo"
+} as const
+
 const now = new Date()
 function iso(daysAgo: number, hoursAgo = 0) {
   return new Date(
@@ -182,6 +189,110 @@ const expos = [
   }
 ]
 
+const sellerDemoOrders: Order[] = [
+  {
+    id: "ORD-SELLER-DEMO-001",
+    customerId: SELLER_DEMO_PROFILE.id,
+    customerName: SELLER_DEMO_PROFILE.name,
+    customerEmail: SELLER_DEMO_PROFILE.email,
+    customerCompany: SELLER_DEMO_PROFILE.company,
+    partnerName: "Food & Farm Inc.",
+    orderType: "booth_registration",
+    referenceId: "reg-demo-seller-001",
+    expoName: "Food & Farm Global Fair",
+    boothRef: "FD-A08",
+    boothTier: "Pro",
+    originalAmount: 15_000_000,
+    discountAmount: 0,
+    amount: 15_000_000,
+    paymentMethod: "vnpay",
+    status: "Paid",
+    invoiceRequested: false,
+    invoiceStatus: "not_requested",
+    paidAt: iso(3, -0.2),
+    createdAt: iso(3),
+    updatedAt: iso(2.9)
+  },
+  {
+    id: "ORD-SELLER-DEMO-002",
+    customerId: SELLER_DEMO_PROFILE.id,
+    customerName: SELLER_DEMO_PROFILE.name,
+    customerEmail: SELLER_DEMO_PROFILE.email,
+    customerCompany: SELLER_DEMO_PROFILE.company,
+    partnerName: "VietTech Events",
+    orderType: "booth_registration",
+    referenceId: "reg-demo-seller-002",
+    expoName: "VietTech Innovation Summit 2025",
+    boothRef: "VT-B12",
+    boothTier: "Premium",
+    originalAmount: 25_000_000,
+    discountAmount: 2_500_000,
+    amount: 22_500_000,
+    voucherId: "VOUCHER-SELLER-DEMO",
+    paymentMethod: "vnpay",
+    status: "Paid",
+    invoiceRequested: true,
+    invoiceType: "business",
+    billingInfoSnapshot: {
+      companyName: SELLER_DEMO_PROFILE.company,
+      invoiceEmail: SELLER_DEMO_PROFILE.email,
+      taxCode: "0312345678",
+      address: "Arobid Demo Office, Ho Chi Minh City",
+      phoneNumber: "0901234567"
+    },
+    invoiceStatus: "requested_paid",
+    paidAt: iso(1, -0.2),
+    createdAt: iso(1),
+    updatedAt: iso(0.9)
+  },
+  {
+    id: "ORD-SELLER-DEMO-003",
+    customerId: SELLER_DEMO_PROFILE.id,
+    customerName: SELLER_DEMO_PROFILE.name,
+    customerEmail: SELLER_DEMO_PROFILE.email,
+    customerCompany: SELLER_DEMO_PROFILE.company,
+    partnerName: "AI Robotics Tech",
+    orderType: "booth_registration",
+    referenceId: "reg-demo-seller-003",
+    expoName: "AI & Robotics Showcase",
+    boothRef: "GH-C04",
+    boothTier: "Basic",
+    originalAmount: 8_500_000,
+    discountAmount: 0,
+    amount: 8_500_000,
+    paymentMethod: "vnpay",
+    status: "Pending Payment",
+    invoiceRequested: false,
+    invoiceStatus: "not_requested",
+    expiresAt: iso(-2),
+    createdAt: iso(0.4),
+    updatedAt: iso(0.3)
+  },
+  {
+    id: "ORD-SELLER-DEMO-004",
+    customerId: SELLER_DEMO_PROFILE.id,
+    customerName: SELLER_DEMO_PROFILE.name,
+    customerEmail: SELLER_DEMO_PROFILE.email,
+    customerCompany: SELLER_DEMO_PROFILE.company,
+    partnerName: "AutoDrive SEA",
+    orderType: "booth_registration",
+    referenceId: "reg-demo-seller-004",
+    expoName: "AutoDrive Expo Southeast Asia",
+    boothRef: "AD-D03",
+    boothTier: "Basic",
+    originalAmount: 5_000_000,
+    discountAmount: 0,
+    amount: 5_000_000,
+    paymentMethod: "vnpay",
+    status: "Paid",
+    invoiceRequested: false,
+    invoiceStatus: "not_requested",
+    paidAt: iso(20, -0.2),
+    createdAt: iso(20),
+    updatedAt: iso(19.9)
+  }
+]
+
 function orderId(n: number) {
   return `ORD-2026-${String(n).padStart(5, "0")}`
 }
@@ -312,6 +423,7 @@ function makeOrder(
 }
 
 export const mockOrders: Order[] = [
+  ...sellerDemoOrders,
   makeOrder(1, 0, 0, "Pending Payment", 0.1),
   makeOrder(2, 1, 2, "Pending Payment", 0.3),
   makeOrder(3, 2, 4, "Paid", 1),

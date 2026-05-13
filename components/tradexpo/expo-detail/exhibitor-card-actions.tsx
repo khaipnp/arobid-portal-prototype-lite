@@ -1,6 +1,6 @@
 "use client"
 
-import { HeartPlusIcon, MessageCircleIcon, Share2Icon } from "lucide-react"
+import { HeartIcon, MessageCircleIcon, Share2Icon } from "lucide-react"
 import Image from "next/image"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -74,7 +74,7 @@ export function ExhibitorCardActions({
         className="flex-1 rounded-lg font-medium text-muted-foreground hover:text-foreground"
         onClick={() => toast("You added the exhibitor to your wishlist")}
       >
-        <HeartPlusIcon />
+        <HeartIcon />
         Wishlist
       </Button>
       <Button

@@ -149,13 +149,6 @@ export function OrderDetail({
       {/* Back + header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.push("/admin/orders")}
-          >
-            <ArrowLeftIcon className="size-4" />
-          </Button>
           <div>
             <div className="flex items-center gap-2">
               <span className="font-mono font-semibold text-lg">

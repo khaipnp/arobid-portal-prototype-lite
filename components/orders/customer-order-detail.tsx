@@ -1,7 +1,5 @@
 "use client"
 
-import { ArrowLeftIcon } from "lucide-react"
-import { useRouter } from "next/navigation"
 import { Fragment, useEffect, useMemo, useState } from "react"
 import {
   type CustomerOrderStatus,
@@ -10,7 +8,6 @@ import {
   mapOrderStatusForCustomer
 } from "@/components/orders/customer-order-status"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import type {
   Order,
   OrderType,
@@ -120,7 +117,6 @@ export function CustomerOrderDetail({
   order: Order
   transactionLog: TransactionLogEntry[]
 }) {
-  const router = useRouter()
   const [nowMs, setNowMs] = useState(() => Date.now())
   const customerStatus = mapOrderStatusForCustomer(order.status)
   const banner = bannerForStatus(customerStatus)
@@ -146,29 +142,6 @@ export function CustomerOrderDetail({
 
   return (
     <div className="space-y-5">
-      <div className="flex items-start gap-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label="Back to orders"
-          onClick={() => router.push("/seller/orders")}
-        >
-          <ArrowLeftIcon className="size-4" />
-        </Button>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="font-mono font-semibold text-lg">{order.id}</span>
-            <CustomerOrderStatusBadge status={customerStatus} />
-            <Badge variant="outline" className="text-xs uppercase">
-              {order.paymentMethod}
-            </Badge>
-          </div>
-          <p className="text-muted-foreground text-sm">
-            Created {formatDate(order.createdAt)}
-          </p>
-        </div>
-      </div>
-
       <div
         className={cn("rounded-lg border px-4 py-3 text-sm", banner.className)}
       >
@@ -206,8 +179,8 @@ export function CustomerOrderDetail({
             <span className="text-muted-foreground">Payment Method</span>
             <span>VNPay</span>
 
-            <span className="text-muted-foreground">Current Status</span>
-            <span>{getCustomerOrderStatusLabel(customerStatus)}</span>
+            <span className="text-muted-foreground">Status</span>
+            <span> {getCustomerOrderStatusLabel(customerStatus)}</span>
 
             {order.paidAt ? (
               <>

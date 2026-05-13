@@ -1,80 +1,72 @@
-"use client"
-
 import {
-  CalendarIcon,
+  ArrowLeftIcon,
+  Building2Icon,
+  CalendarDaysIcon,
   CheckCircle2Icon,
   ChevronRightIcon,
   CircleDashedIcon,
   CircleDotIcon,
-  ClockIcon,
+  CreditCardIcon,
+  DoorOpenIcon,
   EyeIcon,
-  MessageSquareIcon,
-  PackageIcon,
+  InfoIcon,
+  MapPinIcon,
+  PackageCheckIcon,
+  ReceiptTextIcon,
   SettingsIcon,
-  TrendingUpIcon,
-  UsersIcon
+  ShieldAlertIcon,
+  StoreIcon,
+  TicketCheckIcon,
+  UserRoundIcon
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import * as React from "react"
-import { GoLIVESection } from "@/components/tradexpo/golive-section"
+import type { ReactNode } from "react"
+import { CustomerOrderStatusBadge } from "@/components/orders/customer-order-status"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table"
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle
+} from "@/components/ui/empty"
+import { Separator } from "@/components/ui/separator"
 import { getAssetUrl } from "@/lib/image-utils"
 import type {
   BoothCustomization,
   BoothTemplate,
-  CompanyProduct,
   Expo,
-  ExpoStatus,
-  GoLIVEEvent,
+  Order,
   SellerBoothRegistration,
-  SellerBoothStatus,
-  StreamSession
+  SellerBoothStatus
 } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
-import { Label } from "../ui/label"
 
-type SellerExpoViewStatus = "Upcoming" | "Live" | "Archive"
+type TimelinePhase = "Upcoming" | "Live" | "Archived"
 
-const expoStatusStyles: Record<SellerExpoViewStatus, string> = {
-  Upcoming: "border-amber-300 bg-amber-100 text-amber-700",
-  Live: "border-emerald-300 bg-emerald-100 text-emerald-700",
-  Archive: "border-zinc-300 bg-zinc-100 text-zinc-700"
-}
-
-function toSellerExpoViewStatus(status: ExpoStatus): SellerExpoViewStatus {
-  if (status === "Live") return "Live"
-  if (status === "Archived" || status === "Canceled") {
-    return "Archive"
-  }
-  return "Upcoming"
+const phaseStyles: Record<TimelinePhase, string> = {
+  Upcoming: "border-amber-300 bg-amber-50 text-amber-800",
+  Live: "border-emerald-300 bg-emerald-50 text-emerald-700",
+  Archived: "border-zinc-300 bg-zinc-100 text-zinc-700"
 }
 
 const boothStatusStyles: Record<SellerBoothStatus, string> = {
-  "Pending Setup": "border-amber-300 bg-amber-100 text-amber-700",
-  Configured: "border-blue-300 bg-blue-100 text-blue-700",
-  Approved: "border-teal-300 bg-teal-100 text-teal-700",
-  Live: "border-emerald-300 bg-emerald-100 text-emerald-700",
+  "Pending Setup": "border-amber-300 bg-amber-50 text-amber-800",
+  Configured: "border-blue-300 bg-blue-50 text-blue-700",
+  Approved: "border-teal-300 bg-teal-50 text-teal-700",
+  Live: "border-emerald-300 bg-emerald-50 text-emerald-700",
   Ended: "border-zinc-300 bg-zinc-100 text-zinc-700"
 }
 
-const boothStatusIcon: Record<SellerBoothStatus, React.ReactNode> = {
-  "Pending Setup": <CircleDashedIcon className="h-3.5 w-3.5" />,
-  Configured: <CircleDotIcon className="h-3.5 w-3.5" />,
-  Approved: <CheckCircle2Icon className="h-3.5 w-3.5" />,
-  Live: <CheckCircle2Icon className="h-3.5 w-3.5" />,
-  Ended: <ClockIcon className="h-3.5 w-3.5" />
+const boothStatusIcon: Record<SellerBoothStatus, ReactNode> = {
+  "Pending Setup": <CircleDashedIcon className="size-3.5" />,
+  Configured: <CircleDotIcon className="size-3.5" />,
+  Approved: <CheckCircle2Icon className="size-3.5" />,
+  Live: <CheckCircle2Icon className="size-3.5" />,
+  Ended: <CircleDashedIcon className="size-3.5" />
 }
 
 function formatDate(iso: string) {
@@ -83,49 +75,77 @@ function formatDate(iso: string) {
   )
 }
 
-function formatDateTime(iso: string) {
-  return new Intl.DateTimeFormat("en-GB", {
-    dateStyle: "medium",
-    timeStyle: "short"
-  }).format(new Date(iso))
+function formatCurrency(amount: number) {
+  return new Intl.NumberFormat("vi-VN", {
+    style: "currency",
+    currency: "VND",
+    maximumFractionDigits: 0
+  }).format(amount)
 }
 
-function StatCard({
-  title,
-  value,
+function slugifyExpoName(name: string) {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+}
+
+function getPublicExpoHref(expo: Expo) {
+  return `/expos/${expo.slug ?? slugifyExpoName(expo.name)}`
+}
+
+function getPaymentActionLabel(order: Order) {
+  return order.status === "Pending Payment"
+    ? "Complete Payment"
+    : "View Payment"
+}
+
+function isApprovedForBoothSetup(status: SellerBoothStatus) {
+  return status === "Approved" || status === "Live"
+}
+
+function findOrderForRegistration(
+  registration: SellerBoothRegistration,
+  expo: Expo,
+  orders: Order[]
+) {
+  return orders.find((order) => {
+    if (order.orderType !== "booth_registration") return false
+    if (order.referenceId === registration.id) return true
+    return (
+      order.expoName === expo.name &&
+      order.boothRef === registration.boothRef &&
+      order.boothTier === registration.boothTier
+    )
+  })
+}
+
+function SummaryTile({
   icon,
-  trend,
-  description
+  label,
+  value
 }: {
-  title: string
-  value: string | number
-  icon: React.ReactNode
-  trend?: string
-  description?: string
+  icon: ReactNode
+  label: string
+  value: ReactNode
 }) {
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
-          {title}
-        </CardTitle>
-        <div className="text-muted-foreground">{icon}</div>
-      </CardHeader>
-      <CardContent>
-        <div className="flex items-baseline gap-2">
-          <div className="font-bold text-2xl">{value}</div>
-          {trend && (
-            <div className="flex items-center font-medium text-emerald-600 text-xs">
-              <TrendingUpIcon className="mr-0.5 h-3 w-3" />
-              {trend}
-            </div>
-          )}
-        </div>
-        {description && (
-          <p className="mt-1 text-muted-foreground text-xs">{description}</p>
-        )}
-      </CardContent>
-    </Card>
+    <div className="rounded-lg border bg-background p-3">
+      <div className="flex items-center gap-2 text-muted-foreground text-xs">
+        {icon}
+        {label}
+      </div>
+      <div className="mt-1.5 font-medium text-sm">{value}</div>
+    </div>
+  )
+}
+
+function DetailRow({ label, value }: { label: string; value: ReactNode }) {
+  return (
+    <div className="flex items-start justify-between gap-4 py-2 text-sm">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="max-w-[60%] text-right font-medium">{value}</span>
+    </div>
   )
 }
 
@@ -135,9 +155,9 @@ interface Props {
   registrations: SellerBoothRegistration[]
   boothTemplates: BoothTemplate[]
   boothCustomizations: BoothCustomization[]
-  goLiveEvents: GoLIVEEvent[]
-  streamSessions: StreamSession[]
-  companyProducts: CompanyProduct[]
+  customerOrders: Order[]
+  sellerProfile: { name: string; email: string } | null
+  timelinePhase: TimelinePhase | null
 }
 
 export function SellerExpoDetail({
@@ -146,405 +166,397 @@ export function SellerExpoDetail({
   registrations,
   boothTemplates,
   boothCustomizations,
-  goLiveEvents,
-  streamSessions,
-  companyProducts
+  customerOrders,
+  sellerProfile,
+  timelinePhase
 }: Props) {
-  const boothTemplateMap = React.useMemo(() => {
-    const m = new Map<string, BoothTemplate>()
-    for (const bt of boothTemplates) m.set(bt.id, bt)
-    return m
-  }, [boothTemplates])
+  const boothTemplateMap = new Map<string, BoothTemplate>()
+  for (const boothTemplate of boothTemplates) {
+    boothTemplateMap.set(boothTemplate.id, boothTemplate)
+  }
 
-  const customizationMap = React.useMemo(() => {
-    const m = new Map<string, { publishStatus: string; hasTemplate: boolean }>()
-    for (const c of boothCustomizations) {
-      m.set(c.registrationId, {
-        publishStatus: c.publishStatus,
-        hasTemplate: !!c.selectedBoothTemplateId
-      })
-    }
-    return m
-  }, [boothCustomizations])
-
-  const productMap = React.useMemo(() => {
-    const m = new Map<string, CompanyProduct>()
-    for (const p of companyProducts) m.set(p.id, p)
-    return m
-  }, [companyProducts])
-
-  const { stats, seed } = React.useMemo(() => {
-    // In a real app, these would come from an analytics API.
-    // For this prototype, we'll derive some and mock others based on expoId.
-    const s = expoId
-      .split("")
-      .reduce((acc, char) => acc + char.charCodeAt(0), 0)
-    const mockValue = (min: number, max: number) =>
-      Math.floor((s % (max - min)) + min)
-
-    const peakViewers = streamSessions.reduce(
-      (acc, sess) => acc + (sess.peakViewerCount ?? 0),
-      0
-    )
-
-    // Get product IDs displayed in this expo
-    const displayedProductIds = Array.from(
-      new Set(boothCustomizations.flatMap((c) => c.products.map((p) => p.id)))
-    )
-
-    // Match with company products to ensure data integrity
-    const expoProducts = displayedProductIds
-      .map((id) => productMap.get(id))
-      .filter((p): p is CompanyProduct => !!p)
-
-    const topViewedProduct =
-      expoProducts.length > 0 ? expoProducts[s % expoProducts.length] : null
-    const topRFQProduct =
-      expoProducts.length > 0
-        ? expoProducts[(s + 1) % expoProducts.length]
-        : null
-
-    return {
-      seed: s,
-      stats: {
-        visitors: mockValue(500, 2000),
-        clicks: mockValue(200, 1000),
-        leads: mockValue(10, 50),
-        streamViews: peakViewers || mockValue(100, 500),
-        topViewed: topViewedProduct,
-        topViewedCount: mockValue(50, 200),
-        topRFQ: topRFQProduct,
-        topRFQCount: mockValue(5, 20)
-      }
-    }
-  }, [expoId, streamSessions, boothCustomizations, productMap])
-
-  const latestRfqs = React.useMemo(() => {
-    const statuses = ["New", "Quoted", "Closed"] as const
-    const displayedProductIds = Array.from(
-      new Set(boothCustomizations.flatMap((c) => c.products.map((p) => p.id)))
-    )
-    const expoProducts = displayedProductIds
-      .map((id) => productMap.get(id))
-      .filter((p): p is CompanyProduct => !!p)
-
-    const total = Math.max(4, Math.min(10, expoProducts.length * 2 || 6))
-
-    return Array.from({ length: total }).map((_, index) => {
-      const createdAt = new Date(
-        Date.now() - (index * 7 + (seed % 5)) * 60 * 60 * 1000
-      )
-      const expiredAt = new Date(
-        createdAt.getTime() + (30 + (index % 3) * 30) * 24 * 60 * 60 * 1000
-      )
-      const product = expoProducts[index % expoProducts.length]
-      const status = statuses[index % statuses.length]
-
-      return {
-        id: `rfq-${expoId}-${index + 1}`,
-        buyerCompany: `Buyer Company ${index + 1}`,
-        productName: product?.name ?? `Product ${index + 1}`,
-        productImage: product?.mainImageUrl ?? expo?.thumbnailUrl ?? "",
-        quantity: (index + 1) * 10,
-        targetPrice: `${(1000 + index * 75).toLocaleString()} USD`,
-        createdAt: createdAt.toISOString(),
-        expiredAt: expiredAt.toISOString(),
-        status
-      }
+  const customizationMap = new Map<
+    string,
+    { publishStatus: string; hasTemplate: boolean }
+  >()
+  for (const customization of boothCustomizations) {
+    customizationMap.set(customization.registrationId, {
+      publishStatus: customization.publishStatus,
+      hasTemplate: !!customization.selectedBoothTemplateId
     })
-  }, [boothCustomizations, expo?.thumbnailUrl, expoId, productMap, seed])
+  }
 
-  if (!expo) {
+  if (!expo || registrations.length === 0) {
     return (
-      <p className="py-12 text-center text-muted-foreground text-sm">
-        Expo not found.
-      </p>
+      <Empty className="min-h-[420px] border bg-card">
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <ShieldAlertIcon />
+          </EmptyMedia>
+          <EmptyTitle className="text-base">Expo access unavailable</EmptyTitle>
+          <EmptyDescription>
+            This Expo is not part of your workspace My Expos list, or it is no
+            longer available for your account.
+          </EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent>
+          <Button asChild>
+            <Link href="/seller/my-expos">
+              <ArrowLeftIcon className="size-4" />
+              Back to My Expos
+            </Link>
+          </Button>
+        </EmptyContent>
+      </Empty>
     )
   }
 
-  const displayStatus = toSellerExpoViewStatus(expo.status)
-
-  const canConfigure = (status: SellerBoothStatus) =>
-    status !== "Ended" &&
-    status !== ("Canceled" as unknown as SellerBoothStatus)
+  const phase = timelinePhase ?? "Upcoming"
+  const publicExpoHref = getPublicExpoHref(expo)
+  const firstRegistration = registrations[0]
+  const firstOrder = registrations
+    .map((registration) =>
+      findOrderForRegistration(registration, expo, customerOrders)
+    )
+    .find((order): order is Order => Boolean(order))
+  const approvedRegistrations = registrations.filter((registration) =>
+    isApprovedForBoothSetup(registration.status)
+  )
+  const isLobbyAvailable = phase === "Live" || phase === "Archived"
 
   return (
-    <div className="grid gap-6">
-      {/* Expo info header */}
-      <div className="flex flex-col gap-4 rounded-xl border bg-card p-4 sm:flex-row sm:items-start">
-        <div className="relative hidden shrink-0 overflow-hidden rounded-lg sm:block">
-          <Image
-            src={expo.thumbnailUrl}
-            alt={expo.name}
-            width={160}
-            height={100}
-            className="h-25 w-40 object-cover"
-          />
+    <div className="grid gap-5">
+      <section className="overflow-hidden rounded-lg border bg-card">
+        <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="relative min-h-72">
+            <Image
+              src={expo.thumbnailUrl}
+              alt={expo.name}
+              fill
+              priority
+              sizes="(min-width: 1024px) calc(100vw - 640px), 100vw"
+              className="aspect-video object-cover"
+            />
+            <div className="absolute inset-0 bg-linear-to-r from-black/75 via-black/35 to-black/5" />
+            <div className="relative flex min-h-[260px] flex-col justify-between p-5 text-white md:p-7">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge
+                  variant="outline"
+                  className={cn("border-white/35 bg-white/15 text-white")}
+                >
+                  User Workspace
+                </Badge>
+                <Badge
+                  variant="outline"
+                  className={cn("text-xs", phaseStyles[phase])}
+                >
+                  {phase}
+                </Badge>
+              </div>
+
+              <div className="max-w-3xl">
+                <h2 className="text-balance font-semibold text-2xl leading-tight md:text-3xl">
+                  {expo.name}
+                </h2>
+                {expo.description ? (
+                  <p className="mt-3 line-clamp-2 max-w-2xl text-sm text-white/80">
+                    {expo.description}
+                  </p>
+                ) : null}
+              </div>
+            </div>
+          </div>
+
+          <aside className="grid content-between gap-4 border-t p-5 lg:border-t-0 lg:border-l">
+            <div className="space-y-3">
+              <h3 className="font-semibold text-base">Next actions</h3>
+              <div className="grid gap-2">
+                <Button asChild className="justify-between">
+                  <Link href={publicExpoHref}>
+                    <span className="inline-flex items-center gap-2">
+                      <EyeIcon className="size-4" />
+                      View Public Expo Detail
+                    </span>
+                    <ChevronRightIcon className="size-4" />
+                  </Link>
+                </Button>
+
+                {isLobbyAvailable ? (
+                  <Button asChild variant="outline" className="justify-between">
+                    <Link href={publicExpoHref}>
+                      <span className="inline-flex items-center gap-2">
+                        <DoorOpenIcon className="size-4" />
+                        Virtual Lobby
+                      </span>
+                      <ChevronRightIcon className="size-4" />
+                    </Link>
+                  </Button>
+                ) : null}
+
+                {approvedRegistrations[0] ? (
+                  <Button asChild variant="outline" className="justify-between">
+                    <Link
+                      href={`/seller/my-expos/${expoId}/configure/${approvedRegistrations[0].id}`}
+                    >
+                      <span className="inline-flex items-center gap-2">
+                        <SettingsIcon className="size-4" />
+                        Configure Booth
+                      </span>
+                      <ChevronRightIcon className="size-4" />
+                    </Link>
+                  </Button>
+                ) : (
+                  <div className="rounded-lg border border-dashed bg-muted/30 px-3 py-2 text-muted-foreground text-sm">
+                    Configure Booth becomes available after booth registration
+                    is approved.
+                  </div>
+                )}
+
+                {firstOrder ? (
+                  <Button asChild variant="outline" className="justify-between">
+                    <Link href={`/seller/orders/${firstOrder.id}`}>
+                      <span className="inline-flex items-center gap-2">
+                        <CreditCardIcon className="size-4" />
+                        {getPaymentActionLabel(firstOrder)}
+                      </span>
+                      <ChevronRightIcon className="size-4" />
+                    </Link>
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+          </aside>
         </div>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="font-semibold text-lg">{expo.name}</h2>
-            <Badge
-              variant="outline"
-              className={cn("text-xs", expoStatusStyles[displayStatus])}
-            >
-              {displayStatus}
+      </section>
+
+      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <SummaryTile
+          icon={<CalendarDaysIcon className="size-4" />}
+          label="Expo timeline"
+          value={`${formatDate(expo.startDate)} - ${formatDate(expo.endDate)}`}
+        />
+        <SummaryTile
+          icon={<Building2Icon className="size-4" />}
+          label="Organizer"
+          value={expo.ownerEmail}
+        />
+        <SummaryTile
+          icon={<TicketCheckIcon className="size-4" />}
+          label="Participation"
+          value={`${registrations.length} booth${registrations.length === 1 ? "" : "s"} registered`}
+        />
+        <SummaryTile
+          icon={<PackageCheckIcon className="size-4" />}
+          label="Primary booth"
+          value={`${firstRegistration.boothRef} - ${firstRegistration.boothTier}`}
+        />
+      </section>
+
+      <section className="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
+        <div className="rounded-lg border bg-card p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h3 className="font-semibold text-base">Participation summary</h3>
+              <p className="mt-1 text-muted-foreground text-sm">
+                Workspace context for this selected Expo.
+              </p>
+            </div>
+            <Badge variant="outline" className={cn(phaseStyles[phase])}>
+              {phase}
             </Badge>
           </div>
-          <p className="mt-1 flex items-center gap-1.5 text-muted-foreground text-sm">
-            <CalendarIcon className="h-3.5 w-3.5 shrink-0" />
-            {formatDate(expo.startDate)} – {formatDate(expo.endDate)}
-          </p>
-          <p className="mt-0.5 text-muted-foreground text-sm">
-            {registrations.length} booth{registrations.length !== 1 ? "s" : ""}{" "}
-            purchased
-          </p>
-        </div>
-      </div>
 
-      {/* Stats Widgets */}
-      {displayStatus !== "Upcoming" && (
-        <div className="flex items-start gap-4">
-          <div className="flex w-2/3 flex-col space-y-4">
-            <h3 className="font-semibold text-base">Stats</h3>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <StatCard
-                title="Booth Visitors"
-                value={stats.visitors.toLocaleString()}
-                icon={<UsersIcon className="h-4 w-4" />}
-                trend={`${(seed % 15) + 5}%`}
-                description="Unique visitors across booths"
-              />
-              <StatCard
-                title="Product Clicks"
-                value={stats.clicks.toLocaleString()}
-                icon={<PackageIcon className="h-4 w-4" />}
-                trend={`${(seed % 10) + 2}%`}
-                description="Catalog engagement"
-              />
-              <StatCard
-                title="New Leads"
-                value={stats.leads}
-                icon={<MessageSquareIcon className="h-4 w-4" />}
-                trend={`${(seed % 20) + 10}%`}
-                description="Inquiries & contacts"
-              />
-              <StatCard
-                title="Peak Viewers"
-                value={stats.streamViews.toLocaleString()}
-                icon={<EyeIcon className="h-4 w-4" />}
-                description="Max concurrent on streams"
-              />
-              <StatCard
-                title="Most Viewed Product"
-                value={stats.topViewed?.name ?? "N/A"}
-                icon={<EyeIcon className="h-4 w-4" />}
-                description={`${stats.topViewedCount} views`}
-              />
-              <StatCard
-                title="Top RFQ Product"
-                value={stats.topRFQ?.name ?? "N/A"}
-                icon={<MessageSquareIcon className="h-4 w-4" />}
-                description={`${stats.topRFQCount} quotation requests`}
-              />
-            </div>
+          <Separator className="my-4" />
+
+          <div className="divide-y">
+            <DetailRow
+              label="Registered contact"
+              value={
+                <span className="inline-flex flex-col items-end">
+                  <span className="inline-flex items-center gap-1.5">
+                    <UserRoundIcon className="size-3.5 text-muted-foreground" />
+                    {sellerProfile?.name ?? "Not available"}
+                  </span>
+                  {sellerProfile?.email ? (
+                    <span className="font-normal text-muted-foreground text-xs">
+                      {sellerProfile.email}
+                    </span>
+                  ) : null}
+                </span>
+              }
+            />
+            <DetailRow label="Participation status" value="Joined" />
+            <DetailRow
+              label="Booth setup eligibility"
+              value={
+                approvedRegistrations.length > 0
+                  ? "Approved registration available"
+                  : "Waiting for approved booth registration"
+              }
+            />
+            <DetailRow
+              label="Payment status"
+              value={
+                firstOrder ? (
+                  <CustomerOrderStatusBadge status={firstOrder.status} />
+                ) : (
+                  "Not available"
+                )
+              }
+            />
           </div>
 
-          {/* Latest RFQ with scroll */}
-          <section className="flex w-1/3 flex-col space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-base">Latest RFQ</h3>
-              <Badge variant="outline">{latestRfqs.length} RFQs</Badge>
+          {!firstOrder ? (
+            <div className="mt-4 flex gap-2 rounded-lg border border-dashed bg-muted/30 p-3 text-muted-foreground text-sm">
+              <InfoIcon className="mt-0.5 size-4 shrink-0" />
+              Payment or order information is not available yet for this Expo
+              participation.
             </div>
-            <div className="overflow-hidden rounded-lg border">
-              <ScrollArea className="h-74">
-                <div className="divide-y">
-                  {latestRfqs.map((rfq) => (
-                    <div
-                      key={rfq.id}
-                      className="flex w-full cursor-pointer gap-3 px-3 py-2 hover:bg-muted/50"
-                    >
-                      <div className="flex min-w-0 flex-1 flex-col space-y-3 py-1">
-                        <div className="flex w-full items-center justify-between">
-                          <p className="line-clamp-1 flex-1 font-medium text-foreground text-sm">
-                            {rfq.buyerCompany}
-                          </p>
-                          <Badge
-                            variant="ghost"
-                            className={cn(
-                              rfq.status === "New" && "text-blue-700",
-                              rfq.status === "Quoted" && "text-amber-700",
-                              rfq.status === "Closed" && "text-zinc-700"
-                            )}
-                          >
-                            {rfq.status}
-                          </Badge>
+          ) : null}
+        </div>
+
+        <div className="rounded-lg border bg-card p-5">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h3 className="font-semibold text-base">
+                Booth participation summary
+              </h3>
+              <p className="mt-1 text-muted-foreground text-sm">
+                Package, booth position, setup state, and order context.
+              </p>
+            </div>
+            <Badge variant="outline">{registrations.length} booth rows</Badge>
+          </div>
+
+          <div className="mt-4 grid gap-3">
+            {registrations.map((registration) => {
+              const template = registration.boothTemplateId
+                ? boothTemplateMap.get(registration.boothTemplateId)
+                : undefined
+              const customization = customizationMap.get(registration.id)
+              const order = findOrderForRegistration(
+                registration,
+                expo,
+                customerOrders
+              )
+              const canConfigure = isApprovedForBoothSetup(registration.status)
+
+              return (
+                <article
+                  key={registration.id}
+                  className="grid gap-4 rounded-lg border bg-background p-4 lg:grid-cols-[minmax(0,1fr)_220px]"
+                >
+                  <div className="flex gap-3">
+                    <div className="relative h-20 w-24 shrink-0 overflow-hidden rounded-lg border bg-muted">
+                      {template ? (
+                        <Image
+                          src={getAssetUrl(
+                            null,
+                            registration.boothTemplateId,
+                            160,
+                            120
+                          )}
+                          alt={template.name}
+                          fill
+                          sizes="96px"
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="flex size-full items-center justify-center text-muted-foreground">
+                          <StoreIcon className="size-6" />
                         </div>
-                        <div className="flex gap-2">
-                          <Image
-                            src={rfq.productImage}
-                            alt={rfq.productName}
-                            width={64}
-                            height={64}
-                            className="aspect-square size-12 rounded-2xl border border-muted-foreground/40"
-                          />
+                      )}
+                    </div>
 
-                          {/* RFQ Details */}
-                          <div className="flex flex-1 flex-col gap-1">
-                            <p className="line-clamp-1 text-sm">
-                              {rfq.productName}
-                            </p>
-                            <div className="flex justify-between">
-                              <div className="flex flex-col gap-0.5">
-                                <Label className="font-normal text-muted-foreground text-xs">
-                                  Created
-                                </Label>
-                                <p className="text-foreground text-xs">
-                                  {formatDateTime(rfq.createdAt)}
-                                </p>
-                              </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h4 className="font-semibold text-sm">
+                          Booth {registration.boothRef}
+                        </h4>
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "gap-1 text-xs",
+                            boothStatusStyles[registration.status]
+                          )}
+                        >
+                          {boothStatusIcon[registration.status]}
+                          {registration.status}
+                        </Badge>
+                      </div>
 
-                              <div className="flex flex-col gap-0.5">
-                                <Label className="font-normal text-muted-foreground text-xs">
-                                  Quantity:
-                                </Label>
-                                <p className="text-foreground text-xs">
-                                  {rfq.quantity}
-                                </p>
-                              </div>
-
-                              <div className="flex flex-col gap-0.5">
-                                <Label className="font-normal text-muted-foreground text-xs">
-                                  Expired date:
-                                </Label>
-                                <p className="text-foreground text-xs">
-                                  {formatDate(rfq.expiredAt)}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                      <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
+                        <span className="flex items-center gap-2 text-muted-foreground">
+                          <PackageCheckIcon className="size-4" />
+                          <span className="text-foreground">
+                            {registration.boothTier}
+                          </span>
+                        </span>
+                        <span className="flex items-center gap-2 text-muted-foreground">
+                          <MapPinIcon className="size-4" />
+                          <span className="text-foreground">
+                            {registration.slotId ?? "Position not assigned"}
+                          </span>
+                        </span>
+                        <span className="flex items-center gap-2 text-muted-foreground">
+                          <SettingsIcon className="size-4" />
+                          <span className="text-foreground">
+                            {!customization?.hasTemplate
+                              ? "No template selected"
+                              : customization.publishStatus === "Published"
+                                ? "Published"
+                                : "Draft"}
+                          </span>
+                        </span>
+                        <span className="flex items-center gap-2 text-muted-foreground">
+                          <ReceiptTextIcon className="size-4" />
+                          <span className="text-foreground">
+                            {order ? formatCurrency(order.amount) : "No order"}
+                          </span>
+                        </span>
                       </div>
                     </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </div>
-          </section>
-        </div>
-      )}
+                  </div>
 
-      {/* GoLIVE Sessions */}
-      <GoLIVESection
-        expoId={expoId}
-        expoStatus={expo.status}
-        goLiveEvents={goLiveEvents}
-        streamSessions={streamSessions}
-      />
-
-      {/* Booth list */}
-      <section>
-        <h3 className="mb-3 font-semibold text-base">My Booths</h3>
-        <div className="rounded-lg border">
-          <Table>
-            <TableHeader className="bg-muted/40">
-              <TableRow>
-                <TableHead className="w-20">Ref</TableHead>
-                <TableHead>Template</TableHead>
-                <TableHead>Tier</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Configuration</TableHead>
-                <TableHead className="w-10" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {registrations.map((reg) => {
-                const template = reg.boothTemplateId
-                  ? boothTemplateMap.get(reg.boothTemplateId)
-                  : undefined
-                const customization = customizationMap.get(reg.id)
-                const configurable = canConfigure(reg.status)
-
-                return (
-                  <TableRow key={reg.id}>
-                    <TableCell className="font-medium font-mono">
-                      {reg.boothRef}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2.5">
-                        {template && (
-                          <Image
-                            src={getAssetUrl(null, reg.boothTemplateId, 80, 60)}
-                            alt={template.name}
-                            width={40}
-                            height={30}
-                            className="rounded border object-cover"
-                          />
-                        )}
-
-                        <span className="text-sm">
-                          {template?.name ?? reg.boothTemplateId}
+                  <div className="grid content-start gap-2">
+                    {order ? (
+                      <div className="flex items-center justify-between gap-2 rounded-lg border bg-muted/30 px-3 py-2">
+                        <span className="text-muted-foreground text-xs">
+                          Payment
                         </span>
+                        <CustomerOrderStatusBadge status={order.status} />
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <span className="text-sm">{reg.boothTier}</span>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={cn(
-                          "flex w-fit items-center gap-1 text-xs",
-                          boothStatusStyles[reg.status]
-                        )}
-                      >
-                        {boothStatusIcon[reg.status]}
-                        {reg.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {!customization?.hasTemplate ? (
-                        <span className="text-muted-foreground text-sm">
-                          No template
-                        </span>
-                      ) : customization.publishStatus === "Published" ? (
-                        <span className="flex items-center gap-1 text-emerald-600 text-sm">
-                          <CheckCircle2Icon className="h-3.5 w-3.5" />
-                          Published
-                        </span>
-                      ) : (
-                        <span className="flex items-center gap-1 text-blue-600 text-sm">
-                          <CircleDotIcon className="h-3.5 w-3.5" />
-                          Draft
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {configurable ? (
-                        <Button variant="outline" size="sm" asChild>
+                    ) : (
+                      <div className="rounded-lg border border-dashed bg-muted/30 px-3 py-2 text-muted-foreground text-xs">
+                        Payment/order data not available.
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap gap-2">
+                      {canConfigure ? (
+                        <Button asChild size="sm" className="flex-1">
                           <Link
-                            href={`/seller/my-expos/${expoId}/configure/${reg.id}`}
+                            href={`/seller/my-expos/${expoId}/configure/${registration.id}`}
                           >
-                            <SettingsIcon className="h-3.5 w-3.5" />
+                            <SettingsIcon className="size-4" />
                             Configure
                           </Link>
                         </Button>
-                      ) : (
-                        <Button variant="ghost" size="sm" asChild>
-                          <Link
-                            href={`/seller/my-expos/${expoId}/configure/${reg.id}`}
-                          >
-                            View
-                            <ChevronRightIcon className="ml-1 h-3.5 w-3.5" />
+                      ) : null}
+
+                      {order ? (
+                        <Button asChild size="sm" variant="outline">
+                          <Link href={`/seller/orders/${order.id}`}>
+                            {getPaymentActionLabel(order)}
                           </Link>
                         </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
+                      ) : null}
+                    </div>
+                  </div>
+                </article>
+              )
+            })}
+          </div>
         </div>
       </section>
     </div>

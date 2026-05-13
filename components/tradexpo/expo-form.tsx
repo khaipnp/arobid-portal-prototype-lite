@@ -76,6 +76,10 @@ export type ExpoFormProps = {
   categories: ExpoCategory[]
   layoutTemplates: ExpoLayoutTemplate[]
   hallTemplates: HallTemplate[]
+  cancelHref?: string
+  successHref?: string
+  submitEndpoint?: string
+  editableScope?: "admin" | "partner-content"
 } & (
   | { mode: "create" }
   | {
@@ -90,6 +94,8 @@ export type ExpoFormProps = {
 export function ExpoForm(props: ExpoFormProps) {
   const router = useRouter()
   const isEdit = props.mode === "edit"
+  const editableScope = props.editableScope ?? "admin"
+  const isPartnerContentEdit = isEdit && editableScope === "partner-content"
 
   const [name, setName] = React.useState(() =>
     isEdit ? props.initialExpo.name : ""
@@ -244,17 +250,22 @@ export function ExpoForm(props: ExpoFormProps) {
     setSubmitting(true)
     try {
       if (isEdit) {
-        const res = await fetch(`/api/tradexpo/expos/${props.expoId}`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        })
+        const res = await fetch(
+          props.submitEndpoint ?? `/api/tradexpo/expos/${props.expoId}`,
+          {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          }
+        )
         const data = (await res.json()) as { ok?: boolean; error?: string }
         if (!res.ok) {
           setError(data.error ?? "Could not save expo.")
           return
         }
-        router.push(`/admin/tradexpo/expos/${props.expoId}`)
+        router.push(
+          props.successHref ?? `/admin/tradexpo/expos/${props.expoId}`
+        )
         router.refresh()
       } else {
         const res = await fetch("/api/tradexpo/expos", {
@@ -286,9 +297,9 @@ export function ExpoForm(props: ExpoFormProps) {
     categoryIds.length > 0 &&
     ownerPick !== null
 
-  const cancelHref = isEdit
-    ? `/admin/tradexpo/expos/${props.expoId}`
-    : "/admin/tradexpo/expos"
+  const cancelHref =
+    props.cancelHref ??
+    (isEdit ? `/admin/tradexpo/expos/${props.expoId}` : "/admin/tradexpo/expos")
   const filteredCategories = React.useMemo(() => {
     const q = categoryQuery.trim().toLowerCase()
     if (!q) return props.categories
@@ -299,9 +310,16 @@ export function ExpoForm(props: ExpoFormProps) {
     <form className="space-y-3" onSubmit={onSubmit}>
       <Card>
         <CardHeader>
-          <CardTitle>General information</CardTitle>
+          <CardTitle>
+            {isPartnerContentEdit ? "Expo information" : "General information"}
+          </CardTitle>
           <CardDescription>
-            {isEdit ? (
+            {isPartnerContentEdit ? (
+              <>
+                Update public-facing content while this expo is still{" "}
+                <strong>Draft</strong>.
+              </>
+            ) : isEdit ? (
               <>
                 Metadata, schedule, and template selection. Status stays{" "}
                 <strong>{props.initialExpo.status}</strong> until you change it
@@ -396,25 +414,27 @@ export function ExpoForm(props: ExpoFormProps) {
               </p>
             </div>
           </div>
-          <div className="grid gap-2">
-            <Label>Expo Template</Label>
-            <Select
-              value={expoTemplateId || undefined}
-              onValueChange={setExpoTemplateId}
-              required
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select layout template" />
-              </SelectTrigger>
-              <SelectContent>
-                {props.layoutTemplates.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>
-                    {t.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {!isPartnerContentEdit ? (
+            <div className="grid gap-2">
+              <Label>Expo Template</Label>
+              <Select
+                value={expoTemplateId || undefined}
+                onValueChange={setExpoTemplateId}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select layout template" />
+                </SelectTrigger>
+                <SelectContent>
+                  {props.layoutTemplates.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>
+                      {t.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : null}
           <div className="grid gap-2">
             <Label>Categories</Label>
             <InputGroup>
@@ -491,198 +511,202 @@ export function ExpoForm(props: ExpoFormProps) {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Expo owner</CardTitle>
-          <CardDescription>
-            Search by email and select an existing account. Submit stays
-            disabled until a user is selected.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <div className="grid gap-2">
-            <Label htmlFor="owner-q">Owner email</Label>
-            <Input
-              id="owner-q"
-              value={ownerQuery}
-              onChange={(e) => {
-                setOwnerQuery(e.target.value)
-                setOwnerPick(null)
-              }}
-              placeholder="Type at least 2 characters…"
-              autoComplete="off"
-            />
-          </div>
-          {ownerLoading ? (
-            <p className="text-muted-foreground text-xs">Searching…</p>
-          ) : null}
-          {ownerResults.length > 0 && !ownerPick ? (
-            <ul className="space-y-2">
-              {ownerResults.map((u) => (
-                <li key={u.id}>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setOwnerPick(u)
-                      setOwnerQuery(u.email)
-                    }}
-                    className="w-full rounded-lg border bg-card px-3 py-2 text-left text-sm hover:bg-muted/50"
-                  >
-                    <span className="font-medium">{u.name}</span>
-                    <span className="block text-muted-foreground">
-                      {u.email}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          ) : null}
-          {ownerQuery.trim().length >= 2 &&
-          !ownerLoading &&
-          ownerResults.length === 0 &&
-          !ownerPick ? (
-            <p className="text-amber-700 text-sm">
-              No user found for that search.
-            </p>
-          ) : null}
-          {ownerPick ? (
-            <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm dark:border-emerald-900 dark:bg-emerald-950/40">
-              Selected: <strong>{ownerPick.name}</strong> ({ownerPick.email})
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="ml-2 h-7"
-                onClick={() => {
-                  setOwnerPick(null)
-                  setOwnerQuery("")
-                }}
-              >
-                Change
-              </Button>
-            </div>
-          ) : null}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex flex-row items-start justify-between gap-2">
-          <div>
-            <CardTitle>Hall configuration</CardTitle>
+      {!isPartnerContentEdit ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Expo owner</CardTitle>
             <CardDescription>
-              One or more halls: name, hall template, and booth tier counts
-              (Basic / Professional / Premium).
+              Search by email and select an existing account. Submit stays
+              disabled until a user is selected.
             </CardDescription>
-          </div>
-          <Button type="button" variant="outline" size="sm" onClick={addHall}>
-            <PlusIcon className="mr-1 size-4" />
-            Add hall
-          </Button>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {halls.map((hall, index) => (
-            <div key={hall.key} className="space-y-3 rounded-lg border p-4">
-              <div className="flex items-center justify-between gap-2">
-                <span className="font-medium text-sm">Hall {index + 1}</span>
-                {halls.length > 1 ? (
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon-sm"
-                    onClick={() => removeHall(index)}
-                    aria-label="Remove hall"
-                  >
-                    <Trash2Icon />
-                  </Button>
-                ) : null}
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="grid gap-2">
-                  <Label>Hall name</Label>
-                  <Input
-                    className="w-full"
-                    value={hall.hallName}
-                    onChange={(e) =>
-                      updateHall(index, { hallName: e.target.value })
-                    }
-                    maxLength={100}
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Hall template</Label>
-                  <Select
-                    value={hall.hallTemplateId || undefined}
-                    onValueChange={(v) =>
-                      updateHall(index, { hallTemplateId: v })
-                    }
-                  >
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select hall template" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {props.hallTemplates.map((t) => (
-                        <SelectItem key={t.id} value={t.id}>
-                          {t.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {hall.hallTemplateId ? (
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <div className="grid gap-1">
-                    <Label className="text-xs">Basic</Label>
-                    <Input
-                      type="number"
-                      min={0}
-                      value={hall.basicQty}
-                      onChange={(e) =>
-                        updateHall(index, {
-                          basicQty: Number.parseInt(e.target.value, 10) || 0
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="grid gap-1">
-                    <Label className="text-xs">Professional</Label>
-                    <Input
-                      type="number"
-                      min={0}
-                      value={hall.professionalQty}
-                      onChange={(e) =>
-                        updateHall(index, {
-                          professionalQty:
-                            Number.parseInt(e.target.value, 10) || 0
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="grid gap-1">
-                    <Label className="text-xs">Premium</Label>
-                    <Input
-                      type="number"
-                      min={0}
-                      value={hall.premiumQty}
-                      onChange={(e) =>
-                        updateHall(index, {
-                          premiumQty: Number.parseInt(e.target.value, 10) || 0
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-              ) : (
-                <p className="text-muted-foreground text-xs">
-                  Select a hall template to set booth tier quantities.
-                </p>
-              )}
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid gap-2">
+              <Label htmlFor="owner-q">Owner email</Label>
+              <Input
+                id="owner-q"
+                value={ownerQuery}
+                onChange={(e) => {
+                  setOwnerQuery(e.target.value)
+                  setOwnerPick(null)
+                }}
+                placeholder="Type at least 2 characters…"
+                autoComplete="off"
+              />
             </div>
-          ))}
-        </CardContent>
-      </Card>
+            {ownerLoading ? (
+              <p className="text-muted-foreground text-xs">Searching…</p>
+            ) : null}
+            {ownerResults.length > 0 && !ownerPick ? (
+              <ul className="space-y-2">
+                {ownerResults.map((u) => (
+                  <li key={u.id}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setOwnerPick(u)
+                        setOwnerQuery(u.email)
+                      }}
+                      className="w-full rounded-lg border bg-card px-3 py-2 text-left text-sm hover:bg-muted/50"
+                    >
+                      <span className="font-medium">{u.name}</span>
+                      <span className="block text-muted-foreground">
+                        {u.email}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+            {ownerQuery.trim().length >= 2 &&
+            !ownerLoading &&
+            ownerResults.length === 0 &&
+            !ownerPick ? (
+              <p className="text-amber-700 text-sm">
+                No user found for that search.
+              </p>
+            ) : null}
+            {ownerPick ? (
+              <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm dark:border-emerald-900 dark:bg-emerald-950/40">
+                Selected: <strong>{ownerPick.name}</strong> ({ownerPick.email})
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="ml-2 h-7"
+                  onClick={() => {
+                    setOwnerPick(null)
+                    setOwnerQuery("")
+                  }}
+                >
+                  Change
+                </Button>
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
+      ) : null}
+
+      {!isPartnerContentEdit ? (
+        <Card>
+          <CardHeader className="flex flex-row items-start justify-between gap-2">
+            <div>
+              <CardTitle>Hall configuration</CardTitle>
+              <CardDescription>
+                One or more halls: name, hall template, and booth tier counts
+                (Basic / Professional / Premium).
+              </CardDescription>
+            </div>
+            <Button type="button" variant="outline" size="sm" onClick={addHall}>
+              <PlusIcon className="mr-1 size-4" />
+              Add hall
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {halls.map((hall, index) => (
+              <div key={hall.key} className="space-y-3 rounded-lg border p-4">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-medium text-sm">Hall {index + 1}</span>
+                  {halls.length > 1 ? (
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="icon-sm"
+                      onClick={() => removeHall(index)}
+                      aria-label="Remove hall"
+                    >
+                      <Trash2Icon />
+                    </Button>
+                  ) : null}
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="grid gap-2">
+                    <Label>Hall name</Label>
+                    <Input
+                      className="w-full"
+                      value={hall.hallName}
+                      onChange={(e) =>
+                        updateHall(index, { hallName: e.target.value })
+                      }
+                      maxLength={100}
+                      required
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Hall template</Label>
+                    <Select
+                      value={hall.hallTemplateId || undefined}
+                      onValueChange={(v) =>
+                        updateHall(index, { hallTemplateId: v })
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select hall template" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {props.hallTemplates.map((t) => (
+                          <SelectItem key={t.id} value={t.id}>
+                            {t.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {hall.hallTemplateId ? (
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="grid gap-1">
+                      <Label className="text-xs">Basic</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        value={hall.basicQty}
+                        onChange={(e) =>
+                          updateHall(index, {
+                            basicQty: Number.parseInt(e.target.value, 10) || 0
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="grid gap-1">
+                      <Label className="text-xs">Professional</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        value={hall.professionalQty}
+                        onChange={(e) =>
+                          updateHall(index, {
+                            professionalQty:
+                              Number.parseInt(e.target.value, 10) || 0
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="grid gap-1">
+                      <Label className="text-xs">Premium</Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        value={hall.premiumQty}
+                        onChange={(e) =>
+                          updateHall(index, {
+                            premiumQty: Number.parseInt(e.target.value, 10) || 0
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-xs">
+                    Select a hall template to set booth tier quantities.
+                  </p>
+                )}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      ) : null}
 
       {error ? (
         <p className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-rose-800 text-sm dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-200">
