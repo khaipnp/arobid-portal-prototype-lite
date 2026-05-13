@@ -9,9 +9,10 @@ import type {
   TransactionLogEntry
 } from "@/lib/tradexpo/types"
 import { CURRENT_USER_PROFILE } from "@/lib/user/current-user"
+import { SELLER_DEMO_USER_ID } from "./tradexpo"
 
 const SELLER_DEMO_PROFILE = {
-  id: "99999999-9999-4999-8999-999999999999",
+  id: SELLER_DEMO_USER_ID,
   name: "Seller Demo",
   email: "seller.demo@arobid.com",
   company: "Arobid Demo"
