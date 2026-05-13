@@ -347,8 +347,6 @@ export function DealRoomManager({
       return new Date(bTime).getTime() - new Date(aTime).getTime()
     })
 
-  const totalUnread = Object.values(unreadCounts).reduce((s, n) => s + n, 0)
-
   // ── Handlers ──
   function selectConversation(id: string) {
     setActiveConversationId(id)
@@ -590,22 +588,9 @@ export function DealRoomManager({
 
   // ── Render ──
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-full overflow-hidden">
       {/* ── Left panel: Conversation list ── */}
       <aside className="flex w-72 shrink-0 flex-col border-r bg-sidebar">
-        {/* Header */}
-        <div className="flex h-14 items-center justify-between border-b px-4">
-          <div className="flex items-center gap-2">
-            <MessageCircleIcon className="size-4 text-muted-foreground" />
-            <span className="font-semibold text-sm">Deal Room</span>
-            {totalUnread > 0 && (
-              <Badge className="h-4 min-w-4 rounded-full px-1 text-xs">
-                {totalUnread}
-              </Badge>
-            )}
-          </div>
-        </div>
-
         {/* Search */}
         <div className="p-2">
           <InputGroup className="h-8 rounded-full text-xs">
