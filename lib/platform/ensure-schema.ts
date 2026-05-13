@@ -16,7 +16,7 @@ export async function ensurePlatformSchema() {
 
     // If the latest migration is applied, we can assume everything before it is also applied
     // This is a fast-path for cold starts
-    if (appliedNames.has("expo_status_no_ended_v1")) {
+    if (appliedNames.has("wishlist_exhibitors_v1")) {
       platformSchemaReady = true
       return
     }
@@ -1012,6 +1012,20 @@ export async function ensurePlatformSchema() {
     where reference_id is not null and reference_type is not null
   `
 
+  await sql`
+    create table if not exists user_wishlist_exhibitors (
+      user_id text not null references users(id) on delete cascade,
+      registration_id text not null references seller_booth_registrations(id) on delete cascade,
+      created_at timestamptz not null default now(),
+      primary key (user_id, registration_id)
+    )
+  `
+
+  await sql`
+    create index if not exists idx_user_wishlist_exhibitors_created
+    on user_wishlist_exhibitors (user_id, created_at desc)
+  `
+
   await migrateExpoManagementSchema()
   await migratePartnerOrganizationSchema()
   await migrateExpoStatusSchema()
@@ -1019,7 +1033,7 @@ export async function ensurePlatformSchema() {
   // Record final migration to enable fast-path on next boot
   await sql`
     insert into platform_schema_migrations (name)
-    values ('expo_status_no_ended_v1')
+    values ('wishlist_exhibitors_v1')
     on conflict (name) do update set applied_at = now();
   `
 

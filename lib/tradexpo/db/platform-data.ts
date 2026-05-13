@@ -22,6 +22,7 @@ import type {
   StreamSession,
   StreamSessionStatus
 } from "@/lib/tradexpo/types"
+import { listWishlistedRegistrationIds } from "@/lib/wishlist/db"
 
 export type ExpoDetailExhibitor = {
   id: string
@@ -34,6 +35,7 @@ export type ExpoDetailExhibitor = {
   boothRef: string
   country: string
   products: string[]
+  isWishlisted?: boolean
 }
 
 function normalizeBoothTier(value: string) {
@@ -764,9 +766,13 @@ export async function listBoothCustomizations(): Promise<BoothCustomization[]> {
 }
 
 export async function listExpoDetailExhibitorsByName(
-  expoName: string
+  expoName: string,
+  options?: { userId?: string | null }
 ): Promise<ExpoDetailExhibitor[]> {
   const pattern = `%${expoName.trim()}%`
+  const wishlistedIds = options?.userId
+    ? await listWishlistedRegistrationIds(options.userId)
+    : new Set<string>()
   const rows = (await sql`
     select
       sbr.id,
@@ -834,7 +840,8 @@ export async function listExpoDetailExhibitorsByName(
       boothTier: normalizeBoothTier(row.booth_tier),
       boothRef: row.booth_ref,
       country: row.country,
-      products
+      products,
+      isWishlisted: wishlistedIds.has(row.id)
     }
   })
 }

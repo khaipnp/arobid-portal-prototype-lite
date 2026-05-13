@@ -192,6 +192,7 @@ export function ExhibitorsSection({
             <ExhibitorCard
               key={exhibitor.id}
               exhibitor={exhibitor}
+              isAuthenticated={isAuthenticated}
               onChatClick={(product) => handleChatClick(exhibitor, product)}
             />
           ))}

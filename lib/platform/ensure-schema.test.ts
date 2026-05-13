@@ -250,4 +250,115 @@ describe("platform schema consistency", () => {
       await sql`delete from users where id = 'cccccccc-cccc-4ccc-8ccc-ccccccccccc3'`
     }
   })
+
+  test("persists user exhibitor wishlist items", async () => {
+    const { sql } = await import("@/lib/db/neon")
+    const { ensurePlatformSchema } = await import(
+      "@/lib/platform/ensure-schema"
+    )
+    const {
+      addWishlistExhibitor,
+      listWishlistedRegistrationIds,
+      listWishlistItems,
+      removeWishlistExhibitor
+    } = await import("@/lib/wishlist/db")
+
+    await ensurePlatformSchema()
+
+    await sql`delete from user_wishlist_exhibitors where registration_id = 'test-reg-wishlist'`
+    await sql`delete from seller_booth_registrations where id = 'test-reg-wishlist'`
+    await sql`delete from expos where id = 'test-expo-wishlist'`
+    await sql`delete from users where id in ('dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee')`
+
+    try {
+      await sql`
+        insert into users (id, name, email, is_active)
+        values
+          ('dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'Wishlist Buyer', 'wishlist-buyer@example.com', true),
+          ('eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee', 'Wishlist Seller', 'wishlist-seller@example.com', true)
+      `
+
+      await sql`
+        insert into expos (
+          id,
+          name,
+          thumbnail_url,
+          owner_email,
+          start_date,
+          end_date,
+          status,
+          category_ids,
+          created_at
+        )
+        values (
+          'test-expo-wishlist',
+          'Wishlist Test Expo',
+          'https://example.com/thumb.png',
+          'owner@example.com',
+          current_date,
+          current_date + interval '1 day',
+          'Live',
+          '[]'::jsonb,
+          now()
+        )
+      `
+
+      await sql`
+        insert into seller_booth_registrations (
+          id,
+          user_id,
+          expo_id,
+          booth_ref,
+          booth_tier,
+          status,
+          purchased_at
+        )
+        values (
+          'test-reg-wishlist',
+          'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee',
+          'test-expo-wishlist',
+          'W01',
+          'Premium',
+          'Live',
+          now()
+        )
+      `
+
+      await addWishlistExhibitor({
+        userId: "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+        registrationId: "test-reg-wishlist"
+      })
+
+      const ids = await listWishlistedRegistrationIds(
+        "dddddddd-dddd-4ddd-8ddd-dddddddddddd"
+      )
+      const items = await listWishlistItems(
+        "dddddddd-dddd-4ddd-8ddd-dddddddddddd"
+      )
+
+      expect([...ids]).toEqual(["test-reg-wishlist"])
+      expect(items[0]?.registrationId).toBe("test-reg-wishlist")
+      expect(items[0]?.company).toBe("Wishlist Seller")
+      expect(items[0]?.boothTier).toBe("Premium")
+      expect(items[0]?.boothRef).toBe("W01")
+      expect(items[0]?.expo.id).toBe("test-expo-wishlist")
+      expect(items[0]?.expo.name).toBe("Wishlist Test Expo")
+      expect(items[0]?.expo.status).toBe("Live")
+
+      await removeWishlistExhibitor({
+        userId: "dddddddd-dddd-4ddd-8ddd-dddddddddddd",
+        registrationId: "test-reg-wishlist"
+      })
+
+      const afterRemove = await listWishlistedRegistrationIds(
+        "dddddddd-dddd-4ddd-8ddd-dddddddddddd"
+      )
+      expect([...afterRemove]).toEqual([])
+    } finally {
+      await sql`delete from user_wishlist_exhibitors where registration_id = 'test-reg-wishlist'`
+      await sql`delete from seller_booth_registrations where id = 'test-reg-wishlist'`
+      await sql`delete from expos where id = 'test-expo-wishlist'`
+      await sql`delete from users where id in ('dddddddd-dddd-4ddd-8ddd-dddddddddddd', 'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee')`
+    }
+  })
 })
