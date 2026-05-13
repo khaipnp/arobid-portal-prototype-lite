@@ -792,6 +792,7 @@ export async function listExpoDetailExhibitorsByName(
     ? await listWishlistedRegistrationIds(options.userId)
     : new Set<string>()
   const rows = (await sql`
+    with ranked_exhibitors as (
     select
       sbr.id,
       sbr.booth_tier,
@@ -807,22 +808,40 @@ export async function listExpoDetailExhibitorsByName(
       nullif(comp.logo_url, '') as logo_url,
       cu.avatar_url,
       'Vietnam'::text as country,
-      coalesce(bc.products, '[]'::jsonb) as products
-    from seller_booth_registrations sbr
-    join expos e on e.id = sbr.expo_id
-    join users cu on cu.id = sbr.user_id
-    left join companies comp on comp.id = cu.company_id
-    left join booth_customizations bc on bc.registration_id = sbr.id
-    where e.name ilike ${pattern}
-    order by
+      coalesce(bc.products, '[]'::jsonb) as products,
       case lower(trim(sbr.booth_tier))
         when 'premium' then 1
         when 'professional' then 2
         when 'pro' then 2
         when 'basic' then 3
         else 4
-      end asc,
-      sbr.purchased_at desc
+      end as tier_sort,
+      sbr.purchased_at,
+      row_number() over (
+        partition by coalesce(comp.id, cu.id)
+        order by
+          case lower(trim(sbr.booth_tier))
+            when 'premium' then 1
+            when 'professional' then 2
+            when 'pro' then 2
+            when 'basic' then 3
+            else 4
+          end asc,
+          sbr.purchased_at desc,
+          sbr.id asc
+      ) as exhibitor_rank
+    from seller_booth_registrations sbr
+    join expos e on e.id = sbr.expo_id
+    join users cu on cu.id = sbr.user_id
+    left join companies comp on comp.id = cu.company_id
+    join booth_customizations bc on bc.registration_id = sbr.id
+    where e.name ilike ${pattern}
+      and bc.publish_status = 'Published'
+    )
+    select *
+    from ranked_exhibitors
+    where exhibitor_rank = 1
+    order by tier_sort asc, purchased_at desc, id asc
     limit 36
   `) as {
     id: string
