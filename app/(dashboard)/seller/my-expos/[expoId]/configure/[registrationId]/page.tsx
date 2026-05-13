@@ -56,6 +56,7 @@ export default async function SellerBoothConfigurePage({ params }: Props) {
         { label: expo.name, href: `/seller/my-expos/${expoId}` },
         { label: `Booth ${registration.boothRef}` }
       ]}
+      showBackButton
     >
       <SellerBoothConfigurator
         expoId={expoId}

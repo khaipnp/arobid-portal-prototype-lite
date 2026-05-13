@@ -403,7 +403,7 @@ export function SellerBoothConfigurator({
   const hasNoTemplate = !customization.selectedBoothTemplateId
 
   return (
-    <div className="grid gap-6">
+    <div className="grid gap-6 px-4">
       {/* Header bar */}
       <div className="flex flex-wrap items-start justify-between gap-3 rounded-xl border bg-card p-4">
         <div className="flex flex-wrap items-center gap-3">

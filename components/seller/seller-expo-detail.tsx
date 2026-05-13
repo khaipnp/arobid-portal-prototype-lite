@@ -3,15 +3,12 @@ import {
   Building2Icon,
   CalendarDaysIcon,
   CheckCircle2Icon,
-  ChevronRightIcon,
   CircleDashedIcon,
   CircleDotIcon,
-  CreditCardIcon,
-  DoorOpenIcon,
   EyeIcon,
-  InfoIcon,
   MapPinIcon,
   PackageCheckIcon,
+  PaintbrushVerticalIcon,
   ReceiptTextIcon,
   SettingsIcon,
   ShieldAlertIcon,
@@ -33,7 +30,6 @@ import {
   EmptyMedia,
   EmptyTitle
 } from "@/components/ui/empty"
-import { Separator } from "@/components/ui/separator"
 import { getAssetUrl } from "@/lib/image-utils"
 import type {
   BoothCustomization,
@@ -44,6 +40,15 @@ import type {
   SellerBoothStatus
 } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle
+} from "../ui/card"
 
 type TimelinePhase = "Upcoming" | "Live" | "Archived"
 
@@ -94,12 +99,6 @@ function getPublicExpoHref(expo: Expo) {
   return `/expos/${expo.slug ?? slugifyExpoName(expo.name)}`
 }
 
-function getPaymentActionLabel(order: Order) {
-  return order.status === "Pending Payment"
-    ? "Complete Payment"
-    : "View Payment"
-}
-
 function isApprovedForBoothSetup(status: SellerBoothStatus) {
   return status === "Approved" || status === "Live"
 }
@@ -130,13 +129,13 @@ function SummaryTile({
   value: ReactNode
 }) {
   return (
-    <div className="rounded-lg border bg-background p-3">
-      <div className="flex items-center gap-2 text-muted-foreground text-xs">
+    <Card>
+      <CardHeader className="flex items-center gap-2">
         {icon}
         {label}
-      </div>
-      <div className="mt-1.5 font-medium text-sm">{value}</div>
-    </div>
+      </CardHeader>
+      <CardContent>{value}</CardContent>
+    </Card>
   )
 }
 
@@ -222,153 +221,82 @@ export function SellerExpoDetail({
   const approvedRegistrations = registrations.filter((registration) =>
     isApprovedForBoothSetup(registration.status)
   )
-  const isLobbyAvailable = phase === "Live" || phase === "Archived"
 
   return (
-    <div className="grid gap-5">
-      <section className="overflow-hidden rounded-lg border bg-card">
-        <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="relative min-h-72">
+    <div className="grid gap-5 px-4">
+      <div className="flex flex-col gap-4 md:flex-row">
+        <div className="flex flex-col items-center gap-3">
+          {/* Thumbnail */}
+          <div className="relative">
             <Image
               src={expo.thumbnailUrl}
               alt={expo.name}
-              fill
+              width={1000}
+              height={500}
               priority
-              sizes="(min-width: 1024px) calc(100vw - 640px), 100vw"
-              className="aspect-video object-cover"
+              className="aspect-2/1 max-w-sm rounded-3xl object-cover"
             />
-            <div className="absolute inset-0 bg-linear-to-r from-black/75 via-black/35 to-black/5" />
-            <div className="relative flex min-h-65 flex-col justify-between p-5 text-white md:p-7">
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge
-                  variant="outline"
-                  className={cn("border-white/35 bg-white/15 text-white")}
-                >
-                  User Workspace
-                </Badge>
-                <Badge
-                  variant="outline"
-                  className={cn("text-xs", phaseStyles[phase])}
-                >
-                  {phase}
-                </Badge>
-              </div>
-
-              <div className="max-w-3xl">
-                <h2 className="text-balance font-semibold text-2xl leading-tight md:text-3xl">
-                  {expo.name}
-                </h2>
-                {expo.description ? (
-                  <p className="mt-3 line-clamp-2 max-w-2xl text-sm text-white/80">
-                    {expo.description}
-                  </p>
-                ) : null}
-              </div>
-            </div>
-          </div>
-
-          <aside className="grid content-between gap-4 border-t p-5 lg:border-t-0 lg:border-l">
-            <div className="space-y-3">
-              <h3 className="font-semibold text-base">Next actions</h3>
-              <div className="grid gap-2">
-                <Button asChild className="justify-between">
-                  <Link href={publicExpoHref}>
-                    <span className="inline-flex items-center gap-2">
-                      <EyeIcon className="size-4" />
-                      View Public Expo Detail
-                    </span>
-                    <ChevronRightIcon className="size-4" />
-                  </Link>
-                </Button>
-
-                {isLobbyAvailable ? (
-                  <Button asChild variant="outline" className="justify-between">
-                    <Link href={publicExpoHref}>
-                      <span className="inline-flex items-center gap-2">
-                        <DoorOpenIcon className="size-4" />
-                        Virtual Lobby
-                      </span>
-                      <ChevronRightIcon className="size-4" />
-                    </Link>
-                  </Button>
-                ) : null}
-
-                {approvedRegistrations[0] ? (
-                  <Button asChild variant="outline" className="justify-between">
-                    <Link
-                      href={`/seller/my-expos/${expoId}/configure/${approvedRegistrations[0].id}`}
-                    >
-                      <span className="inline-flex items-center gap-2">
-                        <SettingsIcon className="size-4" />
-                        Configure Booth
-                      </span>
-                      <ChevronRightIcon className="size-4" />
-                    </Link>
-                  </Button>
-                ) : (
-                  <div className="rounded-lg border border-dashed bg-muted/30 px-3 py-2 text-muted-foreground text-sm">
-                    Configure Booth becomes available after booth registration
-                    is approved.
-                  </div>
-                )}
-
-                {firstOrder ? (
-                  <Button asChild variant="outline" className="justify-between">
-                    <Link href={`/seller/orders/${firstOrder.id}`}>
-                      <span className="inline-flex items-center gap-2">
-                        <CreditCardIcon className="size-4" />
-                        {getPaymentActionLabel(firstOrder)}
-                      </span>
-                      <ChevronRightIcon className="size-4" />
-                    </Link>
-                  </Button>
-                ) : null}
-              </div>
-            </div>
-          </aside>
-        </div>
-      </section>
-
-      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <SummaryTile
-          icon={<CalendarDaysIcon className="size-4" />}
-          label="Expo timeline"
-          value={`${formatDate(expo.startDate)} - ${formatDate(expo.endDate)}`}
-        />
-        <SummaryTile
-          icon={<Building2Icon className="size-4" />}
-          label="Organizer"
-          value={expo.ownerEmail}
-        />
-        <SummaryTile
-          icon={<TicketCheckIcon className="size-4" />}
-          label="Participation"
-          value={`${registrations.length} booth${registrations.length === 1 ? "" : "s"} registered`}
-        />
-        <SummaryTile
-          icon={<PackageCheckIcon className="size-4" />}
-          label="Primary booth"
-          value={`${firstRegistration.boothRef} - ${firstRegistration.boothTier}`}
-        />
-      </section>
-
-      <section className="grid gap-5 xl:grid-cols-[360px_minmax(0,1fr)]">
-        <div className="rounded-lg border bg-card p-5">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h3 className="font-semibold text-base">Participation summary</h3>
-              <p className="mt-1 text-muted-foreground text-sm">
-                Workspace context for this selected Expo.
-              </p>
-            </div>
-            <Badge variant="outline" className={cn(phaseStyles[phase])}>
+            <Badge
+              variant="outline"
+              className={cn(
+                "absolute top-3 left-3 text-xs",
+                phaseStyles[phase]
+              )}
+            >
               {phase}
             </Badge>
           </div>
+          <Link href={publicExpoHref}>
+            <Button className="rounded-full bg-legend leading-none" size="sm">
+              <EyeIcon className="size-4" />
+              View Expo
+            </Button>
+          </Link>
+        </div>
+        {/* Stat Widget */}
+        <div className="grid flex-1 grid-cols-3 gap-4">
+          <SummaryTile
+            icon={<CalendarDaysIcon className="size-4" />}
+            label="Expo timeline"
+            value={`${formatDate(expo.startDate)} - ${formatDate(expo.endDate)}`}
+          />
+          <SummaryTile
+            icon={<Building2Icon className="size-4" />}
+            label="Organizer"
+            value={expo.ownerEmail}
+          />
+          <SummaryTile
+            icon={<TicketCheckIcon className="size-4" />}
+            label="Participation"
+            value={`${registrations.length} booth${registrations.length === 1 ? "" : "s"} registered`}
+          />
+          <SummaryTile
+            icon={<PackageCheckIcon className="size-4" />}
+            label="Primary booth"
+            value={`${firstRegistration.boothRef} - ${firstRegistration.boothTier}`}
+          />
+          <SummaryTile
+            icon={<PackageCheckIcon className="size-4" />}
+            label="Primary booth"
+            value={`${firstRegistration.boothRef} - ${firstRegistration.boothTier}`}
+          />
+          <SummaryTile
+            icon={<PackageCheckIcon className="size-4" />}
+            label="Total view"
+            value="100"
+          />
+        </div>
+      </div>
 
-          <Separator className="my-4" />
-
-          <div className="divide-y">
+      <section className="flex gap-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Latest RFQ</CardTitle>
+            <CardDescription>
+              Workspace context for this selected Expo.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
             <DetailRow
               label="Registered contact"
               value={
@@ -404,159 +332,122 @@ export function SellerExpoDetail({
                 )
               }
             />
-          </div>
+          </CardContent>
+        </Card>
 
-          {!firstOrder ? (
-            <div className="mt-4 flex gap-2 rounded-lg border border-dashed bg-muted/30 p-3 text-muted-foreground text-sm">
-              <InfoIcon className="mt-0.5 size-4 shrink-0" />
-              Payment or order information is not available yet for this Expo
-              participation.
-            </div>
-          ) : null}
-        </div>
+        <div className="flex flex-1 flex-col gap-2">
+          {registrations.map((registration) => {
+            const template = registration.boothTemplateId
+              ? boothTemplateMap.get(registration.boothTemplateId)
+              : undefined
+            const customization = customizationMap.get(registration.id)
+            const order = findOrderForRegistration(
+              registration,
+              expo,
+              customerOrders
+            )
 
-        <div className="rounded-lg border bg-card p-5">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <h3 className="font-semibold text-base">
-                Booth participation summary
-              </h3>
-              <p className="mt-1 text-muted-foreground text-sm">
-                Package, booth position, setup state, and order context.
-              </p>
-            </div>
-            <Badge variant="outline">{registrations.length} booth rows</Badge>
-          </div>
-
-          <div className="mt-4 grid gap-3">
-            {registrations.map((registration) => {
-              const template = registration.boothTemplateId
-                ? boothTemplateMap.get(registration.boothTemplateId)
-                : undefined
-              const customization = customizationMap.get(registration.id)
-              const order = findOrderForRegistration(
-                registration,
-                expo,
-                customerOrders
-              )
-              const canConfigure = isApprovedForBoothSetup(registration.status)
-
-              return (
-                <article
-                  key={registration.id}
-                  className="grid gap-4 rounded-lg border bg-background p-4 lg:grid-cols-[minmax(0,1fr)_220px]"
-                >
-                  <div className="flex gap-3">
-                    <div className="relative h-20 w-24 shrink-0 overflow-hidden rounded-lg border bg-muted">
-                      {template ? (
-                        <Image
-                          src={getAssetUrl(
-                            null,
-                            registration.boothTemplateId,
-                            160,
-                            120
-                          )}
-                          alt={template.name}
-                          fill
-                          sizes="96px"
-                          className="object-cover"
-                        />
-                      ) : (
-                        <div className="flex size-full items-center justify-center text-muted-foreground">
-                          <StoreIcon className="size-6" />
-                        </div>
+            return (
+              <Card key={registration.id} className="h-fit w-full">
+                <CardHeader>
+                  <CardTitle> {registration.boothRef}</CardTitle>
+                  <CardDescription>{registration.boothTier}</CardDescription>
+                  <CardAction>
+                    <Badge
+                      variant="outline"
+                      className={cn(
+                        "gap-1 text-xs",
+                        boothStatusStyles[registration.status]
                       )}
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h4 className="font-semibold text-sm">
-                          Booth {registration.boothRef}
-                        </h4>
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            "gap-1 text-xs",
-                            boothStatusStyles[registration.status]
-                          )}
-                        >
-                          {boothStatusIcon[registration.status]}
-                          {registration.status}
-                        </Badge>
+                    >
+                      {boothStatusIcon[registration.status]}
+                      {registration.status}
+                    </Badge>
+                  </CardAction>
+                </CardHeader>
+                <CardContent>
+                  <article>
+                    <div className="flex gap-3">
+                      <div className="relative max-w-3xs shrink-0 overflow-hidden rounded-3xl border bg-muted">
+                        {template ? (
+                          <Image
+                            src={getAssetUrl(
+                              null,
+                              registration.boothTemplateId,
+                              160,
+                              120
+                            )}
+                            alt={template.name}
+                            width="2000"
+                            height="1000"
+                            className="aspect-2/1 object-cover"
+                          />
+                        ) : (
+                          <div className="flex size-full items-center justify-center text-muted-foreground">
+                            <StoreIcon className="size-6" />
+                          </div>
+                        )}
                       </div>
 
-                      <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
-                        <span className="flex items-center gap-2 text-muted-foreground">
-                          <PackageCheckIcon className="size-4" />
-                          <span className="text-foreground">
-                            {registration.boothTier}
-                          </span>
-                        </span>
-                        <span className="flex items-center gap-2 text-muted-foreground">
-                          <MapPinIcon className="size-4" />
-                          <span className="text-foreground">
-                            {registration.slotId ?? "Position not assigned"}
-                          </span>
-                        </span>
-                        <span className="flex items-center gap-2 text-muted-foreground">
-                          <SettingsIcon className="size-4" />
-                          <span className="text-foreground">
-                            {!customization?.hasTemplate
-                              ? "No template selected"
-                              : customization.publishStatus === "Published"
-                                ? "Published"
-                                : "Draft"}
-                          </span>
-                        </span>
-                        <span className="flex items-center gap-2 text-muted-foreground">
-                          <ReceiptTextIcon className="size-4" />
-                          <span className="text-foreground">
-                            {order ? formatCurrency(order.amount) : "No order"}
-                          </span>
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid content-start gap-2">
-                    {order ? (
-                      <div className="flex items-center justify-between gap-2 rounded-lg border bg-muted/30 px-3 py-2">
-                        <span className="text-muted-foreground text-xs">
-                          Payment
-                        </span>
-                        <CustomerOrderStatusBadge status={order.status} />
-                      </div>
-                    ) : (
-                      <div className="rounded-lg border border-dashed bg-muted/30 px-3 py-2 text-muted-foreground text-xs">
-                        Payment/order data not available.
-                      </div>
-                    )}
-
-                    <div className="flex flex-wrap gap-2">
-                      {canConfigure ? (
-                        <Button asChild size="sm" className="flex-1">
-                          <Link
-                            href={`/seller/my-expos/${expoId}/configure/${registration.id}`}
-                          >
+                      <div className="min-w-0 flex-1">
+                        <div className="mt-2 grid gap-2 text-sm sm:grid-cols-2">
+                          <div className="fle flex-col items-start">
+                            <span className="flex items-center gap-1 text-muted-foreground text-sm leading-none">
+                              <MapPinIcon className="size-4" />
+                              Position
+                            </span>
+                            <span className="text-foreground">
+                              {registration.slotId ?? "Position not assigned"}
+                            </span>
+                          </div>
+                          <span className="flex items-center gap-2 text-muted-foreground">
                             <SettingsIcon className="size-4" />
-                            Configure
-                          </Link>
-                        </Button>
-                      ) : null}
-
-                      {order ? (
-                        <Button asChild size="sm" variant="outline">
-                          <Link href={`/seller/orders/${order.id}`}>
-                            {getPaymentActionLabel(order)}
-                          </Link>
-                        </Button>
-                      ) : null}
+                            <span className="text-foreground">
+                              {!customization?.hasTemplate
+                                ? "No template selected"
+                                : customization.publishStatus === "Published"
+                                  ? "Published"
+                                  : "Draft"}
+                            </span>
+                          </span>
+                          <span className="flex items-center gap-2 text-muted-foreground">
+                            <ReceiptTextIcon className="size-4" />
+                            <span className="text-foreground">
+                              {order
+                                ? formatCurrency(order.amount)
+                                : "No order"}
+                            </span>
+                          </span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </article>
-              )
-            })}
-          </div>
+                  </article>
+                </CardContent>
+                <CardFooter className="justify-end gap-2">
+                  <Link
+                    href={`/seller/my-expos/${expoId}/configure/${registration.id}`}
+                  >
+                    <Button className="rounded-full bg-legend" size="sm">
+                      <PaintbrushVerticalIcon className="size-4" />
+                      Customize
+                    </Button>
+                  </Link>
+
+                  {order ? (
+                    <Link href={`/seller/orders/${order.id}`}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-full"
+                      >
+                        View Order
+                      </Button>
+                    </Link>
+                  ) : null}
+                </CardFooter>
+              </Card>
+            )
+          })}
         </div>
       </section>
     </div>

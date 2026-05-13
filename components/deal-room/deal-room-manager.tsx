@@ -606,7 +606,7 @@ export function DealRoomManager({
           </InputGroup>
           <Tabs
             value={inboxFilter}
-            onValueChange={setInboxFilter}
+            onValueChange={(v) => setInboxFilter(v as "active" | "archived")}
             className="mt-2"
           >
             <TabsList>
