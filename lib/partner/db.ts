@@ -231,7 +231,7 @@ export function resolvePartnerCapabilities(
 
 function rowToAssignedExpo(
   row: PartnerExpoRow
-): Omit<PartnerAssignedExpo, "goLiveCount"> {
+): Pick<PartnerAssignedExpo, "expo" | "assignment"> {
   return {
     expo: rowToExpo(row),
     assignment: {
