@@ -250,7 +250,7 @@ export async function getAuthenticatedUserById(
   }[]
 
   const row = rows[0]
-  if (!row || !row.user_active) return null
+  if (!row?.user_active) return null
 
   const roles = (row.roles || []).filter((r): r is AppRole =>
     APP_ROLES.includes(r as AppRole)
