@@ -9,14 +9,14 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import { useEffect, useMemo, useState } from "react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import type { ExpoDetailExhibitor } from "@/lib/tradexpo/db/platform-data"
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput
 } from "@/components/ui/input-group"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import type { ExpoDetailExhibitor } from "@/lib/tradexpo/db/platform-data"
 
 function getExhibitorDisplayName(exhibitor: ExpoDetailExhibitor) {
   return exhibitor.company || exhibitor.name || "Unnamed exhibitor"

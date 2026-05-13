@@ -1,10 +1,7 @@
-import { Backpack } from "lucide-react"
-import Link from "next/link"
 import { notFound } from "next/navigation"
 import { PartnerExpoDetailOverview } from "@/components/partner/partner-expo-detail-overview"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import { GoLIVEManager } from "@/components/tradexpo/golive-manager"
-import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { requireRole } from "@/lib/auth/rbac"
 import {

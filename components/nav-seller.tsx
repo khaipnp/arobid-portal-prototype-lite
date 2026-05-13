@@ -90,18 +90,16 @@ export function NavSeller({
       ) : null}
 
       {canManageSeller ? (
-        <>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton asChild>
-                <Link href="/seller/my-expos">
-                  <TvMinimalIcon />
-                  <span>My Expos</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Link href="/seller/my-expos">
+                <TvMinimalIcon />
+                <span>My Expos</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       ) : null}
 
       <SidebarMenu>

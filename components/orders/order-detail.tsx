@@ -1,11 +1,6 @@
 "use client"
 
-import {
-  ArrowLeftIcon,
-  CopyIcon,
-  DownloadIcon,
-  MailCheckIcon
-} from "lucide-react"
+import { CopyIcon, DownloadIcon, MailCheckIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import {
@@ -73,7 +68,7 @@ export function OrderDetail({
   initialOrder,
   initialTransactionLog
 }: OrderDetailProps) {
-  const router = useRouter()
+  const _router = useRouter()
   const [order, setOrder] = useState<Order>(() => initialOrder)
   const [log, setLog] = useState<TransactionLogEntry[]>(() =>
     [...initialTransactionLog].sort(

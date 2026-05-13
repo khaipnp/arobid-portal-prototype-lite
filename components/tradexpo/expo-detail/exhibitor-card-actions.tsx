@@ -108,11 +108,12 @@ export function ExhibitorCardActions({
               <p className="select-none font-semibold text-lg">
                 {exhibitorCompany}
               </p>
-              <img
+              <Image
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(shareUrl)}`}
                 alt={`QR code for ${exhibitorCompany}`}
                 width={180}
                 height={180}
+                unoptimized
                 className="rounded-lg"
               />
               <Button size="sm" variant="secondary" className="rounded-full">

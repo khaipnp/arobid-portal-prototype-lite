@@ -3,11 +3,9 @@
 import { Fragment, useEffect, useMemo, useState } from "react"
 import {
   type CustomerOrderStatus,
-  CustomerOrderStatusBadge,
   getCustomerOrderStatusLabel,
   mapOrderStatusForCustomer
 } from "@/components/orders/customer-order-status"
-import { Badge } from "@/components/ui/badge"
 import type {
   Order,
   OrderType,
