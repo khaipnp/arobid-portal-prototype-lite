@@ -339,7 +339,7 @@ export function BookingContent({ expo }: { expo: BookingExpo }) {
               </h2>
               <div className="flex flex-col gap-8">
                 <div className="flex items-start gap-6 rounded-2xl border border-gray-100 bg-gray-50 p-6">
-                  <div className="relative size-24 flex-shrink-0 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+                  <div className="relative size-24 shrink-0 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
                     <Image
                       src={`/landing/${activeTier.image}`}
                       alt={activeTier.name}

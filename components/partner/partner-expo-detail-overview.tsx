@@ -192,8 +192,8 @@ export function PartnerExpoDetailOverview({
     <div className="space-y-4">
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_380px]">
         <div className="overflow-hidden rounded-3xl border bg-card">
-          <div className="grid min-h-[300px] lg:grid-cols-[minmax(0,0.95fr)_minmax(420px,1.05fr)]">
-            <div className="relative min-h-[260px] overflow-hidden bg-muted">
+          <div className="grid min-h-75 lg:grid-cols-[minmax(0,0.95fr)_minmax(420px,1.05fr)]">
+            <div className="relative min-h-65 overflow-hidden bg-muted">
               <Image
                 src={expo.thumbnailUrl}
                 alt={expo.name}
@@ -405,7 +405,7 @@ export function PartnerExpoDetailOverview({
                 </TableBody>
               </Table>
             ) : (
-              <div className="flex min-h-[160px] items-center justify-center rounded-lg border border-dashed text-muted-foreground text-sm">
+              <div className="flex min-h-40 items-center justify-center rounded-lg border border-dashed text-muted-foreground text-sm">
                 No hall capacity configured.
               </div>
             )}

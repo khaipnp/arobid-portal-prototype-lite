@@ -188,7 +188,7 @@ export function SellerExpoDetail({
 
   if (!expo || registrations.length === 0) {
     return (
-      <Empty className="min-h-[420px] border bg-card">
+      <Empty className="min-h-105 border bg-card">
         <EmptyHeader>
           <EmptyMedia variant="icon">
             <ShieldAlertIcon />
@@ -238,7 +238,7 @@ export function SellerExpoDetail({
               className="aspect-video object-cover"
             />
             <div className="absolute inset-0 bg-linear-to-r from-black/75 via-black/35 to-black/5" />
-            <div className="relative flex min-h-[260px] flex-col justify-between p-5 text-white md:p-7">
+            <div className="relative flex min-h-65 flex-col justify-between p-5 text-white md:p-7">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge
                   variant="outline"
