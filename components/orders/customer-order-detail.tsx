@@ -178,7 +178,7 @@ export function CustomerOrderDetail({
             <span>VNPay</span>
 
             <span className="text-muted-foreground">Status</span>
-            <span> {getCustomerOrderStatusLabel(customerStatus)}</span>
+            <span>{getCustomerOrderStatusLabel(customerStatus)}</span>
 
             {order.paidAt ? (
               <>
