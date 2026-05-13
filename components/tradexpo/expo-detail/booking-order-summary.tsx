@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Switch } from "@/components/ui/switch"
 import { BoothTierBadge } from "./booth-tier-badge"
 
 type BookingOrderSummaryProps = {
@@ -31,7 +30,7 @@ export function BookingOrderSummary({
   isLocationStep
 }: BookingOrderSummaryProps) {
   const [voucher, setVoucher] = useState("")
-  const [useTradeCredit, setUseTradeCredit] = useState(false)
+  const [useTradeCredit, _setUseTradeCredit] = useState(false)
   const [acceptTerms, setAcceptTerms] = useState(false)
 
   const discount = useTradeCredit ? 150000 : 0 // Mock discount
@@ -149,11 +148,11 @@ export function BookingOrderSummary({
             className="size-9"
           />
           <div className="flex flex-1 flex-col">
-            <span className="text-xs text-muted-foreground">
+            <span className="text-muted-foreground text-xs">
               Booking successful. You will receive
             </span>
             <span className="font-medium text-foreground text-sm">
-              <span className="text-legend font-semibold">150</span> TradeCredit
+              <span className="font-semibold text-legend">150</span> TradeCredit
             </span>
           </div>
         </div>

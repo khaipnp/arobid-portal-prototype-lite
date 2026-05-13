@@ -36,7 +36,7 @@ export function BoothTierBadge({
   return (
     <div
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2 py-1 font-bold text-[10px] uppercase tracking-wider w-fit",
+        "inline-flex w-fit items-center gap-1 rounded-full px-2 py-1 font-bold text-[10px] uppercase tracking-wider",
         config.bgColor,
         config.textColor,
         className
@@ -48,7 +48,7 @@ export function BoothTierBadge({
           alt=""
           width={512}
           height={512}
-          className="shrink-0 size-4"
+          className="size-4 shrink-0"
         />
       )}
       {config.label}

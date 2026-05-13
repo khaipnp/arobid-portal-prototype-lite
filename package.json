@@ -16,6 +16,7 @@
     "evoucher:seed": "bun scripts/evoucher/seed.ts",
     "platform:seed": "bun scripts/platform/seed.ts",
     "platform:seed:live-exhibitors": "bun scripts/platform/seed-live-exhibitors.ts",
+    "platform:seed:seller-demo-expos": "bun scripts/platform/seed-seller-demo-expos.ts",
     "platform:seed:exhibitor-categories": "bun scripts/platform/seed-exhibitor-categories.ts",
     "notifications:seed": "bun scripts/notifications/seed.ts"
   },

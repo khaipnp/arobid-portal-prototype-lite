@@ -23,12 +23,13 @@ export default async function CustomerOrderDetailPage({ params }: Props) {
 
   return (
     <DashboardShell
-      title="Order Detail"
+      title={order.id}
       breadcrumbs={[
         { label: "Dashboard", href: "/seller" },
         { label: "Orders", href: "/seller/orders" },
         { label: id }
       ]}
+      showBackButton
     >
       <CustomerOrderDetail order={order} transactionLog={transactionLog} />
     </DashboardShell>

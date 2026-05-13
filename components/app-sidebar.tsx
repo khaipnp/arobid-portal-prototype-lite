@@ -57,7 +57,8 @@ export function AppSidebar({
   const canSwitchPortals = (user.roles ?? []).includes("sys_admin")
   const canManageSeller = (user.roles ?? []).includes("seller")
   const canUseDealRoom =
-    (user.roles ?? []).includes("seller") || (user.roles ?? []).includes("buyer")
+    (user.roles ?? []).includes("seller") ||
+    (user.roles ?? []).includes("buyer")
 
   return (
     <Sidebar collapsible="icon" {...props}>

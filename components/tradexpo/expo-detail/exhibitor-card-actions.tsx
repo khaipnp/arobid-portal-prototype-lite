@@ -1,6 +1,6 @@
 "use client"
 
-import { HeartPlusIcon, MessageCircleIcon, Share2Icon } from "lucide-react"
+import { HeartIcon, MessageCircleIcon, Share2Icon } from "lucide-react"
 import Image from "next/image"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -74,7 +74,7 @@ export function ExhibitorCardActions({
         className="flex-1 rounded-lg font-medium text-muted-foreground hover:text-foreground"
         onClick={() => toast("You added the exhibitor to your wishlist")}
       >
-        <HeartPlusIcon />
+        <HeartIcon />
         Wishlist
       </Button>
       <Button
@@ -108,11 +108,12 @@ export function ExhibitorCardActions({
               <p className="select-none font-semibold text-lg">
                 {exhibitorCompany}
               </p>
-              <img
+              <Image
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(shareUrl)}`}
                 alt={`QR code for ${exhibitorCompany}`}
                 width={180}
                 height={180}
+                unoptimized
                 className="rounded-lg"
               />
               <Button size="sm" variant="secondary" className="rounded-full">

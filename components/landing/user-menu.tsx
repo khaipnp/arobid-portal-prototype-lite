@@ -64,11 +64,11 @@ export function UserMenu({ user }: UserMenuProps) {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
-        className="w-64 px-0 py-3 rounded-2xl"
+        className="w-64 rounded-2xl px-0 py-3"
         align="end"
         forceMount
       >
-        <DropdownMenuItem asChild className="px-4 py-2.25 rounded-none gap-2">
+        <DropdownMenuItem asChild className="gap-2 rounded-none px-4 py-2.25">
           <Link href={getNotificationPath()}>
             <BellIcon strokeWidth="2" />
             <span className="font-medium">Notifications</span>
@@ -78,7 +78,7 @@ export function UserMenu({ user }: UserMenuProps) {
           <>
             <DropdownMenuItem
               asChild
-              className="px-4 py-2.25 rounded-none gap-2"
+              className="gap-2 rounded-none px-4 py-2.25"
             >
               <Link href="/seller/deal-room">
                 <MessageCircleMoreIcon strokeWidth="2" />
@@ -87,7 +87,7 @@ export function UserMenu({ user }: UserMenuProps) {
             </DropdownMenuItem>
             <DropdownMenuItem
               asChild
-              className="px-4 py-2.25 rounded-none gap-2"
+              className="gap-2 rounded-none px-4 py-2.25"
             >
               <Link href="/seller/deal-room">
                 <ListChecksIcon strokeWidth="2" />
@@ -96,7 +96,7 @@ export function UserMenu({ user }: UserMenuProps) {
             </DropdownMenuItem>
             <DropdownMenuItem
               asChild
-              className="px-4 py-2.25 rounded-none gap-2"
+              className="gap-2 rounded-none px-4 py-2.25"
             >
               <Link href="/seller/deal-room">
                 <HeartIcon strokeWidth="2" />
@@ -105,7 +105,7 @@ export function UserMenu({ user }: UserMenuProps) {
             </DropdownMenuItem>
             <DropdownMenuItem
               asChild
-              className="px-4 rounded-none py-2.25 gap-2"
+              className="gap-2 rounded-none px-4 py-2.25"
             >
               <Link href="/profile">
                 <User strokeWidth="2" />
@@ -123,7 +123,7 @@ export function UserMenu({ user }: UserMenuProps) {
             <DropdownMenuSeparator />
             <DropdownMenuLabel className="pl-4">Portal</DropdownMenuLabel>
             <DropdownMenuItem
-              className="px-4 rounded-none py-2.25 gap-2"
+              className="gap-2 rounded-none px-4 py-2.25"
               asChild
             >
               <Link href={getDashboardPath()}>
@@ -133,7 +133,7 @@ export function UserMenu({ user }: UserMenuProps) {
             </DropdownMenuItem>
 
             <DropdownMenuItem
-              className="px-4 rounded-none py-2.25 gap-2"
+              className="gap-2 rounded-none px-4 py-2.25"
               asChild
             >
               <Link href="/partner/settings">
@@ -147,7 +147,7 @@ export function UserMenu({ user }: UserMenuProps) {
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={handleLogout}
-          className="px-4 rounded-none py-2.25 gap-2"
+          className="gap-2 rounded-none px-4 py-2.25"
         >
           <span className="font-normal">Log out</span>
         </DropdownMenuItem>

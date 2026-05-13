@@ -124,7 +124,7 @@ function getClickedExpoId(event: unknown) {
 
 function EmptyChart({ label }: { label: string }) {
   return (
-    <div className="flex h-[220px] items-center justify-center rounded-md border border-dashed text-muted-foreground text-sm">
+    <div className="flex h-55 items-center justify-center rounded-md border border-dashed text-muted-foreground text-sm">
       {label}
     </div>
   )
@@ -293,7 +293,7 @@ export function PartnerDashboard({
             {metrics.statusBreakdown.length > 0 ? (
               <ChartContainer
                 config={chartConfig}
-                className="mx-auto h-[320px] max-w-[360px]"
+                className="mx-auto h-80 max-w-90"
                 initialDimension={{ width: 360, height: 320 }}
               >
                 <PieChart>
@@ -339,7 +339,7 @@ export function PartnerDashboard({
             {hasExpoMetrics ? (
               <ChartContainer
                 config={chartConfig}
-                className="h-[280px] w-full"
+                className="h-70 w-full"
                 initialDimension={{ width: 680, height: 280 }}
               >
                 <LineChart data={expoChartData} margin={{ top: 16, right: 16 }}>
@@ -428,7 +428,7 @@ export function PartnerDashboard({
             <TableBody>
               {metrics.expoMetrics.map((item) => (
                 <TableRow key={item.expoId}>
-                  <TableCell className="max-w-[280px] whitespace-normal font-medium">
+                  <TableCell className="max-w-70 whitespace-normal font-medium">
                     <Link
                       href={`/partner/expos/${item.expoId}`}
                       className="underline-offset-4 hover:underline"

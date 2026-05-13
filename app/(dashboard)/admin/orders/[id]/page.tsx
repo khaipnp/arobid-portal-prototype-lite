@@ -25,6 +25,7 @@ export default async function OrderDetailPage({ params }: Props) {
         { label: "Orders", href: "/admin/orders" },
         { label: id }
       ]}
+      showBackButton
     >
       <OrderDetail
         orderId={id}

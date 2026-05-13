@@ -1,11 +1,6 @@
 "use client"
 
-import {
-  ArrowLeftIcon,
-  CopyIcon,
-  DownloadIcon,
-  MailCheckIcon
-} from "lucide-react"
+import { CopyIcon, DownloadIcon, MailCheckIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import {
@@ -73,7 +68,7 @@ export function OrderDetail({
   initialOrder,
   initialTransactionLog
 }: OrderDetailProps) {
-  const router = useRouter()
+  const _router = useRouter()
   const [order, setOrder] = useState<Order>(() => initialOrder)
   const [log, setLog] = useState<TransactionLogEntry[]>(() =>
     [...initialTransactionLog].sort(
@@ -149,13 +144,6 @@ export function OrderDetail({
       {/* Back + header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => router.push("/admin/orders")}
-          >
-            <ArrowLeftIcon className="size-4" />
-          </Button>
           <div>
             <div className="flex items-center gap-2">
               <span className="font-mono font-semibold text-lg">

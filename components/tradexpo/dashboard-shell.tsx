@@ -67,7 +67,7 @@ export function DashboardShell({
       </header>
 
       <div className="flex flex-1 flex-col gap-4 p-4 pt-4">
-        <div className="flex gap-4 items-center">
+        <div className="flex items-center gap-4">
           {showBackButton ? <BackButton /> : null}
           <section>
             <h1 className="font-semibold text-lg leading-none">{title}</h1>
