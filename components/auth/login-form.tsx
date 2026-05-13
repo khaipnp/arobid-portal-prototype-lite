@@ -160,18 +160,20 @@ function LoginPanel() {
   const [error, setError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  async function navigateFromResponse(response: Response) {
+  async function navigateFromResponse(response: Response): Promise<boolean> {
     const payload = (await response
       .json()
       .catch(() => null)) as LoginResponse | null
 
     if (!response.ok) {
       setError(payload?.error ?? "Sign-in failed.")
-      return
+      return false
     }
 
-    router.replace(callbackUrl ?? payload?.redirectPath ?? "/seller")
+    const redirectPath = callbackUrl ?? payload?.redirectPath ?? "/seller"
+    router.replace(redirectPath)
     router.refresh()
+    return true
   }
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -184,8 +186,12 @@ function LoginPanel() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ email, password })
       })
-      await navigateFromResponse(response)
-    } finally {
+      const success = await navigateFromResponse(response)
+      if (!success) {
+        setIsSubmitting(false)
+      }
+    } catch {
+      setError("An unexpected error occurred.")
       setIsSubmitting(false)
     }
   }
@@ -199,8 +205,12 @@ function LoginPanel() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ role })
       })
-      await navigateFromResponse(response)
-    } finally {
+      const success = await navigateFromResponse(response)
+      if (!success) {
+        setIsSubmitting(false)
+      }
+    } catch {
+      setError("An unexpected error occurred.")
       setIsSubmitting(false)
     }
   }

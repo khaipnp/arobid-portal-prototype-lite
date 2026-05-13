@@ -172,10 +172,13 @@ export async function authenticateByEmailPassword(input: {
       u.name,
       u.email,
       u.is_active as user_active,
-      u.company_id
+      u.company_id,
+      array_agg(ur.role_id) filter (where ur.role_id is not null) as roles
     from auth_identities ai
     inner join users u on u.id = ai.user_id
+    left join user_roles ur on ur.user_id = u.id and ur.expo_id is null
     where lower(ai.email) = lower(${input.email.trim()})
+    group by ai.user_id, ai.password_hash, ai.is_active, u.name, u.email, u.is_active, u.company_id
     limit 1
   `) as {
     user_id: string
@@ -185,6 +188,7 @@ export async function authenticateByEmailPassword(input: {
     email: string
     user_active: boolean
     company_id: string | null
+    roles: string[] | null
   }[]
 
   const row = rows[0]
@@ -192,16 +196,9 @@ export async function authenticateByEmailPassword(input: {
   if (!row.identity_active || !row.user_active) return null
   if (!verifyPassword(input.password, row.password_hash)) return null
 
-  const roleRows = (await sql`
-    select role_id
-    from user_roles
-    where user_id = ${row.user_id}
-      and expo_id is null
-  `) as { role_id: string }[]
-
-  const roles = roleRows
-    .map((r) => r.role_id)
-    .filter((r): r is AppRole => APP_ROLES.includes(r as AppRole))
+  const roles = (row.roles || []).filter((r): r is AppRole =>
+    APP_ROLES.includes(r as AppRole)
+  )
 
   return {
     id: row.user_id,
@@ -231,36 +228,39 @@ export async function getAuthenticatedUserById(
   userId: string
 ): Promise<AuthenticatedUser | null> {
   const rows = (await sql`
-    select id, name, email, is_active, company_id
-    from users
-    where id = ${userId}
+    select
+      u.id,
+      u.name,
+      u.email,
+      u.is_active as user_active,
+      u.company_id,
+      array_agg(ur.role_id) filter (where ur.role_id is not null) as roles
+    from users u
+    left join user_roles ur on ur.user_id = u.id and ur.expo_id is null
+    where u.id = ${userId}
+    group by u.id, u.name, u.email, u.is_active, u.company_id
     limit 1
   `) as {
     id: string
     name: string
     email: string
-    is_active: boolean
+    user_active: boolean
     company_id: string | null
+    roles: string[] | null
   }[]
-  const user = rows[0]
-  if (!user?.is_active) return null
 
-  const roleRows = (await sql`
-    select role_id
-    from user_roles
-    where user_id = ${userId}
-      and expo_id is null
-  `) as { role_id: string }[]
+  const row = rows[0]
+  if (!row || !row.user_active) return null
 
-  const roles = roleRows
-    .map((r) => r.role_id)
-    .filter((r): r is AppRole => APP_ROLES.includes(r as AppRole))
+  const roles = (row.roles || []).filter((r): r is AppRole =>
+    APP_ROLES.includes(r as AppRole)
+  )
 
   return {
-    id: user.id,
-    name: user.name,
-    email: user.email,
+    id: row.id,
+    name: row.name,
+    email: row.email,
     roles,
-    companyId: user.company_id
+    companyId: row.company_id
   }
 }

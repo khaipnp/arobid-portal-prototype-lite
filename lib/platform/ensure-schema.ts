@@ -8,14 +8,7 @@ export async function ensurePlatformSchema() {
   if (platformSchemaReady) return
 
   // 1. Check if core schema is already initialized to skip basic setup
-  const coreInitialized = (await sql`
-    select exists (
-      select 1 from information_schema.tables
-      where table_name = 'platform_schema_migrations'
-    )
-  `) as { exists: boolean }[]
-
-  if (coreInitialized[0]?.exists) {
+  try {
     const migrationApplied = (await sql`
       select name from platform_schema_migrations
     `) as { name: string }[]
@@ -27,6 +20,8 @@ export async function ensurePlatformSchema() {
       platformSchemaReady = true
       return
     }
+  } catch (e) {
+    // Table might not exist yet, proceed with initialization
   }
 
   // 2. Initialize Core Tables (Individual calls to avoid NeonDbError)

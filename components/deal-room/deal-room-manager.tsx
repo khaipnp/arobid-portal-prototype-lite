@@ -34,11 +34,11 @@ import {
   HoverCardContent,
   HoverCardTrigger
 } from "@/components/ui/hover-card"
-import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Textarea } from "@/components/ui/textarea"
 import type { ChatUser, Conversation, Message } from "@/lib/deal-room/types"
 import { cn } from "@/lib/utils"
+import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group"
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const MAX_ATTACHMENTS_PER_MESSAGE = 5
@@ -590,7 +590,7 @@ export function DealRoomManager({
 
   // ── Render ──
   return (
-    <div className="flex h-[calc(100vh-0px)] overflow-hidden">
+    <div className="flex h-screen overflow-hidden">
       {/* ── Left panel: Conversation list ── */}
       <aside className="flex w-72 shrink-0 flex-col border-r bg-sidebar">
         {/* Header */}
@@ -608,15 +608,16 @@ export function DealRoomManager({
 
         {/* Search */}
         <div className="p-2">
-          <div className="relative">
-            <SearchIcon className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
-            <Input
+          <InputGroup className="h-8 rounded-full text-xs">
+            <InputGroupAddon>
+              <SearchIcon className="size-3.5" />
+            </InputGroupAddon>
+            <InputGroupInput
               placeholder="Search by name or company..."
-              className="h-8 pl-8 text-xs"
               value={inboxSearch}
               onChange={(e) => setInboxSearch(e.target.value)}
             />
-          </div>
+          </InputGroup>
           <div className="mt-2 grid grid-cols-2 gap-1 rounded-md bg-muted p-1">
             <Button
               variant={inboxFilter === "active" ? "default" : "ghost"}
