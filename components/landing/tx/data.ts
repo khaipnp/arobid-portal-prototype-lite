@@ -1,6 +1,7 @@
 export const asset = (name: string) => `/landing/${name}`
 
 export type HomeExpoCard = {
+  id: string
   title: string
   image: string | null
   status: "Live" | "Upcoming" | "Archived"
@@ -13,6 +14,7 @@ export type HomeExpoCard = {
   durationLabel: string
   countdown: string
   segment: string
+  isWishlisted?: boolean
 }
 
 export type Plan = {

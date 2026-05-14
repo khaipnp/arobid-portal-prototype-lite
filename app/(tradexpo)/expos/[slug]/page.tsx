@@ -20,6 +20,7 @@ import {
   getExpoHeroStatsByExpo,
   listExpoDetailExhibitorsByName
 } from "@/lib/tradexpo/db/platform-data"
+import { listWishlistedTargetIds } from "@/lib/wishlist/db"
 
 const VIRTUAL_LOBBY_URL_BY_EXPO_SLUG: Record<string, string> = {
   "food-farm-global-fair":
@@ -46,9 +47,10 @@ export default async function Page({
   if (!expo) notFound()
 
   const userId = await getCurrentSessionUserId()
-  const [exhibitors, heroStats] = await Promise.all([
+  const [exhibitors, heroStats, wishlistedExpoIds] = await Promise.all([
     listExpoDetailExhibitorsByName(expo.name, { userId }),
-    getExpoHeroStatsByExpo({ id: expo.id, name: expo.name })
+    getExpoHeroStatsByExpo({ id: expo.id, name: expo.name }),
+    userId ? listWishlistedTargetIds(userId, "expo") : new Set<string>()
   ])
   const bfmBroadcastItems = exhibitors
     .filter((exhibitor) => exhibitor.products.length > 0)
@@ -56,7 +58,7 @@ export default async function Page({
     .map((exhibitor) => ({
       id: `bfm-${exhibitor.id}`,
       companyName: exhibitor.company,
-      productName: exhibitor.products[0],
+      productName: exhibitor.products[0]?.name ?? "",
       ctaHref: "/bfm",
       logoUrl: exhibitor.logoUrl
     }))
@@ -67,6 +69,7 @@ export default async function Page({
       <TxHeader />
       <Breadcrumb />
       <Hero
+        expoId={expo.id}
         expoTitle={expo.name}
         thumbnailUrl={expo.thumbnailUrl}
         startDateLabel={toLongDate(expo.startDate)}
@@ -75,6 +78,8 @@ export default async function Page({
         stats={heroStats}
         bfmItems={bfmBroadcastItems}
         exhibitors={exhibitors}
+        isAuthenticated={!!userId}
+        initialIsWishlisted={wishlistedExpoIds.has(expo.id)}
       />
       <About title={expo.name} description={expo.description} />
       <Sponsors />

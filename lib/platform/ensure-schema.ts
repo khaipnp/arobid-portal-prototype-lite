@@ -16,7 +16,7 @@ export async function ensurePlatformSchema() {
 
     // If the latest migration is applied, we can assume everything before it is also applied
     // This is a fast-path for cold starts
-    if (appliedNames.has("demo_perf_indexes_v1")) {
+    if (appliedNames.has("wishlist_targets_v1")) {
       platformSchemaReady = true
       return
     }
@@ -1026,6 +1026,41 @@ export async function ensurePlatformSchema() {
     on user_wishlist_exhibitors (user_id, created_at desc)
   `
 
+  if (!appliedNames.has("wishlist_targets_v1")) {
+    await sql`
+      create table if not exists user_wishlist_items (
+        user_id text not null references users(id) on delete cascade,
+        target_type text not null check (target_type in ('expo', 'product', 'seller')),
+        target_id text not null,
+        created_at timestamptz not null default now(),
+        primary key (user_id, target_type, target_id)
+      )
+    `
+
+    await sql`
+      insert into user_wishlist_items (user_id, target_type, target_id, created_at)
+      select user_id, 'seller', registration_id, created_at
+      from user_wishlist_exhibitors
+      on conflict (user_id, target_type, target_id) do nothing
+    `
+
+    await sql`
+      create index if not exists idx_user_wishlist_items_user_created
+      on user_wishlist_items (user_id, created_at desc)
+    `
+
+    await sql`
+      create index if not exists idx_user_wishlist_items_target
+      on user_wishlist_items (target_type, target_id)
+    `
+
+    await sql`
+      insert into platform_schema_migrations (name)
+      values ('wishlist_targets_v1')
+      on conflict (name) do update set applied_at = now()
+    `
+  }
+
   await migrateExpoManagementSchema()
   await migratePartnerOrganizationSchema()
   await migrateExpoStatusSchema()
@@ -1034,7 +1069,7 @@ export async function ensurePlatformSchema() {
   // Record final migration to enable fast-path on next boot
   await sql`
     insert into platform_schema_migrations (name)
-    values ('demo_perf_indexes_v1')
+    values ('wishlist_targets_v1')
     on conflict (name) do update set applied_at = now();
   `
 

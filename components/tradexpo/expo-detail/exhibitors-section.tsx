@@ -40,8 +40,10 @@ type Props = {
 }
 
 type ChatProductContext = {
+  id: string
   image: string
   label: string
+  isWishlisted?: boolean
 } | null
 
 export function ExhibitorsSection({

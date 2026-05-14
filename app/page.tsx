@@ -10,11 +10,13 @@ import { Pricing } from "@/components/landing/tx/pricing"
 import { Sponsors } from "@/components/landing/tx/sponsors"
 import { TxFooter } from "@/components/landing/tx-footer"
 import { TxHeader } from "@/components/landing/tx-header"
+import { getCurrentSessionUserId } from "@/lib/auth/session"
 import {
   listExpoCardStats,
   listExpoCategories,
   listExpos
 } from "@/lib/tradexpo/db/platform-data"
+import { listWishlistedTargetIds } from "@/lib/wishlist/db"
 
 function toHomeExpoStatus(status: string): HomeExpoCard["status"] {
   if (status === "Live") return "Live"
@@ -63,7 +65,8 @@ function buildHomeExpoCards(
   statByExpoId: Map<
     string,
     Awaited<ReturnType<typeof listExpoCardStats>>[number]
-  >
+  >,
+  wishlistedExpoIds: Set<string>
 ): HomeExpoCard[] {
   const sortedExpos = [...expos].sort((a, b) => {
     const statusRankDiff =
@@ -97,6 +100,7 @@ function buildHomeExpoCards(
     const detailHref = `/expos/${detailSlug}`
     const href = status === "Upcoming" ? "/seller" : detailHref
     return {
+      id: expo.id,
       title: expo.name,
       image: expo.thumbnailUrl || null,
       status,
@@ -112,20 +116,30 @@ function buildHomeExpoCards(
       detailHref,
       durationLabel: formatDateRange(expo.startDate, expo.endDate),
       countdown: status === "Archived" ? "Ended" : "TBA",
-      segment: segment || "General"
+      segment: segment || "General",
+      isWishlisted: wishlistedExpoIds.has(expo.id)
     }
   })
 }
 
 export default async function Page() {
-  const [expoRows, categoryRows, stats] = await Promise.all([
+  const [expoRows, categoryRows, stats, userId] = await Promise.all([
     listExpos(),
     listExpoCategories(),
-    listExpoCardStats()
+    listExpoCardStats(),
+    getCurrentSessionUserId()
   ])
+  const wishlistedExpoIds = userId
+    ? await listWishlistedTargetIds(userId, "expo")
+    : new Set<string>()
   const categoryNameById = new Map(categoryRows.map((c) => [c.id, c.name]))
   const statByExpoId = new Map(stats.map((item) => [item.expoId, item]))
-  const expoCards = buildHomeExpoCards(expoRows, categoryNameById, statByExpoId)
+  const expoCards = buildHomeExpoCards(
+    expoRows,
+    categoryNameById,
+    statByExpoId,
+    wishlistedExpoIds
+  )
   const categories = ["All Events", ...categoryRows.map((c) => c.name)]
 
   const heroExpos = expoCards.map((card) => ({
@@ -140,7 +154,11 @@ export default async function Page() {
     <main className="min-h-screen bg-white text-[#030712] [font-family:var(--font-tight)]">
       <TxHeader />
       <Hero expos={heroExpos} />
-      <Exhibitions categories={categories} expos={expoCards} />
+      <Exhibitions
+        categories={categories}
+        expos={expoCards}
+        isAuthenticated={!!userId}
+      />
       <Introduction />
       <Pricing />
       <BoothSteps />

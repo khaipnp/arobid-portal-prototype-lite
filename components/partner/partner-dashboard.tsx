@@ -177,7 +177,7 @@ export function PartnerDashboard({
   const hasTierData = metrics.boothTierBreakdown.length > 0
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 px-4">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           title="Assigned Expos"

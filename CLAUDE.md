@@ -17,7 +17,7 @@ bun typecheck    # TypeScript type check (tsc --noEmit)
 
 Next.js 16 App Router project with shadcn/ui (radix-nova style), Tailwind CSS v4, and React 19. **Prototype only — all data is in-memory mock state, no backend.**
 
-- `app/` — App Router pages and layouts. `layout.tsx` wraps everything in `ThemeProvider` and `TooltipProvider`, applies Manrope (sans) + Geist Mono fonts via CSS variables.
+- `app/` — App Router pages and layouts. `layout.tsx` wraps everything in `TooltipProvider`, applies Google Sans + Google Sans Flex via CSS variables.
 - `components/ui/` — shadcn/ui components (add via `npx shadcn@latest add <component>`).
 - `components/tradexpo/` — Domain-specific components for the TradeXpo module.
 - `lib/tradexpo/` — Domain logic: `types.ts` (data models), `mock-data.ts` (seed state), `utils.ts` (status derivation, validation, formatting helpers).

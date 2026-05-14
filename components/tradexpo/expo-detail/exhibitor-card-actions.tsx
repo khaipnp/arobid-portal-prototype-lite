@@ -37,7 +37,7 @@ export function ExhibitorCardActions({
 
   const toggleWishlist = async () => {
     if (!isAuthenticated) {
-      toast.error("Please login to save exhibitors to your wishlist")
+      toast.error("Please login to save sellers to your wishlist")
       return
     }
 
@@ -47,13 +47,13 @@ export function ExhibitorCardActions({
     try {
       const res = await fetch(
         nextValue
-          ? "/api/wishlist/exhibitors"
-          : `/api/wishlist/exhibitors?registrationId=${encodeURIComponent(exhibitorId)}`,
+          ? "/api/wishlist"
+          : `/api/wishlist?targetType=seller&targetId=${encodeURIComponent(exhibitorId)}`,
         {
           method: nextValue ? "POST" : "DELETE",
           headers: nextValue ? { "Content-Type": "application/json" } : {},
           body: nextValue
-            ? JSON.stringify({ registrationId: exhibitorId })
+            ? JSON.stringify({ targetType: "seller", targetId: exhibitorId })
             : undefined
         }
       )
@@ -67,8 +67,8 @@ export function ExhibitorCardActions({
 
       toast.success(
         nextValue
-          ? "Exhibitor saved to your wishlist"
-          : "Exhibitor removed from your wishlist"
+          ? "Seller saved to your wishlist"
+          : "Seller removed from your wishlist"
       )
     } catch (_err) {
       setIsWishlisted(!nextValue)

@@ -18,11 +18,12 @@ import type {
   GoLIVEEventStatus,
   LiveComment,
   NotificationKind,
+  SellerBoothProduct,
   SellerBoothRegistration,
   StreamSession,
   StreamSessionStatus
 } from "@/lib/tradexpo/types"
-import { listWishlistedRegistrationIds } from "@/lib/wishlist/db"
+import { listWishlistedTargetIds } from "@/lib/wishlist/db"
 
 export type ExpoDetailExhibitor = {
   id: string
@@ -34,7 +35,7 @@ export type ExpoDetailExhibitor = {
   boothTier: string
   boothRef: string
   country: string
-  products: string[]
+  products: Array<SellerBoothProduct & { isWishlisted?: boolean }>
   isWishlisted?: boolean
 }
 
@@ -788,8 +789,11 @@ export async function listExpoDetailExhibitorsByName(
   options?: { userId?: string | null }
 ): Promise<ExpoDetailExhibitor[]> {
   const pattern = `%${expoName.trim()}%`
-  const wishlistedIds = options?.userId
-    ? await listWishlistedRegistrationIds(options.userId)
+  const wishlistedSellerIds = options?.userId
+    ? await listWishlistedTargetIds(options.userId, "seller")
+    : new Set<string>()
+  const wishlistedProductIds = options?.userId
+    ? await listWishlistedTargetIds(options.userId, "product")
     : new Set<string>()
   const rows = (await sql`
     with ranked_exhibitors as (
@@ -858,14 +862,31 @@ export async function listExpoDetailExhibitorsByName(
 
   return rows.map((row) => {
     const rawProducts = Array.isArray(row.products) ? row.products : []
-    const products = rawProducts
-      .map((item) =>
-        typeof item === "object" && item !== null && "name" in item
-          ? String((item as { name: string }).name)
-          : ""
-      )
-      .filter(Boolean)
-      .slice(0, 4)
+    const products: Array<SellerBoothProduct & { isWishlisted?: boolean }> = []
+    for (const item of rawProducts) {
+      if (
+        typeof item !== "object" ||
+        item === null ||
+        !("id" in item) ||
+        !("name" in item)
+      ) {
+        continue
+      }
+      const product = item as {
+        id: string
+        name: string
+        description?: string
+        imageUrl?: string
+      }
+      products.push({
+        id: String(product.id),
+        name: String(product.name),
+        description: product.description ? String(product.description) : "",
+        imageUrl: product.imageUrl ? String(product.imageUrl) : undefined,
+        isWishlisted: wishlistedProductIds.has(String(product.id))
+      })
+      if (products.length >= 4) break
+    }
 
     return {
       id: row.id,
@@ -878,7 +899,7 @@ export async function listExpoDetailExhibitorsByName(
       boothRef: row.booth_ref,
       country: row.country,
       products,
-      isWishlisted: wishlistedIds.has(row.id)
+      isWishlisted: wishlistedSellerIds.has(row.id)
     }
   })
 }

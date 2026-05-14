@@ -5,6 +5,7 @@ import {
   CalendarIcon,
   ExternalLinkIcon,
   HeartIcon,
+  PackageIcon,
   Trash2Icon
 } from "lucide-react"
 import Image from "next/image"
@@ -40,19 +41,32 @@ export function WishlistPageContent({
   const [items, setItems] = useState(initialItems)
   const count = items.length
   const savedExpoCount = useMemo(
-    () => new Set(items.map((item) => item.expo.id)).size,
+    () =>
+      new Set(
+        items
+          .map((item) =>
+            item.targetType === "product" ? undefined : item.expo.id
+          )
+          .filter(Boolean)
+      ).size,
     [items]
   )
+  const savedProductCount = items.filter(
+    (item) => item.targetType === "product"
+  ).length
 
-  const removeItem = async (registrationId: string) => {
+  const removeItem = async (targetType: string, targetId: string) => {
     const currentItems = items
     setItems((prev) =>
-      prev.filter((item) => item.registrationId !== registrationId)
+      prev.filter(
+        (item) =>
+          !(item.targetType === targetType && item.targetId === targetId)
+      )
     )
 
     try {
       const res = await fetch(
-        `/api/wishlist/exhibitors?registrationId=${encodeURIComponent(registrationId)}`,
+        `/api/wishlist?targetType=${encodeURIComponent(targetType)}&targetId=${encodeURIComponent(targetId)}`,
         { method: "DELETE" }
       )
       if (!res.ok) {
@@ -77,11 +91,11 @@ export function WishlistPageContent({
               <HeartIcon />
             </EmptyMedia>
             <EmptyTitle className="font-bold text-lg">
-              No Saved Exhibitors
+              No Saved Items
             </EmptyTitle>
             <EmptyDescription>
-              Save exhibitors from public Expo pages and return here to review
-              them from your workspace.
+              Save expos, products, and sellers from public Expo pages and
+              return here to review them from your workspace.
             </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
@@ -96,12 +110,12 @@ export function WishlistPageContent({
 
   return (
     <div className="grid gap-4 px-4 pb-6">
-      <div className="grid gap-3 md:grid-cols-2">
+      <div className="grid gap-3 md:grid-cols-3">
         <div className="rounded-xl border bg-card p-4">
           <p className="font-bold text-3xl">{count}</p>
-          <p className="mt-1 font-semibold text-base">Saved Exhibitors</p>
+          <p className="mt-1 font-semibold text-base">Saved Items</p>
           <p className="text-muted-foreground text-sm">
-            Companies you marked for follow-up.
+            Expos, products, and sellers marked for follow-up.
           </p>
         </div>
         <div className="rounded-xl border bg-card p-4">
@@ -111,75 +125,193 @@ export function WishlistPageContent({
             Expo events represented in your wishlist.
           </p>
         </div>
+        <div className="rounded-xl border bg-card p-4">
+          <p className="font-bold text-3xl">{savedProductCount}</p>
+          <p className="mt-1 font-semibold text-base">Saved Products</p>
+          <p className="text-muted-foreground text-sm">
+            Product opportunities saved from seller booths.
+          </p>
+        </div>
       </div>
 
       <div className="grid gap-3">
-        {items.map((item) => (
-          <article
-            key={item.registrationId}
-            className="flex flex-col gap-4 rounded-xl border bg-card p-4 md:flex-row md:items-start"
-          >
-            <div className="flex min-w-0 flex-1 gap-3">
-              <Image
-                src={item.logoUrl ?? "/landing/figma-company-logo.png"}
-                alt={item.company}
-                width={56}
-                height={56}
-                className="size-14 shrink-0 rounded-full border bg-white object-contain"
-              />
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="truncate font-semibold text-base">
-                    {item.company}
-                  </h2>
-                  <Badge variant="outline">{item.boothTier}</Badge>
+        {items.map((item) => {
+          if (item.targetType === "product") {
+            return (
+              <article
+                key={`${item.targetType}-${item.targetId}`}
+                className="flex flex-col gap-4 rounded-xl border bg-card p-4 md:flex-row md:items-start"
+              >
+                <div className="flex min-w-0 flex-1 gap-3">
+                  <Image
+                    src={
+                      item.product.imageUrl ?? "/landing/figma-product-1.png"
+                    }
+                    alt={item.product.name}
+                    width={56}
+                    height={56}
+                    className="size-14 shrink-0 rounded-lg border bg-white object-cover"
+                  />
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="truncate font-semibold text-base">
+                        {item.product.name}
+                      </h2>
+                      <Badge variant="outline">Product</Badge>
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground text-sm">
+                      <span className="inline-flex items-center gap-1">
+                        <PackageIcon className="size-3.5" />
+                        {item.seller.name}
+                      </span>
+                    </div>
+                    {item.product.description ? (
+                      <p className="mt-2 line-clamp-2 text-muted-foreground text-sm">
+                        {item.product.description}
+                      </p>
+                    ) : null}
+                  </div>
                 </div>
-                <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground text-sm">
-                  <span className="inline-flex items-center gap-1">
-                    <Building2Icon className="size-3.5" />
-                    {item.expo.name}
-                  </span>
-                  <span className="inline-flex items-center gap-1">
-                    <CalendarIcon className="size-3.5" />
-                    {formatDateRange(item.expo.startDate, item.expo.endDate)}
-                  </span>
+                <RemoveWishlistButton item={item} onRemove={removeItem} />
+              </article>
+            )
+          }
+
+          if (item.targetType === "expo") {
+            return (
+              <article
+                key={`${item.targetType}-${item.targetId}`}
+                className="flex flex-col gap-4 rounded-xl border bg-card p-4 md:flex-row md:items-start"
+              >
+                <div className="flex min-w-0 flex-1 gap-3">
+                  <Image
+                    src={item.expo.thumbnailUrl}
+                    alt={item.expo.name}
+                    width={56}
+                    height={56}
+                    className="size-14 shrink-0 rounded-lg border bg-white object-cover"
+                  />
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h2 className="truncate font-semibold text-base">
+                        {item.expo.name}
+                      </h2>
+                      <Badge variant="outline">Expo</Badge>
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground text-sm">
+                      <span className="inline-flex items-center gap-1">
+                        <CalendarIcon className="size-3.5" />
+                        {formatDateRange(
+                          item.expo.startDate,
+                          item.expo.endDate
+                        )}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-                <div className="mt-2 flex flex-wrap gap-1.5">
-                  <span className="rounded-md border px-2 py-0.5 text-xs">
-                    {item.boothRef}
-                  </span>
-                  {item.category ? (
-                    <span className="rounded-md border px-2 py-0.5 text-xs">
-                      {item.category}
+                <div className="flex shrink-0 gap-2 md:justify-end">
+                  <Button variant="outline" size="sm" asChild>
+                    <Link
+                      href={item.expo.slug ? `/expos/${item.expo.slug}` : "/"}
+                    >
+                      View Expo
+                      <ExternalLinkIcon className="size-3.5" />
+                    </Link>
+                  </Button>
+                  <RemoveWishlistButton item={item} onRemove={removeItem} />
+                </div>
+              </article>
+            )
+          }
+
+          return (
+            <article
+              key={`${item.targetType}-${item.targetId}`}
+              className="flex flex-col gap-4 rounded-xl border bg-card p-4 md:flex-row md:items-start"
+            >
+              <div className="flex min-w-0 flex-1 gap-3">
+                <Image
+                  src={item.logoUrl ?? "/landing/figma-company-logo.png"}
+                  alt={item.company}
+                  width={56}
+                  height={56}
+                  className="size-14 shrink-0 rounded-full border bg-white object-contain"
+                />
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="truncate font-semibold text-base">
+                      {item.company}
+                    </h2>
+                    <Badge variant="outline">Seller</Badge>
+                    <Badge variant="outline">{item.boothTier}</Badge>
+                  </div>
+                  <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-muted-foreground text-sm">
+                    <span className="inline-flex items-center gap-1">
+                      <Building2Icon className="size-3.5" />
+                      {item.expo.name}
                     </span>
-                  ) : null}
-                  <span className="rounded-md border px-2 py-0.5 text-xs">
-                    {item.country}
-                  </span>
+                    <span className="inline-flex items-center gap-1">
+                      <CalendarIcon className="size-3.5" />
+                      {formatDateRange(item.expo.startDate, item.expo.endDate)}
+                    </span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    <span className="rounded-md border px-2 py-0.5 text-xs">
+                      {item.boothRef}
+                    </span>
+                    {item.category ? (
+                      <span className="rounded-md border px-2 py-0.5 text-xs">
+                        {item.category}
+                      </span>
+                    ) : null}
+                    <span className="rounded-md border px-2 py-0.5 text-xs">
+                      {item.country}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="flex shrink-0 gap-2 md:justify-end">
-              <Button variant="outline" size="sm" asChild>
-                <Link href={item.expo.slug ? `/expos/${item.expo.slug}` : "/"}>
-                  View Expo
-                  <ExternalLinkIcon className="size-3.5" />
-                </Link>
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label={`Remove ${item.company} from wishlist`}
-                onClick={() => removeItem(item.registrationId)}
-              >
-                <Trash2Icon />
-              </Button>
-            </div>
-          </article>
-        ))}
+              <div className="flex shrink-0 gap-2 md:justify-end">
+                <Button variant="outline" size="sm" asChild>
+                  <Link
+                    href={item.expo.slug ? `/expos/${item.expo.slug}` : "/"}
+                  >
+                    View Expo
+                    <ExternalLinkIcon className="size-3.5" />
+                  </Link>
+                </Button>
+                <RemoveWishlistButton item={item} onRemove={removeItem} />
+              </div>
+            </article>
+          )
+        })}
       </div>
     </div>
+  )
+}
+
+function RemoveWishlistButton({
+  item,
+  onRemove
+}: {
+  item: WishlistItem
+  onRemove: (targetType: string, targetId: string) => void
+}) {
+  const label =
+    item.targetType === "product"
+      ? item.product.name
+      : item.targetType === "expo"
+        ? item.expo.name
+        : item.company
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      aria-label={`Remove ${label} from wishlist`}
+      onClick={() => onRemove(item.targetType, item.targetId)}
+    >
+      <Trash2Icon />
+    </Button>
   )
 }

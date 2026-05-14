@@ -1,15 +1,19 @@
 "use client"
 
-import { MessageCircleIcon, StarIcon } from "lucide-react"
+import { HeartIcon, MessageCircleIcon, StarIcon } from "lucide-react"
 import Image from "next/image"
 import { useState } from "react"
+import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { cn } from "@/lib/utils"
 import { ExhibitorRfqDialog } from "./exhibitor-rfq-dialog"
 
 type ProductItem = {
+  id: string
   image: string
   label: string
+  isWishlisted?: boolean
 }
 
 type ExhibitorProductDetailDialogProps = {
@@ -18,6 +22,7 @@ type ExhibitorProductDetailDialogProps = {
   selectedProduct: ProductItem | null
   onSelectedProductChange: (product: ProductItem | null) => void
   onChatNow?: (product: ProductItem) => void
+  isAuthenticated?: boolean
 }
 
 export function ExhibitorProductDetailDialog({
@@ -25,9 +30,19 @@ export function ExhibitorProductDetailDialog({
   products,
   selectedProduct,
   onSelectedProductChange,
-  onChatNow
+  onChatNow,
+  isAuthenticated = false
 }: ExhibitorProductDetailDialogProps) {
   const [isRfqDialogOpen, setIsRfqDialogOpen] = useState(false)
+  const [wishlistedProductIds, setWishlistedProductIds] = useState(
+    () =>
+      new Set(
+        products
+          .filter((product) => product.isWishlisted)
+          .map((product) => product.id)
+      )
+  )
+  const [isWishlistPending, setIsWishlistPending] = useState(false)
 
   const priceRanges = [
     { range: "100 - 499 pieces", price: "VND 759,005", featured: true },
@@ -45,6 +60,61 @@ export function ExhibitorProductDetailDialog({
 
   if (!selectedProduct) {
     return null
+  }
+
+  const isWishlisted = wishlistedProductIds.has(selectedProduct.id)
+
+  const toggleProductWishlist = async () => {
+    if (!isAuthenticated) {
+      toast.error("Please login to save products to your wishlist")
+      return
+    }
+
+    const nextValue = !isWishlisted
+    const nextIds = new Set(wishlistedProductIds)
+    if (nextValue) {
+      nextIds.add(selectedProduct.id)
+    } else {
+      nextIds.delete(selectedProduct.id)
+    }
+    setWishlistedProductIds(nextIds)
+    setIsWishlistPending(true)
+
+    try {
+      const res = await fetch(
+        nextValue
+          ? "/api/wishlist"
+          : `/api/wishlist?targetType=product&targetId=${encodeURIComponent(selectedProduct.id)}`,
+        {
+          method: nextValue ? "POST" : "DELETE",
+          headers: nextValue ? { "Content-Type": "application/json" } : {},
+          body: nextValue
+            ? JSON.stringify({
+                targetType: "product",
+                targetId: selectedProduct.id
+              })
+            : undefined
+        }
+      )
+
+      if (!res.ok) {
+        setWishlistedProductIds(wishlistedProductIds)
+        const payload = await res.json().catch(() => null)
+        toast.error(payload?.error ?? "Could not update wishlist")
+        return
+      }
+
+      toast.success(
+        nextValue
+          ? "Product saved to your wishlist"
+          : "Product removed from your wishlist"
+      )
+    } catch (_err) {
+      setWishlistedProductIds(wishlistedProductIds)
+      toast.error("Could not update wishlist")
+    } finally {
+      setIsWishlistPending(false)
+    }
   }
 
   return (
@@ -86,9 +156,30 @@ export function ExhibitorProductDetailDialog({
                   {exhibitorCompany}
                 </span>
               </p>
-              <h2 className="pr-8 font-semibold text-lg leading-7 sm:text-xl">
-                {selectedProduct.label}
-              </h2>
+              <div className="flex items-start gap-2 pr-8">
+                <h2 className="min-w-0 flex-1 font-semibold text-lg leading-7 sm:text-xl">
+                  {selectedProduct.label}
+                </h2>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className={cn(
+                    "rounded-full",
+                    isWishlisted && "text-rose-600 hover:text-rose-700"
+                  )}
+                  disabled={isWishlistPending}
+                  aria-pressed={isWishlisted}
+                  aria-label={
+                    isWishlisted
+                      ? "Remove product from wishlist"
+                      : "Save product to wishlist"
+                  }
+                  onClick={toggleProductWishlist}
+                >
+                  <HeartIcon className={cn(isWishlisted && "fill-current")} />
+                </Button>
+              </div>
               <div className="flex items-center gap-2 text-[#6b7280] text-xs">
                 <div className="flex items-center gap-0.5 text-yellow-500">
                   {["r1", "r2", "r3", "r4", "r5"].map((ratingKey) => (

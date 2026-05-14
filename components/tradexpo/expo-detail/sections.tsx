@@ -5,6 +5,7 @@ import {
   BoxIcon,
   CheckIcon,
   ChevronRightIcon,
+  HeartIcon,
   HomeIcon,
   RadioIcon,
   SendIcon
@@ -13,6 +14,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useState } from "react"
+import { toast } from "sonner"
 import type { BFMBroadcastItem } from "@/components/tradexpo/expo-detail/broadcast-bfm"
 import { Button } from "@/components/ui/button"
 import { getAssetUrl } from "@/lib/image-utils"
@@ -54,6 +56,7 @@ export function Breadcrumb() {
 }
 
 export function Hero({
+  expoId,
   expoTitle = "Vietnam International Furniture Manufacturing & Wood Expo (VIFMW) #1",
   startDateLabel = "April 15, 2026",
   endDateLabel = "April 17, 2026",
@@ -61,8 +64,11 @@ export function Hero({
   virtualLobbyUrl,
   stats,
   bfmItems,
-  exhibitors = []
+  exhibitors = [],
+  isAuthenticated = false,
+  initialIsWishlisted = false
 }: {
+  expoId: string
   expoTitle?: string
   startDateLabel?: string
   endDateLabel?: string
@@ -70,6 +76,8 @@ export function Hero({
   virtualLobbyUrl?: string
   bfmItems?: BFMBroadcastItem[]
   exhibitors?: ExpoDetailExhibitor[]
+  isAuthenticated?: boolean
+  initialIsWishlisted?: boolean
   stats?: {
     exhibitors: number
     visitors: number
@@ -77,12 +85,57 @@ export function Hero({
     rfqs: number
   }
 }) {
+  const [isWishlisted, setIsWishlisted] = useState(initialIsWishlisted)
+  const [isWishlistPending, setIsWishlistPending] = useState(false)
   const heroStats: Array<[string, string]> = [
     [formatHeroStat(stats?.exhibitors ?? 0), "Exhibitors"],
     [formatHeroStat(stats?.visitors ?? 0), "Visitors"],
     [formatHeroStat(stats?.products ?? 0), "Products"],
     [formatHeroStat(stats?.rfqs ?? 0), "RFQs"]
   ]
+
+  const toggleWishlist = async () => {
+    if (!isAuthenticated) {
+      toast.error("Please login to save expos to your wishlist")
+      return
+    }
+
+    const nextValue = !isWishlisted
+    setIsWishlisted(nextValue)
+    setIsWishlistPending(true)
+    try {
+      const res = await fetch(
+        nextValue
+          ? "/api/wishlist"
+          : `/api/wishlist?targetType=expo&targetId=${encodeURIComponent(expoId)}`,
+        {
+          method: nextValue ? "POST" : "DELETE",
+          headers: nextValue ? { "Content-Type": "application/json" } : {},
+          body: nextValue
+            ? JSON.stringify({ targetType: "expo", targetId: expoId })
+            : undefined
+        }
+      )
+
+      if (!res.ok) {
+        setIsWishlisted(!nextValue)
+        const payload = await res.json().catch(() => null)
+        toast.error(payload?.error ?? "Could not update wishlist")
+        return
+      }
+
+      toast.success(
+        nextValue
+          ? "Expo saved to your wishlist"
+          : "Expo removed from your wishlist"
+      )
+    } catch (_err) {
+      setIsWishlisted(!nextValue)
+      toast.error("Could not update wishlist")
+    } finally {
+      setIsWishlistPending(false)
+    }
+  }
 
   return (
     <section className="bg-linear-to-b from-white via-25% via-[#ffe0d2] to-white pb-0">
@@ -152,6 +205,17 @@ export function Hero({
                 Join as Exhibitor
               </Button>
             </Link>
+            <Button
+              type="button"
+              variant="secondary"
+              size="lg"
+              disabled={isWishlistPending}
+              aria-pressed={isWishlisted}
+              onClick={toggleWishlist}
+            >
+              <HeartIcon className={cn(isWishlisted && "fill-current")} />
+              {isWishlisted ? "Saved" : "Save Expo"}
+            </Button>
           </div>
           <div className="mt-9 grid max-w-155 grid-cols-2 gap-y-4 divide-white/20 md:grid-cols-4 md:divide-x">
             {heroStats.map(([value, label]) => (
