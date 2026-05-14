@@ -10,14 +10,15 @@ export async function TxHeader() {
   const user = userId ? await getAuthenticatedUserById(userId) : null
 
   return (
-    <header className="sticky top-0 z-50 border-black/5 border-b bg-white/95 backdrop-blur">
-      <section className="container mx-auto flex h-16 items-center gap-8">
+    <header className="sticky top-0 z-50 border-black/5 border-b bg-white/95 backdrop-blur h-16">
+      <section className="container mx-auto h-full flex items-center gap-8">
         <Link href="/" aria-label="Arobid TradeXpo">
           <Image
             src="/landing/logo.svg"
-            alt="Arobid TradeXpo logo"
-            width={156}
-            height={40}
+            alt="Arobid logo"
+            width={1000}
+            height={1000}
+            className="h-10 w-fit"
           />
         </Link>
         <nav className="hidden flex-1 items-center gap-8 font-medium text-sm md:flex">

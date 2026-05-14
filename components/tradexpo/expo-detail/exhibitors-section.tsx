@@ -169,7 +169,7 @@ export function ExhibitorsSection({
             </InputGroup>
 
             <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger className="w-full rounded-full bg-white text-sm md:w-44">
+              <SelectTrigger className="w-full rounded-full bg-white text-sm md:w-xs">
                 <SelectValue placeholder="All category" />
               </SelectTrigger>
               <SelectContent>
