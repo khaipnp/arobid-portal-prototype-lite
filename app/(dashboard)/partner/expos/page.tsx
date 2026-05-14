@@ -1,7 +1,7 @@
-import { PartnerExpoList } from "@/components/partner/partner-expo-list"
+import { PartnerExpoPrograms } from "@/components/partner/partner-expo-programs"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import { requireRole } from "@/lib/auth/rbac"
-import { listPartnerAssignedExpos } from "@/lib/partner/db"
+import { getPartnerExpoProgramsWorkspace } from "@/lib/partner/db"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 
 export const dynamic = "force-dynamic"
@@ -9,18 +9,18 @@ export const dynamic = "force-dynamic"
 export default async function PartnerExposPage() {
   await ensurePlatformSchema()
   const userId = await requireRole("partner")
-  const assignedExpos = await listPartnerAssignedExpos(userId)
+  const workspace = await getPartnerExpoProgramsWorkspace(userId)
 
   return (
     <DashboardShell
-      title="My Expos"
-      description="Manage your expo events, GoLIVE sessions, and exhibitors."
+      title="Expo Programs"
+      description="Manage assigned co-host, turnkey, and bulk booking expo programs."
       breadcrumbs={[
-        { label: "Dashboard", href: "/partner" },
-        { label: "My Expos" }
+        { label: "Overview", href: "/partner" },
+        { label: "Expo Programs" }
       ]}
     >
-      <PartnerExpoList assignedExpos={assignedExpos} />
+      <PartnerExpoPrograms workspace={workspace} />
     </DashboardShell>
   )
 }

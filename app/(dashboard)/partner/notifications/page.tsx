@@ -5,9 +5,9 @@ export default function PartnerNotificationsPage() {
   return (
     <DashboardShell
       title="Notifications"
-      description="Updates and alerts for your expo management."
+      description="Updates and alerts for partner portal operations."
       breadcrumbs={[
-        { label: "Dashboard", href: "/partner" },
+        { label: "Overview", href: "/partner" },
         { label: "Notifications" }
       ]}
     >

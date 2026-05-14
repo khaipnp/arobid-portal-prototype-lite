@@ -2,6 +2,7 @@ import { sql } from "@/lib/db/neon"
 import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
 let platformSchemaReady = false
+const LATEST_PLATFORM_MIGRATION = "plan_subscriptions_packages_v1"
 
 /** Creates platform tables (expos, orders, chat, streaming) for Neon. Idempotent. */
 export async function ensurePlatformSchema() {
@@ -14,9 +15,8 @@ export async function ensurePlatformSchema() {
     `) as { name: string }[]
     const appliedNames = new Set(migrationApplied.map((m) => m.name))
 
-    // If the latest migration is applied, we can assume everything before it is also applied
-    // This is a fast-path for cold starts
-    if (appliedNames.has("wishlist_targets_v1")) {
+    // If the latest migration is applied, we can assume everything before it is also applied.
+    if (appliedNames.has(LATEST_PLATFORM_MIGRATION)) {
       platformSchemaReady = true
       return
     }
@@ -293,6 +293,17 @@ export async function ensurePlatformSchema() {
       updated_at timestamptz not null,
       updated_by text not null
     )
+  `
+  await sql`
+    insert into platform_payment_config (
+      id,
+      vnpay_enabled,
+      bank_transfer_enabled,
+      updated_at,
+      updated_by
+    )
+    values ('default', true, true, now(), 'system')
+    on conflict (id) do nothing
   `
 
   await sql`
@@ -1066,10 +1077,15 @@ export async function ensurePlatformSchema() {
   await migrateExpoStatusSchema()
   await createDemoPerformanceIndexes()
 
-  // Record final migration to enable fast-path on next boot
+  // Record final migrations to enable fast-path on next boot.
   await sql`
     insert into platform_schema_migrations (name)
     values ('wishlist_targets_v1')
+    on conflict (name) do update set applied_at = now();
+  `
+  await sql`
+    insert into platform_schema_migrations (name)
+    values (${LATEST_PLATFORM_MIGRATION})
     on conflict (name) do update set applied_at = now();
   `
 
@@ -1162,6 +1178,7 @@ async function migratePartnerOrganizationSchema() {
       id text primary key,
       name text not null,
       model text not null default 'co_host',
+      partner_type text not null default 'expo_partner',
       status text not null default 'active',
       primary_user_id text references users(id) on delete set null,
       branding jsonb not null default '{}'::jsonb,
@@ -1171,11 +1188,25 @@ async function migratePartnerOrganizationSchema() {
     )
   `
   await sql`
+    alter table partner_organizations
+    add column if not exists partner_type text not null default 'expo_partner'
+  `
+  await sql`
     do $$
     begin
       alter table partner_organizations
       add constraint partner_organizations_model_ck
       check (model in ('co_host', 'turnkey', 'tenant'));
+    exception
+      when duplicate_object then null;
+    end $$;
+  `
+  await sql`
+    do $$
+    begin
+      alter table partner_organizations
+      add constraint partner_organizations_partner_type_ck
+      check (partner_type in ('strategic_partner', 'expo_partner', 'distribution_partner', 'alliance_partner', 'government_program_partner'));
     exception
       when duplicate_object then null;
     end $$;
@@ -1204,11 +1235,22 @@ async function migratePartnerOrganizationSchema() {
   await sql`
     do $$
     begin
+      alter table partner_memberships drop constraint if exists partner_memberships_role_ck;
       alter table partner_memberships
       add constraint partner_memberships_role_ck
-      check (role in ('primary_representative', 'admin', 'operator', 'analyst'));
-    exception
-      when duplicate_object then null;
+      check (role in (
+        'primary_representative',
+        'admin',
+        'operator',
+        'analyst',
+        'partner_owner',
+        'partner_admin',
+        'program_manager',
+        'business_manager',
+        'operations',
+        'finance',
+        'viewer'
+      ));
     end $$;
   `
   await sql`
@@ -1252,10 +1294,305 @@ async function migratePartnerOrganizationSchema() {
   `
 
   await sql`
+    create table if not exists partner_turnkey_expo_requests (
+      id text primary key,
+      partner_org_id text not null references partner_organizations(id) on delete cascade,
+      title text not null,
+      industry text not null default '',
+      target_start_date date,
+      expected_enterprises int not null default 0,
+      requested_booths int not null default 0,
+      status text not null default 'submitted',
+      notes text not null default '',
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    do $$
+    begin
+      alter table partner_turnkey_expo_requests
+      add constraint partner_turnkey_expo_requests_status_ck
+      check (status in ('draft', 'submitted', 'in_review', 'approved', 'rejected', 'converted'));
+    exception
+      when duplicate_object then null;
+    end $$;
+  `
+  await sql`
+    create index if not exists idx_partner_turnkey_requests_org
+    on partner_turnkey_expo_requests (partner_org_id, created_at desc)
+  `
+
+  await sql`
+    create table if not exists partner_enterprise_members (
+      id text primary key,
+      partner_org_id text not null references partner_organizations(id) on delete cascade,
+      enterprise_id text references companies(id) on delete set null,
+      enterprise_name text not null,
+      contact_email text,
+      activation_status text not null default 'invited',
+      expo_participation_count int not null default 0,
+      rfq_generated_count int not null default 0,
+      trade_signal_count int not null default 0,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    do $$
+    begin
+      alter table partner_enterprise_members
+      add constraint partner_enterprise_members_activation_status_ck
+      check (activation_status in ('invited', 'registered', 'profile_completed', 'expo_activated', 'rfq_generated'));
+    exception
+      when duplicate_object then null;
+    end $$;
+  `
+  await sql`
+    create index if not exists idx_partner_enterprise_members_org
+    on partner_enterprise_members (partner_org_id, created_at desc)
+  `
+
+  await sql`
+    create table if not exists partner_quotas (
+      id text primary key,
+      partner_org_id text not null references partner_organizations(id) on delete cascade,
+      quota_type text not null,
+      label text not null,
+      total_quantity int not null default 0,
+      allocated_quantity int not null default 0,
+      consumed_quantity int not null default 0,
+      metadata jsonb not null default '{}'::jsonb,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    do $$
+    begin
+      alter table partner_quotas
+      add constraint partner_quotas_type_ck
+      check (quota_type in ('booth_credits', 'expo_program_quota', 'bulk_booth_inventory'));
+    exception
+      when duplicate_object then null;
+    end $$;
+  `
+  await sql`
+    create index if not exists idx_partner_quotas_org
+    on partner_quotas (partner_org_id, quota_type)
+  `
+
+  await sql`
+    create table if not exists partner_quota_allocations (
+      id text primary key,
+      partner_org_id text not null references partner_organizations(id) on delete cascade,
+      quota_id text not null references partner_quotas(id) on delete cascade,
+      enterprise_member_id text not null references partner_enterprise_members(id) on delete cascade,
+      allocated_quantity int not null default 0,
+      consumed_quantity int not null default 0,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now(),
+      unique (quota_id, enterprise_member_id)
+    )
+  `
+  await sql`
+    create index if not exists idx_partner_quota_allocations_member
+    on partner_quota_allocations (enterprise_member_id)
+  `
+
+  await sql`
+    create table if not exists partner_trade_credit_wallets (
+      partner_org_id text primary key references partner_organizations(id) on delete cascade,
+      balance numeric(15, 2) not null default 0,
+      allocated numeric(15, 2) not null default 0,
+      consumed numeric(15, 2) not null default 0,
+      updated_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    create table if not exists partner_trade_credit_ledger (
+      id text primary key,
+      partner_org_id text not null references partner_organizations(id) on delete cascade,
+      entry_type text not null,
+      amount numeric(15, 2) not null,
+      enterprise_member_id text references partner_enterprise_members(id) on delete set null,
+      reference_type text,
+      reference_id text,
+      note text,
+      created_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    create index if not exists idx_partner_trade_credit_ledger_org
+    on partner_trade_credit_ledger (partner_org_id, created_at desc)
+  `
+
+  await sql`
+    create table if not exists partner_invite_campaigns (
+      id text primary key,
+      partner_org_id text not null references partner_organizations(id) on delete cascade,
+      name text not null,
+      invite_code text not null unique,
+      quota_id text references partner_quotas(id) on delete set null,
+      status text not null default 'draft',
+      claimed_count int not null default 0,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    do $$
+    begin
+      alter table partner_invite_campaigns
+      add constraint partner_invite_campaigns_status_ck
+      check (status in ('draft', 'active', 'paused', 'ended'));
+    exception
+      when duplicate_object then null;
+    end $$;
+  `
+
+  await sql`
+    create table if not exists partner_service_bundles (
+      id text primary key,
+      partner_org_id text not null references partner_organizations(id) on delete cascade,
+      name text not null,
+      description text not null default '',
+      partner_service_price numeric(15, 2) not null default 0,
+      arobid_service_price numeric(15, 2) not null default 0,
+      discount_amount numeric(15, 2) not null default 0,
+      partner_share_percent numeric(5, 2) not null default 0,
+      status text not null default 'draft',
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    do $$
+    begin
+      alter table partner_service_bundles
+      add constraint partner_service_bundles_status_ck
+      check (status in ('draft', 'published', 'archived'));
+    exception
+      when duplicate_object then null;
+    end $$;
+  `
+
+  await sql`
+    create table if not exists partner_revenue_events (
+      id text primary key,
+      partner_org_id text not null references partner_organizations(id) on delete cascade,
+      source_type text not null,
+      source_id text,
+      gross_amount numeric(15, 2) not null default 0,
+      partner_amount numeric(15, 2) not null default 0,
+      arobid_amount numeric(15, 2) not null default 0,
+      status text not null default 'recorded',
+      created_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    create table if not exists partner_settlements (
+      id text primary key,
+      partner_org_id text not null references partner_organizations(id) on delete cascade,
+      cycle_month text not null,
+      gross_amount numeric(15, 2) not null default 0,
+      partner_amount numeric(15, 2) not null default 0,
+      arobid_amount numeric(15, 2) not null default 0,
+      status text not null default 'pending',
+      created_at timestamptz not null default now(),
+      settled_at timestamptz
+    )
+  `
+  await sql`
+    alter table partner_settlements
+    add column if not exists arobid_amount numeric(15, 2) not null default 0
+  `
+  await sql`
+    do $$
+    begin
+      alter table partner_settlements
+      add constraint partner_settlements_status_ck
+      check (status in ('pending', 'settled', 'canceled'));
+    exception
+      when duplicate_object then null;
+    end $$;
+  `
+  await sql`
+    create unique index if not exists idx_partner_settlements_unique_cycle
+    on partner_settlements (partner_org_id, cycle_month)
+  `
+  await sql`
+    create index if not exists idx_partner_settlements_org
+    on partner_settlements (partner_org_id, cycle_month desc)
+  `
+
+  await migratePlanSubscriptionsSchema()
+  await sql`
+    insert into platform_schema_migrations (name)
+    values ('plan_subscriptions_packages_v1')
+    on conflict (name) do update set applied_at = now()
+  `
+
+  await sql`
+    create table if not exists partner_message_threads (
+      id text primary key,
+      partner_org_id text not null references partner_organizations(id) on delete cascade,
+      context_type text not null,
+      context_id text not null,
+      subject text not null,
+      participant_label text not null default '',
+      status text not null default 'open',
+      created_by_user_id text references users(id) on delete set null,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    do $$
+    begin
+      alter table partner_message_threads
+      add constraint partner_message_threads_context_type_ck
+      check (context_type in ('service_inquiry', 'bundle_purchase', 'deal_support', 'expo_participation'));
+    exception
+      when duplicate_object then null;
+    end $$;
+  `
+  await sql`
+    do $$
+    begin
+      alter table partner_message_threads
+      add constraint partner_message_threads_status_ck
+      check (status in ('open', 'closed'));
+    exception
+      when duplicate_object then null;
+    end $$;
+  `
+  await sql`
+    create index if not exists idx_partner_message_threads_org
+    on partner_message_threads (partner_org_id, updated_at desc)
+  `
+
+  await sql`
+    create table if not exists partner_thread_messages (
+      id text primary key,
+      thread_id text not null references partner_message_threads(id) on delete cascade,
+      sender_user_id text references users(id) on delete set null,
+      sender_label text not null,
+      body text not null,
+      created_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    create index if not exists idx_partner_thread_messages_thread
+    on partner_thread_messages (thread_id, created_at asc)
+  `
+
+  await sql`
     insert into partner_organizations (
       id,
       name,
       model,
+      partner_type,
       status,
       primary_user_id,
       created_at,
@@ -1265,6 +1602,7 @@ async function migratePartnerOrganizationSchema() {
       'partner-org-' || encode(sha256(e.owner_user_id::bytea), 'hex'),
       coalesce(nullif(u.name, ''), e.owner_email),
       'co_host',
+      'expo_partner',
       'active',
       e.owner_user_id,
       now(),
@@ -1275,6 +1613,7 @@ async function migratePartnerOrganizationSchema() {
     on conflict (id) do update
     set
       name = excluded.name,
+      partner_type = excluded.partner_type,
       primary_user_id = excluded.primary_user_id,
       updated_at = now()
   `
@@ -1309,6 +1648,118 @@ async function migratePartnerOrganizationSchema() {
     inner join users u on u.id = e.owner_user_id
     where e.owner_user_id is not null
     on conflict (partner_org_id, expo_id) do nothing
+  `
+}
+
+async function migratePlanSubscriptionsSchema() {
+  await sql`
+    create table if not exists plans (
+      id text primary key,
+      code text not null unique,
+      name text not null,
+      target_type text not null,
+      tier_rank int not null default 1,
+      is_active boolean not null default true,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    do $$
+    begin
+      alter table plans
+      add constraint plans_target_type_ck
+      check (target_type in ('ORGANIZATION', 'EXPO'));
+    exception
+      when duplicate_object then null;
+    end $$;
+  `
+  await sql`
+    create table if not exists packages (
+      id text primary key,
+      code text not null unique,
+      name text not null,
+      description text,
+      price numeric(15, 2) not null default 0,
+      price_unit text not null default 'VND',
+      image_url text,
+      is_public boolean not null default false,
+      is_active boolean not null default true,
+      created_by text not null references users(id) on delete restrict,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    alter table packages add column if not exists price numeric(15, 2) not null default 0
+  `
+  await sql`
+    alter table packages add column if not exists price_unit text not null default 'VND'
+  `
+  await sql`
+    alter table packages add column if not exists image_url text
+  `
+  await sql`
+    alter table packages add column if not exists is_public boolean not null default false
+  `
+  await sql`
+    create table if not exists package_plans (
+      id text primary key,
+      package_id text not null references packages(id) on delete cascade,
+      plan_id text not null references plans(id) on delete restrict,
+      role_code text not null references roles(id) on delete restrict,
+      validity_type text not null,
+      duration_months int,
+      expo_id text references expos(id) on delete restrict,
+      created_at timestamptz not null default now(),
+      unique (package_id, plan_id, role_code)
+    )
+  `
+  await sql`
+    do $$
+    begin
+      alter table package_plans
+      add constraint package_plans_validity_type_ck
+      check (validity_type in ('DURATION', 'EVENT_BOUND'));
+    exception
+      when duplicate_object then null;
+    end $$;
+  `
+  await sql`
+    do $$
+    begin
+      alter table package_plans
+      add constraint package_plans_validity_value_ck
+      check (
+        (validity_type = 'DURATION' and duration_months is not null and duration_months > 0 and expo_id is null)
+        or
+        (validity_type = 'EVENT_BOUND' and expo_id is not null and duration_months is null)
+      );
+    exception
+      when duplicate_object then null;
+    end $$;
+  `
+  await sql`
+    create index if not exists idx_package_plans_package
+    on package_plans (package_id)
+  `
+  await sql`
+    create index if not exists idx_package_plans_plan
+    on package_plans (plan_id)
+  `
+  await sql`
+    insert into plans (id, code, name, target_type, tier_rank)
+    values
+      ('plan-b2b-pro', 'b2b_pro', 'B2B Pro', 'ORGANIZATION', 1),
+      ('plan-b2b-enterprise', 'b2b_enterprise', 'B2B Enterprise', 'ORGANIZATION', 2),
+      ('plan-tx-premium', 'tx_premium', 'TradeXpo Premium', 'EXPO', 2)
+    on conflict (id) do update
+    set
+      code = excluded.code,
+      name = excluded.name,
+      target_type = excluded.target_type,
+      tier_rank = excluded.tier_rank,
+      updated_at = now()
   `
 }
 

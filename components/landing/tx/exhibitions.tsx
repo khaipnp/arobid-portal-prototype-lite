@@ -30,7 +30,7 @@ export function Exhibitions({
   isAuthenticated = false
 }: ExhibitionsProps) {
   return (
-    <section id="shows" className="bg-white px-5 py-16 md:px-20">
+    <section id="shows" className="bg-white container mx-auto py-16">
       <h2 className="text-center font-semibold text-3xl leading-10">
         Explore Industry Shows
       </h2>
@@ -51,7 +51,7 @@ export function Exhibitions({
           </button>
         ))}
       </div>
-      <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {expos.map((expo) => (
           <ExpoCard
             key={expo.id}

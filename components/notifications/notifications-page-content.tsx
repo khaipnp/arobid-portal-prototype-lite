@@ -171,7 +171,7 @@ export function NotificationsPageContent() {
   }, [hasUnread, isMarkAllBusy, refreshListAndCount])
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 px-4">
       <div className="flex flex-wrap items-center justify-end gap-2">
         <Button
           type="button"

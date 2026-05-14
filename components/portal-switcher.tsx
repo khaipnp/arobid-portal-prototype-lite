@@ -91,7 +91,7 @@ export function PortalSwitcher({
       <SidebarMenuItem>
         {!canSwitchPortals ? (
           <SidebarMenuButton size="lg" className="cursor-default">
-            <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+            <div className="flex aspect-square size-8 items-center justify-center rounded-xl bg-legend text-sidebar-primary-foreground">
               {activePortal.logo}
             </div>
             <div className="grid flex-1 text-left text-sm leading-tight">
@@ -108,7 +108,7 @@ export function PortalSwitcher({
                     size="lg"
                     className="cursor-help data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                   >
-                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                    <div className="flex aspect-square size-8 items-center justify-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground">
                       {activePortal.logo}
                     </div>
                     <div className="grid flex-1 text-left text-sm leading-tight">

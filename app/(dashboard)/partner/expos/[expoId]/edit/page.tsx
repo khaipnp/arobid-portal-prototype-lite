@@ -49,8 +49,8 @@ export default async function PartnerEditExpoPage({
       title={`Edit: ${expo.name}`}
       description="Update expo information while it is still in Draft."
       breadcrumbs={[
-        { label: "Dashboard", href: "/partner" },
-        { label: "My Expos", href: "/partner/expos" },
+        { label: "Overview", href: "/partner" },
+        { label: "Expo Programs", href: "/partner/expos" },
         { label: expo.name, href: `/partner/expos/${expoId}` },
         { label: "Edit" }
       ]}

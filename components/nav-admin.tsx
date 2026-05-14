@@ -7,6 +7,7 @@ import {
   LayoutPanelTopIcon,
   LayoutTemplateIcon,
   MonitorPlayIcon,
+  PackageCheckIcon,
   PieChartIcon,
   ReceiptIcon,
   ShapesIcon,
@@ -76,6 +77,11 @@ const servicesLinks = [
     name: "eVoucher",
     url: "/admin/evoucher",
     icon: <TicketIcon />
+  },
+  {
+    name: "Plan Packages",
+    url: "/admin/plan-subscriptions/packages",
+    icon: <PackageCheckIcon />
   },
   {
     name: "Payment Management",
