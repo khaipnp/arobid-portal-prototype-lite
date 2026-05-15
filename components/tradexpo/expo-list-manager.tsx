@@ -294,34 +294,32 @@ export function ExpoListManager({
   }, [confirmAction])
 
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-4 px-4">
       <section>
-        <div className="grid gap-3">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <Button asChild className="w-fit">
-              <Link href="/admin/tradexpo/expos/new">Create new</Link>
-            </Button>
-          </div>
-          <div className="flex flex-col gap-3 md:flex-row md:items-center">
-            <InputGroup className="max-w-xs">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex w-full flex-col gap-3 md:flex-row md:items-center">
+            <InputGroup className="max-w-xs rounded-full">
               <InputGroupInput
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 placeholder="Search by expo name or owner email…"
               />
-              <InputGroupAddon>
+              <InputGroupAddon align="inline-start">
                 <SearchIcon />
               </InputGroupAddon>
+
               {searchInput && (
-                <InputGroupButton
-                  size="icon-xs"
-                  className="rounded-full"
-                  variant="ghost"
-                  onClick={() => setSearchInput("")}
-                >
-                  <XIcon />
-                  <span className="sr-only">Clear search</span>
-                </InputGroupButton>
+                <InputGroupAddon align="inline-end">
+                  <InputGroupButton
+                    size="icon-xs"
+                    className="rounded-full"
+                    variant="secondary"
+                    onClick={() => setSearchInput("")}
+                  >
+                    <XIcon />
+                    <span className="sr-only">Clear search</span>
+                  </InputGroupButton>
+                </InputGroupAddon>
               )}
             </InputGroup>
             <Select
@@ -331,7 +329,7 @@ export function ExpoListManager({
                 setPage(1)
               }}
             >
-              <SelectTrigger className="w-44">
+              <SelectTrigger className="w-44 rounded-full">
                 <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
               <SelectContent>
@@ -348,7 +346,7 @@ export function ExpoListManager({
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
-                  className="w-44 justify-between rounded-lg font-normal"
+                  className="w-44 justify-between rounded-full font-normal"
                 >
                   {categoryFilter.length > 0
                     ? `${categoryFilter.length} categor${categoryFilter.length === 1 ? "y" : "ies"}`
@@ -390,31 +388,33 @@ export function ExpoListManager({
                 )}
               </DropdownMenuContent>
             </DropdownMenu>
-            <div className="flex flex-wrap items-center gap-2 text-sm">
-              <div className="flex items-center gap-2">
-                <DateRangePicker
-                  value={dateRangeFilter}
-                  onChange={(range) => {
-                    setDateRangeFilter(range)
+
+            <div className="flex items-center gap-2">
+              <DateRangePicker
+                value={dateRangeFilter}
+                onChange={(range) => {
+                  setDateRangeFilter(range)
+                  setPage(1)
+                }}
+                className="w-76 rounded-full"
+              />
+              {(dateRangeFilter?.from || dateRangeFilter?.to) && (
+                <Button
+                  variant="ghost"
+                  size="xs"
+                  onClick={() => {
+                    setDateRangeFilter(undefined)
                     setPage(1)
                   }}
-                  className="w-76"
-                />
-                {(dateRangeFilter?.from || dateRangeFilter?.to) && (
-                  <Button
-                    variant="ghost"
-                    size="xs"
-                    onClick={() => {
-                      setDateRangeFilter(undefined)
-                      setPage(1)
-                    }}
-                  >
-                    Clear
-                  </Button>
-                )}
-              </div>
+                >
+                  Clear
+                </Button>
+              )}
             </div>
           </div>
+          <Button asChild className="w-fit">
+            <Link href="/admin/tradexpo/expos/new">Create new</Link>
+          </Button>
         </div>
 
         {notice && (

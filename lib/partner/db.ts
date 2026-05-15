@@ -1,14 +1,29 @@
-import { createHash } from "node:crypto"
+import { createHash, randomUUID } from "node:crypto"
 import { sql } from "@/lib/db/neon"
+import { createExpoWithHalls } from "@/lib/tradexpo/db/platform-data"
 import type { Expo, ExpoStatus } from "@/lib/tradexpo/types"
 
 export type PartnerModel = "co_host" | "turnkey" | "tenant"
+
+export type PartnerType =
+  | "strategic_partner"
+  | "expo_partner"
+  | "distribution_partner"
+  | "alliance_partner"
+  | "government_program_partner"
 
 export type PartnerMembershipRole =
   | "primary_representative"
   | "admin"
   | "operator"
   | "analyst"
+  | "partner_owner"
+  | "partner_admin"
+  | "program_manager"
+  | "business_manager"
+  | "operations"
+  | "finance"
+  | "viewer"
 
 export type PartnerCapability =
   | "view_dashboard"
@@ -24,6 +39,7 @@ export type PartnerOrganization = {
   id: string
   name: string
   model: PartnerModel
+  partnerType: PartnerType
   status: "active" | "inactive"
   primaryUserId: string | null
 }
@@ -33,6 +49,375 @@ export type PartnerAssignment = {
   membershipRole: PartnerMembershipRole
   partnershipModel: PartnerModel
   capabilities: PartnerCapability[]
+}
+
+export type PartnerPortalOrganization = PartnerOrganization & {
+  membershipRole: PartnerMembershipRole
+}
+
+export type PartnerPortalSummary = {
+  organization: PartnerPortalOrganization | null
+  overview: {
+    enterprisesActivated: number
+    expoBoothsUsed: number
+    tradeCreditsAllocated: number
+    rfqGenerated: number
+    dealContexts: number
+    bundleSales: number
+    partnerRevenue: number
+  }
+  expoPrograms: {
+    assignedExpos: number
+    coHost: number
+    turnkey: number
+    bulkBooking: number
+  }
+  enterprises: {
+    total: number
+    invited: number
+    registered: number
+    profileCompleted: number
+    expoActivated: number
+    rfqGenerated: number
+  }
+  quotas: {
+    totalQuantity: number
+    allocatedQuantity: number
+    consumedQuantity: number
+    availableQuantity: number
+    activeInviteCampaigns: number
+    walletBalance: number
+    walletAllocated: number
+    walletConsumed: number
+  }
+  bundles: {
+    total: number
+    published: number
+    draft: number
+    archived: number
+  }
+  communications: {
+    expoContextMessages: number
+    activeContextTypes: number
+  }
+  finance: {
+    recordedRevenue: number
+    partnerShare: number
+    pendingSettlement: number
+    settledSettlement: number
+  }
+  reports: {
+    expoOverviewReady: boolean
+    tradeActivityReady: boolean
+    industryInsightReady: boolean
+    buyerLeadsReady: boolean
+  }
+}
+
+export type PartnerQuota = {
+  id: string
+  quotaType: "booth_credits" | "expo_program_quota" | "bulk_booth_inventory"
+  label: string
+  totalQuantity: number
+  allocatedQuantity: number
+  consumedQuantity: number
+  availableQuantity: number
+  createdAt: string
+}
+
+export type PartnerDealContextStage =
+  | "rfq_generated"
+  | "qualified"
+  | "meeting_scheduled"
+  | "proposal_sent"
+  | "closed_won"
+  | "closed_lost"
+
+export type PartnerEnterpriseMember = {
+  id: string
+  enterpriseName: string
+  contactEmail: string | null
+  activationStatus:
+    | "invited"
+    | "registered"
+    | "profile_completed"
+    | "expo_activated"
+    | "rfq_generated"
+  expoParticipationCount: number
+  rfqGeneratedCount: number
+  tradeSignalCount: number
+  dealContextStage?: PartnerDealContextStage | null
+  dealContextEvents?: number
+  quotaAllocatedQuantity?: number
+  quotaConsumedQuantity?: number
+  tradeCreditsAllocated?: number
+  tradeCreditsConsumed?: number
+}
+
+export type PartnerEnterpriseWorkspace = {
+  organization: PartnerPortalOrganization | null
+  members: Required<PartnerEnterpriseMember>[]
+  funnel: {
+    invited: number
+    registered: number
+    profileCompleted: number
+    expoActivated: number
+    rfqGenerated: number
+  }
+}
+
+export type PartnerInviteCampaign = {
+  id: string
+  name: string
+  inviteCode: string
+  quotaId: string | null
+  quotaLabel: string | null
+  status: "draft" | "active" | "paused" | "ended"
+  claimedCount: number
+  createdAt: string
+}
+
+export type PartnerTradeCreditLedgerEntry = {
+  id: string
+  entryType: "purchase" | "allocate" | "consume" | "release"
+  amount: number
+  enterpriseMemberId: string | null
+  enterpriseName: string | null
+  note: string | null
+  createdAt: string
+}
+
+export type PartnerQuotaWorkspace = {
+  organization: PartnerPortalOrganization | null
+  quotas: PartnerQuota[]
+  enterpriseMembers: PartnerEnterpriseMember[]
+  inviteCampaigns: PartnerInviteCampaign[]
+  wallet: {
+    balance: number
+    allocated: number
+    consumed: number
+  }
+  ledger: PartnerTradeCreditLedgerEntry[]
+}
+
+export type PartnerTurnkeyExpoRequest = {
+  id: string
+  title: string
+  industry: string
+  targetStartDate: string | null
+  expectedEnterprises: number
+  requestedBooths: number
+  status:
+    | "draft"
+    | "submitted"
+    | "in_review"
+    | "approved"
+    | "rejected"
+    | "converted"
+  notes: string
+  reviewedBy: string | null
+  reviewedAt: string | null
+  rejectionReason: string
+  convertedExpoId: string | null
+  convertedAt: string | null
+  createdAt: string
+}
+
+export type PartnerExpoProgramsWorkspace = {
+  assignedExpos: PartnerAssignedExpo[]
+  quotaWorkspace: PartnerQuotaWorkspace
+  turnkeyRequests: PartnerTurnkeyExpoRequest[]
+}
+
+export type PartnerServiceExecutionStatus =
+  | "scheduled"
+  | "in_progress"
+  | "delivered"
+  | "closed"
+  | "canceled"
+
+export type PartnerServiceExecution = {
+  id: string
+  bundleId: string
+  bundleName: string
+  status: PartnerServiceExecutionStatus
+  eventCount: number
+  scheduledAt: string
+  slaDueAt: string | null
+}
+
+export type PartnerServiceBundle = {
+  id: string
+  name: string
+  description: string
+  partnerServicePrice: number
+  arobidServicePrice: number
+  discountAmount: number
+  totalPrice: number
+  partnerSharePercent: number
+  partnerShareAmount: number
+  arobidShareAmount: number
+  status: "draft" | "published" | "archived"
+  createdAt: string
+}
+
+export type PartnerRevenueModelType = "wholesale_partner" | "platform_billing"
+
+export type PartnerRevenueEvent = {
+  id: string
+  sourceType: string
+  sourceId: string | null
+  modelType: PartnerRevenueModelType
+  grossAmount: number
+  partnerAmount: number
+  arobidAmount: number
+  status: string
+  createdAt: string
+}
+
+export type PartnerSettlementAuditEvent = {
+  id: string
+  settlementId: string
+  eventType: string
+  actorUserId: string | null
+  payload: Record<string, unknown>
+  createdAt: string
+}
+
+export type PartnerSettlement = {
+  id: string
+  cycleMonth: string
+  grossAmount: number
+  partnerAmount: number
+  arobidAmount: number
+  status: "pending" | "settled" | "canceled"
+  auditEvents: PartnerSettlementAuditEvent[]
+  createdAt: string
+  settledAt: string | null
+}
+
+export type PartnerBundlesWorkspace = {
+  organization: PartnerPortalOrganization | null
+  bundles: PartnerServiceBundle[]
+  revenueEvents: PartnerRevenueEvent[]
+  serviceExecutions: PartnerServiceExecution[]
+  totals: {
+    published: number
+    draft: number
+    archived: number
+    grossRevenue: number
+    partnerRevenue: number
+    arobidRevenue: number
+  }
+}
+
+export type PartnerFinanceWorkspace = {
+  organization: PartnerPortalOrganization | null
+  revenueEvents: PartnerRevenueEvent[]
+  settlements: PartnerSettlement[]
+  cycleOptions: string[]
+  totals: {
+    recordedRevenue: number
+    partnerShare: number
+    arobidShare: number
+    wholesaleRevenue: number
+    platformBillingRevenue: number
+    pendingSettlement: number
+    settledSettlement: number
+  }
+}
+
+export type PartnerMessageContextType =
+  | "service_inquiry"
+  | "bundle_purchase"
+  | "deal_support"
+  | "expo_participation"
+
+export type PartnerMessageThread = {
+  id: string
+  contextType: PartnerMessageContextType
+  contextId: string
+  subject: string
+  participantLabel: string
+  status: "open" | "closed"
+  messageCount: number
+  lastMessage: string | null
+  updatedAt: string
+}
+
+export type PartnerThreadMessage = {
+  id: string
+  threadId: string
+  senderUserId: string | null
+  senderLabel: string
+  body: string
+  createdAt: string
+}
+
+export type PartnerMessageTrigger = {
+  contextType: PartnerMessageContextType
+  contextId: string
+  label: string
+  participantLabel: string
+}
+
+export type PartnerCommunicationsWorkspace = {
+  organization: PartnerPortalOrganization | null
+  threads: PartnerMessageThread[]
+  messagesByThread: Record<string, PartnerThreadMessage[]>
+  triggers: PartnerMessageTrigger[]
+  totals: {
+    openThreads: number
+    serviceInquiryTriggers: number
+    bundlePurchaseTriggers: number
+    dealSupportTriggers: number
+    expoParticipationTriggers: number
+  }
+}
+
+export type PartnerReportSnapshot = {
+  key: "expo_overview" | "trade_activity" | "industry_insight" | "buyer_leads"
+  title: string
+  description: string
+  source: string
+  status: "ready" | "pending"
+  metrics: {
+    label: string
+    value: number
+  }[]
+}
+
+export type PartnerGovernmentProgramWorkspace = {
+  organization: PartnerPortalOrganization | null
+  quotaWorkspace: PartnerQuotaWorkspace
+  supportedSmes: number
+  activeCampaigns: number
+  creditUtilization: number
+  quotaUtilization: number
+}
+
+export type PartnerAnalyticsWorkspace = {
+  organization: PartnerPortalOrganization | null
+  summary: PartnerPortalSummary
+  reports: PartnerReportSnapshot[]
+  topExpos: {
+    expoId: string
+    expoName: string
+    status: ExpoStatus
+    boothUtilization: number
+    soldBooths: number
+    rfqCount: number
+    meetings: number
+    revenue: number
+  }[]
+  funnel: PartnerEnterpriseWorkspace["funnel"]
+  sourceMetrics: {
+    meetings: number
+    countrySegments: number
+    boothTierSegments: number
+    openThreads: number
+    settlementCycles: number
+  }
 }
 
 export type PartnerAssignedExpo = {
@@ -150,6 +535,7 @@ type PartnerExpoRow = {
   partner_org_id: string
   partner_org_name: string
   partner_org_model: PartnerModel
+  partner_type?: PartnerType
   partner_org_status: "active" | "inactive"
   partner_org_primary_user_id: string | null
   membership_role: PartnerMembershipRole
@@ -239,6 +625,7 @@ function rowToAssignedExpo(
         id: row.partner_org_id,
         name: row.partner_org_name,
         model: row.partner_org_model,
+        partnerType: row.partner_type ?? "expo_partner",
         status: row.partner_org_status,
         primaryUserId: row.partner_org_primary_user_id
       },
@@ -247,6 +634,2904 @@ function rowToAssignedExpo(
       capabilities: resolvePartnerCapabilities(row.partnership_model)
     }
   }
+}
+
+export function formatPartnerType(type: PartnerType) {
+  return type
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ")
+}
+
+export function formatPartnerModel(model: PartnerModel) {
+  const labels: Record<PartnerModel, string> = {
+    co_host: "Co-host",
+    turnkey: "Turnkey",
+    tenant: "Tenant"
+  }
+  return labels[model]
+}
+
+export async function getPrimaryPartnerOrganization(
+  userId: string
+): Promise<PartnerPortalOrganization | null> {
+  const rows = (await sql`
+    select
+      po.id,
+      po.name,
+      po.model,
+      po.partner_type,
+      po.status,
+      po.primary_user_id,
+      pm.role as membership_role
+    from partner_memberships pm
+    inner join partner_organizations po on po.id = pm.partner_org_id
+    where pm.user_id = ${userId}
+      and pm.status = 'active'
+      and po.status = 'active'
+    order by
+      case pm.role
+        when 'partner_owner' then 1
+        when 'primary_representative' then 2
+        when 'partner_admin' then 3
+        when 'admin' then 4
+        else 5
+      end,
+      po.created_at asc
+    limit 1
+  `) as {
+    id: string
+    name: string
+    model: PartnerModel
+    partner_type: PartnerType
+    status: "active" | "inactive"
+    primary_user_id: string | null
+    membership_role: PartnerMembershipRole
+  }[]
+
+  const row = rows[0]
+  if (!row) return null
+
+  return {
+    id: row.id,
+    name: row.name,
+    model: row.model,
+    partnerType: row.partner_type,
+    status: row.status,
+    primaryUserId: row.primary_user_id,
+    membershipRole: row.membership_role
+  }
+}
+
+export async function getPartnerPortalSummary(
+  userId: string
+): Promise<PartnerPortalSummary> {
+  const organization = await getPrimaryPartnerOrganization(userId)
+
+  const empty: PartnerPortalSummary = {
+    organization,
+    overview: {
+      enterprisesActivated: 0,
+      expoBoothsUsed: 0,
+      tradeCreditsAllocated: 0,
+      rfqGenerated: 0,
+      dealContexts: 0,
+      bundleSales: 0,
+      partnerRevenue: 0
+    },
+    expoPrograms: {
+      assignedExpos: 0,
+      coHost: 0,
+      turnkey: 0,
+      bulkBooking: 0
+    },
+    enterprises: {
+      total: 0,
+      invited: 0,
+      registered: 0,
+      profileCompleted: 0,
+      expoActivated: 0,
+      rfqGenerated: 0
+    },
+    quotas: {
+      totalQuantity: 0,
+      allocatedQuantity: 0,
+      consumedQuantity: 0,
+      availableQuantity: 0,
+      activeInviteCampaigns: 0,
+      walletBalance: 0,
+      walletAllocated: 0,
+      walletConsumed: 0
+    },
+    bundles: {
+      total: 0,
+      published: 0,
+      draft: 0,
+      archived: 0
+    },
+    communications: {
+      expoContextMessages: 0,
+      activeContextTypes: 0
+    },
+    finance: {
+      recordedRevenue: 0,
+      partnerShare: 0,
+      pendingSettlement: 0,
+      settledSettlement: 0
+    },
+    reports: {
+      expoOverviewReady: false,
+      tradeActivityReady: false,
+      industryInsightReady: false,
+      buyerLeadsReady: false
+    }
+  }
+
+  if (!organization) return empty
+
+  const orgId = organization.id
+  const [
+    expoRows,
+    enterpriseRows,
+    dealRows,
+    quotaRows,
+    walletRows,
+    bundleRows,
+    revenueRows,
+    settlementRows,
+    communicationRows
+  ] = await Promise.all([
+    sql`
+      select
+        count(*)::int as assigned_expos,
+        count(*) filter (where partnership_model = 'co_host')::int as co_host,
+        count(*) filter (where partnership_model = 'turnkey')::int as turnkey,
+        count(*) filter (where partnership_model = 'tenant')::int as tenant,
+        coalesce((
+          select count(*)::int
+          from seller_booth_registrations sbr
+          inner join partner_expo_assignments pea on pea.expo_id = sbr.expo_id
+          where pea.partner_org_id = ${orgId}
+        ), 0)::int as expo_booths_used
+      from partner_expo_assignments
+      where partner_org_id = ${orgId}
+    `,
+    sql`
+      select
+        count(*)::int as total,
+        count(*) filter (where activation_status = 'invited')::int as invited,
+        count(*) filter (where activation_status = 'registered')::int as registered,
+        count(*) filter (where activation_status = 'profile_completed')::int as profile_completed,
+        count(*) filter (where activation_status = 'expo_activated')::int as expo_activated,
+        count(*) filter (where activation_status = 'rfq_generated')::int as rfq_generated,
+        coalesce(sum(rfq_generated_count), 0)::int as rfq_generated_count,
+        coalesce(sum(trade_signal_count), 0)::int as trade_signal_count
+      from partner_enterprise_members
+      where partner_org_id = ${orgId}
+    `,
+    sql`
+      select
+        count(*)::int as deal_contexts,
+        count(*) filter (where stage = 'rfq_generated')::int as rfq_generated,
+        count(*) filter (where stage not in ('closed_won', 'closed_lost'))::int as active_deal_contexts
+      from partner_deal_contexts
+      where partner_org_id = ${orgId}
+    `,
+    sql`
+      select
+        coalesce(sum(total_quantity), 0)::int as total_quantity,
+        coalesce(sum(allocated_quantity), 0)::int as allocated_quantity,
+        coalesce(sum(consumed_quantity), 0)::int as consumed_quantity,
+        coalesce((
+          select count(*)::int
+          from partner_invite_campaigns
+          where partner_org_id = ${orgId}
+            and status = 'active'
+        ), 0)::int as active_invite_campaigns
+      from partner_quotas
+      where partner_org_id = ${orgId}
+    `,
+    sql`
+      select
+        coalesce(balance, 0)::numeric as balance,
+        coalesce(allocated, 0)::numeric as allocated,
+        coalesce(consumed, 0)::numeric as consumed
+      from partner_trade_credit_wallets
+      where partner_org_id = ${orgId}
+      limit 1
+    `,
+    sql`
+      select
+        count(*)::int as total,
+        count(*) filter (where status = 'published')::int as published,
+        count(*) filter (where status = 'draft')::int as draft,
+        count(*) filter (where status = 'archived')::int as archived
+      from partner_service_bundles
+      where partner_org_id = ${orgId}
+    `,
+    sql`
+      select
+        coalesce(sum(gross_amount), 0)::numeric as gross_amount,
+        coalesce(sum(partner_amount), 0)::numeric as partner_amount,
+        count(*) filter (where source_type = 'bundle_purchase')::int as bundle_sales
+      from partner_revenue_events
+      where partner_org_id = ${orgId}
+    `,
+    sql`
+      select
+        coalesce(sum(partner_amount) filter (where status = 'pending'), 0)::numeric as pending,
+        coalesce(sum(partner_amount) filter (where status = 'settled'), 0)::numeric as settled
+      from partner_settlements
+      where partner_org_id = ${orgId}
+    `,
+    sql`
+      select
+        coalesce(count(lc.live_comment_id), 0)::int as expo_context_messages
+      from partner_expo_assignments pea
+      inner join go_live_events gle on gle.expo_id = pea.expo_id
+      inner join live_comments lc on lc.stream_session_id = gle.stream_session_id
+      where pea.partner_org_id = ${orgId}
+        and lc.is_deleted = false
+    `
+  ])
+
+  const expo = (
+    expoRows as {
+      assigned_expos: number | string
+      co_host: number | string
+      turnkey: number | string
+      tenant: number | string
+      expo_booths_used: number | string
+    }[]
+  )[0]
+  const enterprise = (
+    enterpriseRows as {
+      total: number | string
+      invited: number | string
+      registered: number | string
+      profile_completed: number | string
+      expo_activated: number | string
+      rfq_generated: number | string
+      rfq_generated_count: number | string
+      trade_signal_count: number | string
+    }[]
+  )[0]
+  const deal = (
+    dealRows as {
+      deal_contexts: number | string
+      rfq_generated: number | string
+      active_deal_contexts: number | string
+    }[]
+  )[0]
+  const quota = (
+    quotaRows as {
+      total_quantity: number | string
+      allocated_quantity: number | string
+      consumed_quantity: number | string
+      active_invite_campaigns: number | string
+    }[]
+  )[0]
+  const wallet = (
+    walletRows as {
+      balance: number | string
+      allocated: number | string
+      consumed: number | string
+    }[]
+  )[0]
+  const bundle = (
+    bundleRows as {
+      total: number | string
+      published: number | string
+      draft: number | string
+      archived: number | string
+    }[]
+  )[0]
+  const revenue = (
+    revenueRows as {
+      gross_amount: number | string
+      partner_amount: number | string
+      bundle_sales: number | string
+    }[]
+  )[0]
+  const settlement = (
+    settlementRows as {
+      pending: number | string
+      settled: number | string
+    }[]
+  )[0]
+  const communication = (
+    communicationRows as {
+      expo_context_messages: number | string
+    }[]
+  )[0]
+
+  const quotaTotal = toNumber(quota?.total_quantity)
+  const quotaAllocated = toNumber(quota?.allocated_quantity)
+  const quotaConsumed = toNumber(quota?.consumed_quantity)
+  const rfqGenerated =
+    toNumber(deal?.rfq_generated) ||
+    toNumber(enterprise?.rfq_generated_count) ||
+    toNumber(enterprise?.rfq_generated)
+  const dealContexts = toNumber(deal?.deal_contexts) || rfqGenerated
+  const assignedExpos = toNumber(expo?.assigned_expos)
+  const bundleSales = toNumber(revenue?.bundle_sales)
+
+  return {
+    ...empty,
+    overview: {
+      enterprisesActivated: toNumber(enterprise?.expo_activated),
+      expoBoothsUsed: toNumber(expo?.expo_booths_used),
+      tradeCreditsAllocated: toNumber(wallet?.allocated),
+      rfqGenerated,
+      dealContexts,
+      bundleSales,
+      partnerRevenue: toNumber(revenue?.partner_amount)
+    },
+    expoPrograms: {
+      assignedExpos,
+      coHost: toNumber(expo?.co_host),
+      turnkey: toNumber(expo?.turnkey),
+      bulkBooking: quotaTotal
+    },
+    enterprises: {
+      total: toNumber(enterprise?.total),
+      invited: toNumber(enterprise?.invited),
+      registered: toNumber(enterprise?.registered),
+      profileCompleted: toNumber(enterprise?.profile_completed),
+      expoActivated: toNumber(enterprise?.expo_activated),
+      rfqGenerated
+    },
+    quotas: {
+      totalQuantity: quotaTotal,
+      allocatedQuantity: quotaAllocated,
+      consumedQuantity: quotaConsumed,
+      availableQuantity: Math.max(
+        quotaTotal - quotaAllocated - quotaConsumed,
+        0
+      ),
+      activeInviteCampaigns: toNumber(quota?.active_invite_campaigns),
+      walletBalance: toNumber(wallet?.balance),
+      walletAllocated: toNumber(wallet?.allocated),
+      walletConsumed: toNumber(wallet?.consumed)
+    },
+    bundles: {
+      total: toNumber(bundle?.total),
+      published: toNumber(bundle?.published),
+      draft: toNumber(bundle?.draft),
+      archived: toNumber(bundle?.archived)
+    },
+    communications: {
+      expoContextMessages: toNumber(communication?.expo_context_messages),
+      activeContextTypes:
+        assignedExpos > 0 || bundleSales > 0 || rfqGenerated > 0 ? 1 : 0
+    },
+    finance: {
+      recordedRevenue: toNumber(revenue?.gross_amount),
+      partnerShare: toNumber(revenue?.partner_amount),
+      pendingSettlement: toNumber(settlement?.pending),
+      settledSettlement: toNumber(settlement?.settled)
+    },
+    reports: {
+      expoOverviewReady: assignedExpos > 0,
+      tradeActivityReady: rfqGenerated > 0,
+      industryInsightReady: toNumber(enterprise?.trade_signal_count) > 0,
+      buyerLeadsReady: rfqGenerated > 0
+    }
+  }
+}
+
+async function requirePrimaryPartnerOrganization(
+  userId: string
+): Promise<PartnerPortalOrganization> {
+  const organization = await getPrimaryPartnerOrganization(userId)
+  if (!organization) {
+    throw new Error("No active partner organization found.")
+  }
+  return organization
+}
+
+async function requirePartnerQuota(
+  userId: string,
+  quotaId: string
+): Promise<{ organization: PartnerPortalOrganization; quota: PartnerQuota }> {
+  const organization = await requirePrimaryPartnerOrganization(userId)
+  const rows = (await sql`
+    select
+      id,
+      quota_type,
+      label,
+      total_quantity,
+      allocated_quantity,
+      consumed_quantity,
+      created_at
+    from partner_quotas
+    where id = ${quotaId}
+      and partner_org_id = ${organization.id}
+    limit 1
+  `) as {
+    id: string
+    quota_type: PartnerQuota["quotaType"]
+    label: string
+    total_quantity: number | string
+    allocated_quantity: number | string
+    consumed_quantity: number | string
+    created_at: string | Date
+  }[]
+
+  const row = rows[0]
+  if (!row) throw new Error("Quota not found.")
+
+  const totalQuantity = toNumber(row.total_quantity)
+  const allocatedQuantity = toNumber(row.allocated_quantity)
+  const consumedQuantity = toNumber(row.consumed_quantity)
+  return {
+    organization,
+    quota: {
+      id: row.id,
+      quotaType: row.quota_type,
+      label: row.label,
+      totalQuantity,
+      allocatedQuantity,
+      consumedQuantity,
+      availableQuantity: Math.max(
+        totalQuantity - allocatedQuantity - consumedQuantity,
+        0
+      ),
+      createdAt: toIso(row.created_at)
+    }
+  }
+}
+
+async function requirePartnerEnterpriseMember(
+  userId: string,
+  memberId: string
+): Promise<{
+  organization: PartnerPortalOrganization
+  member: PartnerEnterpriseMember
+}> {
+  const organization = await requirePrimaryPartnerOrganization(userId)
+  const rows = (await sql`
+    select
+      id,
+      enterprise_name,
+      contact_email,
+      activation_status,
+      expo_participation_count,
+      rfq_generated_count,
+      trade_signal_count
+    from partner_enterprise_members
+    where id = ${memberId}
+      and partner_org_id = ${organization.id}
+    limit 1
+  `) as {
+    id: string
+    enterprise_name: string
+    contact_email: string | null
+    activation_status: PartnerEnterpriseMember["activationStatus"]
+    expo_participation_count: number | string
+    rfq_generated_count: number | string
+    trade_signal_count: number | string
+  }[]
+
+  const row = rows[0]
+  if (!row) throw new Error("Enterprise member not found.")
+
+  return {
+    organization,
+    member: {
+      id: row.id,
+      enterpriseName: row.enterprise_name,
+      contactEmail: row.contact_email,
+      activationStatus: row.activation_status,
+      expoParticipationCount: toNumber(row.expo_participation_count),
+      rfqGeneratedCount: toNumber(row.rfq_generated_count),
+      tradeSignalCount: toNumber(row.trade_signal_count),
+      dealContextStage: null,
+      dealContextEvents: 0,
+      quotaAllocatedQuantity: 0,
+      quotaConsumedQuantity: 0,
+      tradeCreditsAllocated: 0,
+      tradeCreditsConsumed: 0
+    }
+  }
+}
+
+async function ensurePartnerDealContext(input: {
+  organizationId: string
+  enterpriseMemberId: string
+  actorUserId: string
+  toStage: PartnerDealContextStage
+  note?: string
+}) {
+  const existingRows = (await sql`
+    select id, stage
+    from partner_deal_contexts
+    where partner_org_id = ${input.organizationId}
+      and enterprise_member_id = ${input.enterpriseMemberId}
+    order by created_at desc
+    limit 1
+  `) as { id: string; stage: PartnerDealContextStage }[]
+
+  const existing = existingRows[0]
+  const dealContextId = existing?.id ?? `partner-deal-context-${randomUUID()}`
+
+  if (existing) {
+    await sql`
+      update partner_deal_contexts
+      set
+        stage = ${input.toStage},
+        owner_user_id = ${input.actorUserId},
+        updated_at = now(),
+        closed_at = case
+          when ${input.toStage} in ('closed_won', 'closed_lost') then now()
+          else null
+        end
+      where id = ${dealContextId}
+    `
+  } else {
+    await sql`
+      insert into partner_deal_contexts (
+        id,
+        partner_org_id,
+        enterprise_member_id,
+        stage,
+        owner_user_id
+      )
+      values (
+        ${dealContextId},
+        ${input.organizationId},
+        ${input.enterpriseMemberId},
+        ${input.toStage},
+        ${input.actorUserId}
+      )
+    `
+  }
+
+  if (existing?.stage !== input.toStage) {
+    await sql`
+      insert into partner_deal_context_events (
+        id,
+        deal_context_id,
+        partner_org_id,
+        enterprise_member_id,
+        from_stage,
+        to_stage,
+        actor_user_id,
+        note
+      )
+      values (
+        ${`partner-deal-context-event-${randomUUID()}`},
+        ${dealContextId},
+        ${input.organizationId},
+        ${input.enterpriseMemberId},
+        ${existing?.stage ?? null},
+        ${input.toStage},
+        ${input.actorUserId},
+        ${input.note ?? null}
+      )
+    `
+  }
+}
+
+export async function getPartnerQuotaWorkspace(
+  userId: string
+): Promise<PartnerQuotaWorkspace> {
+  const organization = await getPrimaryPartnerOrganization(userId)
+  if (!organization) {
+    return {
+      organization: null,
+      quotas: [],
+      enterpriseMembers: [],
+      inviteCampaigns: [],
+      wallet: { balance: 0, allocated: 0, consumed: 0 },
+      ledger: []
+    }
+  }
+
+  const orgId = organization.id
+  const [quotaRows, memberRows, campaignRows, walletRows, ledgerRows] =
+    await Promise.all([
+      sql`
+        select
+          id,
+          quota_type,
+          label,
+          total_quantity,
+          allocated_quantity,
+          consumed_quantity,
+          created_at
+        from partner_quotas
+        where partner_org_id = ${orgId}
+        order by created_at desc
+      `,
+      sql`
+        select
+          id,
+          enterprise_name,
+          contact_email,
+          activation_status,
+          expo_participation_count,
+          rfq_generated_count,
+          trade_signal_count
+        from partner_enterprise_members
+        where partner_org_id = ${orgId}
+        order by created_at desc
+      `,
+      sql`
+        select
+          pic.id,
+          pic.name,
+          pic.invite_code,
+          pic.quota_id,
+          pq.label as quota_label,
+          pic.status,
+          pic.claimed_count,
+          pic.created_at
+        from partner_invite_campaigns pic
+        left join partner_quotas pq on pq.id = pic.quota_id
+        where pic.partner_org_id = ${orgId}
+        order by pic.created_at desc
+      `,
+      sql`
+        select balance, allocated, consumed
+        from partner_trade_credit_wallets
+        where partner_org_id = ${orgId}
+        limit 1
+      `,
+      sql`
+        select
+          l.id,
+          l.entry_type,
+          l.amount,
+          l.enterprise_member_id,
+          pem.enterprise_name,
+          l.note,
+          l.created_at
+        from partner_trade_credit_ledger l
+        left join partner_enterprise_members pem on pem.id = l.enterprise_member_id
+        where l.partner_org_id = ${orgId}
+        order by l.created_at desc
+        limit 20
+      `
+    ])
+
+  return {
+    organization,
+    quotas: (
+      quotaRows as {
+        id: string
+        quota_type: PartnerQuota["quotaType"]
+        label: string
+        total_quantity: number | string
+        allocated_quantity: number | string
+        consumed_quantity: number | string
+        created_at: string | Date
+      }[]
+    ).map((row) => {
+      const totalQuantity = toNumber(row.total_quantity)
+      const allocatedQuantity = toNumber(row.allocated_quantity)
+      const consumedQuantity = toNumber(row.consumed_quantity)
+      return {
+        id: row.id,
+        quotaType: row.quota_type,
+        label: row.label,
+        totalQuantity,
+        allocatedQuantity,
+        consumedQuantity,
+        availableQuantity: Math.max(
+          totalQuantity - allocatedQuantity - consumedQuantity,
+          0
+        ),
+        createdAt: toIso(row.created_at)
+      }
+    }),
+    enterpriseMembers: (
+      memberRows as {
+        id: string
+        enterprise_name: string
+        contact_email: string | null
+        activation_status: PartnerEnterpriseMember["activationStatus"]
+        expo_participation_count: number | string
+        rfq_generated_count: number | string
+        trade_signal_count: number | string
+      }[]
+    ).map((row) => ({
+      id: row.id,
+      enterpriseName: row.enterprise_name,
+      contactEmail: row.contact_email,
+      activationStatus: row.activation_status,
+      expoParticipationCount: toNumber(row.expo_participation_count),
+      rfqGeneratedCount: toNumber(row.rfq_generated_count),
+      tradeSignalCount: toNumber(row.trade_signal_count)
+    })),
+    inviteCampaigns: (
+      campaignRows as {
+        id: string
+        name: string
+        invite_code: string
+        quota_id: string | null
+        quota_label: string | null
+        status: PartnerInviteCampaign["status"]
+        claimed_count: number | string
+        created_at: string | Date
+      }[]
+    ).map((row) => ({
+      id: row.id,
+      name: row.name,
+      inviteCode: row.invite_code,
+      quotaId: row.quota_id,
+      quotaLabel: row.quota_label,
+      status: row.status,
+      claimedCount: toNumber(row.claimed_count),
+      createdAt: toIso(row.created_at)
+    })),
+    wallet: {
+      balance: toNumber(
+        (walletRows as { balance: number | string }[])[0]?.balance
+      ),
+      allocated: toNumber(
+        (walletRows as { allocated: number | string }[])[0]?.allocated
+      ),
+      consumed: toNumber(
+        (walletRows as { consumed: number | string }[])[0]?.consumed
+      )
+    },
+    ledger: (
+      ledgerRows as {
+        id: string
+        entry_type: PartnerTradeCreditLedgerEntry["entryType"]
+        amount: number | string
+        enterprise_member_id: string | null
+        enterprise_name: string | null
+        note: string | null
+        created_at: string | Date
+      }[]
+    ).map((row) => ({
+      id: row.id,
+      entryType: row.entry_type,
+      amount: toNumber(row.amount),
+      enterpriseMemberId: row.enterprise_member_id,
+      enterpriseName: row.enterprise_name,
+      note: row.note,
+      createdAt: toIso(row.created_at)
+    }))
+  }
+}
+
+export async function getPartnerTurnkeyExpoRequests(
+  userId: string
+): Promise<PartnerTurnkeyExpoRequest[]> {
+  const organization = await getPrimaryPartnerOrganization(userId)
+  if (!organization) return []
+
+  const rows = (await sql`
+    select
+      id,
+      title,
+      industry,
+      target_start_date,
+      expected_enterprises,
+      requested_booths,
+      status,
+      notes,
+      reviewed_by,
+      reviewed_at,
+      rejection_reason,
+      converted_expo_id,
+      converted_at,
+      created_at
+    from partner_turnkey_expo_requests
+    where partner_org_id = ${organization.id}
+    order by created_at desc
+  `) as {
+    id: string
+    title: string
+    industry: string
+    target_start_date: string | Date | null
+    expected_enterprises: number | string
+    requested_booths: number | string
+    status: PartnerTurnkeyExpoRequest["status"]
+    notes: string
+    reviewed_by: string | null
+    reviewed_at: string | Date | null
+    rejection_reason: string
+    converted_expo_id: string | null
+    converted_at: string | Date | null
+    created_at: string | Date
+  }[]
+
+  return rows.map((row) => ({
+    id: row.id,
+    title: row.title,
+    industry: row.industry,
+    targetStartDate: row.target_start_date
+      ? toDateOnly(row.target_start_date)
+      : null,
+    expectedEnterprises: toNumber(row.expected_enterprises),
+    requestedBooths: toNumber(row.requested_booths),
+    status: row.status,
+    notes: row.notes,
+    reviewedBy: row.reviewed_by,
+    reviewedAt: row.reviewed_at ? toIso(row.reviewed_at) : null,
+    rejectionReason: row.rejection_reason,
+    convertedExpoId: row.converted_expo_id,
+    convertedAt: row.converted_at ? toIso(row.converted_at) : null,
+    createdAt: toIso(row.created_at)
+  }))
+}
+
+export async function getPartnerExpoProgramsWorkspace(
+  userId: string
+): Promise<PartnerExpoProgramsWorkspace> {
+  const [assignedExpos, quotaWorkspace, turnkeyRequests] = await Promise.all([
+    listPartnerAssignedExpos(userId),
+    getPartnerQuotaWorkspace(userId),
+    getPartnerTurnkeyExpoRequests(userId)
+  ])
+
+  return {
+    assignedExpos,
+    quotaWorkspace,
+    turnkeyRequests
+  }
+}
+
+export async function createPartnerTurnkeyExpoRequest(
+  userId: string,
+  input: {
+    title: string
+    industry?: string | null
+    targetStartDate?: string | null
+    expectedEnterprises?: number
+    requestedBooths?: number
+    notes?: string | null
+  }
+) {
+  const organization = await requirePrimaryPartnerOrganization(userId)
+  const title = input.title.trim()
+  if (!title) throw new Error("Expo request title is required.")
+  const expectedEnterprises = Math.max(
+    0,
+    Math.floor(Number(input.expectedEnterprises) || 0)
+  )
+  const requestedBooths = Math.max(
+    0,
+    Math.floor(Number(input.requestedBooths) || 0)
+  )
+  const id = `partner-turnkey-request-${randomUUID()}`
+
+  await sql`
+    insert into partner_turnkey_expo_requests (
+      id,
+      partner_org_id,
+      title,
+      industry,
+      target_start_date,
+      expected_enterprises,
+      requested_booths,
+      status,
+      notes
+    )
+    values (
+      ${id},
+      ${organization.id},
+      ${title},
+      ${input.industry?.trim() || ""},
+      ${input.targetStartDate || null},
+      ${expectedEnterprises},
+      ${requestedBooths},
+      'submitted',
+      ${input.notes?.trim() || ""}
+    )
+  `
+
+  return { id }
+}
+
+export async function reviewPartnerTurnkeyExpoRequest(
+  userId: string,
+  requestId: string,
+  input: { decision: "approved" | "rejected"; rejectionReason?: string | null }
+) {
+  const organization = await requirePrimaryPartnerOrganization(userId)
+  const rows = (await sql`
+    update partner_turnkey_expo_requests
+    set
+      status = ${input.decision},
+      reviewed_by = ${userId},
+      reviewed_at = now(),
+      rejection_reason = ${input.decision === "rejected" ? input.rejectionReason?.trim() || "Rejected." : ""},
+      approved_payload_json = case
+        when ${input.decision} = 'approved' then jsonb_build_object('approvedBy', ${userId})
+        else '{}'::jsonb
+      end,
+      updated_at = now()
+    where id = ${requestId}
+      and partner_org_id = ${organization.id}
+      and status in ('submitted', 'in_review', 'approved', 'rejected')
+    returning id
+  `) as { id: string }[]
+
+  if (rows.length === 0) throw new Error("Turnkey request not found.")
+}
+
+export async function convertPartnerTurnkeyExpoRequest(
+  userId: string,
+  requestId: string
+) {
+  const organization = await requirePrimaryPartnerOrganization(userId)
+  const rows = (await sql`
+    select
+      id,
+      title,
+      industry,
+      target_start_date,
+      requested_booths,
+      status,
+      converted_expo_id
+    from partner_turnkey_expo_requests
+    where id = ${requestId}
+      and partner_org_id = ${organization.id}
+    limit 1
+  `) as {
+    id: string
+    title: string
+    industry: string
+    target_start_date: string | Date | null
+    requested_booths: number | string
+    status: PartnerTurnkeyExpoRequest["status"]
+    converted_expo_id: string | null
+  }[]
+
+  const request = rows[0]
+  if (!request) throw new Error("Turnkey request not found.")
+  if (request.converted_expo_id) return { expoId: request.converted_expo_id }
+  if (request.status !== "approved") {
+    throw new Error("Only approved turnkey requests can be converted.")
+  }
+
+  const start = request.target_start_date
+    ? new Date(request.target_start_date)
+    : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+  start.setHours(2, 0, 0, 0)
+  const end = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000)
+  const requestedBooths = Math.max(toNumber(request.requested_booths), 1)
+  const basicQty = Math.max(requestedBooths - 10, 1)
+  const professionalQty = Math.min(8, Math.max(requestedBooths - basicQty, 0))
+  const premiumQty = Math.max(requestedBooths - basicQty - professionalQty, 0)
+
+  const expo = await createExpoWithHalls({
+    name: request.title,
+    description: request.industry || "Partner turnkey expo program",
+    thumbnailUrl: "/placeholder.svg",
+    categoryIds: [],
+    expoTemplateId: "layout-standard",
+    startAt: start.toISOString(),
+    endAt: end.toISOString(),
+    timezone: "Asia/Ho_Chi_Minh",
+    ownerUserId: userId,
+    ownerEmail: organization.primaryUserId ?? userId,
+    halls: [
+      {
+        hallName: "Main Hall",
+        hallTemplateId: "hall-template-1",
+        basicQty,
+        professionalQty,
+        premiumQty
+      }
+    ]
+  })
+
+  await sql`
+    insert into partner_expo_assignments (
+      partner_org_id,
+      expo_id,
+      partnership_model,
+      capabilities
+    )
+    values (${organization.id}, ${expo.id}, 'turnkey', '{}'::jsonb)
+    on conflict (partner_org_id, expo_id) do update
+    set partnership_model = excluded.partnership_model
+  `
+  await sql`
+    update partner_turnkey_expo_requests
+    set
+      status = 'converted',
+      converted_expo_id = ${expo.id},
+      converted_at = now(),
+      updated_at = now()
+    where id = ${request.id}
+  `
+
+  return { expoId: expo.id }
+}
+
+function mapPartnerServiceBundle(row: {
+  id: string
+  name: string
+  description: string
+  partner_service_price: number | string
+  arobid_service_price: number | string
+  discount_amount: number | string
+  partner_share_percent: number | string
+  status: PartnerServiceBundle["status"]
+  created_at: string | Date
+}): PartnerServiceBundle {
+  const partnerServicePrice = toNumber(row.partner_service_price)
+  const arobidServicePrice = toNumber(row.arobid_service_price)
+  const discountAmount = toNumber(row.discount_amount)
+  const totalPrice = Math.max(
+    partnerServicePrice + arobidServicePrice - discountAmount,
+    0
+  )
+  const partnerSharePercent = toNumber(row.partner_share_percent)
+  const partnerShareAmount = Math.round(
+    (totalPrice * partnerSharePercent) / 100
+  )
+
+  return {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    partnerServicePrice,
+    arobidServicePrice,
+    discountAmount,
+    totalPrice,
+    partnerSharePercent,
+    partnerShareAmount,
+    arobidShareAmount: Math.max(totalPrice - partnerShareAmount, 0),
+    status: row.status,
+    createdAt: toIso(row.created_at)
+  }
+}
+
+export async function getPartnerBundlesWorkspace(
+  userId: string
+): Promise<PartnerBundlesWorkspace> {
+  const organization = await getPrimaryPartnerOrganization(userId)
+  if (!organization) {
+    return {
+      organization: null,
+      bundles: [],
+      revenueEvents: [],
+      serviceExecutions: [],
+      totals: {
+        published: 0,
+        draft: 0,
+        archived: 0,
+        grossRevenue: 0,
+        partnerRevenue: 0,
+        arobidRevenue: 0
+      }
+    }
+  }
+
+  const [bundleRows, revenueRows, executionRows] = await Promise.all([
+    sql`
+      select
+        id,
+        name,
+        description,
+        partner_service_price,
+        arobid_service_price,
+        discount_amount,
+        partner_share_percent,
+        status,
+        created_at
+      from partner_service_bundles
+      where partner_org_id = ${organization.id}
+      order by created_at desc
+    `,
+    sql`
+      select
+        id,
+        source_type,
+        source_id,
+        model_type,
+        gross_amount,
+        partner_amount,
+        arobid_amount,
+        status,
+        created_at
+      from partner_revenue_events
+      where partner_org_id = ${organization.id}
+      order by created_at desc
+      limit 20
+    `,
+    sql`
+      select
+        pse.id,
+        pse.bundle_id,
+        psb.name as bundle_name,
+        pse.status,
+        pse.scheduled_at,
+        pse.sla_due_at,
+        coalesce(count(psee.id), 0)::int as event_count
+      from partner_service_executions pse
+      inner join partner_service_bundles psb on psb.id = pse.bundle_id
+      left join partner_service_execution_events psee on psee.execution_id = pse.id
+      where pse.partner_org_id = ${organization.id}
+      group by pse.id, psb.name
+      order by pse.updated_at desc
+      limit 20
+    `
+  ])
+
+  const bundles = (
+    bundleRows as {
+      id: string
+      name: string
+      description: string
+      partner_service_price: number | string
+      arobid_service_price: number | string
+      discount_amount: number | string
+      partner_share_percent: number | string
+      status: PartnerServiceBundle["status"]
+      created_at: string | Date
+    }[]
+  ).map(mapPartnerServiceBundle)
+
+  const revenueEvents = (
+    revenueRows as Parameters<typeof mapPartnerRevenueEvent>[0][]
+  ).map(mapPartnerRevenueEvent)
+  const serviceExecutions = (
+    executionRows as {
+      id: string
+      bundle_id: string
+      bundle_name: string
+      status: PartnerServiceExecutionStatus
+      scheduled_at: string | Date
+      sla_due_at: string | Date | null
+      event_count: number | string
+    }[]
+  ).map((row) => ({
+    id: row.id,
+    bundleId: row.bundle_id,
+    bundleName: row.bundle_name,
+    status: row.status,
+    eventCount: toNumber(row.event_count),
+    scheduledAt: toIso(row.scheduled_at),
+    slaDueAt: row.sla_due_at ? toIso(row.sla_due_at) : null
+  }))
+
+  return {
+    organization,
+    bundles,
+    revenueEvents,
+    serviceExecutions,
+    totals: {
+      published: bundles.filter((bundle) => bundle.status === "published")
+        .length,
+      draft: bundles.filter((bundle) => bundle.status === "draft").length,
+      archived: bundles.filter((bundle) => bundle.status === "archived").length,
+      grossRevenue: revenueEvents.reduce(
+        (sum, event) => sum + event.grossAmount,
+        0
+      ),
+      partnerRevenue: revenueEvents.reduce(
+        (sum, event) => sum + event.partnerAmount,
+        0
+      ),
+      arobidRevenue: revenueEvents.reduce(
+        (sum, event) => sum + event.arobidAmount,
+        0
+      )
+    }
+  }
+}
+
+export async function createPartnerServiceBundle(
+  userId: string,
+  input: {
+    name: string
+    description?: string | null
+    partnerServicePrice: number
+    arobidServicePrice: number
+    discountAmount: number
+    partnerSharePercent: number
+  }
+) {
+  const organization = await requirePrimaryPartnerOrganization(userId)
+  const name = input.name.trim()
+  if (!name) throw new Error("Bundle name is required.")
+  const partnerSharePercent = Math.min(
+    Math.max(Number(input.partnerSharePercent) || 0, 0),
+    100
+  )
+  const id = `partner-bundle-${randomUUID()}`
+
+  await sql`
+    insert into partner_service_bundles (
+      id,
+      partner_org_id,
+      name,
+      description,
+      partner_service_price,
+      arobid_service_price,
+      discount_amount,
+      partner_share_percent,
+      status
+    )
+    values (
+      ${id},
+      ${organization.id},
+      ${name},
+      ${input.description?.trim() || ""},
+      ${Math.max(Number(input.partnerServicePrice) || 0, 0)},
+      ${Math.max(Number(input.arobidServicePrice) || 0, 0)},
+      ${Math.max(Number(input.discountAmount) || 0, 0)},
+      ${partnerSharePercent},
+      'draft'
+    )
+  `
+
+  return { id }
+}
+
+export async function updatePartnerServiceBundle(
+  userId: string,
+  bundleId: string,
+  input: {
+    name: string
+    description?: string | null
+    partnerServicePrice: number
+    arobidServicePrice: number
+    discountAmount: number
+    partnerSharePercent: number
+  }
+) {
+  const organization = await requirePrimaryPartnerOrganization(userId)
+  const name = input.name.trim()
+  if (!name) throw new Error("Bundle name is required.")
+
+  const rows = (await sql`
+    update partner_service_bundles
+    set
+      name = ${name},
+      description = ${input.description?.trim() || ""},
+      partner_service_price = ${Math.max(Number(input.partnerServicePrice) || 0, 0)},
+      arobid_service_price = ${Math.max(Number(input.arobidServicePrice) || 0, 0)},
+      discount_amount = ${Math.max(Number(input.discountAmount) || 0, 0)},
+      partner_share_percent = ${Math.min(Math.max(Number(input.partnerSharePercent) || 0, 0), 100)},
+      updated_at = now()
+    where id = ${bundleId}
+      and partner_org_id = ${organization.id}
+    returning id
+  `) as { id: string }[]
+
+  if (rows.length === 0) throw new Error("Bundle not found.")
+}
+
+export async function updatePartnerServiceBundleStatus(
+  userId: string,
+  bundleId: string,
+  status: PartnerServiceBundle["status"]
+) {
+  const organization = await requirePrimaryPartnerOrganization(userId)
+  const rows = (await sql`
+    update partner_service_bundles
+    set status = ${status}, updated_at = now()
+    where id = ${bundleId}
+      and partner_org_id = ${organization.id}
+    returning id
+  `) as { id: string }[]
+
+  if (rows.length === 0) throw new Error("Bundle not found.")
+}
+
+export async function recordPartnerBundlePurchase(
+  userId: string,
+  bundleId: string
+) {
+  const organization = await requirePrimaryPartnerOrganization(userId)
+  const rows = (await sql`
+    select
+      id,
+      name,
+      description,
+      partner_service_price,
+      arobid_service_price,
+      discount_amount,
+      partner_share_percent,
+      status,
+      created_at
+    from partner_service_bundles
+    where id = ${bundleId}
+      and partner_org_id = ${organization.id}
+    limit 1
+  `) as {
+    id: string
+    name: string
+    description: string
+    partner_service_price: number | string
+    arobid_service_price: number | string
+    discount_amount: number | string
+    partner_share_percent: number | string
+    status: PartnerServiceBundle["status"]
+    created_at: string | Date
+  }[]
+
+  const row = rows[0]
+  if (!row) throw new Error("Bundle not found.")
+  if (row.status !== "published") {
+    throw new Error("Only published bundles can be purchased.")
+  }
+
+  const bundle = mapPartnerServiceBundle(row)
+  const id = `partner-revenue-${randomUUID()}`
+  await sql`
+    insert into partner_revenue_events (
+      id,
+      partner_org_id,
+      source_type,
+      source_id,
+      gross_amount,
+      partner_amount,
+      arobid_amount,
+      status
+    )
+    values (
+      ${id},
+      ${organization.id},
+      'bundle_purchase',
+      ${bundle.id},
+      ${bundle.totalPrice},
+      ${bundle.partnerShareAmount},
+      ${bundle.arobidShareAmount},
+      'recorded'
+    )
+  `
+
+  const executionId = `partner-service-execution-${randomUUID()}`
+  await sql`
+    insert into partner_service_executions (
+      id,
+      partner_org_id,
+      bundle_id,
+      revenue_event_id,
+      owner_user_id,
+      sla_due_at
+    )
+    values (
+      ${executionId},
+      ${organization.id},
+      ${bundle.id},
+      ${id},
+      ${userId},
+      now() + interval '14 days'
+    )
+  `
+  await sql`
+    insert into partner_service_execution_events (
+      id,
+      execution_id,
+      partner_org_id,
+      from_status,
+      to_status,
+      actor_user_id,
+      note
+    )
+    values (
+      ${`partner-service-execution-event-${randomUUID()}`},
+      ${executionId},
+      ${organization.id},
+      null,
+      'scheduled',
+      ${userId},
+      'Bundle purchase created service execution.'
+    )
+  `
+
+  return { id, executionId }
+}
+
+export async function updatePartnerServiceExecutionStatus(
+  userId: string,
+  executionId: string,
+  status: PartnerServiceExecutionStatus
+) {
+  const organization = await requirePrimaryPartnerOrganization(userId)
+  const rows = (await sql`
+    select status
+    from partner_service_executions
+    where id = ${executionId}
+      and partner_org_id = ${organization.id}
+    limit 1
+  `) as { status: PartnerServiceExecutionStatus }[]
+
+  const current = rows[0]
+  if (!current) throw new Error("Service execution not found.")
+  const allowed: Record<
+    PartnerServiceExecutionStatus,
+    PartnerServiceExecutionStatus[]
+  > = {
+    scheduled: ["in_progress", "canceled"],
+    in_progress: ["delivered", "canceled"],
+    delivered: ["closed"],
+    closed: [],
+    canceled: []
+  }
+  if (!allowed[current.status].includes(status)) {
+    throw new Error("Invalid service execution transition.")
+  }
+
+  await sql`
+    update partner_service_executions
+    set
+      status = ${status},
+      started_at = case when ${status} = 'in_progress' then now() else started_at end,
+      delivered_at = case when ${status} = 'delivered' then now() else delivered_at end,
+      closed_at = case when ${status} in ('closed', 'canceled') then now() else closed_at end,
+      updated_at = now()
+    where id = ${executionId}
+      and partner_org_id = ${organization.id}
+  `
+  await sql`
+    insert into partner_service_execution_events (
+      id,
+      execution_id,
+      partner_org_id,
+      from_status,
+      to_status,
+      actor_user_id
+    )
+    values (
+      ${`partner-service-execution-event-${randomUUID()}`},
+      ${executionId},
+      ${organization.id},
+      ${current.status},
+      ${status},
+      ${userId}
+    )
+  `
+}
+
+function mapPartnerRevenueEvent(row: {
+  id: string
+  source_type: string
+  source_id: string | null
+  model_type: PartnerRevenueModelType
+  gross_amount: number | string
+  partner_amount: number | string
+  arobid_amount: number | string
+  status: string
+  created_at: string | Date
+}): PartnerRevenueEvent {
+  return {
+    id: row.id,
+    sourceType: row.source_type,
+    sourceId: row.source_id,
+    modelType: row.model_type,
+    grossAmount: toNumber(row.gross_amount),
+    partnerAmount: toNumber(row.partner_amount),
+    arobidAmount: toNumber(row.arobid_amount),
+    status: row.status,
+    createdAt: toIso(row.created_at)
+  }
+}
+
+function mapPartnerSettlement(row: {
+  id: string
+  cycle_month: string
+  gross_amount: number | string
+  partner_amount: number | string
+  arobid_amount: number | string
+  status: PartnerSettlement["status"]
+  created_at: string | Date
+  settled_at: string | Date | null
+}): PartnerSettlement {
+  return {
+    id: row.id,
+    cycleMonth: row.cycle_month,
+    grossAmount: toNumber(row.gross_amount),
+    partnerAmount: toNumber(row.partner_amount),
+    arobidAmount: toNumber(row.arobid_amount),
+    status: row.status,
+    auditEvents: [],
+    createdAt: toIso(row.created_at),
+    settledAt: row.settled_at ? toIso(row.settled_at) : null
+  }
+}
+
+async function recordPartnerSettlementAudit(input: {
+  organizationId: string
+  settlementId: string
+  eventType: string
+  actorUserId: string
+  payload?: Record<string, unknown>
+}) {
+  await sql`
+    insert into partner_settlement_audit_log (
+      id,
+      partner_org_id,
+      settlement_id,
+      event_type,
+      actor_user_id,
+      payload_json
+    )
+    values (
+      ${`partner-settlement-audit-${randomUUID()}`},
+      ${input.organizationId},
+      ${input.settlementId},
+      ${input.eventType},
+      ${input.actorUserId},
+      ${JSON.stringify(input.payload ?? {})}::jsonb
+    )
+  `
+}
+
+export async function getPartnerFinanceWorkspace(
+  userId: string
+): Promise<PartnerFinanceWorkspace> {
+  const organization = await getPrimaryPartnerOrganization(userId)
+  if (!organization) {
+    return {
+      organization: null,
+      revenueEvents: [],
+      settlements: [],
+      cycleOptions: [],
+      totals: {
+        recordedRevenue: 0,
+        partnerShare: 0,
+        arobidShare: 0,
+        wholesaleRevenue: 0,
+        platformBillingRevenue: 0,
+        pendingSettlement: 0,
+        settledSettlement: 0
+      }
+    }
+  }
+
+  const [revenueRows, settlementRows, auditRows, cycleRows] = await Promise.all(
+    [
+      sql`
+      select
+        id,
+        source_type,
+        source_id,
+        model_type,
+        gross_amount,
+        partner_amount,
+        arobid_amount,
+        status,
+        created_at
+      from partner_revenue_events
+      where partner_org_id = ${organization.id}
+      order by created_at desc
+      limit 50
+    `,
+      sql`
+      select
+        id,
+        cycle_month,
+        gross_amount,
+        partner_amount,
+        arobid_amount,
+        status,
+        created_at,
+        settled_at
+      from partner_settlements
+      where partner_org_id = ${organization.id}
+      order by cycle_month desc
+    `,
+      sql`
+      select
+        id,
+        settlement_id,
+        event_type,
+        actor_user_id,
+        payload_json,
+        created_at
+      from partner_settlement_audit_log
+      where partner_org_id = ${organization.id}
+      order by created_at asc
+    `,
+      sql`
+      select distinct to_char(created_at, 'YYYY-MM') as cycle_month
+      from partner_revenue_events
+      where partner_org_id = ${organization.id}
+      order by cycle_month desc
+    `
+    ]
+  )
+
+  const revenueEvents = (
+    revenueRows as Parameters<typeof mapPartnerRevenueEvent>[0][]
+  ).map(mapPartnerRevenueEvent)
+  const auditEvents = (
+    auditRows as {
+      id: string
+      settlement_id: string
+      event_type: string
+      actor_user_id: string | null
+      payload_json: Record<string, unknown>
+      created_at: string | Date
+    }[]
+  ).map((row) => ({
+    id: row.id,
+    settlementId: row.settlement_id,
+    eventType: row.event_type,
+    actorUserId: row.actor_user_id,
+    payload: row.payload_json,
+    createdAt: toIso(row.created_at)
+  }))
+  const settlements = (
+    settlementRows as Parameters<typeof mapPartnerSettlement>[0][]
+  )
+    .map(mapPartnerSettlement)
+    .map((settlement) => ({
+      ...settlement,
+      auditEvents: auditEvents.filter(
+        (event) => event.settlementId === settlement.id
+      )
+    }))
+
+  return {
+    organization,
+    revenueEvents,
+    settlements,
+    cycleOptions: (cycleRows as { cycle_month: string }[]).map(
+      (row) => row.cycle_month
+    ),
+    totals: {
+      recordedRevenue: revenueEvents.reduce(
+        (sum, event) => sum + event.grossAmount,
+        0
+      ),
+      partnerShare: revenueEvents.reduce(
+        (sum, event) => sum + event.partnerAmount,
+        0
+      ),
+      arobidShare: revenueEvents.reduce(
+        (sum, event) => sum + event.arobidAmount,
+        0
+      ),
+      wholesaleRevenue: revenueEvents
+        .filter((event) => event.modelType === "wholesale_partner")
+        .reduce((sum, event) => sum + event.grossAmount, 0),
+      platformBillingRevenue: revenueEvents
+        .filter((event) => event.modelType === "platform_billing")
+        .reduce((sum, event) => sum + event.grossAmount, 0),
+      pendingSettlement: settlements
+        .filter((settlement) => settlement.status === "pending")
+        .reduce((sum, settlement) => sum + settlement.partnerAmount, 0),
+      settledSettlement: settlements
+        .filter((settlement) => settlement.status === "settled")
+        .reduce((sum, settlement) => sum + settlement.partnerAmount, 0)
+    }
+  }
+}
+
+export async function createPartnerMonthlySettlement(
+  userId: string,
+  cycleMonth: string
+) {
+  const organization = await requirePrimaryPartnerOrganization(userId)
+  if (!/^\d{4}-\d{2}$/.test(cycleMonth)) {
+    throw new Error("Cycle month must use YYYY-MM format.")
+  }
+
+  const rows = (await sql`
+    select
+      coalesce(sum(gross_amount), 0)::numeric as gross_amount,
+      coalesce(sum(partner_amount), 0)::numeric as partner_amount,
+      coalesce(sum(arobid_amount), 0)::numeric as arobid_amount
+    from partner_revenue_events
+    where partner_org_id = ${organization.id}
+      and to_char(created_at, 'YYYY-MM') = ${cycleMonth}
+  `) as {
+    gross_amount: number | string
+    partner_amount: number | string
+    arobid_amount: number | string
+  }[]
+
+  const summary = rows[0]
+  const grossAmount = toNumber(summary?.gross_amount)
+  const partnerAmount = toNumber(summary?.partner_amount)
+  const arobidAmount = toNumber(summary?.arobid_amount)
+  if (grossAmount <= 0) {
+    throw new Error("No revenue events found for this cycle.")
+  }
+
+  const id = `partner-settlement-${randomUUID()}`
+  const idRows = (await sql`
+    insert into partner_settlements (
+      id,
+      partner_org_id,
+      cycle_month,
+      gross_amount,
+      partner_amount,
+      arobid_amount,
+      status
+    )
+    values (
+      ${id},
+      ${organization.id},
+      ${cycleMonth},
+      ${grossAmount},
+      ${partnerAmount},
+      ${arobidAmount},
+      'pending'
+    )
+    on conflict (partner_org_id, cycle_month) do update
+    set
+      gross_amount = excluded.gross_amount,
+      partner_amount = excluded.partner_amount,
+      arobid_amount = excluded.arobid_amount,
+      status = case
+        when partner_settlements.status = 'settled' then partner_settlements.status
+        else 'pending'
+      end
+    returning id
+  `) as { id: string }[]
+
+  await recordPartnerSettlementAudit({
+    organizationId: organization.id,
+    settlementId: idRows[0]?.id ?? id,
+    eventType: "generated",
+    actorUserId: userId,
+    payload: { cycleMonth, grossAmount, partnerAmount, arobidAmount }
+  })
+
+  await sql`
+    update partner_revenue_events
+    set status = 'settlement_pending'
+    where partner_org_id = ${organization.id}
+      and to_char(created_at, 'YYYY-MM') = ${cycleMonth}
+      and status <> 'settled'
+  `
+}
+
+export async function settlePartnerMonthlySettlement(
+  userId: string,
+  settlementId: string
+) {
+  const organization = await requirePrimaryPartnerOrganization(userId)
+  const rows = (await sql`
+    update partner_settlements
+    set status = 'settled', settled_at = now()
+    where id = ${settlementId}
+      and partner_org_id = ${organization.id}
+    returning cycle_month, gross_amount, partner_amount, arobid_amount
+  `) as {
+    cycle_month: string
+    gross_amount: number | string
+    partner_amount: number | string
+    arobid_amount: number | string
+  }[]
+
+  const row = rows[0]
+  if (!row) throw new Error("Settlement not found.")
+
+  await recordPartnerSettlementAudit({
+    organizationId: organization.id,
+    settlementId,
+    eventType: "settled",
+    actorUserId: userId,
+    payload: {
+      cycleMonth: row.cycle_month,
+      grossAmount: toNumber(row.gross_amount),
+      partnerAmount: toNumber(row.partner_amount),
+      arobidAmount: toNumber(row.arobid_amount)
+    }
+  })
+
+  await sql`
+    set status = 'settled'
+    where partner_org_id = ${organization.id}
+      and to_char(created_at, 'YYYY-MM') = ${row.cycle_month}
+  `
+}
+
+async function validatePartnerMessageContext(input: {
+  organizationId: string
+  contextType: PartnerMessageContextType
+  contextId: string
+}): Promise<{ subject: string; participantLabel: string }> {
+  if (input.contextType === "service_inquiry") {
+    const rows = (await sql`
+      select name
+      from partner_service_bundles
+      where id = ${input.contextId}
+        and partner_org_id = ${input.organizationId}
+        and status = 'published'
+      limit 1
+    `) as { name: string }[]
+    const row = rows[0]
+    if (!row) throw new Error("Published bundle not found.")
+    return {
+      subject: `Service inquiry: ${row.name}`,
+      participantLabel: "Enterprise buyer"
+    }
+  }
+
+  if (input.contextType === "bundle_purchase") {
+    const rows = (await sql`
+      select psb.name
+      from partner_revenue_events pre
+      left join partner_service_bundles psb on psb.id = pre.source_id
+      where pre.id = ${input.contextId}
+        and pre.partner_org_id = ${input.organizationId}
+        and pre.source_type = 'bundle_purchase'
+      limit 1
+    `) as { name: string | null }[]
+    const row = rows[0]
+    if (!row) throw new Error("Bundle purchase not found.")
+    return {
+      subject: `Bundle purchase: ${row.name ?? "Service bundle"}`,
+      participantLabel: "Purchasing enterprise"
+    }
+  }
+
+  if (input.contextType === "deal_support") {
+    const rows = (await sql`
+      select enterprise_name
+      from partner_enterprise_members
+      where id = ${input.contextId}
+        and partner_org_id = ${input.organizationId}
+        and (activation_status = 'rfq_generated' or rfq_generated_count > 0)
+      limit 1
+    `) as { enterprise_name: string }[]
+    const row = rows[0]
+    if (!row) throw new Error("Deal support context not found.")
+    return {
+      subject: `Deal support: ${row.enterprise_name}`,
+      participantLabel: row.enterprise_name
+    }
+  }
+
+  const rows = (await sql`
+    select e.name
+    from partner_expo_assignments pea
+    inner join expos e on e.id = pea.expo_id
+    where pea.partner_org_id = ${input.organizationId}
+      and e.id = ${input.contextId}
+    limit 1
+  `) as { name: string }[]
+  const row = rows[0]
+  if (!row) throw new Error("Expo participation context not found.")
+  return {
+    subject: `Expo support: ${row.name}`,
+    participantLabel: "Expo participant"
+  }
+}
+
+export async function getPartnerCommunicationsWorkspace(
+  userId: string
+): Promise<PartnerCommunicationsWorkspace> {
+  const organization = await getPrimaryPartnerOrganization(userId)
+  if (!organization) {
+    return {
+      organization: null,
+      threads: [],
+      messagesByThread: {},
+      triggers: [],
+      totals: {
+        openThreads: 0,
+        serviceInquiryTriggers: 0,
+        bundlePurchaseTriggers: 0,
+        dealSupportTriggers: 0,
+        expoParticipationTriggers: 0
+      }
+    }
+  }
+
+  const [
+    threadRows,
+    messageRows,
+    bundleRows,
+    purchaseRows,
+    dealRows,
+    expoRows
+  ] = await Promise.all([
+    sql`
+      select
+        pmt.*,
+        (
+          select count(*)::int
+          from partner_thread_messages ptm
+          where ptm.thread_id = pmt.id
+        ) as message_count,
+        (
+          select body
+          from partner_thread_messages ptm
+          where ptm.thread_id = pmt.id
+          order by created_at desc
+          limit 1
+        ) as last_message
+      from partner_message_threads pmt
+      where pmt.partner_org_id = ${organization.id}
+      order by pmt.updated_at desc
+    `,
+    sql`
+      select ptm.*
+      from partner_thread_messages ptm
+      inner join partner_message_threads pmt on pmt.id = ptm.thread_id
+      where pmt.partner_org_id = ${organization.id}
+      order by ptm.created_at asc
+    `,
+    sql`
+      select id, name
+      from partner_service_bundles
+      where partner_org_id = ${organization.id}
+        and status = 'published'
+      order by created_at desc
+    `,
+    sql`
+      select pre.id, psb.name
+      from partner_revenue_events pre
+      left join partner_service_bundles psb on psb.id = pre.source_id
+      where pre.partner_org_id = ${organization.id}
+        and pre.source_type = 'bundle_purchase'
+      order by pre.created_at desc
+      limit 20
+    `,
+    sql`
+      select id, enterprise_name
+      from partner_enterprise_members
+      where partner_org_id = ${organization.id}
+        and (activation_status = 'rfq_generated' or rfq_generated_count > 0)
+      order by updated_at desc
+      limit 20
+    `,
+    sql`
+      select e.id, e.name
+      from partner_expo_assignments pea
+      inner join expos e on e.id = pea.expo_id
+      where pea.partner_org_id = ${organization.id}
+      order by e.created_at desc
+    `
+  ])
+
+  const threads = (
+    threadRows as {
+      id: string
+      context_type: PartnerMessageContextType
+      context_id: string
+      subject: string
+      participant_label: string
+      status: "open" | "closed"
+      message_count: number | string
+      last_message: string | null
+      updated_at: string | Date
+    }[]
+  ).map((row) => ({
+    id: row.id,
+    contextType: row.context_type,
+    contextId: row.context_id,
+    subject: row.subject,
+    participantLabel: row.participant_label,
+    status: row.status,
+    messageCount: toNumber(row.message_count),
+    lastMessage: row.last_message,
+    updatedAt: toIso(row.updated_at)
+  }))
+
+  const messagesByThread: Record<string, PartnerThreadMessage[]> = {}
+  for (const row of messageRows as {
+    id: string
+    thread_id: string
+    sender_user_id: string | null
+    sender_label: string
+    body: string
+    created_at: string | Date
+  }[]) {
+    const list = messagesByThread[row.thread_id] ?? []
+    list.push({
+      id: row.id,
+      threadId: row.thread_id,
+      senderUserId: row.sender_user_id,
+      senderLabel: row.sender_label,
+      body: row.body,
+      createdAt: toIso(row.created_at)
+    })
+    messagesByThread[row.thread_id] = list
+  }
+
+  const triggers: PartnerMessageTrigger[] = [
+    ...(bundleRows as { id: string; name: string }[]).map((row) => ({
+      contextType: "service_inquiry" as const,
+      contextId: row.id,
+      label: `Service inquiry: ${row.name}`,
+      participantLabel: "Enterprise buyer"
+    })),
+    ...(purchaseRows as { id: string; name: string | null }[]).map((row) => ({
+      contextType: "bundle_purchase" as const,
+      contextId: row.id,
+      label: `Bundle purchase: ${row.name ?? "Service bundle"}`,
+      participantLabel: "Purchasing enterprise"
+    })),
+    ...(dealRows as { id: string; enterprise_name: string }[]).map((row) => ({
+      contextType: "deal_support" as const,
+      contextId: row.id,
+      label: `Deal support: ${row.enterprise_name}`,
+      participantLabel: row.enterprise_name
+    })),
+    ...(expoRows as { id: string; name: string }[]).map((row) => ({
+      contextType: "expo_participation" as const,
+      contextId: row.id,
+      label: `Expo support: ${row.name}`,
+      participantLabel: "Expo participant"
+    }))
+  ]
+
+  return {
+    organization,
+    threads,
+    messagesByThread,
+    triggers,
+    totals: {
+      openThreads: threads.filter((thread) => thread.status === "open").length,
+      serviceInquiryTriggers: triggers.filter(
+        (trigger) => trigger.contextType === "service_inquiry"
+      ).length,
+      bundlePurchaseTriggers: triggers.filter(
+        (trigger) => trigger.contextType === "bundle_purchase"
+      ).length,
+      dealSupportTriggers: triggers.filter(
+        (trigger) => trigger.contextType === "deal_support"
+      ).length,
+      expoParticipationTriggers: triggers.filter(
+        (trigger) => trigger.contextType === "expo_participation"
+      ).length
+    }
+  }
+}
+
+export async function createPartnerMessageThread(
+  userId: string,
+  input: { contextType: PartnerMessageContextType; contextId: string }
+) {
+  const organization = await requirePrimaryPartnerOrganization(userId)
+  const context = await validatePartnerMessageContext({
+    organizationId: organization.id,
+    contextType: input.contextType,
+    contextId: input.contextId
+  })
+  const id = `partner-thread-${randomUUID()}`
+
+  await sql`
+    insert into partner_message_threads (
+      id,
+      partner_org_id,
+      context_type,
+      context_id,
+      subject,
+      participant_label,
+      status,
+      created_by_user_id
+    )
+    values (
+      ${id},
+      ${organization.id},
+      ${input.contextType},
+      ${input.contextId},
+      ${context.subject},
+      ${context.participantLabel},
+      'open',
+      ${userId}
+    )
+  `
+  await createPartnerThreadMessage(userId, {
+    threadId: id,
+    body: `Context opened: ${context.subject}`,
+    isSystem: true
+  })
+
+  return { id }
+}
+
+export async function createPartnerThreadMessage(
+  userId: string,
+  input: { threadId: string; body: string; isSystem?: boolean }
+) {
+  const organization = await requirePrimaryPartnerOrganization(userId)
+  const body = input.body.trim()
+  if (!body) throw new Error("Message body is required.")
+  const threadRows = (await sql`
+    select id
+    from partner_message_threads
+    where id = ${input.threadId}
+      and partner_org_id = ${organization.id}
+    limit 1
+  `) as { id: string }[]
+
+  if (threadRows.length === 0) throw new Error("Thread not found.")
+
+  await sql`
+    insert into partner_thread_messages (
+      id,
+      thread_id,
+      sender_user_id,
+      sender_label,
+      body
+    )
+    values (
+      ${`partner-thread-message-${randomUUID()}`},
+      ${input.threadId},
+      ${input.isSystem ? null : userId},
+      ${input.isSystem ? "System" : organization.name},
+      ${body}
+    )
+  `
+  await sql`
+    update partner_message_threads
+    set updated_at = now()
+    where id = ${input.threadId}
+  `
+}
+
+export async function updatePartnerMessageThreadStatus(
+  userId: string,
+  input: { threadId: string; status: "open" | "closed" }
+) {
+  const organization = await requirePrimaryPartnerOrganization(userId)
+  const rows = (await sql`
+    update partner_message_threads
+    set status = ${input.status}, updated_at = now()
+    where id = ${input.threadId}
+      and partner_org_id = ${organization.id}
+    returning id
+  `) as { id: string }[]
+
+  if (rows.length === 0) throw new Error("Thread not found.")
+}
+
+export async function getPartnerEnterpriseWorkspace(
+  userId: string
+): Promise<PartnerEnterpriseWorkspace> {
+  const organization = await getPrimaryPartnerOrganization(userId)
+  if (!organization) {
+    return {
+      organization: null,
+      members: [],
+      funnel: {
+        invited: 0,
+        registered: 0,
+        profileCompleted: 0,
+        expoActivated: 0,
+        rfqGenerated: 0
+      }
+    }
+  }
+
+  const rows = (await sql`
+    with quota_totals as (
+      select
+        enterprise_member_id,
+        coalesce(sum(allocated_quantity), 0)::int as quota_allocated_quantity,
+        coalesce(sum(consumed_quantity), 0)::int as quota_consumed_quantity
+      from partner_quota_allocations
+      where partner_org_id = ${organization.id}
+      group by enterprise_member_id
+    ),
+    credit_totals as (
+      select
+        enterprise_member_id,
+        coalesce(sum(amount) filter (where entry_type = 'allocate'), 0)::numeric as trade_credits_allocated,
+        coalesce(sum(amount) filter (where entry_type = 'consume'), 0)::numeric as trade_credits_consumed
+      from partner_trade_credit_ledger
+      where partner_org_id = ${organization.id}
+        and enterprise_member_id is not null
+      group by enterprise_member_id
+    ),
+    deal_totals as (
+      select
+        pdc.enterprise_member_id,
+        pdc.stage as deal_context_stage,
+        count(pdce.id)::int as deal_context_events
+      from partner_deal_contexts pdc
+      left join partner_deal_context_events pdce on pdce.deal_context_id = pdc.id
+      where pdc.partner_org_id = ${organization.id}
+      group by pdc.enterprise_member_id, pdc.stage, pdc.updated_at
+    )
+    select
+      pem.id,
+      pem.enterprise_name,
+      pem.contact_email,
+      pem.activation_status,
+      pem.expo_participation_count,
+      pem.rfq_generated_count,
+      pem.trade_signal_count,
+      coalesce(qt.quota_allocated_quantity, 0)::int as quota_allocated_quantity,
+      coalesce(qt.quota_consumed_quantity, 0)::int as quota_consumed_quantity,
+      coalesce(ct.trade_credits_allocated, 0)::numeric as trade_credits_allocated,
+      coalesce(ct.trade_credits_consumed, 0)::numeric as trade_credits_consumed,
+      dt.deal_context_stage,
+      coalesce(dt.deal_context_events, 0)::int as deal_context_events
+    from partner_enterprise_members pem
+    left join quota_totals qt on qt.enterprise_member_id = pem.id
+    left join credit_totals ct on ct.enterprise_member_id = pem.id
+    left join deal_totals dt on dt.enterprise_member_id = pem.id
+    where pem.partner_org_id = ${organization.id}
+    order by pem.created_at desc
+  `) as {
+    id: string
+    enterprise_name: string
+    contact_email: string | null
+    activation_status: PartnerEnterpriseMember["activationStatus"]
+    expo_participation_count: number | string
+    rfq_generated_count: number | string
+    trade_signal_count: number | string
+    quota_allocated_quantity: number | string
+    quota_consumed_quantity: number | string
+    trade_credits_allocated: number | string
+    trade_credits_consumed: number | string
+    deal_context_stage: PartnerDealContextStage | null
+    deal_context_events: number | string
+  }[]
+
+  const members = rows.map((row) => ({
+    id: row.id,
+    enterpriseName: row.enterprise_name,
+    contactEmail: row.contact_email ?? "",
+    activationStatus: row.activation_status,
+    expoParticipationCount: toNumber(row.expo_participation_count),
+    rfqGeneratedCount: toNumber(row.rfq_generated_count),
+    tradeSignalCount: toNumber(row.trade_signal_count),
+    dealContextStage: row.deal_context_stage,
+    dealContextEvents: toNumber(row.deal_context_events),
+    quotaAllocatedQuantity: toNumber(row.quota_allocated_quantity),
+    quotaConsumedQuantity: toNumber(row.quota_consumed_quantity),
+    tradeCreditsAllocated: toNumber(row.trade_credits_allocated),
+    tradeCreditsConsumed: toNumber(row.trade_credits_consumed)
+  }))
+
+  return {
+    organization,
+    members,
+    funnel: {
+      invited: members.filter((member) => member.activationStatus === "invited")
+        .length,
+      registered: members.filter(
+        (member) => member.activationStatus === "registered"
+      ).length,
+      profileCompleted: members.filter(
+        (member) => member.activationStatus === "profile_completed"
+      ).length,
+      expoActivated: members.filter(
+        (member) => member.activationStatus === "expo_activated"
+      ).length,
+      rfqGenerated: members.filter(
+        (member) => member.activationStatus === "rfq_generated"
+      ).length
+    }
+  }
+}
+
+export async function getPartnerGovernmentProgramWorkspace(
+  userId: string
+): Promise<PartnerGovernmentProgramWorkspace> {
+  const quotaWorkspace = await getPartnerQuotaWorkspace(userId)
+  const supportedSmes = quotaWorkspace.enterpriseMembers.filter(
+    (member) => member.activationStatus !== "invited"
+  ).length
+  const activeCampaigns = quotaWorkspace.inviteCampaigns.filter(
+    (campaign) => campaign.status === "active"
+  ).length
+  const quotaTotal = quotaWorkspace.quotas.reduce(
+    (sum, quota) => sum + quota.totalQuantity,
+    0
+  )
+  const quotaConsumed = quotaWorkspace.quotas.reduce(
+    (sum, quota) => sum + quota.consumedQuantity,
+    0
+  )
+  const creditTotal = Math.max(quotaWorkspace.wallet.balance, 0)
+
+  return {
+    organization: quotaWorkspace.organization,
+    quotaWorkspace,
+    supportedSmes,
+    activeCampaigns,
+    creditUtilization:
+      creditTotal > 0
+        ? Math.round((quotaWorkspace.wallet.consumed / creditTotal) * 100)
+        : 0,
+    quotaUtilization:
+      quotaTotal > 0 ? Math.round((quotaConsumed / quotaTotal) * 100) : 0
+  }
+}
+
+export async function getPartnerAnalyticsWorkspace(
+  userId: string
+): Promise<PartnerAnalyticsWorkspace> {
+  const [
+    summary,
+    dashboard,
+    enterpriseWorkspace,
+    financeWorkspace,
+    communicationsWorkspace
+  ] = await Promise.all([
+    getPartnerPortalSummary(userId),
+    getPartnerDashboardMetrics(userId),
+    getPartnerEnterpriseWorkspace(userId),
+    getPartnerFinanceWorkspace(userId),
+    getPartnerCommunicationsWorkspace(userId)
+  ])
+
+  const topExpos = dashboard.expoMetrics
+    .map((expo) => ({
+      expoId: expo.expoId,
+      expoName: expo.expoName,
+      status: expo.status,
+      boothUtilization: expo.boothUtilization,
+      soldBooths: expo.soldBooths,
+      rfqCount: Math.round(expo.soldBooths * 1.5),
+      meetings: expo.liveSessions,
+      revenue: expo.revenue
+    }))
+    .sort(
+      (a, b) =>
+        b.rfqCount - a.rfqCount ||
+        b.revenue - a.revenue ||
+        b.soldBooths - a.soldBooths
+    )
+    .slice(0, 8)
+
+  const tradeSignals = enterpriseWorkspace.members.reduce(
+    (total, member) => total + member.tradeSignalCount,
+    0
+  )
+  const openThreads = communicationsWorkspace.totals.openThreads
+
+  return {
+    organization: summary.organization,
+    summary,
+    reports: [
+      {
+        key: "expo_overview",
+        title: "Expo overview",
+        description:
+          "Assigned expos, booth inventory, booth utilization, and GoLIVE activity.",
+        source: "TradeXpo Engine",
+        status: summary.reports.expoOverviewReady ? "ready" : "pending",
+        metrics: [
+          { label: "Assigned expos", value: dashboard.totals.assignedExpos },
+          {
+            label: "Booth utilization",
+            value: dashboard.totals.boothUtilization
+          },
+          {
+            label: "Published booths",
+            value: dashboard.totals.publishedBooths
+          },
+          { label: "GoLIVE events", value: dashboard.totals.goLiveEvents }
+        ]
+      },
+      {
+        key: "trade_activity",
+        title: "Trade activity",
+        description:
+          "RFQ generation, deal context proxy, meetings, and partner-supported activity.",
+        source: "DealContext + Partner Members",
+        status: summary.reports.tradeActivityReady ? "ready" : "pending",
+        metrics: [
+          { label: "RFQ generated", value: summary.overview.rfqGenerated },
+          { label: "Deal contexts", value: summary.overview.dealContexts },
+          { label: "Meetings", value: dashboard.totals.liveSessions },
+          { label: "Enterprises supported", value: summary.enterprises.total }
+        ]
+      },
+      {
+        key: "industry_insight",
+        title: "Industry insight",
+        description:
+          "Trade signals, buyer geography, booth-tier demand, and activity mix.",
+        source: "Partner Members + Expo Operations",
+        status: summary.reports.industryInsightReady ? "ready" : "pending",
+        metrics: [
+          { label: "Trade signals", value: tradeSignals },
+          {
+            label: "Country segments",
+            value: dashboard.countryBreakdown.length
+          },
+          {
+            label: "Booth-tier segments",
+            value: dashboard.boothTierBreakdown.length
+          },
+          { label: "Comments", value: dashboard.totals.comments }
+        ]
+      },
+      {
+        key: "buyer_leads",
+        title: "Buyer leads",
+        description:
+          "Buyer demand signals from RFQ activity and context-bound support threads.",
+        source: "RFQ + Communications",
+        status: summary.reports.buyerLeadsReady ? "ready" : "pending",
+        metrics: [
+          { label: "RFQ generated", value: summary.overview.rfqGenerated },
+          {
+            label: "Deal support triggers",
+            value: communicationsWorkspace.totals.dealSupportTriggers
+          },
+          { label: "Open support threads", value: openThreads },
+          { label: "Bundle purchases", value: summary.overview.bundleSales }
+        ]
+      }
+    ],
+    topExpos,
+    funnel: enterpriseWorkspace.funnel,
+    sourceMetrics: {
+      meetings: dashboard.totals.liveSessions,
+      countrySegments: dashboard.countryBreakdown.length,
+      boothTierSegments: dashboard.boothTierBreakdown.length,
+      openThreads,
+      settlementCycles: financeWorkspace.settlements.length
+    }
+  }
+}
+
+export async function updatePartnerEnterpriseMember(
+  userId: string,
+  input: {
+    memberId: string
+    enterpriseName: string
+    contactEmail?: string | null
+  }
+) {
+  const { organization } = await requirePartnerEnterpriseMember(
+    userId,
+    input.memberId
+  )
+  const enterpriseName = input.enterpriseName.trim()
+  if (!enterpriseName) throw new Error("Enterprise name is required.")
+
+  await sql`
+    update partner_enterprise_members
+    set
+      enterprise_name = ${enterpriseName},
+      contact_email = ${input.contactEmail?.trim() || null},
+      updated_at = now()
+    where id = ${input.memberId}
+      and partner_org_id = ${organization.id}
+  `
+}
+
+export async function advancePartnerEnterpriseActivation(
+  userId: string,
+  memberId: string
+) {
+  const { organization, member } = await requirePartnerEnterpriseMember(
+    userId,
+    memberId
+  )
+  const nextStatus: Record<
+    PartnerEnterpriseMember["activationStatus"],
+    PartnerEnterpriseMember["activationStatus"]
+  > = {
+    invited: "registered",
+    registered: "profile_completed",
+    profile_completed: "expo_activated",
+    expo_activated: "rfq_generated",
+    rfq_generated: "rfq_generated"
+  }
+  const next = nextStatus[member.activationStatus]
+
+  await sql`
+    update partner_enterprise_members
+    set
+      activation_status = ${next},
+      expo_participation_count = case
+        when ${next} = 'expo_activated' and activation_status <> 'expo_activated'
+        then expo_participation_count + 1
+        else expo_participation_count
+      end,
+      rfq_generated_count = case
+        when ${next} = 'rfq_generated' and activation_status <> 'rfq_generated'
+        then rfq_generated_count + 1
+        else rfq_generated_count
+      end,
+      trade_signal_count = case
+        when ${next} = 'rfq_generated' and activation_status <> 'rfq_generated'
+        then trade_signal_count + 1
+        else trade_signal_count
+      end,
+      updated_at = now()
+    where id = ${memberId}
+      and partner_org_id = ${organization.id}
+  `
+
+  if (next === "rfq_generated") {
+    await ensurePartnerDealContext({
+      organizationId: organization.id,
+      enterpriseMemberId: memberId,
+      actorUserId: userId,
+      toStage: "rfq_generated",
+      note: "Enterprise activation reached RFQ stage."
+    })
+  }
+}
+
+export async function createPartnerQuota(
+  userId: string,
+  input: {
+    quotaType: PartnerQuota["quotaType"]
+    label: string
+    totalQuantity: number
+  }
+) {
+  const organization = await requirePrimaryPartnerOrganization(userId)
+  const label = input.label.trim()
+  if (!label) throw new Error("Quota label is required.")
+  if (!Number.isInteger(input.totalQuantity) || input.totalQuantity <= 0) {
+    throw new Error("Total quantity must be greater than 0.")
+  }
+
+  const id = `partner-quota-${randomUUID()}`
+  await sql`
+    insert into partner_quotas (
+      id,
+      partner_org_id,
+      quota_type,
+      label,
+      total_quantity,
+      allocated_quantity,
+      consumed_quantity
+    )
+    values (
+      ${id},
+      ${organization.id},
+      ${input.quotaType},
+      ${label},
+      ${input.totalQuantity},
+      0,
+      0
+    )
+  `
+  return { id }
+}
+
+export async function createPartnerEnterpriseMember(
+  userId: string,
+  input: { enterpriseName: string; contactEmail?: string | null }
+) {
+  const organization = await requirePrimaryPartnerOrganization(userId)
+  const enterpriseName = input.enterpriseName.trim()
+  if (!enterpriseName) throw new Error("Enterprise name is required.")
+  const id = `partner-member-${randomUUID()}`
+
+  await sql`
+    insert into partner_enterprise_members (
+      id,
+      partner_org_id,
+      enterprise_name,
+      contact_email,
+      activation_status
+    )
+    values (
+      ${id},
+      ${organization.id},
+      ${enterpriseName},
+      ${input.contactEmail?.trim() || null},
+      'invited'
+    )
+  `
+  return { id }
+}
+
+export async function createPartnerInviteCampaign(
+  userId: string,
+  input: {
+    name: string
+    inviteCode: string
+    quotaId?: string | null
+    status?: PartnerInviteCampaign["status"]
+  }
+) {
+  const organization = await requirePrimaryPartnerOrganization(userId)
+  const name = input.name.trim()
+  const inviteCode = input.inviteCode.trim().toUpperCase()
+  if (!name) throw new Error("Campaign name is required.")
+  if (!/^[A-Z0-9_-]{4,32}$/.test(inviteCode)) {
+    throw new Error("Invite code must be 4-32 letters, numbers, _, or -.")
+  }
+  if (input.quotaId) {
+    await requirePartnerQuota(userId, input.quotaId)
+  }
+
+  const id = `partner-campaign-${randomUUID()}`
+  await sql`
+    insert into partner_invite_campaigns (
+      id,
+      partner_org_id,
+      name,
+      invite_code,
+      quota_id,
+      status
+    )
+    values (
+      ${id},
+      ${organization.id},
+      ${name},
+      ${inviteCode},
+      ${input.quotaId || null},
+      ${input.status ?? "active"}
+    )
+  `
+  return { id }
+}
+
+export async function allocatePartnerQuota(
+  userId: string,
+  input: { quotaId: string; enterpriseMemberId: string; quantity: number }
+) {
+  const { organization, quota } = await requirePartnerQuota(
+    userId,
+    input.quotaId
+  )
+  await requirePartnerEnterpriseMember(userId, input.enterpriseMemberId)
+  if (!Number.isInteger(input.quantity) || input.quantity <= 0) {
+    throw new Error("Quantity must be greater than 0.")
+  }
+  if (input.quantity > quota.availableQuantity) {
+    throw new Error("Not enough available quota.")
+  }
+
+  const rows = (await sql`
+    update partner_quotas
+    set
+      allocated_quantity = allocated_quantity + ${input.quantity},
+      updated_at = now()
+    where id = ${input.quotaId}
+      and partner_org_id = ${organization.id}
+      and (total_quantity - allocated_quantity - consumed_quantity) >= ${input.quantity}
+    returning id
+  `) as { id: string }[]
+
+  if (rows.length === 0) throw new Error("Not enough available quota.")
+  await sql`
+    update partner_enterprise_members
+    set updated_at = now()
+    where id = ${input.enterpriseMemberId}
+  `
+  await sql`
+    insert into partner_quota_allocations (
+      id,
+      partner_org_id,
+      quota_id,
+      enterprise_member_id,
+      allocated_quantity,
+      consumed_quantity
+    )
+    values (
+      ${`partner-quota-allocation-${randomUUID()}`},
+      ${organization.id},
+      ${input.quotaId},
+      ${input.enterpriseMemberId},
+      ${input.quantity},
+      0
+    )
+    on conflict (quota_id, enterprise_member_id) do update
+    set
+      allocated_quantity = partner_quota_allocations.allocated_quantity + excluded.allocated_quantity,
+      updated_at = now()
+  `
+}
+
+export async function consumePartnerQuota(
+  userId: string,
+  input: {
+    quotaId: string
+    quantity: number
+    enterpriseMemberId?: string | null
+  }
+) {
+  const { organization, quota } = await requirePartnerQuota(
+    userId,
+    input.quotaId
+  )
+  if (input.enterpriseMemberId) {
+    await requirePartnerEnterpriseMember(userId, input.enterpriseMemberId)
+    const allocationRows = (await sql`
+      select allocated_quantity
+      from partner_quota_allocations
+      where quota_id = ${input.quotaId}
+        and partner_org_id = ${organization.id}
+        and enterprise_member_id = ${input.enterpriseMemberId}
+      limit 1
+    `) as { allocated_quantity: number | string }[]
+    if (toNumber(allocationRows[0]?.allocated_quantity) < input.quantity) {
+      throw new Error("Not enough allocated quota for this enterprise.")
+    }
+  }
+  if (!Number.isInteger(input.quantity) || input.quantity <= 0) {
+    throw new Error("Quantity must be greater than 0.")
+  }
+  if (input.quantity > quota.allocatedQuantity) {
+    throw new Error("Not enough allocated quota.")
+  }
+
+  const rows = (await sql`
+    update partner_quotas
+    set
+      allocated_quantity = allocated_quantity - ${input.quantity},
+      consumed_quantity = consumed_quantity + ${input.quantity},
+      updated_at = now()
+    where id = ${input.quotaId}
+      and partner_org_id = ${organization.id}
+      and allocated_quantity >= ${input.quantity}
+    returning id
+  `) as { id: string }[]
+
+  if (rows.length === 0) throw new Error("Not enough allocated quota.")
+
+  if (input.enterpriseMemberId) {
+    const allocationRows = (await sql`
+      update partner_quota_allocations
+      set
+        allocated_quantity = allocated_quantity - ${input.quantity},
+        consumed_quantity = consumed_quantity + ${input.quantity},
+        updated_at = now()
+      where quota_id = ${input.quotaId}
+        and partner_org_id = ${organization.id}
+        and enterprise_member_id = ${input.enterpriseMemberId}
+        and allocated_quantity >= ${input.quantity}
+      returning id
+    `) as { id: string }[]
+    if (allocationRows.length === 0) {
+      throw new Error("Not enough allocated quota for this enterprise.")
+    }
+  }
+}
+
+export async function claimPartnerInviteCampaign(
+  userId: string,
+  input: { campaignId: string; enterpriseMemberId?: string | null }
+) {
+  const organization = await requirePrimaryPartnerOrganization(userId)
+  if (input.enterpriseMemberId) {
+    await requirePartnerEnterpriseMember(userId, input.enterpriseMemberId)
+  }
+  const rows = (await sql`
+    select id, quota_id, status
+    from partner_invite_campaigns
+    where id = ${input.campaignId}
+      and partner_org_id = ${organization.id}
+    limit 1
+  `) as {
+    id: string
+    quota_id: string | null
+    status: PartnerInviteCampaign["status"]
+  }[]
+
+  const campaign = rows[0]
+  if (!campaign) throw new Error("Invite campaign not found.")
+  if (campaign.status !== "active") {
+    throw new Error("Only active invite campaigns can be claimed.")
+  }
+
+  if (campaign.quota_id) {
+    await consumePartnerQuota(userId, {
+      quotaId: campaign.quota_id,
+      quantity: 1,
+      enterpriseMemberId: input.enterpriseMemberId || null
+    })
+  }
+
+  await sql`
+    update partner_invite_campaigns
+    set claimed_count = claimed_count + 1, updated_at = now()
+    where id = ${campaign.id}
+      and partner_org_id = ${organization.id}
+  `
+
+  if (input.enterpriseMemberId) {
+    await sql`
+      update partner_enterprise_members
+      set
+        activation_status = 'expo_activated',
+        expo_participation_count = expo_participation_count + 1,
+        updated_at = now()
+      where id = ${input.enterpriseMemberId}
+        and partner_org_id = ${organization.id}
+    `
+  }
+}
+
+export async function recordPartnerTradeCreditEntry(
+  userId: string,
+  input: {
+    entryType: PartnerTradeCreditLedgerEntry["entryType"]
+    amount: number
+    enterpriseMemberId?: string | null
+    note?: string | null
+  }
+) {
+  const organization = await requirePrimaryPartnerOrganization(userId)
+  if (!Number.isFinite(input.amount) || input.amount <= 0) {
+    throw new Error("Amount must be greater than 0.")
+  }
+  if (input.enterpriseMemberId) {
+    await requirePartnerEnterpriseMember(userId, input.enterpriseMemberId)
+  }
+
+  const walletRows = (await sql`
+    insert into partner_trade_credit_wallets (
+      partner_org_id,
+      balance,
+      allocated,
+      consumed,
+      updated_at
+    )
+    values (${organization.id}, 0, 0, 0, now())
+    on conflict (partner_org_id) do update
+    set updated_at = now()
+    returning balance, allocated, consumed
+  `) as {
+    balance: number | string
+    allocated: number | string
+    consumed: number | string
+  }[]
+
+  const wallet = walletRows[0]
+  const balance = toNumber(wallet?.balance)
+  const allocated = toNumber(wallet?.allocated)
+  const amount = input.amount
+
+  if (input.entryType === "allocate" && amount > balance) {
+    throw new Error("Not enough TradeCredit balance.")
+  }
+  if (input.entryType === "consume" && amount > allocated) {
+    throw new Error("Not enough allocated TradeCredits.")
+  }
+
+  if (input.entryType === "purchase") {
+    await sql`
+      update partner_trade_credit_wallets
+      set balance = balance + ${amount}, updated_at = now()
+      where partner_org_id = ${organization.id}
+    `
+  } else if (input.entryType === "allocate") {
+    await sql`
+      update partner_trade_credit_wallets
+      set
+        balance = balance - ${amount},
+        allocated = allocated + ${amount},
+        updated_at = now()
+      where partner_org_id = ${organization.id}
+    `
+  } else if (input.entryType === "consume") {
+    await sql`
+      update partner_trade_credit_wallets
+      set
+        allocated = allocated - ${amount},
+        consumed = consumed + ${amount},
+        updated_at = now()
+      where partner_org_id = ${organization.id}
+    `
+  } else {
+    await sql`
+      update partner_trade_credit_wallets
+      set
+        balance = balance + ${amount},
+        allocated = greatest(allocated - ${amount}, 0),
+        updated_at = now()
+      where partner_org_id = ${organization.id}
+    `
+  }
+
+  const id = `partner-credit-${randomUUID()}`
+  await sql`
+    insert into partner_trade_credit_ledger (
+      id,
+      partner_org_id,
+      entry_type,
+      amount,
+      enterprise_member_id,
+      note
+    )
+    values (
+      ${id},
+      ${organization.id},
+      ${input.entryType},
+      ${amount},
+      ${input.enterpriseMemberId || null},
+      ${input.note?.trim() || null}
+    )
+  `
+  return { id }
 }
 
 function toNumber(value: unknown): number {
@@ -269,6 +3554,7 @@ export async function listPartnerAssignedExpos(
       po.id as partner_org_id,
       po.name as partner_org_name,
       po.model as partner_org_model,
+      po.partner_type,
       po.status as partner_org_status,
       po.primary_user_id as partner_org_primary_user_id,
       pm.role as membership_role,
@@ -343,6 +3629,7 @@ export async function getPartnerAssignedExpo(
       po.id as partner_org_id,
       po.name as partner_org_name,
       po.model as partner_org_model,
+      po.partner_type,
       po.status as partner_org_status,
       po.primary_user_id as partner_org_primary_user_id,
       pm.role as membership_role,
@@ -726,12 +4013,12 @@ export async function getPartnerDashboardMetrics(
         and po.status = 'active'
     )
     select
-      coalesce(nullif(trim(u.location), ''), 'Vietnam') as name,
+      coalesce(nullif(trim(u.location), ''), 'Unknown') as name,
       count(*)::int as value
     from seller_booth_registrations sbr
     inner join assigned a on a.id = sbr.expo_id
     inner join users u on u.id = sbr.user_id
-    group by coalesce(nullif(trim(u.location), ''), 'Vietnam')
+    group by coalesce(nullif(trim(u.location), ''), 'Unknown')
     order by value desc, name asc
     limit 6
   `) as { name: string; value: number | string }[]
@@ -857,6 +4144,7 @@ export async function ensureCoHostPartnerAssignment(input: {
       id,
       name,
       model,
+      partner_type,
       status,
       primary_user_id,
       created_at,
@@ -866,6 +4154,7 @@ export async function ensureCoHostPartnerAssignment(input: {
       ${orgId},
       ${userName},
       'co_host',
+      'expo_partner',
       'active',
       ${input.userId},
       now(),
@@ -874,6 +4163,7 @@ export async function ensureCoHostPartnerAssignment(input: {
     on conflict (id) do update
     set
       name = excluded.name,
+      partner_type = excluded.partner_type,
       primary_user_id = excluded.primary_user_id,
       updated_at = now()
   `

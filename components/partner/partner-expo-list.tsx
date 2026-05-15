@@ -4,7 +4,6 @@ import {
   CalendarIcon,
   ChevronDownIcon,
   ChevronRightIcon,
-  ExternalLinkIcon,
   EyeIcon,
   FileTextIcon,
   InfoIcon,
@@ -37,7 +36,13 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select"
-import type { PartnerAssignedExpo, PartnerCapability } from "@/lib/partner/db"
+import type { PartnerAccess } from "@/lib/partner/access"
+import type {
+  PartnerAssignedExpo,
+  PartnerCapability,
+  PartnerMembershipRole,
+  PartnerModel
+} from "@/lib/partner/db"
 import type { ExpoStatus } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
 import { ExpoStatusBadge } from "../tradexpo/status-badge"
@@ -60,6 +65,33 @@ const EXPO_STATUSES: { label: string; value: ExpoStatus | "All" }[] = [
   { label: "Canceled", value: "Canceled" }
 ]
 
+const PARTNERSHIP_MODELS: { label: string; value: PartnerModel | "All" }[] = [
+  { label: "All Models", value: "All" },
+  { label: "Co-host", value: "co_host" },
+  { label: "Turnkey", value: "turnkey" },
+  { label: "Tenant", value: "tenant" }
+]
+
+const PARTNERSHIP_MODEL_LABELS: Record<PartnerModel, string> = {
+  co_host: "Co-host",
+  turnkey: "Turnkey",
+  tenant: "Tenant"
+}
+
+const MEMBERSHIP_ROLE_LABELS: Record<PartnerMembershipRole, string> = {
+  primary_representative: "Primary representative",
+  admin: "Admin",
+  operator: "Operator",
+  analyst: "Analyst",
+  partner_owner: "Partner owner",
+  partner_admin: "Partner admin",
+  program_manager: "Program manager",
+  business_manager: "Business manager",
+  operations: "Operations",
+  finance: "Finance",
+  viewer: "Viewer"
+}
+
 const CAPABILITY_LABELS: Record<PartnerCapability, string> = {
   view_dashboard: "View Dashboard",
   manage_golive: "Manage GoLIVE",
@@ -74,29 +106,36 @@ const CAPABILITY_LABELS: Record<PartnerCapability, string> = {
 const PAGE_SIZE = 10
 
 export function PartnerExpoList({
+  access,
   assignedExpos
 }: {
+  access: PartnerAccess
   assignedExpos: PartnerAssignedExpo[]
 }) {
   const [searchQuery, setSearchQuery] = React.useState("")
   const [statusFilter, setStatusFilter] = React.useState<ExpoStatus | "All">(
     "All"
   )
+  const [modelFilter, setModelFilter] = React.useState<PartnerModel | "All">(
+    "All"
+  )
   const [expandedId, setExpandedId] = React.useState<string | null>(null)
   const [currentPage, setCurrentPage] = React.useState(1)
 
   const filteredExpos = React.useMemo(() => {
-    return assignedExpos.filter(({ expo }) => {
+    return assignedExpos.filter(({ expo, assignment }) => {
       const matchesSearch = expo.name
         .toLowerCase()
         .includes(searchQuery.toLowerCase())
       const matchesStatus =
         statusFilter === "All" || expo.status === statusFilter
-      return matchesSearch && matchesStatus
+      const matchesModel =
+        modelFilter === "All" || assignment.partnershipModel === modelFilter
+      return matchesSearch && matchesStatus && matchesModel
     })
-  }, [assignedExpos, searchQuery, statusFilter])
+  }, [assignedExpos, searchQuery, statusFilter, modelFilter])
 
-  const totalPages = Math.ceil(filteredExpos.length / PAGE_SIZE)
+  const totalPages = Math.max(1, Math.ceil(filteredExpos.length / PAGE_SIZE))
   const pagedExpos = React.useMemo(() => {
     return filteredExpos.slice(
       (currentPage - 1) * PAGE_SIZE,
@@ -104,17 +143,16 @@ export function PartnerExpoList({
     )
   }, [filteredExpos, currentPage])
 
-  // Reset page when filtering
   React.useEffect(() => {
-    setCurrentPage(1)
-  }, [])
+    setCurrentPage((page) => Math.min(page, totalPages))
+  }, [totalPages])
 
   const toggleExpand = (id: string) => {
     setExpandedId(expandedId === id ? null : id)
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-4">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
           <InputGroup className="max-w-xs">
@@ -124,14 +162,18 @@ export function PartnerExpoList({
             <InputGroupInput
               placeholder="Search expos..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(event) => {
+                setSearchQuery(event.target.value)
+                setCurrentPage(1)
+              }}
             />
           </InputGroup>
           <Select
             value={statusFilter}
-            onValueChange={(value) =>
+            onValueChange={(value) => {
               setStatusFilter(value as ExpoStatus | "All")
-            }
+              setCurrentPage(1)
+            }}
           >
             <SelectTrigger className="w-45">
               <SelectValue placeholder="Status" />
@@ -140,6 +182,24 @@ export function PartnerExpoList({
               {EXPO_STATUSES.map((status) => (
                 <SelectItem key={status.value} value={status.value}>
                   {status.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={modelFilter}
+            onValueChange={(value) => {
+              setModelFilter(value as PartnerModel | "All")
+              setCurrentPage(1)
+            }}
+          >
+            <SelectTrigger className="w-45">
+              <SelectValue placeholder="Model" />
+            </SelectTrigger>
+            <SelectContent>
+              {PARTNERSHIP_MODELS.map((model) => (
+                <SelectItem key={model.value} value={model.value}>
+                  {model.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -199,7 +259,7 @@ export function PartnerExpoList({
                           <h3 className="font-semibold text-sm leading-tight transition-colors group-hover:text-primary">
                             {expo.name}
                           </h3>
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground md:text-xs">
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground text-xs">
                             <div className="flex items-center gap-1">
                               <CalendarIcon className="h-3 w-3" />
                               <span>
@@ -238,35 +298,45 @@ export function PartnerExpoList({
                       <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
                         <div className="flex items-center gap-6">
                           <div className="flex flex-col">
-                            <span className="font-bold text-[9px] text-muted-foreground/70 uppercase">
+                            <span className="font-bold text-muted-foreground/70 text-xs uppercase">
                               Role
                             </span>
-                            <span className="font-medium text-[11px]">
-                              {assignment.membershipRole}
+                            <span className="font-medium text-xs">
+                              {
+                                MEMBERSHIP_ROLE_LABELS[
+                                  assignment.membershipRole
+                                ]
+                              }
                             </span>
                           </div>
                           <div className="flex flex-col">
-                            <span className="font-bold text-[9px] text-muted-foreground/70 uppercase">
+                            <span className="font-bold text-muted-foreground/70 text-xs uppercase">
                               Model
                             </span>
-                            <span className="font-medium text-[11px] capitalize">
-                              {assignment.partnershipModel}
+                            <span className="font-medium text-xs capitalize">
+                              {
+                                PARTNERSHIP_MODEL_LABELS[
+                                  assignment.partnershipModel
+                                ]
+                              }
                             </span>
                           </div>
                         </div>
 
-                        <Button
-                          asChild
-                          variant="outline"
-                          size="sm"
-                          className="h-7 px-3 font-semibold text-[10px]"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Link href={`/partner/expos/${expo.id}`}>
-                            Manage
-                            <ChevronRightIcon className="ml-1 h-3 w-3" />
-                          </Link>
-                        </Button>
+                        {access.actions["expo.edit"] ? (
+                          <Button
+                            asChild
+                            variant="outline"
+                            size="sm"
+                            className="h-7 px-3 font-semibold text-xs"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Link href={`/partner/expos/${expo.id}`}>
+                              Manage
+                              <ChevronRightIcon className="ml-1 h-3 w-3" />
+                            </Link>
+                          </Button>
+                        ) : null}
                       </div>
                     </div>
                   </div>
@@ -278,7 +348,7 @@ export function PartnerExpoList({
                         {/* Metrics Section */}
                         {showMetrics && (
                           <div className="space-y-4">
-                            <div className="flex items-center gap-2 font-bold font-mono text-[10px] text-muted-foreground uppercase tracking-wider">
+                            <div className="flex items-center gap-2 font-bold font-mono text-muted-foreground text-xs uppercase tracking-wider">
                               <ZapIcon className="h-3 w-3 text-amber-500" />
                               Operational Metrics
                             </div>
@@ -286,7 +356,7 @@ export function PartnerExpoList({
                               <div className="flex flex-col gap-1 rounded-xl border border-sidebar-border bg-card p-3 shadow-xs">
                                 <div className="flex items-center gap-2 text-muted-foreground">
                                   <EyeIcon className="h-3.5 w-3.5" />
-                                  <span className="font-semibold text-[10px] uppercase">
+                                  <span className="font-semibold text-xs uppercase">
                                     Total Views
                                   </span>
                                 </div>
@@ -297,7 +367,7 @@ export function PartnerExpoList({
                               <div className="flex flex-col gap-1 rounded-xl border border-sidebar-border bg-card p-3 shadow-xs">
                                 <div className="flex items-center gap-2 text-muted-foreground">
                                   <LayoutDashboardIcon className="h-3.5 w-3.5" />
-                                  <span className="font-semibold text-[10px] uppercase">
+                                  <span className="font-semibold text-xs uppercase">
                                     Booths
                                   </span>
                                 </div>
@@ -313,7 +383,7 @@ export function PartnerExpoList({
                               <div className="flex flex-col gap-1 rounded-xl border border-sidebar-border bg-card p-3 shadow-xs">
                                 <div className="flex items-center gap-2 text-muted-foreground">
                                   <FileTextIcon className="h-3.5 w-3.5" />
-                                  <span className="font-semibold text-[10px] uppercase">
+                                  <span className="font-semibold text-xs uppercase">
                                     RFQs Created
                                   </span>
                                 </div>
@@ -324,7 +394,7 @@ export function PartnerExpoList({
                               <div className="flex flex-col gap-1 rounded-xl border border-sidebar-border bg-card p-3 shadow-xs">
                                 <div className="flex items-center gap-2 text-muted-foreground">
                                   <MessageSquareIcon className="h-3.5 w-3.5" />
-                                  <span className="font-semibold text-[10px] uppercase">
+                                  <span className="font-semibold text-xs uppercase">
                                     Chat Now
                                   </span>
                                 </div>
@@ -338,7 +408,7 @@ export function PartnerExpoList({
 
                         <div className="grid gap-6 sm:grid-cols-2">
                           <div className="space-y-4">
-                            <div className="flex items-center gap-2 font-bold text-[10px] text-muted-foreground uppercase tracking-wider">
+                            <div className="flex items-center gap-2 font-bold text-muted-foreground text-xs uppercase tracking-wider">
                               <InfoIcon className="h-3 w-3" />
                               Organization Details
                             </div>
@@ -362,7 +432,7 @@ export function PartnerExpoList({
                                       ? "outline"
                                       : "destructive"
                                   }
-                                  className="h-4 px-1.5 font-bold text-[9px] uppercase"
+                                  className="h-4 px-1.5 font-bold text-xs uppercase"
                                 >
                                   {assignment.partnerOrganization.status ===
                                   "active"
@@ -383,7 +453,7 @@ export function PartnerExpoList({
                           </div>
 
                           <div className="space-y-4">
-                            <div className="flex items-center gap-2 font-bold text-[10px] text-muted-foreground uppercase tracking-wider">
+                            <div className="flex items-center gap-2 font-bold text-muted-foreground text-xs uppercase tracking-wider">
                               <ShieldCheckIcon className="h-3 w-3" />
                               Capabilities
                             </div>
@@ -392,7 +462,7 @@ export function PartnerExpoList({
                                 <Badge
                                   key={cap}
                                   variant="secondary"
-                                  className="border px-1.5 py-0 font-normal text-[10px]"
+                                  className="border px-1.5 py-0 font-normal text-xs"
                                 >
                                   {CAPABILITY_LABELS[cap] || cap}
                                 </Badge>
@@ -400,19 +470,6 @@ export function PartnerExpoList({
                             </div>
                           </div>
                         </div>
-                      </div>
-
-                      <div className="mt-6 flex justify-end md:ml-48">
-                        <Button
-                          asChild
-                          size="sm"
-                          className="h-8 px-4 font-semibold text-[11px]"
-                        >
-                          <Link href={`/partner/expos/${expo.id}`}>
-                            Access Expo Dashboard
-                            <ExternalLinkIcon className="ml-2 h-3 w-3" />
-                          </Link>
-                        </Button>
                       </div>
                     </div>
                   )}
@@ -497,6 +554,27 @@ export function PartnerExpoList({
             </div>
           )}
         </div>
+      ) : assignedExpos.length === 0 ? (
+        <Card className="flex min-h-75 flex-col items-center justify-center border-dashed bg-muted/20 p-8 text-center">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+            <CalendarIcon className="h-5 w-5 text-muted-foreground/60" />
+          </div>
+          <CardTitle className="mt-4 font-semibold text-sm">
+            No expo programs assigned yet
+          </CardTitle>
+          <CardDescription className="mt-1 max-w-80 text-xs">
+            Ask an admin to assign your partner organization to an expo program.
+            Assigned expos will appear here for operations and GoLIVE work.
+          </CardDescription>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => window.location.reload()}
+            className="mt-4 h-8 text-xs"
+          >
+            Refresh assignments
+          </Button>
+        </Card>
       ) : (
         <Card className="flex min-h-75 flex-col items-center justify-center border-dashed bg-muted/20 p-8 text-center">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
@@ -514,6 +592,7 @@ export function PartnerExpoList({
             onClick={() => {
               setSearchQuery("")
               setStatusFilter("All")
+              setModelFilter("All")
             }}
             className="mt-4 h-8 text-xs"
           >

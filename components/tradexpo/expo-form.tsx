@@ -307,31 +307,13 @@ export function ExpoForm(props: ExpoFormProps) {
   }, [categoryQuery, props.categories])
 
   return (
-    <form className="space-y-3" onSubmit={onSubmit}>
+    <form className="space-y-3 px-4" onSubmit={onSubmit}>
       <Card>
         <CardHeader>
           <CardTitle>
             {isPartnerContentEdit ? "Expo information" : "General information"}
           </CardTitle>
-          <CardDescription>
-            {isPartnerContentEdit ? (
-              <>
-                Update public-facing content while this expo is still{" "}
-                <strong>Draft</strong>.
-              </>
-            ) : isEdit ? (
-              <>
-                Metadata, schedule, and template selection. Status stays{" "}
-                <strong>{props.initialExpo.status}</strong> until you change it
-                from the expo detail page.
-              </>
-            ) : (
-              <>
-                Metadata, schedule, and template selection. The expo is saved as{" "}
-                <strong>Draft</strong>.
-              </>
-            )}
-          </CardDescription>
+          <CardDescription />
         </CardHeader>
         <CardContent className="grid gap-4">
           <div className="grid gap-2">

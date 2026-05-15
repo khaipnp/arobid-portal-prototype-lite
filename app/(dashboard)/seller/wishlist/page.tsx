@@ -14,7 +14,7 @@ export default async function SellerWishlistPage() {
   return (
     <DashboardShell
       title="Wishlist"
-      description="Review exhibitors you saved from public Expo pages."
+      description="Review expos, products, and sellers you saved from public Expo pages."
       breadcrumbs={[
         { label: "Dashboard", href: "/seller" },
         { label: "Wishlist" }

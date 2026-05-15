@@ -50,8 +50,8 @@ export default async function PartnerExpoDetailPage({
       title={expo.name}
       description={`${formatDate(expo.startDate)} - ${formatDate(expo.endDate)}`}
       breadcrumbs={[
-        { label: "Dashboard", href: "/partner" },
-        { label: "My Expos", href: "/partner/expos" },
+        { label: "Overview", href: "/partner" },
+        { label: "Expo Programs", href: "/partner/expos" },
         { label: expo.name }
       ]}
       showBackButton

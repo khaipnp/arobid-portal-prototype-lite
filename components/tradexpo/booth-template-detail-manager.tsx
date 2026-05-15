@@ -15,6 +15,13 @@ import { reuploadBoothTemplateAsset } from "@/lib/tradexpo/actions/booth-templat
 import { updateModelAssetStatus } from "@/lib/tradexpo/actions/model-assets"
 import type { BoothTemplate, ModelAsset } from "@/lib/tradexpo/types"
 import { getAssetMap } from "@/lib/tradexpo/utils"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from "../ui/card"
 
 function assetStatusVariant(
   status: string
@@ -35,10 +42,7 @@ export function BoothTemplateDetailManager({
   const [assets, setAssets] = React.useState<ModelAsset[]>(() =>
     initialAssets.map((a) => ({ ...a }))
   )
-  const [template, setTemplate] = React.useState<BoothTemplate>(() => ({
-    ...initialTemplate,
-    translations: initialTemplate.translations.map((tr) => ({ ...tr }))
-  }))
+  const [template, setTemplate] = React.useState<BoothTemplate>(initialTemplate)
   const [notice, setNotice] = React.useState<{
     type: "success" | "error"
     text: string
@@ -132,41 +136,20 @@ export function BoothTemplateDetailManager({
   ]
 
   return (
-    <section className="rounded-xl border bg-card p-4">
-      <h2 className="font-semibold text-base">Asset Status</h2>
-      <p className="mt-0.5 text-muted-foreground text-sm">
-        Template can only be published when GLB and thumbnail are ready.
-      </p>
-
-      {notice ? (
-        <p
-          className={
-            notice.type === "error"
-              ? "mt-3 rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-rose-700 text-sm"
-              : "mt-3 rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-emerald-700 text-sm"
-          }
-        >
-          {notice.text}
-        </p>
-      ) : null}
-
-      <div className="mt-3 rounded-md border">
+    <Card>
+      <CardHeader>
+        <CardTitle>Asset Status</CardTitle>
+        <CardDescription>{assets.length} assets</CardDescription>
+      </CardHeader>
+      <CardContent>
         <Table>
-          <TableHeader className="bg-muted/40">
-            <TableRow>
-              <TableHead>Asset</TableHead>
-              <TableHead>File Name</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Action</TableHead>
-            </TableRow>
-          </TableHeader>
           <TableBody>
             {assetRows.map(({ label, asset, kind, required }) => (
               <TableRow key={kind}>
                 <TableCell className="font-medium">
                   {label}
                   {required ? (
-                    <span className="ml-1 text-rose-500">*</span>
+                    <span className="ml-1 text-red-500">*</span>
                   ) : null}
                 </TableCell>
                 <TableCell className="text-muted-foreground text-xs">
@@ -174,31 +157,20 @@ export function BoothTemplateDetailManager({
                 </TableCell>
                 <TableCell>
                   {asset ? (
-                    <Badge variant={assetStatusVariant(asset.status)}>
+                    <Badge variant="secondary" className="capitalize">
                       {asset.status}
                     </Badge>
                   ) : (
                     <span className="text-muted-foreground text-xs">
-                      missing
+                      Missing
                     </span>
                   )}
-                </TableCell>
-                <TableCell>
-                  {asset?.status === "failed" ? (
-                    <Button
-                      size="xs"
-                      variant="outline"
-                      onClick={() => handleReuploadAsset(kind)}
-                    >
-                      Re-upload
-                    </Button>
-                  ) : null}
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
-      </div>
-    </section>
+      </CardContent>
+    </Card>
   )
 }

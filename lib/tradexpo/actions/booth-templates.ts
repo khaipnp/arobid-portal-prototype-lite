@@ -142,3 +142,74 @@ export async function toggleBoothTemplateActive(templateId: string) {
   revalidatePath("/admin/tradexpo/booth-templates")
   revalidatePath(`/admin/tradexpo/booth-templates/${templateId}`)
 }
+
+export async function deleteBoothTemplate(templateId: string) {
+  const usageRows = (await sql`
+    select upcoming_expo_booth_count, live_expo_booth_count, archived_expo_booth_count
+    from booth_template_usage
+    where booth_template_id = ${templateId}
+  `) as {
+    upcoming_expo_booth_count: number
+    live_expo_booth_count: number
+    archived_expo_booth_count: number
+  }[]
+
+  const usage = usageRows[0]
+  const totalReferences = usage
+    ? usage.upcoming_expo_booth_count +
+      usage.live_expo_booth_count +
+      usage.archived_expo_booth_count
+    : 0
+
+  if (totalReferences > 0) {
+    throw new Error(
+      "This template is used by one or more expo booths and cannot be deleted."
+    )
+  }
+
+  await sql`begin`
+  try {
+    const templateRows = (await sql`
+      delete from booth_templates
+      where id = ${templateId}
+      returning source_blend_asset_id, render_glb_asset_id, thumbnail_asset_id
+    `) as {
+      source_blend_asset_id: string | null
+      render_glb_asset_id: string
+      thumbnail_asset_id: string
+    }[]
+
+    if (templateRows.length === 0) {
+      throw new Error("Booth template not found")
+    }
+
+    const assetIds = [
+      templateRows[0].source_blend_asset_id,
+      templateRows[0].render_glb_asset_id,
+      templateRows[0].thumbnail_asset_id
+    ].filter((id): id is string => Boolean(id))
+
+    for (const assetId of assetIds) {
+      const rows = (await sql`
+        select exists (
+          select 1 from booth_templates
+          where source_blend_asset_id = ${assetId}
+             or render_glb_asset_id = ${assetId}
+             or thumbnail_asset_id = ${assetId}
+        ) as is_used
+      `) as { is_used: boolean }[]
+
+      if (!rows[0]?.is_used) {
+        await sql`delete from model_assets where id = ${assetId}`
+      }
+    }
+
+    await sql`commit`
+  } catch (error) {
+    await sql`rollback`
+    throw error
+  }
+
+  revalidatePath("/admin/tradexpo/booth-templates")
+  revalidatePath(`/admin/tradexpo/booth-templates/${templateId}`)
+}

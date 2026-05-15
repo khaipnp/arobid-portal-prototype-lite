@@ -37,7 +37,7 @@ export function ExhibitorCardActions({
 
   const toggleWishlist = async () => {
     if (!isAuthenticated) {
-      toast.error("Please login to save exhibitors to your wishlist")
+      toast.error("Please login to save sellers to your wishlist")
       return
     }
 
@@ -47,13 +47,13 @@ export function ExhibitorCardActions({
     try {
       const res = await fetch(
         nextValue
-          ? "/api/wishlist/exhibitors"
-          : `/api/wishlist/exhibitors?registrationId=${encodeURIComponent(exhibitorId)}`,
+          ? "/api/wishlist"
+          : `/api/wishlist?targetType=seller&targetId=${encodeURIComponent(exhibitorId)}`,
         {
           method: nextValue ? "POST" : "DELETE",
           headers: nextValue ? { "Content-Type": "application/json" } : {},
           body: nextValue
-            ? JSON.stringify({ registrationId: exhibitorId })
+            ? JSON.stringify({ targetType: "seller", targetId: exhibitorId })
             : undefined
         }
       )
@@ -67,8 +67,8 @@ export function ExhibitorCardActions({
 
       toast.success(
         nextValue
-          ? "Exhibitor saved to your wishlist"
-          : "Exhibitor removed from your wishlist"
+          ? "Seller saved to your wishlist"
+          : "Seller removed from your wishlist"
       )
     } catch (_err) {
       setIsWishlisted(!nextValue)
@@ -121,8 +121,9 @@ export function ExhibitorCardActions({
       <Button
         type="button"
         variant="ghost"
+        size="md"
         className={cn(
-          "flex-1 rounded-lg font-medium text-muted-foreground hover:text-foreground",
+          "flex-1 rounded-xl font-medium text-[13px] text-muted-foreground leading-none hover:text-foreground",
           isWishlisted && "text-rose-600 hover:text-rose-700"
         )}
         disabled={isWishlistPending}
@@ -135,18 +136,19 @@ export function ExhibitorCardActions({
       <Button
         type="button"
         variant="ghost"
-        size="default"
-        className="flex-1 rounded-lg font-medium text-muted-foreground hover:text-foreground"
+        size="md"
+        className="flex-1 rounded-xl font-medium text-[13px] text-muted-foreground leading-none hover:text-foreground"
         onClick={onChatClick}
       >
-        <MessageCircleIcon /> Chat Now
+        <MessageCircleIcon size={16} /> Chat Now
       </Button>
       <Dialog open={shareOpen} onOpenChange={setShareOpen}>
         <DialogTrigger asChild>
           <Button
             type="button"
             variant="ghost"
-            className="flex-1 rounded-lg font-medium text-muted-foreground hover:text-foreground"
+            size="md"
+            className="flex-1 rounded-xl font-medium text-[13px] text-muted-foreground leading-none"
           >
             <Share2Icon />
             Share

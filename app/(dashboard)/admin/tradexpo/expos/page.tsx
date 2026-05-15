@@ -19,6 +19,7 @@ export default async function ExpoListPage() {
         { label: "TradeXpo", href: "/admin/tradexpo" },
         { label: "Expo List" }
       ]}
+      showBackButton
     >
       <ExpoListManager
         initialExpos={initialExpos}

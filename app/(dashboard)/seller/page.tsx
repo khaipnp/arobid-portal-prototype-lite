@@ -21,7 +21,7 @@ export default async function SellerDashboardPage() {
       description="Manage your booths and browse expo events."
       breadcrumbs={[{ label: "Dashboard" }]}
     >
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 px-4 md:grid-cols-3">
         <Link
           href="/seller/orders"
           className="group rounded-xl border bg-card p-4 transition-colors hover:bg-accent/40"

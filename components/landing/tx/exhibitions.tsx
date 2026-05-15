@@ -10,6 +10,7 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { useState } from "react"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -20,11 +21,16 @@ import { asset, type HomeExpoCard } from "./data"
 type ExhibitionsProps = {
   categories: string[]
   expos: HomeExpoCard[]
+  isAuthenticated?: boolean
 }
 
-export function Exhibitions({ categories, expos }: ExhibitionsProps) {
+export function Exhibitions({
+  categories,
+  expos,
+  isAuthenticated = false
+}: ExhibitionsProps) {
   return (
-    <section id="shows" className="bg-white px-5 py-16 md:px-20">
+    <section id="shows" className="container mx-auto bg-white py-16">
       <h2 className="text-center font-semibold text-3xl leading-10">
         Explore Industry Shows
       </h2>
@@ -45,9 +51,13 @@ export function Exhibitions({ categories, expos }: ExhibitionsProps) {
           </button>
         ))}
       </div>
-      <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {expos.map((expo) => (
-          <ExpoCard key={expo.title} expo={expo} />
+          <ExpoCard
+            key={expo.id}
+            expo={expo}
+            isAuthenticated={isAuthenticated}
+          />
         ))}
       </div>
       <div className="mt-8 text-center">
@@ -63,7 +73,15 @@ export function Exhibitions({ categories, expos }: ExhibitionsProps) {
   )
 }
 
-function ExpoCard({ expo }: { expo: HomeExpoCard }) {
+function ExpoCard({
+  expo,
+  isAuthenticated
+}: {
+  expo: HomeExpoCard
+  isAuthenticated: boolean
+}) {
+  const [isWishlisted, setIsWishlisted] = useState(!!expo.isWishlisted)
+  const [isWishlistPending, setIsWishlistPending] = useState(false)
   const statusTone =
     expo.status === "Live"
       ? "bg-[#16a34a]"
@@ -71,6 +89,49 @@ function ExpoCard({ expo }: { expo: HomeExpoCard }) {
         ? "bg-[#f59e0b]"
         : "bg-[#9ca3af]"
   const countdownLabel = expo.status === "Upcoming" ? "Starts in" : "Ends in"
+
+  const toggleWishlist = async () => {
+    if (!isAuthenticated) {
+      toast.error("Please login to save expos to your wishlist")
+      return
+    }
+
+    const nextValue = !isWishlisted
+    setIsWishlisted(nextValue)
+    setIsWishlistPending(true)
+    try {
+      const res = await fetch(
+        nextValue
+          ? "/api/wishlist"
+          : `/api/wishlist?targetType=expo&targetId=${encodeURIComponent(expo.id)}`,
+        {
+          method: nextValue ? "POST" : "DELETE",
+          headers: nextValue ? { "Content-Type": "application/json" } : {},
+          body: nextValue
+            ? JSON.stringify({ targetType: "expo", targetId: expo.id })
+            : undefined
+        }
+      )
+
+      if (!res.ok) {
+        setIsWishlisted(!nextValue)
+        const payload = await res.json().catch(() => null)
+        toast.error(payload?.error ?? "Could not update wishlist")
+        return
+      }
+
+      toast.success(
+        nextValue
+          ? "Expo saved to your wishlist"
+          : "Expo removed from your wishlist"
+      )
+    } catch (_err) {
+      setIsWishlisted(!nextValue)
+      toast.error("Could not update wishlist")
+    } finally {
+      setIsWishlistPending(false)
+    }
+  }
 
   return (
     <Card className="overflow-hidden rounded-3xl bg-white p-2 shadow-[0_0_12px_rgba(0,0,0,0.08)]">
@@ -106,10 +167,21 @@ function ExpoCard({ expo }: { expo: HomeExpoCard }) {
             </Badge>
           ))}
         </div>
-        <Heart
-          className="absolute top-3 right-3 size-7 text-muted"
-          onClick={() => toast("Add to Favorites!")}
-        />
+        <button
+          type="button"
+          className="absolute top-3 right-3 grid size-9 place-items-center rounded-full bg-white/80 text-muted transition hover:text-rose-600 disabled:opacity-60"
+          disabled={isWishlistPending}
+          aria-pressed={isWishlisted}
+          aria-label={isWishlisted ? "Remove expo from wishlist" : "Save expo"}
+          onClick={toggleWishlist}
+        >
+          <Heart
+            className={cn(
+              "size-5",
+              isWishlisted && "fill-rose-500 text-rose-600"
+            )}
+          />
+        </button>
         <div className="absolute inset-x-0 bottom-0 flex items-center gap-3 rounded-b-xl bg-black/40 px-3 py-2 text-white backdrop-blur">
           <div className="rounded-lg bg-white/30 p-2 text-white">
             <CalendarDays className="size-5" />

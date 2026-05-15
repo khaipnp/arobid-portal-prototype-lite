@@ -27,6 +27,7 @@ export default async function CreateExpoPage() {
         { label: "Expo List", href: "/admin/tradexpo/expos" },
         { label: "Create" }
       ]}
+      showBackButton
     >
       <ExpoForm
         mode="create"

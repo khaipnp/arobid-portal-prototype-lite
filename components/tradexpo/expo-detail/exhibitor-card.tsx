@@ -18,7 +18,14 @@ const productFallbackImages = [
 type ExhibitorCardProps = {
   exhibitor: ExpoDetailExhibitor
   isAuthenticated?: boolean
-  onChatClick?: (product?: { image: string; label: string } | null) => void
+  onChatClick?: (
+    product?: {
+      id: string
+      image: string
+      label: string
+      isWishlisted?: boolean
+    } | null
+  ) => void
 }
 
 function Dot() {
@@ -50,13 +57,20 @@ export function ExhibitorCard({
   onChatClick
 }: ExhibitorCardProps) {
   const [selectedProduct, setSelectedProduct] = useState<{
+    id: string
     image: string
     label: string
+    isWishlisted?: boolean
   } | null>(null)
 
-  const productImages = productFallbackImages.map((image, index) => ({
-    image,
-    label: exhibitor.products[index] ?? `Featured product ${index + 1}`
+  const productImages = exhibitor.products.map((product, index) => ({
+    id: product.id,
+    image:
+      product.imageUrl ??
+      productFallbackImages[index] ??
+      productFallbackImages[0],
+    label: product.name,
+    isWishlisted: product.isWishlisted
   }))
 
   return (
@@ -151,6 +165,7 @@ export function ExhibitorCard({
         products={productImages}
         selectedProduct={selectedProduct}
         onSelectedProductChange={setSelectedProduct}
+        isAuthenticated={isAuthenticated}
         onChatNow={(product) => {
           onChatClick?.(product)
         }}

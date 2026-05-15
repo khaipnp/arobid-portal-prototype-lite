@@ -1,6 +1,16 @@
 "use client"
 
-import { CalendarIcon, LayoutDashboardIcon, Settings2Icon } from "lucide-react"
+import {
+  BoxesIcon,
+  Building2Icon,
+  CalendarIcon,
+  LandmarkIcon,
+  LayoutDashboardIcon,
+  MessageSquareIcon,
+  PieChartIcon,
+  UsersIcon,
+  WalletCardsIcon
+} from "lucide-react"
 import Link from "next/link"
 import { NotificationNavLink } from "@/components/notifications/notification-nav-link"
 import {
@@ -10,21 +20,64 @@ import {
   SidebarMenuButton,
   SidebarMenuItem
 } from "@/components/ui/sidebar"
+import type { PartnerAccess, PartnerPortalTab } from "@/lib/partner/access"
 
-const expoOwnerLinks = [
+const partnerLinks = [
   {
-    name: "My Expos",
+    name: "Expo Programs",
     url: "/partner/expos",
+    tab: "expo",
     icon: <CalendarIcon />
   },
   {
-    name: "Settings",
-    url: "/partner/settings",
-    icon: <Settings2Icon />
+    name: "Enterprises & Members",
+    url: "/partner/enterprises",
+    tab: "enterprises",
+    icon: <UsersIcon />
+  },
+  {
+    name: "Quota & TradeCredits",
+    url: "/partner/quota",
+    tab: "quota",
+    icon: <WalletCardsIcon />
+  },
+  {
+    name: "Service Bundles",
+    url: "/partner/bundles",
+    tab: "bundles",
+    icon: <BoxesIcon />
+  },
+  {
+    name: "Communications",
+    url: "/partner/communications",
+    tab: "communications",
+    icon: <MessageSquareIcon />
+  },
+  {
+    name: "Finance & Settlement",
+    url: "/partner/finance",
+    tab: "finance",
+    icon: <Building2Icon />
+  },
+  {
+    name: "Analytics & Reports",
+    url: "/partner/analytics",
+    tab: "analytics",
+    icon: <PieChartIcon />
+  },
+  {
+    name: "Government Programs",
+    url: "/partner/government",
+    tab: "government",
+    icon: <LandmarkIcon />
   }
 ]
 
-export function NavPartner() {
+export function NavPartner({ access }: { access?: PartnerAccess }) {
+  const links = partnerLinks.filter(
+    (item) => access?.tabs[item.tab as PartnerPortalTab] ?? true
+  )
+
   return (
     <SidebarGroup>
       <SidebarMenu>
@@ -32,7 +85,7 @@ export function NavPartner() {
           <SidebarMenuButton asChild>
             <Link href="/partner">
               <LayoutDashboardIcon />
-              <span>Dashboard</span>
+              <span>Overview</span>
             </Link>
           </SidebarMenuButton>
         </SidebarMenuItem>
@@ -40,11 +93,8 @@ export function NavPartner() {
       <SidebarMenu>
         <NotificationNavLink href="/partner/notifications" />
       </SidebarMenu>
-      <SidebarGroupLabel className="select-none">
-        Expo Management
-      </SidebarGroupLabel>
       <SidebarMenu>
-        {expoOwnerLinks.map((item) => (
+        {links.map((item) => (
           <SidebarMenuItem key={item.name}>
             <SidebarMenuButton asChild>
               <Link href={item.url}>

@@ -8,7 +8,7 @@ import {
   WalletCardsIcon
 } from "lucide-react"
 import Link from "next/link"
-import { type ReactNode, useState } from "react"
+import type { ReactNode } from "react"
 import {
   Bar,
   BarChart,
@@ -117,11 +117,6 @@ function shortName(name: string) {
   return words.slice(0, 2).join(" ")
 }
 
-function getClickedExpoId(event: unknown) {
-  return (event as { activePayload?: { payload?: { expoId?: string } }[] })
-    ?.activePayload?.[0]?.payload?.expoId
-}
-
 function EmptyChart({ label }: { label: string }) {
   return (
     <div className="flex h-55 items-center justify-center rounded-md border border-dashed text-muted-foreground text-sm">
@@ -168,21 +163,17 @@ export function PartnerDashboard({
     ...item,
     label: shortName(item.expoName)
   }))
-  const [selectedExpoId, setSelectedExpoId] = useState(
-    metrics.expoMetrics[0]?.expoId ?? ""
-  )
-
   const hasExpoMetrics = metrics.expoMetrics.length > 0
   const hasCountryData = metrics.countryBreakdown.length > 0
   const hasTierData = metrics.boothTierBreakdown.length > 0
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 px-4">
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           title="Assigned Expos"
           value={numberFormat.format(metrics.totals.assignedExpos)}
-          note={`${metrics.totals.liveExpos} live now`}
+          note={`${metrics.totals.liveExpos} live now across assigned expos`}
           icon={<BarChart3Icon className="h-4 w-4" />}
         />
         <MetricCard
@@ -200,7 +191,7 @@ export function PartnerDashboard({
         <MetricCard
           title="Paid Revenue"
           value={currencyFormat.format(metrics.totals.revenue)}
-          note={`${numberFormat.format(metrics.totals.publishedBooths)} booths published`}
+          note={`${numberFormat.format(metrics.totals.publishedBooths)} booths published across assigned expos`}
           icon={<WalletCardsIcon className="h-4 w-4" />}
         />
       </div>
@@ -220,14 +211,7 @@ export function PartnerDashboard({
                 className="h-80 w-full"
                 initialDimension={{ width: 720, height: 320 }}
               >
-                <BarChart
-                  data={expoChartData}
-                  margin={{ top: 20, right: 16 }}
-                  onClick={(event) => {
-                    const expoId = getClickedExpoId(event)
-                    if (expoId) setSelectedExpoId(expoId)
-                  }}
-                >
+                <BarChart data={expoChartData} margin={{ top: 20, right: 16 }}>
                   <CartesianGrid vertical={false} />
                   <XAxis
                     dataKey="label"
@@ -243,30 +227,13 @@ export function PartnerDashboard({
                     stackId="booths"
                     fill="var(--color-soldBooths)"
                     radius={[0, 0, 4, 4]}
-                    className="cursor-pointer"
-                  >
-                    {expoChartData.map((item) => (
-                      <Cell
-                        key={`sold-${item.expoId}`}
-                        fill="var(--color-soldBooths)"
-                        opacity={item.expoId === selectedExpoId ? 1 : 0.45}
-                      />
-                    ))}
-                  </Bar>
+                  />
                   <Bar
                     dataKey="unsoldBooths"
                     stackId="booths"
                     fill="var(--color-unsoldBooths)"
                     radius={[4, 4, 0, 0]}
-                    className="cursor-pointer"
                   >
-                    {expoChartData.map((item) => (
-                      <Cell
-                        key={`unsold-${item.expoId}`}
-                        fill="var(--color-unsoldBooths)"
-                        opacity={item.expoId === selectedExpoId ? 1 : 0.35}
-                      />
-                    ))}
                     <LabelList
                       dataKey="boothUtilization"
                       position="top"
@@ -413,7 +380,7 @@ export function PartnerDashboard({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
+          <Table className="min-w-[820px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Expo Name</TableHead>
@@ -421,7 +388,7 @@ export function PartnerDashboard({
                 <TableHead className="text-right">Booths</TableHead>
                 <TableHead className="text-right">Utilization</TableHead>
                 <TableHead className="text-right">Published</TableHead>
-                <TableHead className="text-right">Visitor</TableHead>
+                <TableHead className="text-right">Peak viewers</TableHead>
                 <TableHead className="text-right">Revenue</TableHead>
               </TableRow>
             </TableHeader>
@@ -462,11 +429,16 @@ export function PartnerDashboard({
               ))}
               {metrics.expoMetrics.length === 0 ? (
                 <TableRow>
-                  <TableCell
-                    colSpan={7}
-                    className="h-24 text-center text-muted-foreground"
-                  >
-                    No assigned expos available for this partner.
+                  <TableCell colSpan={7} className="h-32 text-center">
+                    <div className="flex flex-col items-center gap-3 text-muted-foreground">
+                      <span>No assigned expos available for this partner.</span>
+                      <Link
+                        href="/partner/expos"
+                        className="rounded-md border px-3 py-2 font-medium text-foreground text-sm underline-offset-4 hover:underline"
+                      >
+                        Go to Expo Programs
+                      </Link>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : null}
@@ -515,7 +487,7 @@ function BreakdownList({
                 <div className="h-2 overflow-hidden rounded-full bg-muted">
                   <div
                     className="h-full rounded-full bg-primary"
-                    style={{ width: `${Math.max(percent, 4)}%` }}
+                    style={{ width: `${percent}%` }}
                   />
                 </div>
               </div>
