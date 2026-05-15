@@ -1,21 +1,14 @@
 import { NextResponse } from "next/server"
-import { getCurrentUserIdFromRequest, userHasRole } from "@/lib/auth/rbac"
+import { requirePartnerApiAction } from "@/lib/partner/access"
 import { updatePartnerServiceBundle } from "@/lib/partner/db"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 
 type Props = { params: Promise<{ bundleId: string }> }
 
-async function requirePartnerUser() {
-  const userId = await getCurrentUserIdFromRequest()
-  const allowed = await userHasRole(userId, "partner")
-  if (!allowed) throw new Error("Forbidden.")
-  return userId
-}
-
 export async function PATCH(request: Request, { params }: Props) {
   await ensurePlatformSchema()
   try {
-    const userId = await requirePartnerUser()
+    const userId = await requirePartnerApiAction("bundle.manage")
     const { bundleId } = await params
     const body = (await request.json()) as {
       name?: string

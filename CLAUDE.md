@@ -28,7 +28,7 @@ bun notifications:seed
 bun scripts/test-r2.ts
 ```
 
-Tests are plain TypeScript/Bun test files where present:
+Tests are plain TypeScript/Bun test files where present. Run all tests with `bun test`, or a single test file with:
 
 ```bash
 bun test lib/platform/ensure-schema.test.ts

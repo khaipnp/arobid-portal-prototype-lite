@@ -2,10 +2,9 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import { MoreHorizontalIcon, PlusIcon, SearchIcon } from "lucide-react"
+import { MoreHorizontalIcon, PlusIcon, SearchIcon, XIcon } from "lucide-react"
 import Link from "next/link"
 import * as React from "react"
-import { StatusBadge } from "@/components/tradexpo/status-badge"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,6 +16,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger
 } from "@/components/ui/alert-dialog"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
@@ -67,11 +67,15 @@ import {
   createMockId,
   formatDateTime,
   getAssetMap,
-  getBoothTemplateStatus,
   getTranslationName,
   isValidFileName
 } from "@/lib/tradexpo/utils"
-import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group"
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput
+} from "../ui/input-group"
 
 interface BoothTemplateFormState {
   name: string
@@ -143,7 +147,7 @@ export function BoothTemplateLibraryManager({
   const [translationLanguageCode, setTranslationLanguageCode] =
     React.useState("vi")
   const [translationName, setTranslationName] = React.useState("")
-  const [previewLocale, setPreviewLocale] = React.useState("en")
+  const previewLocale = "en"
   const [deleteTemplateId, setDeleteTemplateId] = React.useState<string | null>(
     null
   )
@@ -678,30 +682,37 @@ export function BoothTemplateLibraryManager({
   }
 
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-4 px-4">
       <section>
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-          <div className="flex w-full items-center gap-2 md:max-w-xl">
-            <InputGroup>
-              <InputGroupInput
-                value={search}
-                onChange={(event) => {
-                  setSearch(event.target.value)
-                  setPage(1)
-                }}
-                placeholder="Search booth template by name"
-              />
-              <InputGroupAddon>
-                <SearchIcon />
-              </InputGroupAddon>
-            </InputGroup>
-            <Input
-              className="w-28"
-              value={previewLocale}
-              onChange={(event) => setPreviewLocale(event.target.value || "en")}
-              placeholder="locale"
+          <InputGroup className="w-full max-w-xs rounded-full">
+            <InputGroupAddon align="inline-start">
+              <SearchIcon />
+            </InputGroupAddon>
+            <InputGroupInput
+              value={search}
+              onChange={(event) => {
+                setSearch(event.target.value)
+                setPage(1)
+              }}
+              placeholder="Search booth template by name"
             />
-          </div>
+
+            {search && (
+              <InputGroupAddon align="inline-end">
+                <InputGroupButton
+                  size="icon-xs"
+                  className="rounded-full"
+                  variant="secondary"
+                  onClick={() => setSearch("")}
+                >
+                  <XIcon />
+                  <span className="sr-only">Clear search</span>
+                </InputGroupButton>
+              </InputGroupAddon>
+            )}
+          </InputGroup>
+
           <Button onClick={openCreateForm}>
             <PlusIcon />
             Create New
@@ -712,7 +723,7 @@ export function BoothTemplateLibraryManager({
           <p
             className={
               notice.type === "error"
-                ? "mt-3 rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-rose-700 text-sm"
+                ? "mt-3 rounded-md border border-red-300 bg-red-50 px-3 py-2 text-red-700 text-sm"
                 : notice.type === "info"
                   ? "mt-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-amber-700 text-sm"
                   : "mt-3 rounded-md border border-emerald-300 bg-emerald-50 px-3 py-2 text-emerald-700 text-sm"
@@ -726,7 +737,6 @@ export function BoothTemplateLibraryManager({
           <Table>
             <TableHeader className="bg-muted/40">
               <TableRow>
-                <TableHead>Thumbnail</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Booth Type</TableHead>
                 <TableHead>Updated By</TableHead>
@@ -744,8 +754,7 @@ export function BoothTemplateLibraryManager({
                 </TableRow>
               ) : (
                 pagedTemplates.map((template) => {
-                  const status = getBoothTemplateStatus(template, assetMap)
-                  const thumbnail = assetMap[template.thumbnailAssetId]
+                  const status = template.isActive ? "Active" : "Inactive"
                   const translatedName = getTranslationName(
                     template.name,
                     template.translations,
@@ -760,30 +769,10 @@ export function BoothTemplateLibraryManager({
                       <TableCell>
                         <Link
                           href={`/admin/tradexpo/booth-templates/${template.id}`}
-                        >
-                          {/* biome-ignore lint/performance/noImgElement: thumbnail src is dynamic, next/image requires known dimensions */}
-                          <img
-                            src={getAssetUrl(
-                              thumbnail?.fileUrl,
-                              template.id,
-                              80,
-                              48
-                            )}
-                            alt={template.name}
-                            className="h-12 w-20 rounded-md border object-cover"
-                          />
-                        </Link>
-                      </TableCell>
-                      <TableCell>
-                        <Link
-                          href={`/admin/tradexpo/booth-templates/${template.id}`}
                           className="font-medium"
                         >
                           {translatedName}
                         </Link>
-                        <p className="text-muted-foreground text-xs">
-                          {template.description || "No description"}
-                        </p>
                       </TableCell>
                       <TableCell>{boothTypeName}</TableCell>
                       <TableCell>{template.updatedBy}</TableCell>
@@ -791,7 +780,16 @@ export function BoothTemplateLibraryManager({
                         {formatDateTime(template.updatedAt)}
                       </TableCell>
                       <TableCell>
-                        <StatusBadge status={status} />
+                        <Badge
+                          variant="outline"
+                          className={
+                            template.isActive
+                              ? "border-emerald-300 bg-emerald-100 text-emerald-700"
+                              : "border-zinc-300 bg-zinc-100 text-zinc-700"
+                          }
+                        >
+                          {status}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
@@ -975,9 +973,7 @@ export function BoothTemplateLibraryManager({
                 </SelectContent>
               </Select>
               {formErrors.boothTypeId ? (
-                <p className="text-rose-600 text-xs">
-                  {formErrors.boothTypeId}
-                </p>
+                <p className="text-red-600 text-xs">{formErrors.boothTypeId}</p>
               ) : null}
             </div>
 
@@ -1010,7 +1006,7 @@ export function BoothTemplateLibraryManager({
                   placeholder="example.glb"
                 />
                 {formErrors.glbFileName ? (
-                  <p className="text-rose-600 text-xs">
+                  <p className="text-red-600 text-xs">
                     {formErrors.glbFileName}
                   </p>
                 ) : (
@@ -1033,7 +1029,7 @@ export function BoothTemplateLibraryManager({
                   placeholder="example.png"
                 />
                 {formErrors.thumbnailFileName ? (
-                  <p className="text-rose-600 text-xs">
+                  <p className="text-red-600 text-xs">
                     {formErrors.thumbnailFileName}
                   </p>
                 ) : (
@@ -1059,7 +1055,7 @@ export function BoothTemplateLibraryManager({
                 placeholder="source.blend"
               />
               {formErrors.blendFileName ? (
-                <p className="text-rose-600 text-xs">
+                <p className="text-red-600 text-xs">
                   {formErrors.blendFileName}
                 </p>
               ) : (
@@ -1097,7 +1093,7 @@ export function BoothTemplateLibraryManager({
             </div>
 
             {formErrors.isPublic ? (
-              <p className="text-rose-600 text-xs">{formErrors.isPublic}</p>
+              <p className="text-red-600 text-xs">{formErrors.isPublic}</p>
             ) : null}
 
             <div className="flex flex-wrap justify-end gap-2">

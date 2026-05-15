@@ -140,7 +140,7 @@ export function PartnerAnalyticsReportCenter({
           <CardHeader>
             <CardTitle>Top Expo Inputs</CardTitle>
             <CardDescription>
-              Ranked by RFQ proxy, revenue, then booth sales.
+              Ranked by SSOT RFQ activity, revenue, then booth sales.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -252,7 +252,7 @@ function ReportCard({ report }: { report: PartnerReportSnapshot }) {
         <div className="grid grid-cols-2 gap-2">
           {report.metrics.map((metric) => (
             <div key={metric.label} className="rounded-md border p-2">
-              <p className="text-muted-foreground text-[11px]">
+              <p className="text-[11px] text-muted-foreground">
                 {metric.label}
               </p>
               <p className="font-medium tabular-nums">

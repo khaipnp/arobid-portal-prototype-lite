@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/card"
 import { NativeSelect } from "@/components/ui/native-select"
 import { Textarea } from "@/components/ui/textarea"
+import type { PartnerAccess } from "@/lib/partner/access"
 import type {
   PartnerCommunicationsWorkspace,
   PartnerMessageThread,
@@ -36,11 +37,14 @@ const contextLabels: Record<PartnerMessageTrigger["contextType"], string> = {
 }
 
 export function PartnerCommunicationsManager({
+  access,
   workspace
 }: {
+  access: PartnerAccess
   workspace: PartnerCommunicationsWorkspace
 }) {
   const router = useRouter()
+  const canManageCommunications = access.actions["communications.manage"]
   const [activeThreadId, setActiveThreadId] = useState(
     workspace.threads[0]?.id ?? ""
   )
@@ -153,32 +157,34 @@ export function PartnerCommunicationsManager({
                 </CardDescription>
               </div>
             </div>
-            <div className="flex gap-2 pt-2">
-              <NativeSelect
-                className="min-w-0 flex-1"
-                value={triggerKey}
-                onChange={(event) => setTriggerKey(event.target.value)}
-              >
-                {workspace.triggers.length === 0 ? (
-                  <option value="">No available triggers</option>
-                ) : null}
-                {workspace.triggers.map((trigger) => (
-                  <option
-                    key={`${trigger.contextType}:${trigger.contextId}`}
-                    value={`${trigger.contextType}:${trigger.contextId}`}
-                  >
-                    {trigger.label}
-                  </option>
-                ))}
-              </NativeSelect>
-              <Button
-                size="sm"
-                disabled={!triggerKey || isSaving}
-                onClick={createThread}
-              >
-                <PlusIcon />
-              </Button>
-            </div>
+            {canManageCommunications ? (
+              <div className="flex gap-2 pt-2">
+                <NativeSelect
+                  className="min-w-0 flex-1"
+                  value={triggerKey}
+                  onChange={(event) => setTriggerKey(event.target.value)}
+                >
+                  {workspace.triggers.length === 0 ? (
+                    <option value="">No available triggers</option>
+                  ) : null}
+                  {workspace.triggers.map((trigger) => (
+                    <option
+                      key={`${trigger.contextType}:${trigger.contextId}`}
+                      value={`${trigger.contextType}:${trigger.contextId}`}
+                    >
+                      {trigger.label}
+                    </option>
+                  ))}
+                </NativeSelect>
+                <Button
+                  size="sm"
+                  disabled={!triggerKey || isSaving}
+                  onClick={createThread}
+                >
+                  <PlusIcon />
+                </Button>
+              </div>
+            ) : null}
           </CardHeader>
           <CardContent className="space-y-2">
             {workspace.threads.length === 0 ? (
@@ -231,7 +237,7 @@ export function PartnerCommunicationsManager({
                     : "Context details appear here."}
                 </CardDescription>
               </div>
-              {activeThread ? (
+              {activeThread && canManageCommunications ? (
                 <Button
                   size="sm"
                   variant="outline"
@@ -274,7 +280,11 @@ export function PartnerCommunicationsManager({
             <div className="grid gap-2">
               <Textarea
                 value={messageBody}
-                disabled={!activeThread || activeThread.status === "closed"}
+                disabled={
+                  !activeThread ||
+                  activeThread.status === "closed" ||
+                  !canManageCommunications
+                }
                 onChange={(event) => setMessageBody(event.target.value)}
                 placeholder="Write a context-bound message..."
               />
@@ -283,6 +293,7 @@ export function PartnerCommunicationsManager({
                   disabled={
                     !activeThread ||
                     activeThread.status === "closed" ||
+                    !canManageCommunications ||
                     !messageBody.trim() ||
                     isSaving
                   }

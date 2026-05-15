@@ -57,7 +57,7 @@ export function PartnerOverviewCommand({
     {
       label: "Deal contexts",
       value: numberFormat.format(summary.overview.dealContexts),
-      note: "Deal support scope",
+      note: "SSOT deal contexts",
       icon: HandshakeIcon
     },
     {

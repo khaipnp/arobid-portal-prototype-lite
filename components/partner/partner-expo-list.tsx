@@ -36,6 +36,7 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select"
+import type { PartnerAccess } from "@/lib/partner/access"
 import type {
   PartnerAssignedExpo,
   PartnerCapability,
@@ -105,8 +106,10 @@ const CAPABILITY_LABELS: Record<PartnerCapability, string> = {
 const PAGE_SIZE = 10
 
 export function PartnerExpoList({
+  access,
   assignedExpos
 }: {
+  access: PartnerAccess
   assignedExpos: PartnerAssignedExpo[]
 }) {
   const [searchQuery, setSearchQuery] = React.useState("")
@@ -320,18 +323,20 @@ export function PartnerExpoList({
                           </div>
                         </div>
 
-                        <Button
-                          asChild
-                          variant="outline"
-                          size="sm"
-                          className="h-7 px-3 font-semibold text-xs"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <Link href={`/partner/expos/${expo.id}`}>
-                            Manage
-                            <ChevronRightIcon className="ml-1 h-3 w-3" />
-                          </Link>
-                        </Button>
+                        {access.actions["expo.edit"] ? (
+                          <Button
+                            asChild
+                            variant="outline"
+                            size="sm"
+                            className="h-7 px-3 font-semibold text-xs"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <Link href={`/partner/expos/${expo.id}`}>
+                              Manage
+                              <ChevronRightIcon className="ml-1 h-3 w-3" />
+                            </Link>
+                          </Button>
+                        ) : null}
                       </div>
                     </div>
                   </div>

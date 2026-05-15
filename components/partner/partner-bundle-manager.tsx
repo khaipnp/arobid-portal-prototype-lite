@@ -39,9 +39,11 @@ import {
   TableRow
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
+import type { PartnerAccess } from "@/lib/partner/access"
 import type {
   PartnerBundlesWorkspace,
-  PartnerServiceBundle
+  PartnerServiceBundle,
+  PartnerServiceExecutionStatus
 } from "@/lib/partner/db"
 
 const numberFormat = new Intl.NumberFormat("en")
@@ -63,12 +65,23 @@ const emptyForm = {
   partnerSharePercent: "50"
 }
 
+const executionNextStatus: Partial<
+  Record<PartnerServiceExecutionStatus, PartnerServiceExecutionStatus>
+> = {
+  scheduled: "in_progress",
+  in_progress: "delivered",
+  delivered: "closed"
+}
+
 export function PartnerBundleManager({
+  access,
   workspace
 }: {
+  access: PartnerAccess
   workspace: PartnerBundlesWorkspace
 }) {
   const router = useRouter()
+  const canManageBundles = access.actions["bundle.manage"]
   const [formMode, setFormMode] = useState<FormMode>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState(emptyForm)
@@ -177,6 +190,17 @@ export function PartnerBundleManager({
     await submitJson(`/api/partner/bundles/${bundle.id}/purchase`, "POST")
   }
 
+  async function advanceExecution(
+    executionId: string,
+    status: PartnerServiceExecutionStatus
+  ) {
+    await submitJson(
+      `/api/partner/service-executions/${executionId}/status`,
+      "POST",
+      { status }
+    )
+  }
+
   return (
     <div className="space-y-4 px-4">
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -222,10 +246,12 @@ export function PartnerBundleManager({
                   Partner service + Arobid service - discount.
                 </CardDescription>
               </div>
-              <Button size="sm" onClick={openAdd}>
-                <PlusIcon />
-                Create bundle
-              </Button>
+              {canManageBundles ? (
+                <Button size="sm" onClick={openAdd}>
+                  <PlusIcon />
+                  Create bundle
+                </Button>
+              ) : null}
             </div>
           </CardHeader>
           <CardContent>
@@ -272,46 +298,48 @@ export function PartnerBundleManager({
                         <Badge variant="outline">{bundle.status}</Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => openEdit(bundle)}
-                          >
-                            <PencilIcon />
-                            Edit
-                          </Button>
-                          {bundle.status !== "published" ? (
-                            <Button
-                              size="sm"
-                              onClick={() =>
-                                setBundleStatus(bundle, "published")
-                              }
-                            >
-                              Publish
-                            </Button>
-                          ) : (
+                        {canManageBundles ? (
+                          <div className="flex justify-end gap-2">
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => recordPurchase(bundle)}
+                              onClick={() => openEdit(bundle)}
                             >
-                              <ReceiptTextIcon />
-                              Purchase
+                              <PencilIcon />
+                              Edit
                             </Button>
-                          )}
-                          {bundle.status !== "archived" ? (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() =>
-                                setBundleStatus(bundle, "archived")
-                              }
-                            >
-                              Archive
-                            </Button>
-                          ) : null}
-                        </div>
+                            {bundle.status !== "published" ? (
+                              <Button
+                                size="sm"
+                                onClick={() =>
+                                  setBundleStatus(bundle, "published")
+                                }
+                              >
+                                Publish
+                              </Button>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => recordPurchase(bundle)}
+                              >
+                                <ReceiptTextIcon />
+                                Purchase
+                              </Button>
+                            )}
+                            {bundle.status !== "archived" ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() =>
+                                  setBundleStatus(bundle, "archived")
+                                }
+                              >
+                                Archive
+                              </Button>
+                            ) : null}
+                          </div>
+                        ) : null}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -323,40 +351,59 @@ export function PartnerBundleManager({
 
         <Card>
           <CardHeader>
-            <CardTitle>Revenue Events</CardTitle>
+            <CardTitle>Service Execution</CardTitle>
             <CardDescription>
-              Bundle purchases feed Finance & Settlement.
+              Bundle purchases create execution work items for Alliance
+              services.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {workspace.revenueEvents.length === 0 ? (
-              <EmptyState label="No bundle purchases recorded yet." />
+            {workspace.serviceExecutions.length === 0 ? (
+              <EmptyState label="No service executions yet." />
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Source</TableHead>
-                    <TableHead className="text-right">Gross</TableHead>
-                    <TableHead className="text-right">Partner</TableHead>
+                    <TableHead>Bundle</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Events</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {workspace.revenueEvents.map((event) => (
-                    <TableRow key={event.id}>
-                      <TableCell>
-                        <p className="font-medium">{event.sourceType}</p>
-                        <p className="text-muted-foreground text-xs">
-                          {event.status}
-                        </p>
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {currencyFormat.format(event.grossAmount)}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {currencyFormat.format(event.partnerAmount)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {workspace.serviceExecutions.map((execution) => {
+                    const nextStatus = executionNextStatus[execution.status]
+                    return (
+                      <TableRow key={execution.id}>
+                        <TableCell>
+                          <p className="font-medium">{execution.bundleName}</p>
+                          <p className="text-muted-foreground text-xs">
+                            SLA {execution.slaDueAt?.slice(0, 10) ?? "not set"}
+                          </p>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{execution.status}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {numberFormat.format(execution.eventCount)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {nextStatus && canManageBundles ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={isSaving}
+                              onClick={() =>
+                                advanceExecution(execution.id, nextStatus)
+                              }
+                            >
+                              {nextStatus.replace("_", " ")}
+                            </Button>
+                          ) : null}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
                 </TableBody>
               </Table>
             )}

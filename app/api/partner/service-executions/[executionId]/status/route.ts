@@ -1,24 +1,24 @@
 import { NextResponse } from "next/server"
 import { requirePartnerApiAction } from "@/lib/partner/access"
-import { updatePartnerEnterpriseMember } from "@/lib/partner/db"
+import {
+  type PartnerServiceExecutionStatus,
+  updatePartnerServiceExecutionStatus
+} from "@/lib/partner/db"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 
-type Props = { params: Promise<{ memberId: string }> }
-
-export async function PATCH(request: Request, { params }: Props) {
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ executionId: string }> }
+) {
   await ensurePlatformSchema()
   try {
-    const userId = await requirePartnerApiAction("enterprise.manage")
-    const { memberId } = await params
+    const userId = await requirePartnerApiAction("bundle.manage")
+    const { executionId } = await params
     const body = (await request.json()) as {
-      enterpriseName?: string
-      contactEmail?: string | null
+      status?: PartnerServiceExecutionStatus
     }
-    await updatePartnerEnterpriseMember(userId, {
-      memberId,
-      enterpriseName: body.enterpriseName ?? "",
-      contactEmail: body.contactEmail ?? null
-    })
+    if (!body.status) throw new Error("Status is required.")
+    await updatePartnerServiceExecutionStatus(userId, executionId, body.status)
     return NextResponse.json({ ok: true })
   } catch (error) {
     const message = error instanceof Error ? error.message : "Update failed."

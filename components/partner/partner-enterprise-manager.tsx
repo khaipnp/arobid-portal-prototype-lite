@@ -46,6 +46,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
+import type { PartnerAccess } from "@/lib/partner/access"
 import type {
   PartnerEnterpriseMember,
   PartnerEnterpriseWorkspace
@@ -64,6 +65,15 @@ const statusLabels: Record<
   rfq_generated: "RFQ generated"
 }
 
+const dealStageLabels: Record<string, string> = {
+  rfq_generated: "RFQ generated",
+  qualified: "Qualified",
+  meeting_scheduled: "Meeting scheduled",
+  proposal_sent: "Proposal sent",
+  closed_won: "Closed won",
+  closed_lost: "Closed lost"
+}
+
 const statusOrder: PartnerEnterpriseMember["activationStatus"][] = [
   "invited",
   "registered",
@@ -75,11 +85,14 @@ const statusOrder: PartnerEnterpriseMember["activationStatus"][] = [
 type FormMode = "add" | "edit" | null
 
 export function PartnerEnterpriseManager({
+  access,
   workspace
 }: {
+  access: PartnerAccess
   workspace: PartnerEnterpriseWorkspace
 }) {
   const router = useRouter()
+  const canManageEnterprises = access.actions["enterprise.manage"]
   const [query, setQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<
     PartnerEnterpriseMember["activationStatus"] | "all"
@@ -236,10 +249,12 @@ export function PartnerEnterpriseManager({
                   Members linked to current partner organization.
                 </CardDescription>
               </div>
-              <Button size="sm" onClick={openAdd}>
-                <PlusIcon />
-                Add enterprise
-              </Button>
+              {canManageEnterprises ? (
+                <Button size="sm" onClick={openAdd}>
+                  <PlusIcon />
+                  Add enterprise
+                </Button>
+              ) : null}
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -283,6 +298,7 @@ export function PartnerEnterpriseManager({
                   <TableRow>
                     <TableHead>Enterprise</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>DealContext</TableHead>
                     <TableHead className="text-right">Quota</TableHead>
                     <TableHead className="text-right">Credits</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -302,6 +318,24 @@ export function PartnerEnterpriseManager({
                           {statusLabels[member.activationStatus]}
                         </Badge>
                       </TableCell>
+                      <TableCell>
+                        {member.dealContextStage ? (
+                          <div className="space-y-1">
+                            <Badge variant="secondary">
+                              {dealStageLabels[member.dealContextStage] ??
+                                member.dealContextStage}
+                            </Badge>
+                            <p className="text-muted-foreground text-xs">
+                              {numberFormat.format(member.dealContextEvents)}{" "}
+                              events
+                            </p>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">
+                            No context
+                          </span>
+                        )}
+                      </TableCell>
                       <TableCell className="text-right tabular-nums">
                         {numberFormat.format(member.quotaAllocatedQuantity)}
                         <span className="text-muted-foreground">
@@ -317,26 +351,28 @@ export function PartnerEnterpriseManager({
                         </span>
                       </TableCell>
                       <TableCell>
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => openEdit(member)}
-                          >
-                            <PencilIcon />
-                            Edit
-                          </Button>
-                          <Button
-                            size="sm"
-                            disabled={
-                              member.activationStatus === "rfq_generated"
-                            }
-                            onClick={() => advanceMember(member.id)}
-                          >
-                            <SendIcon />
-                            Advance
-                          </Button>
-                        </div>
+                        {canManageEnterprises ? (
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openEdit(member)}
+                            >
+                              <PencilIcon />
+                              Edit
+                            </Button>
+                            <Button
+                              size="sm"
+                              disabled={
+                                member.activationStatus === "rfq_generated"
+                              }
+                              onClick={() => advanceMember(member.id)}
+                            >
+                              <SendIcon />
+                              Advance
+                            </Button>
+                          </div>
+                        ) : null}
                       </TableCell>
                     </TableRow>
                   ))}

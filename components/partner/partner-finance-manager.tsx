@@ -28,6 +28,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
+import type { PartnerAccess } from "@/lib/partner/access"
 import type {
   PartnerFinanceWorkspace,
   PartnerSettlement
@@ -41,11 +42,14 @@ const currencyFormat = new Intl.NumberFormat("vi-VN", {
 })
 
 export function PartnerFinanceManager({
+  access,
   workspace
 }: {
+  access: PartnerAccess
   workspace: PartnerFinanceWorkspace
 }) {
   const router = useRouter()
+  const canManageSettlements = access.actions["settlement.manage"]
   const [cycleMonth, setCycleMonth] = useState(workspace.cycleOptions[0] ?? "")
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -91,15 +95,15 @@ export function PartnerFinanceManager({
           icon={<BanknoteIcon />}
         />
         <MetricCard
-          title="Pending Settlement"
-          value={currencyFormat.format(workspace.totals.pendingSettlement)}
-          note="Monthly settlement not paid"
+          title="Platform Billing"
+          value={currencyFormat.format(workspace.totals.platformBillingRevenue)}
+          note={`${currencyFormat.format(workspace.totals.wholesaleRevenue)} wholesale tracked`}
           icon={<FileClockIcon />}
         />
         <MetricCard
           title="Settled"
           value={currencyFormat.format(workspace.totals.settledSettlement)}
-          note="Closed partner settlement"
+          note={`${currencyFormat.format(workspace.totals.pendingSettlement)} pending`}
           icon={<CheckCircle2Icon />}
         />
       </section>
@@ -121,31 +125,33 @@ export function PartnerFinanceManager({
                   Monthly partner settlement generated from revenue events.
                 </CardDescription>
               </div>
-              <div className="flex gap-2">
-                <NativeSelect
-                  value={cycleMonth}
-                  onChange={(event) => setCycleMonth(event.target.value)}
-                >
-                  {workspace.cycleOptions.length === 0 ? (
-                    <option value="">No revenue cycle</option>
-                  ) : null}
-                  {workspace.cycleOptions.map((cycle) => (
-                    <option key={cycle} value={cycle}>
-                      {cycle}
-                    </option>
-                  ))}
-                </NativeSelect>
-                <Button
-                  size="sm"
-                  disabled={!cycleMonth || isSaving}
-                  onClick={() =>
-                    submitJson("/api/partner/settlements", { cycleMonth })
-                  }
-                >
-                  <PlusIcon />
-                  Generate
-                </Button>
-              </div>
+              {canManageSettlements ? (
+                <div className="flex gap-2">
+                  <NativeSelect
+                    value={cycleMonth}
+                    onChange={(event) => setCycleMonth(event.target.value)}
+                  >
+                    {workspace.cycleOptions.length === 0 ? (
+                      <option value="">No revenue cycle</option>
+                    ) : null}
+                    {workspace.cycleOptions.map((cycle) => (
+                      <option key={cycle} value={cycle}>
+                        {cycle}
+                      </option>
+                    ))}
+                  </NativeSelect>
+                  <Button
+                    size="sm"
+                    disabled={!cycleMonth || isSaving}
+                    onClick={() =>
+                      submitJson("/api/partner/settlements", { cycleMonth })
+                    }
+                  >
+                    <PlusIcon />
+                    Generate
+                  </Button>
+                </div>
+              ) : null}
             </div>
           </CardHeader>
           <CardContent>
@@ -169,9 +175,7 @@ export function PartnerFinanceManager({
                       <TableCell>
                         <p className="font-medium">{settlement.cycleMonth}</p>
                         <p className="text-muted-foreground text-xs">
-                          {settlement.settledAt
-                            ? `Settled ${settlement.settledAt.slice(0, 10)}`
-                            : "Monthly settlement"}
+                          {settlement.auditEvents.length} audit events
                         </p>
                       </TableCell>
                       <AmountCell value={settlement.grossAmount} />
@@ -181,19 +185,23 @@ export function PartnerFinanceManager({
                         <SettlementStatus settlement={settlement} />
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={settlement.status !== "pending" || isSaving}
-                          onClick={() =>
-                            submitJson(
-                              `/api/partner/settlements/${settlement.id}/settle`
-                            )
-                          }
-                        >
-                          <ReceiptTextIcon />
-                          Settle
-                        </Button>
+                        {canManageSettlements ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={
+                              settlement.status !== "pending" || isSaving
+                            }
+                            onClick={() =>
+                              submitJson(
+                                `/api/partner/settlements/${settlement.id}/settle`
+                              )
+                            }
+                          >
+                            <ReceiptTextIcon />
+                            Settle
+                          </Button>
+                        ) : null}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -228,7 +236,8 @@ export function PartnerFinanceManager({
                       <TableCell>
                         <p className="font-medium">{event.sourceType}</p>
                         <p className="text-muted-foreground text-xs">
-                          {event.status} / {event.createdAt.slice(0, 10)}
+                          {event.modelType.replace("_", " ")} / {event.status} /{" "}
+                          {event.createdAt.slice(0, 10)}
                         </p>
                       </TableCell>
                       <AmountCell value={event.grossAmount} />

@@ -123,7 +123,7 @@ export function ExhibitorCardActions({
         variant="ghost"
         size="md"
         className={cn(
-          "flex-1 rounded-xl font-medium text-muted-foreground text-[13px] leading-none hover:text-foreground",
+          "flex-1 rounded-xl font-medium text-[13px] text-muted-foreground leading-none hover:text-foreground",
           isWishlisted && "text-rose-600 hover:text-rose-700"
         )}
         disabled={isWishlistPending}
@@ -137,7 +137,7 @@ export function ExhibitorCardActions({
         type="button"
         variant="ghost"
         size="md"
-        className="flex-1 rounded-xl font-medium text-[13px] leading-none text-muted-foreground hover:text-foreground"
+        className="flex-1 rounded-xl font-medium text-[13px] text-muted-foreground leading-none hover:text-foreground"
         onClick={onChatClick}
       >
         <MessageCircleIcon size={16} /> Chat Now
@@ -148,7 +148,7 @@ export function ExhibitorCardActions({
             type="button"
             variant="ghost"
             size="md"
-            className="flex-1 rounded-xl font-medium text-[13px] leading-none text-muted-foreground"
+            className="flex-1 rounded-xl font-medium text-[13px] text-muted-foreground leading-none"
           >
             <Share2Icon />
             Share
