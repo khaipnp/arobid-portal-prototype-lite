@@ -2,7 +2,7 @@ import { sql } from "@/lib/db/neon"
 import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
 let platformSchemaReady = false
-const LATEST_PLATFORM_MIGRATION = "plan_subscriptions_packages_v1"
+const LATEST_PLATFORM_MIGRATION = "partner_portal_workflows_v1"
 
 /** Creates platform tables (expos, orders, chat, streaming) for Neon. Idempotent. */
 export async function ensurePlatformSchema() {
@@ -1322,6 +1322,30 @@ async function migratePartnerOrganizationSchema() {
     create index if not exists idx_partner_turnkey_requests_org
     on partner_turnkey_expo_requests (partner_org_id, created_at desc)
   `
+  await sql`
+    alter table partner_turnkey_expo_requests
+    add column if not exists reviewed_by text references users(id) on delete set null
+  `
+  await sql`
+    alter table partner_turnkey_expo_requests
+    add column if not exists reviewed_at timestamptz
+  `
+  await sql`
+    alter table partner_turnkey_expo_requests
+    add column if not exists rejection_reason text not null default ''
+  `
+  await sql`
+    alter table partner_turnkey_expo_requests
+    add column if not exists approved_payload_json jsonb not null default '{}'::jsonb
+  `
+  await sql`
+    alter table partner_turnkey_expo_requests
+    add column if not exists converted_expo_id text references expos(id) on delete set null
+  `
+  await sql`
+    alter table partner_turnkey_expo_requests
+    add column if not exists converted_at timestamptz
+  `
 
   await sql`
     create table if not exists partner_enterprise_members (
@@ -1351,6 +1375,62 @@ async function migratePartnerOrganizationSchema() {
   await sql`
     create index if not exists idx_partner_enterprise_members_org
     on partner_enterprise_members (partner_org_id, created_at desc)
+  `
+
+  await sql`
+    create table if not exists partner_deal_contexts (
+      id text primary key,
+      partner_org_id text not null references partner_organizations(id) on delete cascade,
+      enterprise_member_id text not null references partner_enterprise_members(id) on delete cascade,
+      expo_id text references expos(id) on delete set null,
+      source_type text not null default 'partner_activation',
+      source_id text,
+      stage text not null default 'rfq_generated',
+      owner_user_id text references users(id) on delete set null,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now(),
+      closed_at timestamptz
+    )
+  `
+  await sql`
+    do $$
+    begin
+      alter table partner_deal_contexts
+      add constraint partner_deal_contexts_stage_ck
+      check (stage in ('rfq_generated', 'qualified', 'meeting_scheduled', 'proposal_sent', 'closed_won', 'closed_lost'));
+    exception
+      when duplicate_object then null;
+    end $$;
+  `
+  await sql`
+    create index if not exists idx_partner_deal_contexts_org
+    on partner_deal_contexts (partner_org_id, stage)
+  `
+  await sql`
+    create index if not exists idx_partner_deal_contexts_member
+    on partner_deal_contexts (enterprise_member_id, updated_at desc)
+  `
+  await sql`
+    create table if not exists partner_deal_context_events (
+      id text primary key,
+      deal_context_id text not null references partner_deal_contexts(id) on delete cascade,
+      partner_org_id text not null references partner_organizations(id) on delete cascade,
+      enterprise_member_id text not null references partner_enterprise_members(id) on delete cascade,
+      from_stage text,
+      to_stage text not null,
+      actor_user_id text references users(id) on delete set null,
+      note text,
+      metadata jsonb not null default '{}'::jsonb,
+      created_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    create index if not exists idx_partner_deal_context_events_context
+    on partner_deal_context_events (deal_context_id, created_at asc)
+  `
+  await sql`
+    create index if not exists idx_partner_deal_context_events_org
+    on partner_deal_context_events (partner_org_id, created_at desc)
   `
 
   await sql`
@@ -1491,6 +1571,20 @@ async function migratePartnerOrganizationSchema() {
     )
   `
   await sql`
+    alter table partner_revenue_events
+    add column if not exists model_type text not null default 'platform_billing'
+  `
+  await sql`
+    do $$
+    begin
+      alter table partner_revenue_events
+      add constraint partner_revenue_events_model_type_ck
+      check (model_type in ('wholesale_partner', 'platform_billing'));
+    exception
+      when duplicate_object then null;
+    end $$;
+  `
+  await sql`
     create table if not exists partner_settlements (
       id text primary key,
       partner_org_id text not null references partner_organizations(id) on delete cascade,
@@ -1525,12 +1619,77 @@ async function migratePartnerOrganizationSchema() {
     create index if not exists idx_partner_settlements_org
     on partner_settlements (partner_org_id, cycle_month desc)
   `
+  await sql`
+    create table if not exists partner_settlement_audit_log (
+      id text primary key,
+      partner_org_id text not null references partner_organizations(id) on delete cascade,
+      settlement_id text not null references partner_settlements(id) on delete cascade,
+      event_type text not null,
+      actor_user_id text references users(id) on delete set null,
+      payload_json jsonb not null default '{}'::jsonb,
+      created_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    create index if not exists idx_partner_settlement_audit_log_settlement
+    on partner_settlement_audit_log (settlement_id, created_at asc)
+  `
 
   await migratePlanSubscriptionsSchema()
   await sql`
     insert into platform_schema_migrations (name)
     values ('plan_subscriptions_packages_v1')
     on conflict (name) do update set applied_at = now()
+  `
+
+  await sql`
+    create table if not exists partner_service_executions (
+      id text primary key,
+      partner_org_id text not null references partner_organizations(id) on delete cascade,
+      bundle_id text not null references partner_service_bundles(id) on delete cascade,
+      revenue_event_id text references partner_revenue_events(id) on delete set null,
+      enterprise_member_id text references partner_enterprise_members(id) on delete set null,
+      status text not null default 'scheduled',
+      owner_user_id text references users(id) on delete set null,
+      scheduled_at timestamptz not null default now(),
+      started_at timestamptz,
+      delivered_at timestamptz,
+      closed_at timestamptz,
+      sla_due_at timestamptz,
+      metadata_json jsonb not null default '{}'::jsonb,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    do $$
+    begin
+      alter table partner_service_executions
+      add constraint partner_service_executions_status_ck
+      check (status in ('scheduled', 'in_progress', 'delivered', 'closed', 'canceled'));
+    exception
+      when duplicate_object then null;
+    end $$;
+  `
+  await sql`
+    create index if not exists idx_partner_service_executions_org
+    on partner_service_executions (partner_org_id, status)
+  `
+  await sql`
+    create table if not exists partner_service_execution_events (
+      id text primary key,
+      execution_id text not null references partner_service_executions(id) on delete cascade,
+      partner_org_id text not null references partner_organizations(id) on delete cascade,
+      from_status text,
+      to_status text not null,
+      actor_user_id text references users(id) on delete set null,
+      note text,
+      created_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    create index if not exists idx_partner_service_execution_events_execution
+    on partner_service_execution_events (execution_id, created_at asc)
   `
 
   await sql`

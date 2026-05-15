@@ -1,7 +1,5 @@
 "use client"
 
-import type { PartnerAccess } from "@/lib/partner/access"
-
 import {
   BanknoteIcon,
   CheckCircle2Icon,
@@ -30,6 +28,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
+import type { PartnerAccess } from "@/lib/partner/access"
 import type {
   PartnerFinanceWorkspace,
   PartnerSettlement
@@ -96,15 +95,15 @@ export function PartnerFinanceManager({
           icon={<BanknoteIcon />}
         />
         <MetricCard
-          title="Pending Settlement"
-          value={currencyFormat.format(workspace.totals.pendingSettlement)}
-          note="Monthly settlement not paid"
+          title="Platform Billing"
+          value={currencyFormat.format(workspace.totals.platformBillingRevenue)}
+          note={`${currencyFormat.format(workspace.totals.wholesaleRevenue)} wholesale tracked`}
           icon={<FileClockIcon />}
         />
         <MetricCard
           title="Settled"
           value={currencyFormat.format(workspace.totals.settledSettlement)}
-          note="Closed partner settlement"
+          note={`${currencyFormat.format(workspace.totals.pendingSettlement)} pending`}
           icon={<CheckCircle2Icon />}
         />
       </section>
@@ -176,9 +175,7 @@ export function PartnerFinanceManager({
                       <TableCell>
                         <p className="font-medium">{settlement.cycleMonth}</p>
                         <p className="text-muted-foreground text-xs">
-                          {settlement.settledAt
-                            ? `Settled ${settlement.settledAt.slice(0, 10)}`
-                            : "Monthly settlement"}
+                          {settlement.auditEvents.length} audit events
                         </p>
                       </TableCell>
                       <AmountCell value={settlement.grossAmount} />
@@ -192,7 +189,9 @@ export function PartnerFinanceManager({
                           <Button
                             size="sm"
                             variant="outline"
-                            disabled={settlement.status !== "pending" || isSaving}
+                            disabled={
+                              settlement.status !== "pending" || isSaving
+                            }
                             onClick={() =>
                               submitJson(
                                 `/api/partner/settlements/${settlement.id}/settle`
@@ -237,7 +236,8 @@ export function PartnerFinanceManager({
                       <TableCell>
                         <p className="font-medium">{event.sourceType}</p>
                         <p className="text-muted-foreground text-xs">
-                          {event.status} / {event.createdAt.slice(0, 10)}
+                          {event.modelType.replace("_", " ")} / {event.status} /{" "}
+                          {event.createdAt.slice(0, 10)}
                         </p>
                       </TableCell>
                       <AmountCell value={event.grossAmount} />

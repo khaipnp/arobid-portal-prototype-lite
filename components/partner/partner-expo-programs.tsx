@@ -1,7 +1,5 @@
 "use client"
 
-import type { PartnerAccess } from "@/lib/partner/access"
-
 import {
   BadgeCheckIcon,
   Building2Icon,
@@ -41,6 +39,7 @@ import {
   TableRow
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
+import type { PartnerAccess } from "@/lib/partner/access"
 import type { PartnerExpoProgramsWorkspace } from "@/lib/partner/db"
 import { PartnerExpoList } from "./partner-expo-list"
 
@@ -115,32 +114,51 @@ export function PartnerExpoPrograms({
     { total: 0, available: 0, allocated: 0, consumed: 0 }
   )
 
-  async function submitTurnkeyRequest() {
+  async function submitJson(url: string, body?: unknown) {
     setIsSaving(true)
     setError(null)
     try {
-      const response = await fetch("/api/partner/turnkey-requests", {
+      const response = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...requestForm,
-          expectedEnterprises: Number(requestForm.expectedEnterprises),
-          requestedBooths: Number(requestForm.requestedBooths)
-        })
+        body: body ? JSON.stringify(body) : undefined
       })
       if (!response.ok) {
         const payload = (await response.json().catch(() => null)) as {
           error?: string
         } | null
-        throw new Error(payload?.error ?? "Create request failed.")
+        throw new Error(payload?.error ?? "Request failed.")
       }
       setShowRequestDialog(false)
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Create request failed.")
+      setError(err instanceof Error ? err.message : "Request failed.")
     } finally {
       setIsSaving(false)
     }
+  }
+
+  async function submitTurnkeyRequest() {
+    await submitJson("/api/partner/turnkey-requests", {
+      ...requestForm,
+      expectedEnterprises: Number(requestForm.expectedEnterprises),
+      requestedBooths: Number(requestForm.requestedBooths)
+    })
+  }
+
+  async function reviewTurnkeyRequest(
+    requestId: string,
+    decision: "approved" | "rejected"
+  ) {
+    await submitJson(`/api/partner/turnkey-requests/${requestId}/review`, {
+      decision,
+      rejectionReason:
+        decision === "rejected" ? "Rejected by partner admin." : ""
+    })
+  }
+
+  async function convertTurnkeyRequest(requestId: string) {
+    await submitJson(`/api/partner/turnkey-requests/${requestId}/convert`)
   }
 
   return (
@@ -202,6 +220,7 @@ export function PartnerExpoPrograms({
                     <TableHead>Target</TableHead>
                     <TableHead className="text-right">Booths</TableHead>
                     <TableHead className="text-right">Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -229,6 +248,45 @@ export function PartnerExpoPrograms({
                         <Badge variant="outline">
                           {requestStatusLabels[request.status]}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex justify-end gap-2">
+                          {request.convertedExpoId ? (
+                            <Button asChild size="sm" variant="outline">
+                              <Link
+                                href={`/partner/expos/${request.convertedExpoId}`}
+                              >
+                                Open expo
+                              </Link>
+                            </Button>
+                          ) : null}
+                          {canCreateTurnkey &&
+                          request.status !== "converted" ? (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={isSaving}
+                                onClick={() =>
+                                  reviewTurnkeyRequest(request.id, "approved")
+                                }
+                              >
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                disabled={
+                                  isSaving || request.status !== "approved"
+                                }
+                                onClick={() =>
+                                  convertTurnkeyRequest(request.id)
+                                }
+                              >
+                                Convert
+                              </Button>
+                            </>
+                          ) : null}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -298,7 +356,10 @@ export function PartnerExpoPrograms({
         </Card>
       </section>
 
-      <PartnerExpoList access={access} assignedExpos={workspace.assignedExpos} />
+      <PartnerExpoList
+        access={access}
+        assignedExpos={workspace.assignedExpos}
+      />
 
       <Dialog open={showRequestDialog} onOpenChange={setShowRequestDialog}>
         <DialogContent className="sm:max-w-lg">

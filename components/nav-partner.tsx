@@ -4,6 +4,7 @@ import {
   BoxesIcon,
   Building2Icon,
   CalendarIcon,
+  LandmarkIcon,
   LayoutDashboardIcon,
   MessageSquareIcon,
   PieChartIcon,
@@ -63,6 +64,12 @@ const partnerLinks = [
     url: "/partner/analytics",
     tab: "analytics",
     icon: <PieChartIcon />
+  },
+  {
+    name: "Government Programs",
+    url: "/partner/government",
+    tab: "government",
+    icon: <LandmarkIcon />
   }
 ]
 
@@ -86,9 +93,6 @@ export function NavPartner({ access }: { access?: PartnerAccess }) {
       <SidebarMenu>
         <NotificationNavLink href="/partner/notifications" />
       </SidebarMenu>
-      <SidebarGroupLabel className="select-none">
-        Partner Portal
-      </SidebarGroupLabel>
       <SidebarMenu>
         {links.map((item) => (
           <SidebarMenuItem key={item.name}>

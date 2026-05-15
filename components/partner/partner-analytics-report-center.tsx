@@ -140,7 +140,7 @@ export function PartnerAnalyticsReportCenter({
           <CardHeader>
             <CardTitle>Top Expo Inputs</CardTitle>
             <CardDescription>
-              Ranked by RFQ proxy, revenue, then booth sales.
+              Ranked by SSOT RFQ activity, revenue, then booth sales.
             </CardDescription>
           </CardHeader>
           <CardContent>

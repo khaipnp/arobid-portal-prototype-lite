@@ -3,7 +3,6 @@ import { requirePartnerApiAction } from "@/lib/partner/access"
 import { recordPartnerTradeCreditEntry } from "@/lib/partner/db"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 
-
 export async function POST(request: Request) {
   await ensurePlatformSchema()
   try {

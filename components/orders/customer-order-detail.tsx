@@ -12,7 +12,6 @@ import type {
   TransactionLogEntry
 } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
-import { Alert, AlertDescription } from "../ui/alert"
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card"
 
 function formatVND(amount: number) {
@@ -67,19 +66,6 @@ function bannerForStatus(status: CustomerOrderStatus) {
         message: "Payment was cancelled.",
         className: "border-zinc-300 bg-zinc-50 text-zinc-700"
       }
-  }
-}
-
-function resultMessage(status: CustomerOrderStatus, orderType: OrderType) {
-  switch (status) {
-    case "Pending Payment":
-      return "VNPay has not returned a final payment result for this order yet."
-    case "Paid":
-      return orderType === "booth_registration"
-        ? "VNPay confirmed this payment successfully. Your booth booking is recorded."
-        : "VNPay confirmed this payment successfully. Your order is recorded."
-    case "Cancel":
-      return "This payment was cancelled before completion."
   }
 }
 

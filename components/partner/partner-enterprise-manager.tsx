@@ -1,7 +1,5 @@
 "use client"
 
-import type { PartnerAccess } from "@/lib/partner/access"
-
 import {
   Building2Icon,
   CheckCircle2Icon,
@@ -48,6 +46,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
+import type { PartnerAccess } from "@/lib/partner/access"
 import type {
   PartnerEnterpriseMember,
   PartnerEnterpriseWorkspace
@@ -64,6 +63,15 @@ const statusLabels: Record<
   profile_completed: "Profile completed",
   expo_activated: "Expo activated",
   rfq_generated: "RFQ generated"
+}
+
+const dealStageLabels: Record<string, string> = {
+  rfq_generated: "RFQ generated",
+  qualified: "Qualified",
+  meeting_scheduled: "Meeting scheduled",
+  proposal_sent: "Proposal sent",
+  closed_won: "Closed won",
+  closed_lost: "Closed lost"
 }
 
 const statusOrder: PartnerEnterpriseMember["activationStatus"][] = [
@@ -290,6 +298,7 @@ export function PartnerEnterpriseManager({
                   <TableRow>
                     <TableHead>Enterprise</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>DealContext</TableHead>
                     <TableHead className="text-right">Quota</TableHead>
                     <TableHead className="text-right">Credits</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -308,6 +317,24 @@ export function PartnerEnterpriseManager({
                         <Badge variant="outline">
                           {statusLabels[member.activationStatus]}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        {member.dealContextStage ? (
+                          <div className="space-y-1">
+                            <Badge variant="secondary">
+                              {dealStageLabels[member.dealContextStage] ??
+                                member.dealContextStage}
+                            </Badge>
+                            <p className="text-muted-foreground text-xs">
+                              {numberFormat.format(member.dealContextEvents)}{" "}
+                              events
+                            </p>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">
+                            No context
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell className="text-right tabular-nums">
                         {numberFormat.format(member.quotaAllocatedQuantity)}

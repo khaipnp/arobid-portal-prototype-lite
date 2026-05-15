@@ -1,7 +1,5 @@
 "use client"
 
-import type { PartnerAccess } from "@/lib/partner/access"
-
 import {
   BadgeCheckIcon,
   CircleDollarSignIcon,
@@ -43,6 +41,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
+import type { PartnerAccess } from "@/lib/partner/access"
 import type {
   PartnerEnterpriseMember,
   PartnerInviteCampaign,
@@ -246,26 +245,26 @@ export function PartnerQuotaManager({
       {canManageQuota ? (
         <div className="flex flex-wrap gap-2">
           <Button size="sm" onClick={() => open("quota")}>
-          <PlusIcon />
-          Add quota
-        </Button>
-        <Button size="sm" variant="outline" onClick={() => open("member")}>
-          <UsersIcon />
-          Add enterprise
-        </Button>
-        <Button size="sm" variant="outline" onClick={() => open("campaign")}>
-          <KeyRoundIcon />
-          Create invite code
-        </Button>
-        <Button
-          size="sm"
-          variant="outline"
-          disabled={workspace.quotas.length === 0}
-          onClick={() => open("allocate-quota")}
-        >
-          <SendIcon />
-          Allocate / consume quota
-        </Button>
+            <PlusIcon />
+            Add quota
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => open("member")}>
+            <UsersIcon />
+            Add enterprise
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => open("campaign")}>
+            <KeyRoundIcon />
+            Create invite code
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={workspace.quotas.length === 0}
+            onClick={() => open("allocate-quota")}
+          >
+            <SendIcon />
+            Allocate / consume quota
+          </Button>
           <Button size="sm" variant="outline" onClick={() => open("credit")}>
             <CircleDollarSignIcon />
             Record TradeCredit

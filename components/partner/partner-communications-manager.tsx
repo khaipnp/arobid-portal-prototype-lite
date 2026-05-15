@@ -1,7 +1,5 @@
 "use client"
 
-import type { PartnerAccess } from "@/lib/partner/access"
-
 import {
   HandshakeIcon,
   MessageSquareIcon,
@@ -23,6 +21,7 @@ import {
 } from "@/components/ui/card"
 import { NativeSelect } from "@/components/ui/native-select"
 import { Textarea } from "@/components/ui/textarea"
+import type { PartnerAccess } from "@/lib/partner/access"
 import type {
   PartnerCommunicationsWorkspace,
   PartnerMessageThread,

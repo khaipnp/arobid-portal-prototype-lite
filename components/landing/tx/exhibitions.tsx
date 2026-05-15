@@ -30,7 +30,7 @@ export function Exhibitions({
   isAuthenticated = false
 }: ExhibitionsProps) {
   return (
-    <section id="shows" className="bg-white container mx-auto py-16">
+    <section id="shows" className="container mx-auto bg-white py-16">
       <h2 className="text-center font-semibold text-3xl leading-10">
         Explore Industry Shows
       </h2>

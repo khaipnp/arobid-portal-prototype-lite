@@ -14,6 +14,7 @@ export type PartnerPortalTab =
   | "communications"
   | "finance"
   | "analytics"
+  | "government"
 
 export type PartnerPortalAction =
   | "expo.edit"
@@ -30,6 +31,7 @@ export type PartnerPortalAction =
   | "finance.manage"
   | "settlement.manage"
   | "analytics.view"
+  | "government.manage"
 
 export type PartnerAccess = {
   organization: PartnerPortalOrganization | null
@@ -47,7 +49,8 @@ const allTabs: PartnerPortalTab[] = [
   "bundles",
   "communications",
   "finance",
-  "analytics"
+  "analytics",
+  "government"
 ]
 
 const allActions: PartnerPortalAction[] = [
@@ -64,7 +67,8 @@ const allActions: PartnerPortalAction[] = [
   "chat.use",
   "finance.manage",
   "settlement.manage",
-  "analytics.view"
+  "analytics.view",
+  "government.manage"
 ]
 
 const emptyTabs = Object.fromEntries(
@@ -79,6 +83,15 @@ const ownerActions = allActions
 const programManagerActions = allActions.filter(
   (action) => action !== "finance.manage" && action !== "settlement.manage"
 )
+const governmentActions: PartnerPortalAction[] = [
+  "quota.manage",
+  "invite.manage",
+  "tradeCredits.manage",
+  "enterprise.manage",
+  "enterprise.advance",
+  "analytics.view",
+  "government.manage"
+]
 const businessManagerActions: PartnerPortalAction[] = [
   "enterprise.manage",
   "enterprise.advance",
@@ -126,7 +139,13 @@ const roleTabs: Record<PartnerMembershipRole, PartnerPortalTab[]> = {
     "communications",
     "analytics"
   ],
-  operations: ["overview", "expo", "enterprises", "communications", "analytics"],
+  operations: [
+    "overview",
+    "expo",
+    "enterprises",
+    "communications",
+    "analytics"
+  ],
   finance: ["finance", "analytics"],
   viewer: [
     "overview",
@@ -153,12 +172,14 @@ const roleActions: Record<PartnerMembershipRole, PartnerPortalAction[]> = {
   viewer: ["analytics.view"]
 }
 
-function makeRecord<T extends string>(keys: readonly T[], allowed: readonly T[]) {
+function makeRecord<T extends string>(
+  keys: readonly T[],
+  allowed: readonly T[]
+) {
   const allowedSet = new Set(allowed)
-  return Object.fromEntries(keys.map((key) => [key, allowedSet.has(key)])) as Record<
-    T,
-    boolean
-  >
+  return Object.fromEntries(
+    keys.map((key) => [key, allowedSet.has(key)])
+  ) as Record<T, boolean>
 }
 
 export async function getPartnerAccess(userId: string): Promise<PartnerAccess> {
@@ -184,12 +205,21 @@ export async function getPartnerAccess(userId: string): Promise<PartnerAccess> {
     }
   }
 
-  const actions = roleActions[organization.membershipRole] ?? []
+  const baseTabs = roleTabs[organization.membershipRole] ?? []
+  const baseActions = roleActions[organization.membershipRole] ?? []
+  const actions =
+    organization.partnerType === "government_program_partner"
+      ? Array.from(new Set([...baseActions, ...governmentActions]))
+      : baseActions
+  const tabs =
+    organization.partnerType === "government_program_partner"
+      ? Array.from(new Set([...baseTabs, "government" as const]))
+      : baseTabs
 
   return {
     organization,
     role: organization.membershipRole,
-    tabs: makeRecord(allTabs, roleTabs[organization.membershipRole] ?? []),
+    tabs: makeRecord(allTabs, tabs),
     actions: makeRecord(allActions, actions),
     readOnly: actions.every((action) => action === "analytics.view")
   }

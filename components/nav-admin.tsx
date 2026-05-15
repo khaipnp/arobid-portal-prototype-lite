@@ -4,11 +4,9 @@ import {
   BrickWallShieldIcon,
   Grid3x2Icon,
   LayoutDashboardIcon,
-  LayoutPanelTopIcon,
   LayoutTemplateIcon,
   MonitorPlayIcon,
   PackageCheckIcon,
-  PieChartIcon,
   ReceiptIcon,
   ShapesIcon,
   ShieldCheckIcon,
@@ -25,19 +23,6 @@ import {
   SidebarMenuButton,
   SidebarMenuItem
 } from "@/components/ui/sidebar"
-
-const b2bMarketplaceLinks = [
-  {
-    name: "Hall Templates",
-    url: "/admin/tradexpo/hall-templates",
-    icon: <PieChartIcon />
-  },
-  {
-    name: "Booth Templates",
-    url: "/admin/tradexpo/booth-templates",
-    icon: <LayoutPanelTopIcon />
-  }
-]
 
 const tradexpoLinks = [
   {
@@ -116,23 +101,6 @@ const administrationLinks = [
 export function NavAdmin() {
   return (
     <>
-      <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-        <SidebarGroupLabel className="select-none">
-          B2B Marketplace
-        </SidebarGroupLabel>
-        <SidebarMenu>
-          {b2bMarketplaceLinks.map((item) => (
-            <SidebarMenuItem key={item.name}>
-              <SidebarMenuButton asChild>
-                <Link href={item.url}>
-                  {item.icon}
-                  <span>{item.name}</span>
-                </Link>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarGroup>
       <SidebarGroup className="group-data-[collapsible=icon]:hidden">
         <SidebarGroupLabel className="select-none">TradeXpo</SidebarGroupLabel>
         <SidebarMenu>

@@ -5,7 +5,6 @@ import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 
 type Props = { params: Promise<{ settlementId: string }> }
 
-
 export async function POST(_request: Request, { params }: Props) {
   await ensurePlatformSchema()
   try {

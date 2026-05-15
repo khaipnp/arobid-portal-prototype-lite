@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import { MoreHorizontalIcon, PlusIcon, SearchIcon } from "lucide-react"
+import { MoreHorizontalIcon, PlusIcon, SearchIcon, XIcon } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import * as React from "react"
@@ -63,7 +63,12 @@ import {
   getTranslationName,
   isValidFileName
 } from "@/lib/tradexpo/utils"
-import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group"
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput
+} from "../ui/input-group"
 
 interface HallTemplateFormState {
   name: string
@@ -128,7 +133,7 @@ export function HallTemplateLibraryManager({
   const [translationLanguageCode, setTranslationLanguageCode] =
     React.useState("vi")
   const [translationName, setTranslationName] = React.useState("")
-  const [previewLocale, setPreviewLocale] = React.useState("en")
+  const previewLocale = "en"
   const [deleteTemplateId, setDeleteTemplateId] = React.useState<string | null>(
     null
   )
@@ -654,11 +659,11 @@ export function HallTemplateLibraryManager({
   }
 
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-4 px-4">
       <section>
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex w-full items-center gap-2 md:max-w-xl">
-            <InputGroup>
+            <InputGroup className="max-w-xs rounded-full">
               <InputGroupInput
                 value={search}
                 onChange={(event) => {
@@ -670,14 +675,19 @@ export function HallTemplateLibraryManager({
               <InputGroupAddon>
                 <SearchIcon />
               </InputGroupAddon>
+              {search && (
+                <InputGroupAddon align="inline-end">
+                  <InputGroupButton
+                    variant="secondary"
+                    size="icon-xs"
+                    className="rounded-full"
+                    onClick={() => setSearch("")}
+                  >
+                    <XIcon />
+                  </InputGroupButton>
+                </InputGroupAddon>
+              )}
             </InputGroup>
-
-            <Input
-              className="w-28"
-              value={previewLocale}
-              onChange={(event) => setPreviewLocale(event.target.value || "en")}
-              placeholder="locale"
-            />
           </div>
           <Button onClick={openCreateForm}>
             <PlusIcon />

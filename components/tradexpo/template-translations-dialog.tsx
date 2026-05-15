@@ -12,7 +12,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger
 } from "@/components/ui/alert-dialog"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -81,16 +80,11 @@ export function TemplateTranslationsDialog({
     <>
       <Button
         variant="outline"
-        size="sm"
         onClick={() => setOpen(true)}
-        className="mt-3"
+        size="md"
+        className="rounded-full"
       >
-        Manage Translations
-        {translations.length > 0 && (
-          <Badge variant="secondary" className="ml-1">
-            {translations.length}
-          </Badge>
-        )}
+        Translations
       </Button>
 
       <Dialog

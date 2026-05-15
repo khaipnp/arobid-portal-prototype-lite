@@ -1,7 +1,5 @@
 "use client"
 
-import type { PartnerAccess } from "@/lib/partner/access"
-
 import {
   ArchiveIcon,
   BoxesIcon,
@@ -41,9 +39,11 @@ import {
   TableRow
 } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
+import type { PartnerAccess } from "@/lib/partner/access"
 import type {
   PartnerBundlesWorkspace,
-  PartnerServiceBundle
+  PartnerServiceBundle,
+  PartnerServiceExecutionStatus
 } from "@/lib/partner/db"
 
 const numberFormat = new Intl.NumberFormat("en")
@@ -63,6 +63,14 @@ const emptyForm = {
   arobidServicePrice: "0",
   discountAmount: "0",
   partnerSharePercent: "50"
+}
+
+const executionNextStatus: Partial<
+  Record<PartnerServiceExecutionStatus, PartnerServiceExecutionStatus>
+> = {
+  scheduled: "in_progress",
+  in_progress: "delivered",
+  delivered: "closed"
 }
 
 export function PartnerBundleManager({
@@ -180,6 +188,17 @@ export function PartnerBundleManager({
 
   async function recordPurchase(bundle: PartnerServiceBundle) {
     await submitJson(`/api/partner/bundles/${bundle.id}/purchase`, "POST")
+  }
+
+  async function advanceExecution(
+    executionId: string,
+    status: PartnerServiceExecutionStatus
+  ) {
+    await submitJson(
+      `/api/partner/service-executions/${executionId}/status`,
+      "POST",
+      { status }
+    )
   }
 
   return (
@@ -332,40 +351,59 @@ export function PartnerBundleManager({
 
         <Card>
           <CardHeader>
-            <CardTitle>Revenue Events</CardTitle>
+            <CardTitle>Service Execution</CardTitle>
             <CardDescription>
-              Bundle purchases feed Finance & Settlement.
+              Bundle purchases create execution work items for Alliance
+              services.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {workspace.revenueEvents.length === 0 ? (
-              <EmptyState label="No bundle purchases recorded yet." />
+            {workspace.serviceExecutions.length === 0 ? (
+              <EmptyState label="No service executions yet." />
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Source</TableHead>
-                    <TableHead className="text-right">Gross</TableHead>
-                    <TableHead className="text-right">Partner</TableHead>
+                    <TableHead>Bundle</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Events</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {workspace.revenueEvents.map((event) => (
-                    <TableRow key={event.id}>
-                      <TableCell>
-                        <p className="font-medium">{event.sourceType}</p>
-                        <p className="text-muted-foreground text-xs">
-                          {event.status}
-                        </p>
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {currencyFormat.format(event.grossAmount)}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {currencyFormat.format(event.partnerAmount)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {workspace.serviceExecutions.map((execution) => {
+                    const nextStatus = executionNextStatus[execution.status]
+                    return (
+                      <TableRow key={execution.id}>
+                        <TableCell>
+                          <p className="font-medium">{execution.bundleName}</p>
+                          <p className="text-muted-foreground text-xs">
+                            SLA {execution.slaDueAt?.slice(0, 10) ?? "not set"}
+                          </p>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">{execution.status}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right tabular-nums">
+                          {numberFormat.format(execution.eventCount)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {nextStatus && canManageBundles ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={isSaving}
+                              onClick={() =>
+                                advanceExecution(execution.id, nextStatus)
+                              }
+                            >
+                              {nextStatus.replace("_", " ")}
+                            </Button>
+                          ) : null}
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
                 </TableBody>
               </Table>
             )}

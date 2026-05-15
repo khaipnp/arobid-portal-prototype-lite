@@ -5,7 +5,6 @@ import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 
 type Props = { params: Promise<{ quotaId: string }> }
 
-
 export async function POST(request: Request, { params }: Props) {
   await ensurePlatformSchema()
   try {
