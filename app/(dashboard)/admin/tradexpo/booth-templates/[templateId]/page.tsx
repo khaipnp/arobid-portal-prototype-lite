@@ -62,8 +62,8 @@ export default async function BoothTemplateDetailPage({
       ]}
       showBackButton
     >
-      <div className="px-4">
-        <Card className="lg:col-span-1">
+      <div className="px-4 grid grid-cols-3 gap-4">
+        <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               Template Details
@@ -100,11 +100,7 @@ export default async function BoothTemplateDetailPage({
               {formatDateTime(template.updatedAt)}
             </p>
           </CardContent>
-          <Separator />
-          <BoothTemplateDetailManager
-            initialTemplate={template}
-            initialAssets={assets}
-          />
+
           <CardFooter className="justify-end gap-2">
             <BoothTemplateDeleteButton
               templateId={template.id}
@@ -116,6 +112,10 @@ export default async function BoothTemplateDetailPage({
             </Button>
           </CardFooter>
         </Card>
+        <BoothTemplateDetailManager
+          initialTemplate={template}
+          initialAssets={assets}
+        />
       </div>
     </DashboardShell>
   )

@@ -15,7 +15,13 @@ import { reuploadBoothTemplateAsset } from "@/lib/tradexpo/actions/booth-templat
 import { updateModelAssetStatus } from "@/lib/tradexpo/actions/model-assets"
 import type { BoothTemplate, ModelAsset } from "@/lib/tradexpo/types"
 import { getAssetMap } from "@/lib/tradexpo/utils"
-import { CardContent, CardHeader, CardTitle } from "../ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from "../ui/card"
 
 function assetStatusVariant(
   status: string
@@ -130,11 +136,11 @@ export function BoothTemplateDetailManager({
   ]
 
   return (
-    <>
+    <Card>
       <CardHeader>
         <CardTitle>Asset Status</CardTitle>
+        <CardDescription>{assets.length} assets</CardDescription>
       </CardHeader>
-
       <CardContent>
         <Table>
           <TableBody>
@@ -143,7 +149,7 @@ export function BoothTemplateDetailManager({
                 <TableCell className="font-medium">
                   {label}
                   {required ? (
-                    <span className="ml-1 text-rose-500">*</span>
+                    <span className="ml-1 text-red-500">*</span>
                   ) : null}
                 </TableCell>
                 <TableCell className="text-muted-foreground text-xs">
@@ -151,12 +157,12 @@ export function BoothTemplateDetailManager({
                 </TableCell>
                 <TableCell>
                   {asset ? (
-                    <Badge variant={assetStatusVariant(asset.status)}>
+                    <Badge variant="secondary" className="capitalize">
                       {asset.status}
                     </Badge>
                   ) : (
                     <span className="text-muted-foreground text-xs">
-                      missing
+                      Missing
                     </span>
                   )}
                 </TableCell>
@@ -165,6 +171,6 @@ export function BoothTemplateDetailManager({
           </TableBody>
         </Table>
       </CardContent>
-    </>
+    </Card>
   )
 }
