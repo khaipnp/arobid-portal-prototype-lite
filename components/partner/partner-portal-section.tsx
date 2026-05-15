@@ -30,14 +30,6 @@ import {
 import type { PartnerPortalSummary } from "@/lib/partner/db"
 import { formatPartnerModel, formatPartnerType } from "@/lib/partner/db"
 
-const numberFormat = new Intl.NumberFormat("en")
-const currencyFormat = new Intl.NumberFormat("vi-VN", {
-  style: "currency",
-  currency: "VND",
-  notation: "compact",
-  maximumFractionDigits: 1
-})
-
 type Metric = {
   label: string
   value: string

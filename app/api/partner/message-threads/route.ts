@@ -1,22 +1,16 @@
 import { NextResponse } from "next/server"
-import { getCurrentUserIdFromRequest, userHasRole } from "@/lib/auth/rbac"
+import { requirePartnerApiAction } from "@/lib/partner/access"
 import {
   createPartnerMessageThread,
   type PartnerMessageContextType
 } from "@/lib/partner/db"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 
-async function requirePartnerUser() {
-  const userId = await getCurrentUserIdFromRequest()
-  const allowed = await userHasRole(userId, "partner")
-  if (!allowed) throw new Error("Forbidden.")
-  return userId
-}
 
 export async function POST(request: Request) {
   await ensurePlatformSchema()
   try {
-    const userId = await requirePartnerUser()
+    const userId = await requirePartnerApiAction("communications.manage")
     const body = (await request.json()) as {
       contextType?: PartnerMessageContextType
       contextId?: string

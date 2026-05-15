@@ -594,7 +594,7 @@ export function formatPartnerModel(model: PartnerModel) {
   return labels[model]
 }
 
-async function getPrimaryPartnerOrganization(
+export async function getPrimaryPartnerOrganization(
   userId: string
 ): Promise<PartnerPortalOrganization | null> {
   const rows = (await sql`

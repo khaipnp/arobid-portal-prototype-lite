@@ -1,19 +1,13 @@
 import { NextResponse } from "next/server"
-import { getCurrentUserIdFromRequest, userHasRole } from "@/lib/auth/rbac"
+import { requirePartnerApiAction } from "@/lib/partner/access"
 import { createPartnerMonthlySettlement } from "@/lib/partner/db"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 
-async function requirePartnerUser() {
-  const userId = await getCurrentUserIdFromRequest()
-  const allowed = await userHasRole(userId, "partner")
-  if (!allowed) throw new Error("Forbidden.")
-  return userId
-}
 
 export async function POST(request: Request) {
   await ensurePlatformSchema()
   try {
-    const userId = await requirePartnerUser()
+    const userId = await requirePartnerApiAction("settlement.manage")
     const body = (await request.json()) as { cycleMonth?: string }
     await createPartnerMonthlySettlement(userId, body.cycleMonth ?? "")
     return NextResponse.json({ ok: true }, { status: 201 })

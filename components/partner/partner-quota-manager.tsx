@@ -1,5 +1,7 @@
 "use client"
 
+import type { PartnerAccess } from "@/lib/partner/access"
+
 import {
   BadgeCheckIcon,
   CircleDollarSignIcon,
@@ -77,11 +79,14 @@ const creditTypeLabels: Record<
 }
 
 export function PartnerQuotaManager({
+  access,
   workspace
 }: {
+  access: PartnerAccess
   workspace: PartnerQuotaWorkspace
 }) {
   const router = useRouter()
+  const canManageQuota = access.actions["quota.manage"]
   const [dialogMode, setDialogMode] = useState<DialogMode>(null)
   const [quotaForm, setQuotaForm] = useState({
     quotaType: "booth_credits",
@@ -238,8 +243,9 @@ export function PartnerQuotaManager({
         </div>
       ) : null}
 
-      <div className="flex flex-wrap gap-2">
-        <Button size="sm" onClick={() => open("quota")}>
+      {canManageQuota ? (
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" onClick={() => open("quota")}>
           <PlusIcon />
           Add quota
         </Button>
@@ -260,23 +266,28 @@ export function PartnerQuotaManager({
           <SendIcon />
           Allocate / consume quota
         </Button>
-        <Button size="sm" variant="outline" onClick={() => open("credit")}>
-          <CircleDollarSignIcon />
-          Record TradeCredit
-        </Button>
-      </div>
+          <Button size="sm" variant="outline" onClick={() => open("credit")}>
+            <CircleDollarSignIcon />
+            Record TradeCredit
+          </Button>
+        </div>
+      ) : null}
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(360px,0.9fr)]">
         <QuotaTable quotas={workspace.quotas} />
         <CampaignTable
           campaigns={workspace.inviteCampaigns}
-          onClaim={(campaign) => {
-            setClaimForm({
-              campaignId: campaign.id,
-              enterpriseMemberId: workspace.enterpriseMembers[0]?.id ?? ""
-            })
-            open("claim-code")
-          }}
+          onClaim={
+            canManageQuota
+              ? (campaign) => {
+                  setClaimForm({
+                    campaignId: campaign.id,
+                    enterpriseMemberId: workspace.enterpriseMembers[0]?.id ?? ""
+                  })
+                  open("claim-code")
+                }
+              : undefined
+          }
         />
       </section>
 
@@ -285,7 +296,7 @@ export function PartnerQuotaManager({
         <CreditLedger
           ledger={workspace.ledger}
           wallet={workspace.wallet}
-          onRecord={() => open("credit")}
+          onRecord={canManageQuota ? () => open("credit") : undefined}
         />
       </section>
 
@@ -725,7 +736,7 @@ function CampaignTable({
   onClaim
 }: {
   campaigns: PartnerInviteCampaign[]
-  onClaim: (campaign: PartnerInviteCampaign) => void
+  onClaim?: (campaign: PartnerInviteCampaign) => void
 }) {
   return (
     <Card>
@@ -767,8 +778,8 @@ function CampaignTable({
                     <Button
                       size="sm"
                       variant="outline"
-                      disabled={campaign.status !== "active"}
-                      onClick={() => onClaim(campaign)}
+                      disabled={campaign.status !== "active" || !onClaim}
+                      onClick={() => onClaim?.(campaign)}
                     >
                       Claim
                     </Button>
@@ -842,7 +853,7 @@ function CreditLedger({
 }: {
   ledger: PartnerTradeCreditLedgerEntry[]
   wallet: PartnerQuotaWorkspace["wallet"]
-  onRecord: () => void
+  onRecord?: () => void
 }) {
   return (
     <Card>
@@ -856,9 +867,11 @@ function CreditLedger({
               {numberFormat.format(wallet.consumed)}
             </CardDescription>
           </div>
-          <Button size="sm" variant="outline" onClick={onRecord}>
-            Record
-          </Button>
+          {onRecord ? (
+            <Button size="sm" variant="outline" onClick={onRecord}>
+              Record
+            </Button>
+          ) : null}
         </div>
       </CardHeader>
       <CardContent>

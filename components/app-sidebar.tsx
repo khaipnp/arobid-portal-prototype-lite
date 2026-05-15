@@ -14,6 +14,7 @@ import {
   SidebarHeader,
   SidebarRail
 } from "@/components/ui/sidebar"
+import type { PartnerAccess } from "@/lib/partner/access"
 
 export type PortalType = "admin" | "partner" | "seller"
 
@@ -40,6 +41,7 @@ const portals = [
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   portal?: PortalType
+  partnerAccess?: PartnerAccess
   user: {
     name: string
     email: string
@@ -50,6 +52,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 
 export function AppSidebar({
   portal = "admin",
+  partnerAccess,
   user,
   ...props
 }: AppSidebarProps) {
@@ -71,7 +74,7 @@ export function AppSidebar({
       </SidebarHeader>
       <SidebarContent>
         {portal === "admin" && <NavAdmin />}
-        {portal === "partner" && <NavPartner />}
+        {portal === "partner" && <NavPartner access={partnerAccess} />}
         {portal === "seller" && (
           <NavSeller
             canManageSeller={canManageSeller}

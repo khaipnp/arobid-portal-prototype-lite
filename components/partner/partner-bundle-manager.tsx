@@ -1,5 +1,7 @@
 "use client"
 
+import type { PartnerAccess } from "@/lib/partner/access"
+
 import {
   ArchiveIcon,
   BoxesIcon,
@@ -64,11 +66,14 @@ const emptyForm = {
 }
 
 export function PartnerBundleManager({
+  access,
   workspace
 }: {
+  access: PartnerAccess
   workspace: PartnerBundlesWorkspace
 }) {
   const router = useRouter()
+  const canManageBundles = access.actions["bundle.manage"]
   const [formMode, setFormMode] = useState<FormMode>(null)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState(emptyForm)
@@ -222,10 +227,12 @@ export function PartnerBundleManager({
                   Partner service + Arobid service - discount.
                 </CardDescription>
               </div>
-              <Button size="sm" onClick={openAdd}>
-                <PlusIcon />
-                Create bundle
-              </Button>
+              {canManageBundles ? (
+                <Button size="sm" onClick={openAdd}>
+                  <PlusIcon />
+                  Create bundle
+                </Button>
+              ) : null}
             </div>
           </CardHeader>
           <CardContent>
@@ -272,46 +279,48 @@ export function PartnerBundleManager({
                         <Badge variant="outline">{bundle.status}</Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => openEdit(bundle)}
-                          >
-                            <PencilIcon />
-                            Edit
-                          </Button>
-                          {bundle.status !== "published" ? (
-                            <Button
-                              size="sm"
-                              onClick={() =>
-                                setBundleStatus(bundle, "published")
-                              }
-                            >
-                              Publish
-                            </Button>
-                          ) : (
+                        {canManageBundles ? (
+                          <div className="flex justify-end gap-2">
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => recordPurchase(bundle)}
+                              onClick={() => openEdit(bundle)}
                             >
-                              <ReceiptTextIcon />
-                              Purchase
+                              <PencilIcon />
+                              Edit
                             </Button>
-                          )}
-                          {bundle.status !== "archived" ? (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() =>
-                                setBundleStatus(bundle, "archived")
-                              }
-                            >
-                              Archive
-                            </Button>
-                          ) : null}
-                        </div>
+                            {bundle.status !== "published" ? (
+                              <Button
+                                size="sm"
+                                onClick={() =>
+                                  setBundleStatus(bundle, "published")
+                                }
+                              >
+                                Publish
+                              </Button>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => recordPurchase(bundle)}
+                              >
+                                <ReceiptTextIcon />
+                                Purchase
+                              </Button>
+                            )}
+                            {bundle.status !== "archived" ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() =>
+                                  setBundleStatus(bundle, "archived")
+                                }
+                              >
+                                Archive
+                              </Button>
+                            ) : null}
+                          </div>
+                        ) : null}
                       </TableCell>
                     </TableRow>
                   ))}

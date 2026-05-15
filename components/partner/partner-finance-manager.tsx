@@ -1,5 +1,7 @@
 "use client"
 
+import type { PartnerAccess } from "@/lib/partner/access"
+
 import {
   BanknoteIcon,
   CheckCircle2Icon,
@@ -41,11 +43,14 @@ const currencyFormat = new Intl.NumberFormat("vi-VN", {
 })
 
 export function PartnerFinanceManager({
+  access,
   workspace
 }: {
+  access: PartnerAccess
   workspace: PartnerFinanceWorkspace
 }) {
   const router = useRouter()
+  const canManageSettlements = access.actions["settlement.manage"]
   const [cycleMonth, setCycleMonth] = useState(workspace.cycleOptions[0] ?? "")
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -121,31 +126,33 @@ export function PartnerFinanceManager({
                   Monthly partner settlement generated from revenue events.
                 </CardDescription>
               </div>
-              <div className="flex gap-2">
-                <NativeSelect
-                  value={cycleMonth}
-                  onChange={(event) => setCycleMonth(event.target.value)}
-                >
-                  {workspace.cycleOptions.length === 0 ? (
-                    <option value="">No revenue cycle</option>
-                  ) : null}
-                  {workspace.cycleOptions.map((cycle) => (
-                    <option key={cycle} value={cycle}>
-                      {cycle}
-                    </option>
-                  ))}
-                </NativeSelect>
-                <Button
-                  size="sm"
-                  disabled={!cycleMonth || isSaving}
-                  onClick={() =>
-                    submitJson("/api/partner/settlements", { cycleMonth })
-                  }
-                >
-                  <PlusIcon />
-                  Generate
-                </Button>
-              </div>
+              {canManageSettlements ? (
+                <div className="flex gap-2">
+                  <NativeSelect
+                    value={cycleMonth}
+                    onChange={(event) => setCycleMonth(event.target.value)}
+                  >
+                    {workspace.cycleOptions.length === 0 ? (
+                      <option value="">No revenue cycle</option>
+                    ) : null}
+                    {workspace.cycleOptions.map((cycle) => (
+                      <option key={cycle} value={cycle}>
+                        {cycle}
+                      </option>
+                    ))}
+                  </NativeSelect>
+                  <Button
+                    size="sm"
+                    disabled={!cycleMonth || isSaving}
+                    onClick={() =>
+                      submitJson("/api/partner/settlements", { cycleMonth })
+                    }
+                  >
+                    <PlusIcon />
+                    Generate
+                  </Button>
+                </div>
+              ) : null}
             </div>
           </CardHeader>
           <CardContent>
@@ -181,19 +188,21 @@ export function PartnerFinanceManager({
                         <SettlementStatus settlement={settlement} />
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={settlement.status !== "pending" || isSaving}
-                          onClick={() =>
-                            submitJson(
-                              `/api/partner/settlements/${settlement.id}/settle`
-                            )
-                          }
-                        >
-                          <ReceiptTextIcon />
-                          Settle
-                        </Button>
+                        {canManageSettlements ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={settlement.status !== "pending" || isSaving}
+                            onClick={() =>
+                              submitJson(
+                                `/api/partner/settlements/${settlement.id}/settle`
+                              )
+                            }
+                          >
+                            <ReceiptTextIcon />
+                            Settle
+                          </Button>
+                        ) : null}
                       </TableCell>
                     </TableRow>
                   ))}

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
-import { getCurrentUserIdFromRequest, userHasRole } from "@/lib/auth/rbac"
+import { getCurrentUserIdFromRequest } from "@/lib/auth/rbac"
+import { requirePartnerAction } from "@/lib/partner/access"
 import { getPartnerAssignedExpo } from "@/lib/partner/db"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 import {
@@ -23,8 +24,9 @@ export async function PUT(request: Request, { params }: Props) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 })
   }
 
-  const hasPartnerRole = await userHasRole(userId, "partner")
-  if (!hasPartnerRole) {
+  try {
+    await requirePartnerAction(userId, "expo.edit")
+  } catch {
     return NextResponse.json({ error: "Forbidden." }, { status: 403 })
   }
 

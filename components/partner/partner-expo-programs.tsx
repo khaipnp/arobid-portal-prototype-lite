@@ -1,5 +1,7 @@
 "use client"
 
+import type { PartnerAccess } from "@/lib/partner/access"
+
 import {
   BadgeCheckIcon,
   Building2Icon,
@@ -57,11 +59,14 @@ const requestStatusLabels: Record<
 }
 
 export function PartnerExpoPrograms({
+  access,
   workspace
 }: {
+  access: PartnerAccess
   workspace: PartnerExpoProgramsWorkspace
 }) {
   const router = useRouter()
+  const canCreateTurnkey = access.actions["turnkey.create"]
   const [showRequestDialog, setShowRequestDialog] = useState(false)
   const [requestForm, setRequestForm] = useState({
     title: "",
@@ -178,10 +183,12 @@ export function PartnerExpoPrograms({
                   create and publish.
                 </CardDescription>
               </div>
-              <Button size="sm" onClick={() => setShowRequestDialog(true)}>
-                <CalendarPlusIcon />
-                Request turnkey expo
-              </Button>
+              {canCreateTurnkey ? (
+                <Button size="sm" onClick={() => setShowRequestDialog(true)}>
+                  <CalendarPlusIcon />
+                  Request turnkey expo
+                </Button>
+              ) : null}
             </div>
           </CardHeader>
           <CardContent>
@@ -291,7 +298,7 @@ export function PartnerExpoPrograms({
         </Card>
       </section>
 
-      <PartnerExpoList assignedExpos={workspace.assignedExpos} />
+      <PartnerExpoList access={access} assignedExpos={workspace.assignedExpos} />
 
       <Dialog open={showRequestDialog} onOpenChange={setShowRequestDialog}>
         <DialogContent className="sm:max-w-lg">

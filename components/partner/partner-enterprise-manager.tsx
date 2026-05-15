@@ -1,5 +1,7 @@
 "use client"
 
+import type { PartnerAccess } from "@/lib/partner/access"
+
 import {
   Building2Icon,
   CheckCircle2Icon,
@@ -75,11 +77,14 @@ const statusOrder: PartnerEnterpriseMember["activationStatus"][] = [
 type FormMode = "add" | "edit" | null
 
 export function PartnerEnterpriseManager({
+  access,
   workspace
 }: {
+  access: PartnerAccess
   workspace: PartnerEnterpriseWorkspace
 }) {
   const router = useRouter()
+  const canManageEnterprises = access.actions["enterprise.manage"]
   const [query, setQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<
     PartnerEnterpriseMember["activationStatus"] | "all"
@@ -236,10 +241,12 @@ export function PartnerEnterpriseManager({
                   Members linked to current partner organization.
                 </CardDescription>
               </div>
-              <Button size="sm" onClick={openAdd}>
-                <PlusIcon />
-                Add enterprise
-              </Button>
+              {canManageEnterprises ? (
+                <Button size="sm" onClick={openAdd}>
+                  <PlusIcon />
+                  Add enterprise
+                </Button>
+              ) : null}
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -317,26 +324,28 @@ export function PartnerEnterpriseManager({
                         </span>
                       </TableCell>
                       <TableCell>
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => openEdit(member)}
-                          >
-                            <PencilIcon />
-                            Edit
-                          </Button>
-                          <Button
-                            size="sm"
-                            disabled={
-                              member.activationStatus === "rfq_generated"
-                            }
-                            onClick={() => advanceMember(member.id)}
-                          >
-                            <SendIcon />
-                            Advance
-                          </Button>
-                        </div>
+                        {canManageEnterprises ? (
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openEdit(member)}
+                            >
+                              <PencilIcon />
+                              Edit
+                            </Button>
+                            <Button
+                              size="sm"
+                              disabled={
+                                member.activationStatus === "rfq_generated"
+                              }
+                              onClick={() => advanceMember(member.id)}
+                            >
+                              <SendIcon />
+                              Advance
+                            </Button>
+                          </div>
+                        ) : null}
                       </TableCell>
                     </TableRow>
                   ))}

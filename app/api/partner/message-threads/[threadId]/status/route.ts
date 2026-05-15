@@ -1,21 +1,15 @@
 import { NextResponse } from "next/server"
-import { getCurrentUserIdFromRequest, userHasRole } from "@/lib/auth/rbac"
+import { requirePartnerApiAction } from "@/lib/partner/access"
 import { updatePartnerMessageThreadStatus } from "@/lib/partner/db"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 
 type Props = { params: Promise<{ threadId: string }> }
 
-async function requirePartnerUser() {
-  const userId = await getCurrentUserIdFromRequest()
-  const allowed = await userHasRole(userId, "partner")
-  if (!allowed) throw new Error("Forbidden.")
-  return userId
-}
 
 export async function POST(request: Request, { params }: Props) {
   await ensurePlatformSchema()
   try {
-    const userId = await requirePartnerUser()
+    const userId = await requirePartnerApiAction("communications.manage")
     const { threadId } = await params
     const body = (await request.json()) as { status?: "open" | "closed" }
     if (body.status !== "open" && body.status !== "closed") {
