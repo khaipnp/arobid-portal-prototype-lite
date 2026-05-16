@@ -2,24 +2,44 @@ import { randomUUID } from "node:crypto"
 import { PutObjectCommand } from "@aws-sdk/client-s3"
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { NextResponse } from "next/server"
+import { requireAnyRole } from "@/lib/auth/rbac"
 import { R2_BUCKET_NAME, r2Client } from "@/lib/platform/r2"
 
-/**
- * POST /api/platform/upload
- * Yêu cầu tạo Presigned URL để client upload trực tiếp lên R2.
- */
+const allowedKinds = new Set(["thumbnail", "avatar", "glb", "image"])
+const allowedContentTypes = new Set([
+  "image/jpeg",
+  "image/png",
+  "image/svg+xml",
+  "image/webp",
+  "model/gltf-binary"
+])
+const safeFileNamePattern = /^[a-zA-Z0-9._ -]+$/
+
 export async function POST(req: Request) {
   try {
+    await requireAnyRole(["admin", "partner", "seller"])
+
     const { fileName, contentType, kind } = await req.json()
 
-    if (!fileName || !contentType || !kind) {
+    if (
+      typeof fileName !== "string" ||
+      typeof contentType !== "string" ||
+      typeof kind !== "string"
+    ) {
       return NextResponse.json(
         { error: "Missing required fields (fileName, contentType, kind)" },
         { status: 400 }
       )
     }
 
-    // Tạo một key duy nhất cho file trên R2
+    if (
+      !allowedKinds.has(kind) ||
+      !allowedContentTypes.has(contentType) ||
+      !safeFileNamePattern.test(fileName)
+    ) {
+      return NextResponse.json({ error: "Invalid upload request" }, { status: 400 })
+    }
+
     const fileId = randomUUID()
     const extension = fileName.split(".").pop()
     const key = `${kind}/${fileId}${extension ? `.${extension}` : ""}`

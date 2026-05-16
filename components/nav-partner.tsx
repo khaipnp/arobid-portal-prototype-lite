@@ -1,12 +1,13 @@
 "use client"
 
 import {
+  ApertureIcon,
   BoxesIcon,
   Building2Icon,
-  CalendarIcon,
   LandmarkIcon,
   LayoutDashboardIcon,
   MessageSquareIcon,
+  PaletteIcon,
   PieChartIcon,
   UsersIcon,
   WalletCardsIcon
@@ -15,7 +16,6 @@ import Link from "next/link"
 import { NotificationNavLink } from "@/components/notifications/notification-nav-link"
 import {
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem
@@ -27,7 +27,7 @@ const partnerLinks = [
     name: "Expo Programs",
     url: "/partner/expos",
     tab: "expo",
-    icon: <CalendarIcon />
+    icon: <ApertureIcon />
   },
   {
     name: "Enterprises & Members",
@@ -52,6 +52,12 @@ const partnerLinks = [
     url: "/partner/communications",
     tab: "communications",
     icon: <MessageSquareIcon />
+  },
+  {
+    name: "Site Management",
+    url: "/partner/site-management",
+    tab: "site_management",
+    icon: <PaletteIcon />
   },
   {
     name: "Finance & Settlement",
@@ -85,7 +91,7 @@ export function NavPartner({ access }: { access?: PartnerAccess }) {
           <SidebarMenuButton asChild>
             <Link href="/partner">
               <LayoutDashboardIcon />
-              <span>Overview</span>
+              <span>Dashboard</span>
             </Link>
           </SidebarMenuButton>
         </SidebarMenuItem>
