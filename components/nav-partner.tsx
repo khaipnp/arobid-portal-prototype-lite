@@ -81,7 +81,7 @@ const partnerLinks = [
 
 export function NavPartner({ access }: { access?: PartnerAccess }) {
   const links = partnerLinks.filter(
-    (item) => access?.tabs[item.tab as PartnerPortalTab] ?? true
+    (item) => access?.tabs[item.tab as PartnerPortalTab] ?? false
   )
 
   return (

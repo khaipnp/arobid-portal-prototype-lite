@@ -4,6 +4,31 @@ import { CURRENT_USER_ID } from "@/lib/user/current-user"
 let platformSchemaReady = false
 const LATEST_PLATFORM_MIGRATION = "partner_portal_workflows_v1"
 
+type SqlClient = typeof sql
+
+export async function ensurePlatformPaymentConfig(db: SqlClient = sql) {
+  await db`
+    create table if not exists platform_payment_config (
+      id text primary key,
+      vnpay_enabled boolean not null,
+      bank_transfer_enabled boolean not null,
+      updated_at timestamptz not null,
+      updated_by text not null
+    )
+  `
+  await db`
+    insert into platform_payment_config (
+      id,
+      vnpay_enabled,
+      bank_transfer_enabled,
+      updated_at,
+      updated_by
+    )
+    values ('default', true, true, now(), 'system')
+    on conflict (id) do nothing
+  `
+}
+
 /** Creates platform tables (expos, orders, chat, streaming) for Neon. Idempotent. */
 export async function ensurePlatformSchema() {
   if (platformSchemaReady) return
@@ -17,6 +42,7 @@ export async function ensurePlatformSchema() {
 
     // If the latest migration is applied, we can assume everything before it is also applied.
     if (appliedNames.has(LATEST_PLATFORM_MIGRATION)) {
+      await ensurePlatformPaymentConfig()
       platformSchemaReady = true
       return
     }
@@ -285,26 +311,7 @@ export async function ensurePlatformSchema() {
     )
   `
 
-  await sql`
-    create table if not exists platform_payment_config (
-      id text primary key,
-      vnpay_enabled boolean not null,
-      bank_transfer_enabled boolean not null,
-      updated_at timestamptz not null,
-      updated_by text not null
-    )
-  `
-  await sql`
-    insert into platform_payment_config (
-      id,
-      vnpay_enabled,
-      bank_transfer_enabled,
-      updated_at,
-      updated_by
-    )
-    values ('default', true, true, now(), 'system')
-    on conflict (id) do nothing
-  `
+  await ensurePlatformPaymentConfig()
 
   await sql`
     create table if not exists expo_payment_configs (
