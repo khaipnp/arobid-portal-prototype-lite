@@ -15,6 +15,14 @@ const allowedContentTypes = new Set([
 ])
 const safeFileNamePattern = /^[a-zA-Z0-9._ -]+$/
 
+function getR2PublicBaseUrl() {
+  const publicDomain = process.env.R2_PUBLIC_DOMAIN
+  if (!publicDomain) throw new Error("Missing R2_PUBLIC_DOMAIN")
+  return publicDomain.startsWith("http")
+    ? publicDomain.replace(/\/$/, "")
+    : `https://${publicDomain}`
+}
+
 export async function POST(req: Request) {
   try {
     await requireAnyRole(["admin", "partner", "seller"])
@@ -53,9 +61,7 @@ export async function POST(req: Request) {
 
     const uploadUrl = await getSignedUrl(r2Client, command, { expiresIn: 3600 })
 
-    // Trả về thông tin để client upload và link truy cập dự kiến
-    // Lưu ý: fileUrl này cần được cập nhật sau khi upload thành công hoặc dùng Public Domain của R2
-    const fileUrl = `https://${process.env.R2_PUBLIC_DOMAIN}/${key}`
+    const fileUrl = `${getR2PublicBaseUrl()}/${key}`
 
     return NextResponse.json({
       uploadUrl,
