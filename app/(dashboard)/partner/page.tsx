@@ -20,9 +20,9 @@ export default async function PartnerDashboardPage() {
 
   return (
     <DashboardShell
-      title="Partner Overview"
+      title="Dashboard"
       description="Command center for partner programs, quota, trade activity, bundles, and revenue."
-      breadcrumbs={[{ label: "Overview" }]}
+      breadcrumbs={[{ label: "Dashboard" }]}
     >
       <PartnerOverviewCommand summary={summary} />
       <PartnerDashboard metrics={metrics} />

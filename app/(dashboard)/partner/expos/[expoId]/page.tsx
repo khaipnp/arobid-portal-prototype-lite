@@ -56,27 +56,29 @@ export default async function PartnerExpoDetailPage({
       ]}
       showBackButton
     >
-      <Tabs defaultValue="overview" className="gap-4">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="golive">GoLIVE</TabsTrigger>
-        </TabsList>
+      <div className="px-4">
+        <Tabs defaultValue="overview" className="gap-4">
+          <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="golive">GoLIVE</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="overview">
-          <PartnerExpoDetailOverview
-            assignedExpo={assignedExpo}
-            operations={operations}
-          />
-        </TabsContent>
+          <TabsContent value="overview">
+            <PartnerExpoDetailOverview
+              assignedExpo={assignedExpo}
+              operations={operations}
+            />
+          </TabsContent>
 
-        <TabsContent value="golive">
-          <GoLIVEManager
-            expoId={expoId}
-            initialGoLIVEEvents={initialGoLIVEEvents}
-            initialStreamSessions={initialStreamSessions}
-          />
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="golive">
+            <GoLIVEManager
+              expoId={expoId}
+              initialGoLIVEEvents={initialGoLIVEEvents}
+              initialStreamSessions={initialStreamSessions}
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
     </DashboardShell>
   )
 }
