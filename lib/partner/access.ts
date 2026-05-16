@@ -12,6 +12,7 @@ export type PartnerPortalTab =
   | "quota"
   | "bundles"
   | "communications"
+  | "site_management"
   | "finance"
   | "analytics"
   | "government"
@@ -48,6 +49,7 @@ const allTabs: PartnerPortalTab[] = [
   "quota",
   "bundles",
   "communications",
+  "site_management",
   "finance",
   "analytics",
   "government"
