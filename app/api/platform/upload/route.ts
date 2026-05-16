@@ -4,6 +4,14 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner"
 import { NextResponse } from "next/server"
 import { R2_BUCKET_NAME, r2Client } from "@/lib/platform/r2"
 
+function getR2PublicBaseUrl() {
+  const publicDomain = process.env.R2_PUBLIC_DOMAIN
+  if (!publicDomain) throw new Error("Missing R2_PUBLIC_DOMAIN")
+  return publicDomain.startsWith("http")
+    ? publicDomain.replace(/\/$/, "")
+    : `https://${publicDomain}`
+}
+
 /**
  * POST /api/platform/upload
  * Yêu cầu tạo Presigned URL để client upload trực tiếp lên R2.
@@ -33,9 +41,7 @@ export async function POST(req: Request) {
 
     const uploadUrl = await getSignedUrl(r2Client, command, { expiresIn: 3600 })
 
-    // Trả về thông tin để client upload và link truy cập dự kiến
-    // Lưu ý: fileUrl này cần được cập nhật sau khi upload thành công hoặc dùng Public Domain của R2
-    const fileUrl = `https://${process.env.R2_PUBLIC_DOMAIN}/${key}`
+    const fileUrl = `${getR2PublicBaseUrl()}/${key}`
 
     return NextResponse.json({
       uploadUrl,

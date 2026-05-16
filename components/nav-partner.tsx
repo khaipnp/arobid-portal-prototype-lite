@@ -7,6 +7,7 @@ import {
   LandmarkIcon,
   LayoutDashboardIcon,
   MessageSquareIcon,
+  PaletteIcon,
   PieChartIcon,
   UsersIcon,
   WalletCardsIcon
@@ -51,6 +52,12 @@ const partnerLinks = [
     url: "/partner/communications",
     tab: "communications",
     icon: <MessageSquareIcon />
+  },
+  {
+    name: "Site Management",
+    url: "/partner/site-management",
+    tab: "site_management",
+    icon: <PaletteIcon />
   },
   {
     name: "Finance & Settlement",
