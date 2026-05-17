@@ -4,6 +4,7 @@ import {
   CalendarDaysIcon,
   Edit3Icon,
   ExternalLinkIcon,
+  LockIcon,
   RadioIcon,
   StoreIcon,
   UsersIcon,
@@ -176,7 +177,9 @@ export function PartnerExpoDetailOverview({
 }) {
   const { expo, assignment, goLiveCount } = assignedExpo
   const publicHref = publicExpoHref(expo.slug)
+  const isTurnkey = assignment.partnershipModel === "turnkey"
   const canEditDraft =
+    !isTurnkey &&
     expo.status === "Draft" &&
     assignment.capabilities.includes("edit_expo_content")
   const timelineLabel = getTimelineLabel(expo.startDate, expo.endDate)
@@ -248,6 +251,19 @@ export function PartnerExpoDetailOverview({
                 </div>
               </div>
 
+              {isTurnkey ? (
+                <div className="flex items-start gap-2 rounded-2xl border border-blue-200 bg-blue-50 p-3 text-blue-900 text-sm">
+                  <LockIcon className="mt-0.5 h-4 w-4 shrink-0" />
+                  <div>
+                    <p className="font-medium">Configured by Arobid</p>
+                    <p className="text-blue-800/80 text-xs">
+                      This Turnkey Expo is visible for operations only. Create,
+                      configuration, pricing, and publish actions are hidden.
+                    </p>
+                  </div>
+                </div>
+              ) : null}
+
               <div className="flex flex-wrap gap-2">
                 {publicHref ? (
                   <Button asChild size="sm">
@@ -304,6 +320,12 @@ export function PartnerExpoDetailOverview({
                   {numberFormat.format(goLiveCount)} sessions
                 </p>
               </div>
+              {isTurnkey ? (
+                <div className="col-span-2 rounded-lg bg-muted p-3">
+                  <p className="text-muted-foreground text-xs">Configured by</p>
+                  <p className="font-medium">Arobid Admin</p>
+                </div>
+              ) : null}
             </div>
 
             <Separator />

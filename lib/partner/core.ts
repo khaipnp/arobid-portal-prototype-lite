@@ -230,12 +230,8 @@ export function getPartnerModuleVisibility({
   return {
     overview: hasCapability("overview"),
     mini_site: model === "tenant" && hasCapability("mini_site"),
-    enterprises: hasCapability("enterprise_association"),
-    expo_programs:
-      hasCapability("expo_programs") &&
-      (scope.expoIds.length > 0 ||
-        scope.programIds.length > 0 ||
-        scope.companyIds.length > 0),
+    enterprises: model === "tenant" && hasCapability("enterprise_association"),
+    expo_programs: hasCapability("expo_programs"),
     tradecredit_reports: hasCapability("tradecredit_reporting"),
     analytics_reports: hasCapability("analytics_reporting"),
     bundles: false,

@@ -256,7 +256,9 @@ export async function listPartnerMiniSitesForAdmin(partnerOrgId: string) {
   `
 }
 
-export async function getPublishedPartnerMiniSiteForAdmin(partnerOrgId: string) {
+export async function getPublishedPartnerMiniSiteForAdmin(
+  partnerOrgId: string
+) {
   const rows = await sql`
     select
       id,

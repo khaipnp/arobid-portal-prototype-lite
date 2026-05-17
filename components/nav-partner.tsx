@@ -34,7 +34,7 @@ const partnerLinks = [
     icon: <PaletteIcon />
   },
   {
-    name: "Enterprises & Members",
+    name: "Tenant Companies",
     url: "/partner/enterprises",
     module: "enterprises",
     icon: <UsersIcon />

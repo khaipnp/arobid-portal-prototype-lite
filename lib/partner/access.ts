@@ -123,8 +123,9 @@ export function buildPartnerAccess(input: {
   })
   const canWriteMiniSite = modules.mini_site && !readOnly
   const canWriteEnterprise = modules.enterprises && !readOnly
-  const canWriteExpo = modules.expo_programs && !readOnly
-  const canWriteTradeCredit = modules.tradecredit_reports && !readOnly
+  const canWriteExpo =
+    modules.expo_programs && input.organization.model !== "turnkey" && !readOnly
+  const canWriteTradeCredit = false
 
   return {
     organization: input.organization,

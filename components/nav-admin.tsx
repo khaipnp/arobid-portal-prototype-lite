@@ -3,6 +3,7 @@
 import {
   BrickWallShieldIcon,
   Grid3x2Icon,
+  HistoryIcon,
   LayoutDashboardIcon,
   LayoutTemplateIcon,
   MonitorPlayIcon,
@@ -76,6 +77,11 @@ const servicesLinks = [
 ]
 
 const administrationLinks = [
+  {
+    name: "Partner Audit",
+    url: "/admin/partners/association-audit",
+    icon: <HistoryIcon />
+  },
   {
     name: "Modules",
     url: "/admin/administration/modules",

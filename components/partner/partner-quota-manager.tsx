@@ -86,6 +86,7 @@ export function PartnerQuotaManager({
 }) {
   const router = useRouter()
   const canManageQuota = access.actions["quota.manage"]
+  const canRecordTradeCredit = access.actions["tradeCredits.manage"]
   const [dialogMode, setDialogMode] = useState<DialogMode>(null)
   const [quotaForm, setQuotaForm] = useState({
     quotaType: "booth_credits",
@@ -229,9 +230,9 @@ export function PartnerQuotaManager({
           icon={<RefreshCwIcon />}
         />
         <MetricCard
-          title="TradeCredit Wallet"
-          value={numberFormat.format(workspace.wallet.balance)}
-          note={`${numberFormat.format(workspace.wallet.allocated)} allocated`}
+          title="TradeCredit report"
+          value={numberFormat.format(workspace.wallet.consumed)}
+          note={`${numberFormat.format(workspace.ledger.length)} burn / ledger events`}
           icon={<WalletCardsIcon />}
         />
       </section>
@@ -265,10 +266,12 @@ export function PartnerQuotaManager({
             <SendIcon />
             Allocate / consume quota
           </Button>
-          <Button size="sm" variant="outline" onClick={() => open("credit")}>
-            <CircleDollarSignIcon />
-            Record TradeCredit
-          </Button>
+          {canRecordTradeCredit ? (
+            <Button size="sm" variant="outline" onClick={() => open("credit")}>
+              <CircleDollarSignIcon />
+              Record TradeCredit
+            </Button>
+          ) : null}
         </div>
       ) : null}
 
@@ -295,7 +298,7 @@ export function PartnerQuotaManager({
         <CreditLedger
           ledger={workspace.ledger}
           wallet={workspace.wallet}
-          onRecord={canManageQuota ? () => open("credit") : undefined}
+          onRecord={canRecordTradeCredit ? () => open("credit") : undefined}
         />
       </section>
 
@@ -859,11 +862,11 @@ function CreditLedger({
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
           <div>
-            <CardTitle>TradeCredit Ledger</CardTitle>
+            <CardTitle>TradeCredit Report-only View</CardTitle>
             <CardDescription>
-              Balance {numberFormat.format(wallet.balance)} / allocated{" "}
-              {numberFormat.format(wallet.allocated)} / consumed{" "}
-              {numberFormat.format(wallet.consumed)}
+              Aggregate usage only · consumed{" "}
+              {numberFormat.format(wallet.consumed)} · discount cost owner:
+              Arobid
             </CardDescription>
           </div>
           {onRecord ? (

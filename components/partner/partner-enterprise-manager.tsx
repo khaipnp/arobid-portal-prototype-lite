@@ -1,15 +1,6 @@
 "use client"
 
-import {
-  Building2Icon,
-  CheckCircle2Icon,
-  PencilIcon,
-  PlusIcon,
-  SearchIcon,
-  SendIcon,
-  UsersIcon,
-  ZapIcon
-} from "lucide-react"
+import { PlusIcon, SearchIcon, Trash2Icon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useMemo, useState } from "react"
 import { Badge } from "@/components/ui/badge"
@@ -37,7 +28,6 @@ import {
 } from "@/components/ui/input-group"
 import { Label } from "@/components/ui/label"
 import { NativeSelect } from "@/components/ui/native-select"
-import { Progress } from "@/components/ui/progress"
 import {
   Table,
   TableBody,
@@ -59,30 +49,32 @@ const statusLabels: Record<
   string
 > = {
   invited: "Invited",
-  registered: "Registered",
-  profile_completed: "Profile completed",
-  expo_activated: "Expo activated",
-  rfq_generated: "RFQ generated"
-}
-
-const dealStageLabels: Record<string, string> = {
-  rfq_generated: "RFQ generated",
-  qualified: "Qualified",
-  meeting_scheduled: "Meeting scheduled",
-  proposal_sent: "Proposal sent",
-  closed_won: "Closed won",
-  closed_lost: "Closed lost"
+  pending_acceptance: "Pending acceptance",
+  active: "Active",
+  inactive: "Inactive",
+  removed: "Removed",
+  blocked: "Blocked"
 }
 
 const statusOrder: PartnerEnterpriseMember["activationStatus"][] = [
   "invited",
-  "registered",
-  "profile_completed",
-  "expo_activated",
-  "rfq_generated"
+  "pending_acceptance",
+  "active",
+  "inactive",
+  "removed",
+  "blocked"
 ]
 
-type FormMode = "add" | "edit" | null
+type FormMode = "add" | null
+type RemoveTarget = Required<PartnerEnterpriseMember> | null
+type CompanySearchResult = {
+  id: string
+  name: string
+  taxId: string | null
+  website: string | null
+  address: string | null
+  isActive: boolean
+}
 
 export function PartnerEnterpriseManager({
   access,
@@ -98,11 +90,17 @@ export function PartnerEnterpriseManager({
     PartnerEnterpriseMember["activationStatus"] | "all"
   >("all")
   const [formMode, setFormMode] = useState<FormMode>(null)
-  const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState({
-    enterpriseName: "",
-    contactEmail: ""
+    relationshipType: "member"
   })
+  const [companySearch, setCompanySearch] = useState("")
+  const [companyResults, setCompanyResults] = useState<CompanySearchResult[]>(
+    []
+  )
+  const [selectedCompanyIds, setSelectedCompanyIds] = useState<string[]>([])
+  const [inviteUrl, setInviteUrl] = useState<string | null>(null)
+  const [removeTarget, setRemoveTarget] = useState<RemoveTarget>(null)
+  const [removeReason, setRemoveReason] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
@@ -121,44 +119,19 @@ export function PartnerEnterpriseManager({
     })
   }, [workspace.members, query, statusFilter])
 
-  const totals = useMemo(() => {
-    return workspace.members.reduce(
-      (acc, member) => {
-        acc.quotaAllocated += member.quotaAllocatedQuantity
-        acc.quotaConsumed += member.quotaConsumedQuantity
-        acc.creditsAllocated += member.tradeCreditsAllocated
-        acc.creditsConsumed += member.tradeCreditsConsumed
-        return acc
-      },
-      {
-        quotaAllocated: 0,
-        quotaConsumed: 0,
-        creditsAllocated: 0,
-        creditsConsumed: 0
-      }
-    )
-  }, [workspace.members])
-
   function openAdd() {
     setError(null)
-    setEditingId(null)
-    setForm({ enterpriseName: "", contactEmail: "" })
+    setForm({ relationshipType: "member" })
+    setCompanySearch("")
+    setCompanyResults([])
+    setSelectedCompanyIds([])
+    setInviteUrl(null)
     setFormMode("add")
-  }
-
-  function openEdit(member: Required<PartnerEnterpriseMember>) {
-    setError(null)
-    setEditingId(member.id)
-    setForm({
-      enterpriseName: member.enterpriseName,
-      contactEmail: member.contactEmail ?? ""
-    })
-    setFormMode("edit")
   }
 
   async function submitJson(
     url: string,
-    method: "POST" | "PATCH",
+    method: "POST" | "PATCH" | "DELETE",
     body?: unknown
   ) {
     setIsSaving(true)
@@ -185,74 +158,101 @@ export function PartnerEnterpriseManager({
     }
   }
 
+  async function searchCompanies() {
+    const q = companySearch.trim()
+    if (q.length < 2) {
+      setCompanyResults([])
+      return
+    }
+
+    setError(null)
+    const response = await fetch(
+      `/api/partner/companies/search?q=${encodeURIComponent(q)}`
+    )
+    if (!response.ok) {
+      setError("Could not search Arobid companies.")
+      return
+    }
+    const payload = (await response.json()) as {
+      companies: CompanySearchResult[]
+    }
+    setCompanyResults(payload.companies)
+  }
+
   async function saveMember() {
     if (formMode === "add") {
-      await submitJson("/api/partner/enterprise-members", "POST", form)
-    } else if (formMode === "edit" && editingId) {
-      await submitJson(
-        `/api/partner/enterprise-members/${editingId}`,
-        "PATCH",
-        form
-      )
+      setIsSaving(true)
+      setError(null)
+      try {
+        const response = await fetch("/api/partner/enterprise-members", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            companyIds: selectedCompanyIds,
+            relationshipType: form.relationshipType
+          })
+        })
+        if (!response.ok) {
+          const payload = (await response.json().catch(() => null)) as {
+            error?: string
+          } | null
+          throw new Error(payload?.error ?? "Request failed.")
+        }
+        const result = (await response.json()) as {
+          created?: unknown[]
+          skipped?: unknown[]
+          shareUrl?: string
+        }
+        if (result.shareUrl) {
+          setInviteUrl(result.shareUrl)
+        }
+        setMessage(
+          `${result.created?.length ?? 0} invite(s) created, ${
+            result.skipped?.length ?? 0
+          } skipped.`
+        )
+        router.refresh()
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Request failed.")
+      } finally {
+        setIsSaving(false)
+      }
     }
   }
 
-  async function advanceMember(memberId: string) {
+  async function removeAssociation() {
+    if (!removeTarget) return
     await submitJson(
-      `/api/partner/enterprise-members/${memberId}/advance`,
-      "POST"
+      `/api/partner/enterprise-members/${removeTarget.id}`,
+      "DELETE",
+      { reason: removeReason }
     )
+    setRemoveTarget(null)
+    setRemoveReason("")
   }
 
   return (
     <div className="space-y-4 px-4">
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
-          title="Members"
-          value={numberFormat.format(workspace.members.length)}
-          note="Partner community directory"
-          icon={<UsersIcon />}
-        />
-        <MetricCard
-          title="Expo Activated"
-          value={numberFormat.format(workspace.funnel.expoActivated)}
-          note="Ready for expo participation"
-          icon={<Building2Icon />}
-        />
-        <MetricCard
-          title="Quota Support"
-          value={numberFormat.format(totals.quotaAllocated)}
-          note={`${numberFormat.format(totals.quotaConsumed)} consumed`}
-          icon={<CheckCircle2Icon />}
-        />
-        <MetricCard
-          title="TradeCredits"
-          value={numberFormat.format(totals.creditsAllocated)}
-          note={`${numberFormat.format(totals.creditsConsumed)} consumed`}
-          icon={<ZapIcon />}
-        />
-      </section>
-
       {message ? (
         <div className="rounded-md border bg-muted px-3 py-2 text-sm">
           {message}
         </div>
       ) : null}
 
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <section>
         <Card>
           <CardHeader>
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <CardTitle>Enterprise Directory</CardTitle>
+                <CardTitle>Tenant Company Associations</CardTitle>
                 <CardDescription>
-                  Members linked to current partner organization.
+                  Scoped company links. Company profile data remains read-only.
                 </CardDescription>
               </div>
               {canManageEnterprises ? (
                 <Button size="sm" onClick={openAdd}>
                   <PlusIcon />
-                  Add enterprise
+                  Invite Company
                 </Button>
               ) : null}
             </div>
@@ -266,7 +266,7 @@ export function PartnerEnterpriseManager({
                 <InputGroupInput
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
-                  placeholder="Search enterprise..."
+                  placeholder="Search company or email..."
                 />
               </InputGroup>
               <NativeSelect
@@ -296,11 +296,9 @@ export function PartnerEnterpriseManager({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Enterprise</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>DealContext</TableHead>
-                    <TableHead className="text-right">Quota</TableHead>
-                    <TableHead className="text-right">Credits</TableHead>
+                    <TableHead>Company</TableHead>
+                    <TableHead>Association</TableHead>
+                    <TableHead>Scope</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -319,57 +317,38 @@ export function PartnerEnterpriseManager({
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {member.dealContextStage ? (
-                          <div className="space-y-1">
-                            <Badge variant="secondary">
-                              {dealStageLabels[member.dealContextStage] ??
-                                member.dealContextStage}
-                            </Badge>
+                        <div className="space-y-1">
+                          <Badge variant="secondary">
+                            {member.relationshipType}
+                          </Badge>
+                          <p className="text-muted-foreground text-xs">
+                            {member.source} ·{" "}
+                            {member.publicProfile ? "Public" : "Private"}
+                          </p>
+                          {member.lastAction ? (
                             <p className="text-muted-foreground text-xs">
-                              {numberFormat.format(member.dealContextEvents)}{" "}
-                              events
+                              Last action: {member.lastAction}
                             </p>
-                          </div>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">
-                            No context
-                          </span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {numberFormat.format(member.quotaAllocatedQuantity)}
-                        <span className="text-muted-foreground">
-                          {" "}
-                          / {numberFormat.format(member.quotaConsumedQuantity)}
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {numberFormat.format(member.tradeCreditsAllocated)}
-                        <span className="text-muted-foreground">
-                          {" "}
-                          / {numberFormat.format(member.tradeCreditsConsumed)}
-                        </span>
+                          ) : null}
+                        </div>
                       </TableCell>
                       <TableCell>
                         {canManageEnterprises ? (
                           <div className="flex justify-end gap-2">
                             <Button
                               size="sm"
-                              variant="outline"
-                              onClick={() => openEdit(member)}
-                            >
-                              <PencilIcon />
-                              Edit
-                            </Button>
-                            <Button
-                              size="sm"
+                              variant="destructive"
                               disabled={
-                                member.activationStatus === "rfq_generated"
+                                member.activationStatus === "removed" ||
+                                member.activationStatus === "blocked"
                               }
-                              onClick={() => advanceMember(member.id)}
+                              onClick={() => {
+                                setRemoveTarget(member)
+                                setRemoveReason("")
+                              }}
                             >
-                              <SendIcon />
-                              Advance
+                              <Trash2Icon />
+                              Remove
                             </Button>
                           </div>
                         ) : null}
@@ -381,8 +360,6 @@ export function PartnerEnterpriseManager({
             )}
           </CardContent>
         </Card>
-
-        <FunnelCard workspace={workspace} />
       </section>
 
       <Dialog
@@ -391,40 +368,90 @@ export function PartnerEnterpriseManager({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {formMode === "edit" ? "Edit Enterprise" : "Add Enterprise"}
-            </DialogTitle>
+            <DialogTitle>Invite Company</DialogTitle>
             <DialogDescription>
-              Enterprise member data stays scoped to current partner
-              organization.
+              Manage Tenant association metadata without changing Company SSOT.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
+            {formMode === "add" ? (
+              <div className="space-y-3 rounded-lg border p-3">
+                <div className="grid gap-2">
+                  <Label>Search Arobid Company</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={companySearch}
+                      onChange={(event) => setCompanySearch(event.target.value)}
+                      placeholder="Search by company name, tax ID, website"
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={searchCompanies}
+                    >
+                      Search
+                    </Button>
+                  </div>
+                </div>
+                {companyResults.length > 0 ? (
+                  <div className="max-h-48 space-y-2 overflow-y-auto">
+                    {companyResults.map((company) => (
+                      <button
+                        className="w-full rounded-md border p-2 text-left hover:bg-muted"
+                        key={company.id}
+                        type="button"
+                        onClick={() =>
+                          setSelectedCompanyIds((current) =>
+                            current.includes(company.id)
+                              ? current.filter((id) => id !== company.id)
+                              : [...current, company.id]
+                          )
+                        }
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-medium">{company.name}</span>
+                          {selectedCompanyIds.includes(company.id) ? (
+                            <Badge>Selected</Badge>
+                          ) : null}
+                        </div>
+                        <div className="text-muted-foreground text-xs">
+                          {company.taxId || "No tax ID"} ·{" "}
+                          {company.website || "No website"}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
+                <div className="rounded-md bg-muted p-2 text-muted-foreground text-sm">
+                  Selected {selectedCompanyIds.length} company(s). Save without
+                  selecting companies to get reusable Tenant registration URL.
+                </div>
+                {inviteUrl ? (
+                  <div className="rounded-md border p-2 text-sm">
+                    <div className="font-medium">Invite URL</div>
+                    <div className="break-all text-muted-foreground">
+                      {inviteUrl}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
             <div className="grid gap-2">
-              <Label>Enterprise name</Label>
-              <Input
-                value={form.enterpriseName}
+              <Label>Relationship type</Label>
+              <NativeSelect
+                value={form.relationshipType}
                 onChange={(event) =>
                   setForm((prev) => ({
                     ...prev,
-                    enterpriseName: event.target.value
+                    relationshipType: event.target.value
                   }))
                 }
-                placeholder="Vietnam Textile Export Co."
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label>Contact email</Label>
-              <Input
-                value={form.contactEmail}
-                onChange={(event) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    contactEmail: event.target.value
-                  }))
-                }
-                placeholder="ops@example.com"
-              />
+              >
+                <option value="member">Member</option>
+                <option value="sponsored">Sponsored</option>
+                <option value="expo_participant">Expo participant</option>
+                <option value="campaign_attributed">Campaign attributed</option>
+              </NativeSelect>
             </div>
           </div>
           {error ? <p className="text-destructive text-sm">{error}</p> : null}
@@ -433,71 +460,55 @@ export function PartnerEnterpriseManager({
               Cancel
             </Button>
             <Button disabled={isSaving} onClick={saveMember}>
-              {isSaving ? "Saving..." : "Save"}
+              {isSaving
+                ? "Saving..."
+                : formMode === "add"
+                  ? selectedCompanyIds.length > 0
+                    ? `Invite ${selectedCompanyIds.length} selected`
+                    : "Get share URL"
+                  : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(removeTarget)}
+        onOpenChange={(open) => {
+          if (!open) setRemoveTarget(null)
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove association?</DialogTitle>
+            <DialogDescription>
+              This removes {removeTarget?.enterpriseName} from this Tenant
+              scope. It does not delete or edit the Company profile.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-2">
+            <Label>Removal reason</Label>
+            <Input
+              value={removeReason}
+              onChange={(event) => setRemoveReason(event.target.value)}
+              placeholder="Reason required for audit"
+            />
+          </div>
+          {error ? <p className="text-destructive text-sm">{error}</p> : null}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRemoveTarget(null)}>
+              Cancel
+            </Button>
+            <Button
+              disabled={isSaving || !removeReason.trim()}
+              variant="destructive"
+              onClick={removeAssociation}
+            >
+              {isSaving ? "Removing..." : "Remove"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
-  )
-}
-
-function FunnelCard({ workspace }: { workspace: PartnerEnterpriseWorkspace }) {
-  const total = Math.max(workspace.members.length, 1)
-  const items = [
-    ["Invited", workspace.funnel.invited],
-    ["Registered", workspace.funnel.registered],
-    ["Profile completed", workspace.funnel.profileCompleted],
-    ["Expo activated", workspace.funnel.expoActivated],
-    ["RFQ generated", workspace.funnel.rfqGenerated]
-  ] as const
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Activation Funnel</CardTitle>
-        <CardDescription>
-          Invited to RFQ generation within partner program.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {items.map(([label, value]) => (
-          <div key={label} className="space-y-2">
-            <div className="flex items-center justify-between gap-3 text-sm">
-              <span className="font-medium">{label}</span>
-              <span className="tabular-nums">{numberFormat.format(value)}</span>
-            </div>
-            <Progress value={Math.round((value / total) * 100)} />
-          </div>
-        ))}
-      </CardContent>
-    </Card>
-  )
-}
-
-function MetricCard({
-  title,
-  value,
-  note,
-  icon
-}: {
-  title: string
-  value: string
-  note: string
-  icon: React.ReactNode
-}) {
-  return (
-    <Card size="sm">
-      <CardHeader>
-        <CardDescription>{title}</CardDescription>
-        <CardTitle className="font-semibold text-2xl tabular-nums">
-          {value}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex items-center gap-2 text-muted-foreground text-xs [&_svg]:h-4 [&_svg]:w-4">
-        {icon}
-        <span>{note}</span>
-      </CardContent>
-    </Card>
   )
 }

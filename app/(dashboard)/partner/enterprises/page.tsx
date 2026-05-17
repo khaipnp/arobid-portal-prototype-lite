@@ -15,11 +15,11 @@ export default async function PartnerEnterprisesPage() {
 
   return (
     <DashboardShell
-      title="Enterprises & Members"
-      description="Track partner community activation against the shared Arobid SSOT."
+      title="Tenant Companies"
+      description="Manage company associations in this Tenant scope without editing Arobid company profiles."
       breadcrumbs={[
         { label: "Overview", href: "/partner" },
-        { label: "Enterprises & Members" }
+        { label: "Tenant Companies" }
       ]}
     >
       <PartnerEnterpriseManager access={access} workspace={workspace} />

@@ -28,12 +28,14 @@ export function PartnerExpoDetailTabs({
   initialStreamSessions: StreamSession[]
 }) {
   const [tab, setTab] = useState("overview")
+  const canUseGoLive =
+    assignedExpo.assignment.capabilities.includes("manage_golive")
 
   return (
     <Tabs value={tab} onValueChange={setTab} className="gap-4">
       <TabsList>
         <TabsTrigger value="overview">Overview</TabsTrigger>
-        <TabsTrigger value="golive">GoLIVE</TabsTrigger>
+        {canUseGoLive ? <TabsTrigger value="golive">GoLIVE</TabsTrigger> : null}
         <TabsTrigger value="exhibitors">Exhibitors</TabsTrigger>
       </TabsList>
 
@@ -46,13 +48,15 @@ export function PartnerExpoDetailTabs({
         />
       </TabsContent>
 
-      <TabsContent value="golive">
-        <GoLIVEManager
-          expoId={expoId}
-          initialGoLIVEEvents={initialGoLIVEEvents}
-          initialStreamSessions={initialStreamSessions}
-        />
-      </TabsContent>
+      {canUseGoLive ? (
+        <TabsContent value="golive">
+          <GoLIVEManager
+            expoId={expoId}
+            initialGoLIVEEvents={initialGoLIVEEvents}
+            initialStreamSessions={initialStreamSessions}
+          />
+        </TabsContent>
+      ) : null}
 
       <TabsContent value="exhibitors">
         <PartnerExpoExhibitorsTable

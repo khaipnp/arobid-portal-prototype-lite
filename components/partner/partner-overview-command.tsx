@@ -1,5 +1,7 @@
 import {
+  BarChart3Icon,
   BoxesIcon,
+  Building2Icon,
   HandshakeIcon,
   RadioIcon,
   StoreIcon,
@@ -7,6 +9,7 @@ import {
   WalletCardsIcon,
   ZapIcon
 } from "lucide-react"
+import type { ComponentType } from "react"
 import {
   Card,
   CardContent,
@@ -74,25 +77,76 @@ export function PartnerOverviewCommand({
     }
   ]
 
+  const statusCards = [
+    {
+      label: "Partner Organization",
+      value: summary.organization?.name ?? "Unavailable",
+      note: summary.organization
+        ? `${summary.organization.model.replaceAll("_", " ")} · ${summary.organization.status}`
+        : "No active partner organization",
+      icon: Building2Icon
+    },
+    {
+      label: "Associated companies",
+      value: numberFormat.format(summary.enterprises.total),
+      note: `${numberFormat.format(summary.enterprises.expoActivated)} active · ${numberFormat.format(summary.enterprises.invited)} pending`,
+      icon: UsersIcon
+    },
+    {
+      label: "Assigned Expos / Programs",
+      value: numberFormat.format(summary.expoPrograms.assignedExpos),
+      note: `${numberFormat.format(summary.expoPrograms.coHost)} co-host · ${numberFormat.format(summary.expoPrograms.turnkey)} turnkey`,
+      icon: StoreIcon
+    },
+    {
+      label: "Analytics summary",
+      value: numberFormat.format(
+        summary.overview.rfqGenerated + summary.overview.dealContexts
+      ),
+      note: "Latest available aggregate",
+      icon: BarChart3Icon
+    }
+  ]
+
   return (
-    <section className="grid gap-3 px-4 pb-4 sm:grid-cols-2 xl:grid-cols-7">
-      {kpis.map((kpi) => {
-        const Icon = kpi.icon
-        return (
-          <Card key={kpi.label} size="sm" className="min-w-0">
-            <CardHeader>
-              <CardDescription>{kpi.label}</CardDescription>
-              <CardTitle className="truncate font-semibold text-xl tabular-nums">
-                {kpi.value}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="flex items-center gap-2 text-muted-foreground text-xs">
-              <Icon className="h-4 w-4 shrink-0" />
-              <span className="truncate">{kpi.note}</span>
-            </CardContent>
-          </Card>
-        )
-      })}
-    </section>
+    <div className="space-y-3 px-4 pb-4">
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {statusCards.map((card) => (
+          <OverviewCard key={card.label} {...card} />
+        ))}
+      </section>
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-7">
+        {kpis.map((kpi) => (
+          <OverviewCard key={kpi.label} {...kpi} />
+        ))}
+      </section>
+    </div>
+  )
+}
+
+function OverviewCard({
+  label,
+  value,
+  note,
+  icon: Icon
+}: {
+  label: string
+  value: string
+  note: string
+  icon: ComponentType<{ className?: string }>
+}) {
+  return (
+    <Card size="sm" className="min-w-0">
+      <CardHeader>
+        <CardDescription>{label}</CardDescription>
+        <CardTitle className="truncate font-semibold text-xl tabular-nums">
+          {value}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex items-center gap-2 text-muted-foreground text-xs">
+        <Icon className="h-4 w-4 shrink-0" />
+        <span className="truncate">{note}</span>
+      </CardContent>
+    </Card>
   )
 }

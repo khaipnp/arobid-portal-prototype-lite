@@ -2,7 +2,7 @@ import { sql } from "@/lib/db/neon"
 import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
 let platformSchemaReady = false
-const LATEST_PLATFORM_MIGRATION = "partner_membership_management_v1"
+const LATEST_PLATFORM_MIGRATION = "partner_enterprise_association_audit_v1"
 
 type SqlClient = typeof sql
 
@@ -1518,6 +1518,16 @@ async function migratePartnerOrganizationSchema() {
       enterprise_name text not null,
       contact_email text,
       activation_status text not null default 'invited',
+      source text not null default 'tenant_invite',
+      relationship_type text not null default 'member',
+      public_profile boolean not null default true,
+      last_action text,
+      accepted_by_user_id text references users(id) on delete set null,
+      accepted_at timestamptz,
+      removed_at timestamptz,
+      removed_reason text,
+      invite_token text,
+      invite_expires_at timestamptz,
       expo_participation_count int not null default 0,
       rfq_generated_count int not null default 0,
       trade_signal_count int not null default 0,
@@ -1526,18 +1536,121 @@ async function migratePartnerOrganizationSchema() {
     )
   `
   await sql`
+    alter table partner_enterprise_members
+    add column if not exists source text not null default 'tenant_invite'
+  `
+  await sql`
+    alter table partner_enterprise_members
+    add column if not exists relationship_type text not null default 'member'
+  `
+  await sql`
+    alter table partner_enterprise_members
+    add column if not exists public_profile boolean not null default true
+  `
+  await sql`
+    alter table partner_enterprise_members
+    add column if not exists last_action text
+  `
+  await sql`
+    alter table partner_enterprise_members
+    add column if not exists accepted_by_user_id text references users(id) on delete set null
+  `
+  await sql`
+    alter table partner_enterprise_members
+    add column if not exists accepted_at timestamptz
+  `
+  await sql`
+    alter table partner_enterprise_members
+    add column if not exists removed_at timestamptz
+  `
+  await sql`
+    alter table partner_enterprise_members
+    add column if not exists removed_reason text
+  `
+  await sql`
+    alter table partner_enterprise_members
+    add column if not exists invite_token text
+  `
+  await sql`
+    alter table partner_enterprise_members
+    add column if not exists invite_expires_at timestamptz
+  `
+  await sql`
+    update partner_enterprise_members
+    set activation_status = 'active'
+    where activation_status in (
+      'registered',
+      'profile_completed',
+      'expo_activated',
+      'rfq_generated'
+    )
+  `
+  await sql`
+    alter table partner_enterprise_members
+    drop constraint if exists partner_enterprise_members_activation_status_ck
+  `
+  await sql`
+    alter table partner_enterprise_members
+    add constraint partner_enterprise_members_activation_status_ck
+    check (activation_status in ('invited', 'pending_acceptance', 'active', 'inactive', 'removed', 'blocked'))
+  `
+  await sql`
+    create index if not exists idx_partner_enterprise_members_org
+    on partner_enterprise_members (partner_org_id, created_at desc)
+  `
+
+  await sql`
+    create table if not exists partner_enterprise_member_audit_events (
+      id text primary key,
+      association_id text not null,
+      partner_org_id text not null references partner_organizations(id) on delete restrict,
+      partner_org_name text not null,
+      enterprise_id text,
+      enterprise_name text not null,
+      action text not null,
+      old_status text,
+      new_status text not null,
+      source text not null,
+      actor_type text not null,
+      actor_id text,
+      actor_label text,
+      reason text,
+      metadata jsonb not null default '{}'::jsonb,
+      created_at timestamptz not null default now()
+    )
+  `
+  await sql`
     do $$
     begin
-      alter table partner_enterprise_members
-      add constraint partner_enterprise_members_activation_status_ck
-      check (activation_status in ('invited', 'registered', 'profile_completed', 'expo_activated', 'rfq_generated'));
+      alter table partner_enterprise_member_audit_events
+      add constraint partner_enterprise_member_audit_action_ck
+      check (action in ('invite', 'resend_invite', 'accept', 'activate', 'deactivate', 'remove', 'block', 'unblock', 'reactivate'));
     exception
       when duplicate_object then null;
     end $$;
   `
   await sql`
-    create index if not exists idx_partner_enterprise_members_org
-    on partner_enterprise_members (partner_org_id, created_at desc)
+    do $$
+    begin
+      alter table partner_enterprise_member_audit_events
+      add constraint partner_enterprise_member_audit_actor_ck
+      check (actor_type in ('partner_user', 'company_user', 'arobid_admin', 'system'));
+    exception
+      when duplicate_object then null;
+    end $$;
+  `
+  await sql`
+    create index if not exists idx_partner_enterprise_audit_created
+    on partner_enterprise_member_audit_events (created_at desc, id desc)
+  `
+  await sql`
+    create index if not exists idx_partner_enterprise_audit_org
+    on partner_enterprise_member_audit_events (partner_org_id, created_at desc)
+  `
+  await sql`
+    create index if not exists idx_partner_enterprise_audit_enterprise
+    on partner_enterprise_member_audit_events (enterprise_id, created_at desc)
+    where enterprise_id is not null
   `
 
   await sql`

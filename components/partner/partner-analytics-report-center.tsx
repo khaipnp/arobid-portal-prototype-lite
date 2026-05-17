@@ -1,3 +1,5 @@
+"use client"
+
 import {
   BarChart3Icon,
   CircleDashedIcon,
@@ -5,7 +7,9 @@ import {
   LineChartIcon,
   UsersRoundIcon
 } from "lucide-react"
+import { useMemo, useState } from "react"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -13,6 +17,8 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { NativeSelect } from "@/components/ui/native-select"
 import { Progress } from "@/components/ui/progress"
 import {
   Table,
@@ -47,12 +53,119 @@ export function PartnerAnalyticsReportCenter({
 }: {
   workspace: PartnerAnalyticsWorkspace
 }) {
+  const [filters, setFilters] = useState({
+    scope: "all",
+    period: "current",
+    status: "all",
+    category: "all",
+    search: ""
+  })
+  const filteredReports = useMemo(() => {
+    const search = filters.search.trim().toLowerCase()
+    return workspace.reports.filter((report) => {
+      const matchesStatus =
+        filters.status === "all" || report.status === filters.status
+      const matchesCategory =
+        filters.category === "all" || report.key === filters.category
+      const matchesSearch =
+        !search ||
+        report.title.toLowerCase().includes(search) ||
+        report.description.toLowerCase().includes(search) ||
+        report.source.toLowerCase().includes(search)
+      return matchesStatus && matchesCategory && matchesSearch
+    })
+  }, [filters, workspace.reports])
+  const scopeOptions = [
+    { value: "all", label: "All assigned scopes" },
+    ...workspace.topExpos.map((expo) => ({
+      value: expo.expoId,
+      label: expo.expoName
+    }))
+  ]
+
+  function updateFilter(key: keyof typeof filters, value: string) {
+    setFilters((prev) => ({ ...prev, [key]: value }))
+  }
+
+  function clearFilters() {
+    setFilters({
+      scope: "all",
+      period: "current",
+      status: "all",
+      category: "all",
+      search: ""
+    })
+  }
+
   return (
     <div className="space-y-4 px-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Analytics Filters</CardTitle>
+          <CardDescription>
+            Filters use assigned scopes only and combine with AND logic.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-3 md:grid-cols-5">
+          <NativeSelect
+            value={filters.scope}
+            onChange={(event) => updateFilter("scope", event.target.value)}
+          >
+            {scopeOptions.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </NativeSelect>
+          <NativeSelect
+            value={filters.period}
+            onChange={(event) => updateFilter("period", event.target.value)}
+          >
+            <option value="current">Current period</option>
+            <option value="30d">Last 30 days</option>
+            <option value="90d">Last 90 days</option>
+          </NativeSelect>
+          <NativeSelect
+            value={filters.status}
+            onChange={(event) => updateFilter("status", event.target.value)}
+          >
+            <option value="all">All statuses</option>
+            <option value="ready">Ready</option>
+            <option value="pending">Pending</option>
+          </NativeSelect>
+          <NativeSelect
+            value={filters.category}
+            onChange={(event) => updateFilter("category", event.target.value)}
+          >
+            <option value="all">All metric categories</option>
+            <option value="expo_overview">Expo operations</option>
+            <option value="trade_activity">RFQ / DealContext</option>
+            <option value="industry_insight">Visitor / matching</option>
+            <option value="buyer_leads">Buyer leads</option>
+          </NativeSelect>
+          <div className="flex gap-2">
+            <Input
+              value={filters.search}
+              onChange={(event) => updateFilter("search", event.target.value)}
+              placeholder="Search reports"
+            />
+            <Button variant="outline" onClick={clearFilters}>
+              Clear
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {workspace.reports.map((report) => (
-          <ReportCard key={report.key} report={report} />
-        ))}
+        {filteredReports.length === 0 ? (
+          <div className="sm:col-span-2 xl:col-span-4">
+            <EmptyState label="No analytics results match current filters." />
+          </div>
+        ) : (
+          filteredReports.map((report) => (
+            <ReportCard key={report.key} report={report} />
+          ))
+        )}
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">

@@ -8,6 +8,7 @@ import {
   FileTextIcon,
   InfoIcon,
   LayoutDashboardIcon,
+  LockIcon,
   MessageSquareIcon,
   RadioIcon,
   SearchIcon,
@@ -71,13 +72,6 @@ const EXPO_STATUSES: { label: string; value: ExpoStatus | "All" }[] = [
   { label: "Canceled", value: "Canceled" }
 ]
 
-const PARTNERSHIP_MODELS: { label: string; value: PartnerModel | "All" }[] = [
-  { label: "All Models", value: "All" },
-  { label: "Co-host", value: "co_host" },
-  { label: "Turnkey", value: "turnkey" },
-  { label: "Tenant", value: "tenant" }
-]
-
 const PARTNERSHIP_MODEL_LABELS: Record<PartnerModel, string> = {
   co_host: "Co-host",
   turnkey: "Turnkey",
@@ -122,24 +116,19 @@ export function PartnerExpoList({
   const [statusFilter, setStatusFilter] = React.useState<ExpoStatus | "All">(
     "All"
   )
-  const [modelFilter, setModelFilter] = React.useState<PartnerModel | "All">(
-    "All"
-  )
   const [expandedId, setExpandedId] = React.useState<string | null>(null)
   const [currentPage, setCurrentPage] = React.useState(1)
 
   const filteredExpos = React.useMemo(() => {
-    return assignedExpos.filter(({ expo, assignment }) => {
+    return assignedExpos.filter(({ expo }) => {
       const matchesSearch = expo.name
         .toLowerCase()
         .includes(searchQuery.toLowerCase())
       const matchesStatus =
         statusFilter === "All" || expo.status === statusFilter
-      const matchesModel =
-        modelFilter === "All" || assignment.partnershipModel === modelFilter
-      return matchesSearch && matchesStatus && matchesModel
+      return matchesSearch && matchesStatus
     })
-  }, [assignedExpos, searchQuery, statusFilter, modelFilter])
+  }, [assignedExpos, searchQuery, statusFilter])
 
   const totalPages = Math.max(1, Math.ceil(filteredExpos.length / PAGE_SIZE))
   const pagedExpos = React.useMemo(() => {
@@ -206,26 +195,6 @@ export function PartnerExpoList({
               ))}
             </SelectContent>
           </Select>
-
-          {/* Select Model */}
-          <Select
-            value={modelFilter}
-            onValueChange={(value) => {
-              setModelFilter(value as PartnerModel | "All")
-              setCurrentPage(1)
-            }}
-          >
-            <SelectTrigger className="w-44 rounded-full">
-              <SelectValue placeholder="Model" />
-            </SelectTrigger>
-            <SelectContent>
-              {PARTNERSHIP_MODELS.map((model) => (
-                <SelectItem key={model.value} value={model.value}>
-                  {model.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
       </div>
 
@@ -243,6 +212,7 @@ export function PartnerExpoList({
               chatCount
             }) => {
               const isExpanded = expandedId === expo.id
+              const isTurnkey = assignment.partnershipModel === "turnkey"
               const showMetrics = [
                 "Live",
                 "Archived",
@@ -292,6 +262,12 @@ export function PartnerExpoList({
                                 {goLiveCount} GoLIVE
                               </div>
                             )}
+                            {isTurnkey ? (
+                              <div className="flex items-center gap-1 font-medium text-blue-600">
+                                <LockIcon className="h-3 w-3" />
+                                Arobid-configured
+                              </div>
+                            ) : null}
                           </div>
                         </div>
                         <Button
@@ -342,7 +318,7 @@ export function PartnerExpoList({
                           </div>
                         </div>
 
-                        {access.actions["expo.edit"] ? (
+                        {access.actions["expo.view"] ? (
                           <Button
                             asChild
                             variant="outline"
@@ -351,7 +327,7 @@ export function PartnerExpoList({
                             onClick={(e) => e.stopPropagation()}
                           >
                             <Link href={`/partner/expos/${expo.id}`}>
-                              Manage
+                              Open operational view
                               <ChevronRightIcon className="ml-1 h-3 w-3" />
                             </Link>
                           </Button>
@@ -459,6 +435,16 @@ export function PartnerExpoList({
                                     : "Inactive"}
                                 </Badge>
                               </div>
+                              {isTurnkey ? (
+                                <div className="flex justify-between border-sidebar-border border-b border-dashed py-1.5">
+                                  <span className="text-muted-foreground">
+                                    Configured by:
+                                  </span>
+                                  <span className="text-right font-medium">
+                                    Arobid Admin
+                                  </span>
+                                </div>
+                              ) : null}
                               <div className="flex justify-between py-1.5">
                                 <span className="text-muted-foreground">
                                   Description:
@@ -583,7 +569,8 @@ export function PartnerExpoList({
           </CardTitle>
           <CardDescription className="mt-1 max-w-80 text-xs">
             Ask an admin to assign your partner organization to an expo program.
-            Assigned expos will appear here for operations and GoLIVE work.
+            No self-create or self-configure action is available in Partner
+            Portal.
           </CardDescription>
           <Button
             variant="outline"
@@ -611,7 +598,6 @@ export function PartnerExpoList({
             onClick={() => {
               setSearchQuery("")
               setStatusFilter("All")
-              setModelFilter("All")
             }}
             className="mt-4 h-8 text-xs"
           >

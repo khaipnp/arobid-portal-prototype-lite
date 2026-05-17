@@ -161,7 +161,8 @@ export function PartnerMiniSiteReview({
                           : "First-publication review"}
                       </div>
                       <Badge variant="secondary">
-                        {comparison.filter((field) => field.changed).length} changed
+                        {comparison.filter((field) => field.changed).length}{" "}
+                        changed
                       </Badge>
                     </div>
                     <div className="grid gap-2">
@@ -174,8 +175,14 @@ export function PartnerMiniSiteReview({
                             {field.label}
                             {field.changed ? <Badge>Changed</Badge> : null}
                           </div>
-                          <ComparisonValue label="Published" value={field.current} />
-                          <ComparisonValue label="Submitted" value={field.submitted} />
+                          <ComparisonValue
+                            label="Published"
+                            value={field.current}
+                          />
+                          <ComparisonValue
+                            label="Submitted"
+                            value={field.submitted}
+                          />
                         </div>
                       ))}
                     </div>
