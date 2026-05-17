@@ -1,12 +1,9 @@
 "use client"
 
 import {
-  BoxesIcon,
-  Building2Icon,
-  CalendarIcon,
-  LandmarkIcon,
+  ApertureIcon,
   LayoutDashboardIcon,
-  MessageSquareIcon,
+  PaletteIcon,
   PieChartIcon,
   UsersIcon,
   WalletCardsIcon
@@ -15,67 +12,54 @@ import Link from "next/link"
 import { NotificationNavLink } from "@/components/notifications/notification-nav-link"
 import {
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem
 } from "@/components/ui/sidebar"
-import type { PartnerAccess, PartnerPortalTab } from "@/lib/partner/access"
+import type { PartnerAccess } from "@/lib/partner/access"
+import type { PartnerModule } from "@/lib/partner/core"
 
 const partnerLinks = [
   {
-    name: "Expo Programs",
-    url: "/partner/expos",
-    tab: "expo",
-    icon: <CalendarIcon />
+    name: "Mini-site",
+    url: "/partner/site-management",
+    module: "mini_site",
+    icon: <PaletteIcon />
   },
   {
     name: "Enterprises & Members",
     url: "/partner/enterprises",
-    tab: "enterprises",
+    module: "enterprises",
     icon: <UsersIcon />
   },
   {
-    name: "Quota & TradeCredits",
+    name: "Expo Programs",
+    url: "/partner/expos",
+    module: "expo_programs",
+    icon: <ApertureIcon />
+  },
+  {
+    name: "Quota & TradeCredit Reports",
     url: "/partner/quota",
-    tab: "quota",
+    module: "tradecredit_reports",
     icon: <WalletCardsIcon />
-  },
-  {
-    name: "Service Bundles",
-    url: "/partner/bundles",
-    tab: "bundles",
-    icon: <BoxesIcon />
-  },
-  {
-    name: "Communications",
-    url: "/partner/communications",
-    tab: "communications",
-    icon: <MessageSquareIcon />
-  },
-  {
-    name: "Finance & Settlement",
-    url: "/partner/finance",
-    tab: "finance",
-    icon: <Building2Icon />
   },
   {
     name: "Analytics & Reports",
     url: "/partner/analytics",
-    tab: "analytics",
+    module: "analytics_reports",
     icon: <PieChartIcon />
-  },
-  {
-    name: "Government Programs",
-    url: "/partner/government",
-    tab: "government",
-    icon: <LandmarkIcon />
   }
-]
+] satisfies {
+  name: string
+  url: string
+  module: PartnerModule
+  icon: React.ReactNode
+}[]
 
 export function NavPartner({ access }: { access?: PartnerAccess }) {
   const links = partnerLinks.filter(
-    (item) => access?.tabs[item.tab as PartnerPortalTab] ?? true
+    (item) => access?.modules[item.module] ?? false
   )
 
   return (
@@ -85,7 +69,7 @@ export function NavPartner({ access }: { access?: PartnerAccess }) {
           <SidebarMenuButton asChild>
             <Link href="/partner">
               <LayoutDashboardIcon />
-              <span>Overview</span>
+              <span>Dashboard</span>
             </Link>
           </SidebarMenuButton>
         </SidebarMenuItem>

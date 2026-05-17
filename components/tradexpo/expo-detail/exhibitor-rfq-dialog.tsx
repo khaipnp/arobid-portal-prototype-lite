@@ -13,6 +13,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 
 type ProductItem = {
+  id: string
   image: string
   label: string
 }
@@ -21,12 +22,14 @@ type ExhibitorRfqDialogProps = {
   open: boolean
   selectedProduct: ProductItem | null
   onClose: () => void
+  onSubmitted?: (product: ProductItem) => void
 }
 
 export function ExhibitorRfqDialog({
   open,
   selectedProduct,
-  onClose
+  onClose,
+  onSubmitted
 }: ExhibitorRfqDialogProps) {
   if (!open) {
     return null
@@ -152,6 +155,10 @@ export function ExhibitorRfqDialog({
             <Button
               type="button"
               className="bg-legend text-white hover:bg-legend-600"
+              onClick={() => {
+                if (selectedProduct) onSubmitted?.(selectedProduct)
+                onClose()
+              }}
             >
               Send RFQ
             </Button>

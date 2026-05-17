@@ -11,34 +11,42 @@ import { cn } from "@/lib/utils"
 
 const FIGMA_EXPO_BACKGROUND = "/auth/login-bg.jpg"
 
-type DemoLoginRole = "admin" | "partner" | "seller" | "buyer"
-
 const DEMO_ACCOUNTS: {
-  role: DemoLoginRole
   label: string
   email: string
   password: string
 }[] = [
   {
-    role: "admin",
     label: "Admin",
     email: "khaipham@arobid.com",
     password: "Admin@Arobid123"
   },
   {
-    role: "partner",
-    label: "Partner",
+    label: "Expo Partner Owner",
     email: "partner.demo@arobid.com",
     password: "Partner@Arobid123"
   },
   {
-    role: "seller",
+    label: "Alliance Manager",
+    email: "partner.alliance.business@arobid.com",
+    password: "Partner@Arobid123"
+  },
+  {
+    label: "Government Program",
+    email: "partner.gov.program@arobid.com",
+    password: "Partner@Arobid123"
+  },
+  {
+    label: "Partner Finance",
+    email: "partner.alliance.finance@arobid.com",
+    password: "Partner@Arobid123"
+  },
+  {
     label: "Seller",
     email: "seller.demo@arobid.com",
     password: "Seller@Arobid123"
   },
   {
-    role: "buyer",
     label: "Buyer",
     email: "buyer.demo@arobid.com",
     password: "Buyer@Arobid123"
@@ -123,7 +131,7 @@ function DemoAccountPicker({
   onSelect
 }: {
   disabled: boolean
-  onSelect: (role: DemoLoginRole) => void
+  onSelect: (account: (typeof DEMO_ACCOUNTS)[number]) => void
 }) {
   return (
     <div className="space-y-2">
@@ -131,10 +139,10 @@ function DemoAccountPicker({
       <div className="grid grid-cols-2 gap-2">
         {DEMO_ACCOUNTS.map((account) => (
           <button
-            key={account.role}
+            key={account.email}
             type="button"
             disabled={disabled}
-            onClick={() => onSelect(account.role)}
+            onClick={() => onSelect(account)}
             className="cursor-pointer rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-left transition hover:border-legend hover:bg-legend-50 disabled:pointer-events-none disabled:opacity-60"
           >
             <span className="block font-medium text-foreground text-sm">
@@ -196,23 +204,10 @@ function LoginPanel() {
     }
   }
 
-  async function loginAsDemoRole(role: DemoLoginRole) {
+  function useDemoAccount(account: (typeof DEMO_ACCOUNTS)[number]) {
     setError("")
-    setIsSubmitting(true)
-    try {
-      const response = await fetch("/api/auth/login/demo", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ role })
-      })
-      const success = await navigateFromResponse(response)
-      if (!success) {
-        setIsSubmitting(false)
-      }
-    } catch {
-      setError("An unexpected error occurred.")
-      setIsSubmitting(false)
-    }
+    setEmail(account.email)
+    setPassword(account.password)
   }
 
   return (
@@ -290,10 +285,7 @@ function LoginPanel() {
       </div>
 
       <div className="mt-6 border-[#e5e7eb] border-t pt-5">
-        <DemoAccountPicker
-          disabled={isSubmitting}
-          onSelect={(role) => void loginAsDemoRole(role)}
-        />
+        <DemoAccountPicker disabled={isSubmitting} onSelect={useDemoAccount} />
       </div>
     </section>
   )

@@ -84,6 +84,7 @@ export default async function Page({
       <About title={expo.name} description={expo.description} />
       <Sponsors />
       <ExhibitorsSection
+        expoId={expo.id}
         expoName={expo.name}
         initialExhibitors={exhibitors}
         isAuthenticated={!!userId}

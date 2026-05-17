@@ -1,5 +1,14 @@
 import { createHash, randomUUID } from "node:crypto"
 import { sql } from "@/lib/db/neon"
+import type {
+  PartnerMiniSiteStatus,
+  PartnerCapability as PartnerMvpCapability,
+  PartnerScopeSummary
+} from "@/lib/partner/core"
+import {
+  canTransitionMiniSiteStatus,
+  normalizePartnerRole
+} from "@/lib/partner/core"
 import type { Expo, ExpoStatus } from "@/lib/tradexpo/types"
 
 export type PartnerModel = "co_host" | "turnkey" | "tenant"
@@ -490,6 +499,93 @@ export type PartnerExpoOperationsDetail = {
   registrationStatusBreakdown: PartnerExpoRegistrationStatusBreakdown[]
 }
 
+export type PartnerExpoExhibitorPaymentStatus = "Paid" | "Pending" | "No order"
+
+export type PartnerExpoExhibitorTierMix = {
+  Basic: number
+  Professional: number
+  Premium: number
+}
+
+export type PartnerExpoExhibitorListItem = {
+  id: string
+  displayName: string
+  contactName: string | null
+  contactEmail: string | null
+  phone: string | null
+  website: string | null
+  address: string | null
+  industry: string | null
+  taxId: string | null
+  logoUrl: string | null
+  boothCount: number
+  boothRefs: string[]
+  tierMix: PartnerExpoExhibitorTierMix
+  registrationStatuses: string[]
+  publishedBoothCount: number
+  productCount: number
+  paidAmount: number
+  paymentStatus: PartnerExpoExhibitorPaymentStatus
+  latestPurchasedAt: string | null
+}
+
+export type PartnerExpoExhibitorsWorkspace = {
+  summary: {
+    exhibitorCount: number
+    boothCount: number
+    publishedBoothCount: number
+    paidAmount: number
+  }
+  exhibitors: PartnerExpoExhibitorListItem[]
+  topExhibitors: PartnerExpoExhibitorListItem[]
+}
+
+export type PartnerExpoExhibitorRegistration = {
+  id: string
+  boothRef: string
+  boothTier: string
+  status: string
+  publishStatus: string | null
+  productCount: number
+  purchasedAt: string
+}
+
+export type PartnerExpoExhibitorOrder = {
+  id: string
+  registrationId: string | null
+  boothRef: string | null
+  boothTier: string | null
+  paymentMethod: string
+  status: string
+  originalAmount: number
+  discountAmount: number
+  amount: number
+  createdAt: string
+  updatedAt: string
+}
+
+export type PartnerExpoExhibitorPerformanceProduct = {
+  productId: string
+  productName: string
+  count: number
+}
+
+export type PartnerExpoExhibitorPerformance = {
+  rfqCount: number
+  chatCount: number
+  eProfileVisits: number
+  topViewedProduct: PartnerExpoExhibitorPerformanceProduct | null
+  topChattedProduct: PartnerExpoExhibitorPerformanceProduct | null
+  topWishlistedProduct: PartnerExpoExhibitorPerformanceProduct | null
+}
+
+export type PartnerExpoExhibitorDetail = {
+  exhibitor: PartnerExpoExhibitorListItem
+  registrations: PartnerExpoExhibitorRegistration[]
+  orders: PartnerExpoExhibitorOrder[]
+  performance: PartnerExpoExhibitorPerformance
+}
+
 type PartnerExpoRow = {
   id: string
   slug?: string | null
@@ -675,6 +771,56 @@ export async function getPrimaryPartnerOrganization(
     status: row.status,
     primaryUserId: row.primary_user_id,
     membershipRole: row.membership_role
+  }
+}
+
+export async function getPartnerCapabilities(
+  partnerOrgId: string
+): Promise<PartnerMvpCapability[]> {
+  const rows = (await sql`
+    select capability
+    from partner_capability_assignments
+    where partner_org_id = ${partnerOrgId}
+    order by capability asc
+  `) as { capability: PartnerMvpCapability }[]
+
+  if (rows.length === 0) return ["overview"]
+  return Array.from(new Set(rows.map((row) => row.capability)))
+}
+
+export async function getPartnerScopes(
+  partnerOrgId: string
+): Promise<PartnerScopeSummary> {
+  const rows = (await sql`
+    select scope_type, scope_id
+    from partner_scope_assignments
+    where partner_org_id = ${partnerOrgId}
+      and status = 'active'
+    order by created_at asc
+  `) as { scope_type: "expo" | "program" | "company"; scope_id: string }[]
+
+  return {
+    expoIds: Array.from(
+      new Set(
+        rows
+          .filter((row) => row.scope_type === "expo")
+          .map((row) => row.scope_id)
+      )
+    ),
+    programIds: Array.from(
+      new Set(
+        rows
+          .filter((row) => row.scope_type === "program")
+          .map((row) => row.scope_id)
+      )
+    ),
+    companyIds: Array.from(
+      new Set(
+        rows
+          .filter((row) => row.scope_type === "company")
+          .map((row) => row.scope_id)
+      )
+    )
   }
 }
 
@@ -1185,6 +1331,191 @@ async function ensurePartnerDealContext(input: {
         ${input.note ?? null}
       )
     `
+  }
+}
+
+export type PartnerMiniSiteVersion = {
+  id: string
+  partnerOrgId: string
+  versionLabel: string
+  status: PartnerMiniSiteStatus
+  content: Record<string, unknown>
+  rejectReason: string | null
+  submittedAt: string | null
+  publishedAt: string | null
+  updatedAt: string
+}
+
+export async function listPartnerMiniSiteVersions(
+  userId: string
+): Promise<PartnerMiniSiteVersion[]> {
+  const organization = await requirePrimaryPartnerOrganization(userId)
+  const rows = (await sql`
+    select
+      id,
+      partner_org_id,
+      version_label,
+      status,
+      content_json,
+      reject_reason,
+      submitted_at,
+      published_at,
+      updated_at
+    from partner_mini_sites
+    where partner_org_id = ${organization.id}
+    order by updated_at desc
+  `) as {
+    id: string
+    partner_org_id: string
+    version_label: string
+    status: PartnerMiniSiteStatus
+    content_json: Record<string, unknown>
+    reject_reason: string | null
+    submitted_at: string | Date | null
+    published_at: string | Date | null
+    updated_at: string | Date
+  }[]
+
+  return rows.map((row) => ({
+    id: row.id,
+    partnerOrgId: row.partner_org_id,
+    versionLabel: row.version_label,
+    status: row.status,
+    content: row.content_json,
+    rejectReason: row.reject_reason,
+    submittedAt: row.submitted_at ? toIso(row.submitted_at) : null,
+    publishedAt: row.published_at ? toIso(row.published_at) : null,
+    updatedAt: toIso(row.updated_at)
+  }))
+}
+
+export async function savePartnerMiniSiteDraft(
+  userId: string,
+  content: Record<string, unknown>
+) {
+  const organization = await requirePrimaryPartnerOrganization(userId)
+  await sql`begin`
+  try {
+    const submittedRows = (await sql`
+      select id
+      from partner_mini_sites
+      where partner_org_id = ${organization.id}
+        and status = 'submitted'
+      for update
+      limit 1
+    `) as { id: string }[]
+
+    if (submittedRows.length > 0) {
+      throw new Error("Mini-site version is under Admin review.")
+    }
+
+    const existingRows = (await sql`
+      select id, status
+      from partner_mini_sites
+      where partner_org_id = ${organization.id}
+        and status in ('draft', 'draft_update', 'rejected')
+      order by updated_at desc
+      for update
+      limit 1
+    `) as { id: string; status: PartnerMiniSiteStatus }[]
+
+    const existing = existingRows[0]
+    if (existing) {
+      const nextStatus =
+        existing.status === "rejected" ? "draft" : existing.status
+      await sql`
+        update partner_mini_sites
+        set
+          status = ${nextStatus},
+          content_json = ${JSON.stringify(content)}::jsonb,
+          updated_at = now()
+        where id = ${existing.id}
+      `
+      await sql`commit`
+      return { id: existing.id, status: nextStatus }
+    }
+
+    const publishedRows = (await sql`
+      select id
+      from partner_mini_sites
+      where partner_org_id = ${organization.id}
+        and status = 'published'
+      for update
+      limit 1
+    `) as { id: string }[]
+
+    const status: PartnerMiniSiteStatus = publishedRows[0]
+      ? "draft_update"
+      : "draft"
+    const id = `partner-mini-site-${randomUUID()}`
+    await sql`
+      insert into partner_mini_sites (
+        id,
+        partner_org_id,
+        version_label,
+        status,
+        content_json
+      )
+      values (
+        ${id},
+        ${organization.id},
+        ${status === "draft_update" ? "Draft update" : "Initial draft"},
+        ${status},
+        ${JSON.stringify(content)}::jsonb
+      )
+    `
+    await sql`commit`
+    return { id, status }
+  } catch (error) {
+    await sql`rollback`
+    throw error
+  }
+}
+
+export async function submitPartnerMiniSiteDraft(
+  userId: string,
+  miniSiteId: string
+) {
+  const organization = await requirePrimaryPartnerOrganization(userId)
+  const rows = (await sql`
+    select status
+    from partner_mini_sites
+    where id = ${miniSiteId}
+      and partner_org_id = ${organization.id}
+    limit 1
+  `) as { status: PartnerMiniSiteStatus }[]
+
+  const current = rows[0]
+  if (!current) throw new Error("Mini-site version not found.")
+  if (
+    !canTransitionMiniSiteStatus({
+      actorRole: normalizePartnerRole(organization.membershipRole),
+      from: current.status,
+      to: "submitted"
+    })
+  ) {
+    throw new Error(
+      "Mini-site version cannot be submitted from current status."
+    )
+  }
+
+  const updatedRows = (await sql`
+    update partner_mini_sites
+    set
+      status = 'submitted',
+      submitted_by_user_id = ${userId},
+      submitted_at = now(),
+      updated_at = now()
+    where id = ${miniSiteId}
+      and partner_org_id = ${organization.id}
+      and status = ${current.status}
+    returning id
+  `) as { id: string }[]
+
+  if (updatedRows.length === 0) {
+    throw new Error(
+      "Mini-site version cannot be submitted from current status."
+    )
   }
 }
 
@@ -3439,11 +3770,8 @@ export async function getPartnerAssignedExpo(
     : null
 }
 
-export async function getPartnerExpoOperationsDetail(
-  userId: string,
-  expoId: string
-): Promise<PartnerExpoOperationsDetail | null> {
-  const assignedRows = (await sql`
+async function getAssignedPartnerExpoName(userId: string, expoId: string) {
+  const rows = (await sql`
     select e.id, e.name
     from partner_memberships pm
     inner join partner_organizations po on po.id = pm.partner_org_id
@@ -3456,7 +3784,479 @@ export async function getPartnerExpoOperationsDetail(
     limit 1
   `) as { id: string; name: string }[]
 
-  const assigned = assignedRows[0]
+  return rows[0] ?? null
+}
+
+function normalizePartnerBoothTier(
+  tier: string | null
+): keyof PartnerExpoExhibitorTierMix {
+  if (tier && ["pro", "professional"].includes(tier.toLowerCase())) {
+    return "Professional"
+  }
+  if (tier?.toLowerCase() === "premium") return "Premium"
+  return "Basic"
+}
+
+function resolvePartnerPaymentStatus(input: {
+  paidOrderCount: number
+  orderCount: number
+}): PartnerExpoExhibitorPaymentStatus {
+  if (input.paidOrderCount > 0) return "Paid"
+  if (input.orderCount > 0) return "Pending"
+  return "No order"
+}
+
+export async function getPartnerExpoExhibitors(
+  userId: string,
+  expoId: string
+): Promise<PartnerExpoExhibitorsWorkspace | null> {
+  const assigned = await getAssignedPartnerExpoName(userId, expoId)
+  if (!assigned) return null
+
+  const rows = (await sql`
+    with registration_rows as (
+      select
+        sbr.id,
+        sbr.user_id,
+        sbr.booth_ref,
+        sbr.booth_tier,
+        sbr.status,
+        sbr.purchased_at,
+        u.name as user_name,
+        u.email as user_email,
+        u.phone,
+        u.website as user_website,
+        u.location,
+        u.company_id,
+        null::text as industry,
+        c.name as company_name,
+        c.tax_id,
+        c.logo_url,
+        c.website as company_website,
+        c.address as company_address,
+        bc.publish_status,
+        coalesce(jsonb_array_length(coalesce(bc.products, '[]'::jsonb)), 0)::int as product_count
+      from seller_booth_registrations sbr
+      inner join users u on u.id = sbr.user_id
+      left join companies c on c.id = u.company_id
+      left join booth_customizations bc on bc.registration_id = sbr.id
+      where sbr.expo_id = ${expoId}
+    ),
+    matched_order_candidates as (
+      select
+        rr.id as registration_id,
+        o.id,
+        o.status,
+        o.amount,
+        row_number() over (
+          partition by o.id
+          order by
+            case when o.reference_id = rr.id then 0 else 1 end,
+            rr.purchased_at desc,
+            rr.id asc
+        ) as match_rank
+      from registration_rows rr
+      inner join orders o on
+        o.reference_id = rr.id
+        or (
+          o.reference_id not in (select id from registration_rows)
+          and o.expo_name = ${assigned.name}
+          and o.booth_ref = rr.booth_ref
+        )
+      where o.order_type = 'booth_registration'
+    ),
+    matched_orders as (
+      select registration_id, id, status, amount
+      from matched_order_candidates
+      where match_rank = 1
+    )
+    select
+      coalesce(rr.company_id, rr.user_id) as exhibitor_id,
+      coalesce(max(rr.company_name), max(rr.user_name), max(rr.user_email)) as display_name,
+      min(rr.user_name) as contact_name,
+      min(rr.user_email) as contact_email,
+      min(rr.phone) as phone,
+      coalesce(max(rr.company_website), max(rr.user_website)) as website,
+      coalesce(max(rr.company_address), max(rr.location)) as address,
+      max(rr.industry) as industry,
+      max(rr.tax_id) as tax_id,
+      max(rr.logo_url) as logo_url,
+      count(distinct rr.id)::int as booth_count,
+      array_agg(distinct rr.booth_ref order by rr.booth_ref) as booth_refs,
+      count(distinct rr.id) filter (where lower(rr.booth_tier) not in ('pro', 'professional', 'premium'))::int as basic_count,
+      count(distinct rr.id) filter (where lower(rr.booth_tier) in ('pro', 'professional'))::int as professional_count,
+      count(distinct rr.id) filter (where lower(rr.booth_tier) = 'premium')::int as premium_count,
+      array_agg(distinct rr.status order by rr.status) as registration_statuses,
+      count(distinct rr.id) filter (where rr.publish_status = 'Published')::int as published_booth_count,
+      coalesce(sum(rr.product_count), 0)::int as product_count,
+      coalesce(sum(mo.amount) filter (where mo.status = 'Paid'), 0)::numeric as paid_amount,
+      count(distinct mo.id)::int as order_count,
+      count(distinct mo.id) filter (where mo.status = 'Paid')::int as paid_order_count,
+      max(rr.purchased_at) as latest_purchased_at
+    from registration_rows rr
+    left join matched_orders mo on mo.registration_id = rr.id
+    group by coalesce(rr.company_id, rr.user_id)
+    order by booth_count desc, paid_amount desc, display_name asc
+  `) as {
+    exhibitor_id: string
+    display_name: string
+    contact_name: string | null
+    contact_email: string | null
+    phone: string | null
+    website: string | null
+    address: string | null
+    industry: string | null
+    tax_id: string | null
+    logo_url: string | null
+    booth_count: number | string
+    booth_refs: string[]
+    basic_count: number | string
+    professional_count: number | string
+    premium_count: number | string
+    registration_statuses: string[]
+    published_booth_count: number | string
+    product_count: number | string
+    paid_amount: number | string
+    order_count: number | string
+    paid_order_count: number | string
+    latest_purchased_at: string | Date | null
+  }[]
+
+  const exhibitors = rows.map((row) => ({
+    id: row.exhibitor_id,
+    displayName: row.display_name,
+    contactName: row.contact_name,
+    contactEmail: row.contact_email,
+    phone: row.phone,
+    website: row.website,
+    address: row.address,
+    industry: row.industry,
+    taxId: row.tax_id,
+    logoUrl: row.logo_url,
+    boothCount: toNumber(row.booth_count),
+    boothRefs: row.booth_refs,
+    tierMix: {
+      Basic: toNumber(row.basic_count),
+      Professional: toNumber(row.professional_count),
+      Premium: toNumber(row.premium_count)
+    },
+    registrationStatuses: row.registration_statuses,
+    publishedBoothCount: toNumber(row.published_booth_count),
+    productCount: toNumber(row.product_count),
+    paidAmount: toNumber(row.paid_amount),
+    paymentStatus: resolvePartnerPaymentStatus({
+      paidOrderCount: toNumber(row.paid_order_count),
+      orderCount: toNumber(row.order_count)
+    }),
+    latestPurchasedAt: row.latest_purchased_at
+      ? toIso(row.latest_purchased_at)
+      : null
+  }))
+
+  return {
+    summary: {
+      exhibitorCount: exhibitors.length,
+      boothCount: exhibitors.reduce((sum, item) => sum + item.boothCount, 0),
+      publishedBoothCount: exhibitors.reduce(
+        (sum, item) => sum + item.publishedBoothCount,
+        0
+      ),
+      paidAmount: exhibitors.reduce((sum, item) => sum + item.paidAmount, 0)
+    },
+    exhibitors,
+    topExhibitors: exhibitors.slice(0, 5)
+  }
+}
+
+export async function getPartnerExpoExhibitorDetail(
+  userId: string,
+  expoId: string,
+  exhibitorId: string
+): Promise<PartnerExpoExhibitorDetail | null> {
+  const workspace = await getPartnerExpoExhibitors(userId, expoId)
+  if (!workspace) return null
+
+  const exhibitor = workspace.exhibitors.find((item) => item.id === exhibitorId)
+  if (!exhibitor) return null
+
+  const assigned = await getAssignedPartnerExpoName(userId, expoId)
+  if (!assigned) return null
+
+  const registrationRows = (await sql`
+    select
+      sbr.id,
+      sbr.booth_ref,
+      sbr.booth_tier,
+      sbr.status,
+      sbr.purchased_at,
+      bc.publish_status,
+      coalesce(jsonb_array_length(coalesce(bc.products, '[]'::jsonb)), 0)::int as product_count
+    from seller_booth_registrations sbr
+    inner join users u on u.id = sbr.user_id
+    left join booth_customizations bc on bc.registration_id = sbr.id
+    where sbr.expo_id = ${expoId}
+      and coalesce(u.company_id, u.id) = ${exhibitorId}
+    order by sbr.purchased_at desc
+  `) as {
+    id: string
+    booth_ref: string
+    booth_tier: string
+    status: string
+    purchased_at: string | Date
+    publish_status: string | null
+    product_count: number | string
+  }[]
+
+  const orderRows = (await sql`
+    with selected_registrations as (
+      select sbr.id, sbr.booth_ref, sbr.purchased_at
+      from seller_booth_registrations sbr
+      inner join users u on u.id = sbr.user_id
+      where sbr.expo_id = ${expoId}
+        and coalesce(u.company_id, u.id) = ${exhibitorId}
+    ),
+    matched_order_candidates as (
+      select
+        o.id,
+        sr.id as registration_id,
+        o.booth_ref,
+        o.booth_tier,
+        o.payment_method,
+        o.status,
+        o.original_amount,
+        o.discount_amount,
+        o.amount,
+        o.created_at,
+        o.updated_at,
+        row_number() over (
+          partition by o.id
+          order by
+            case when o.reference_id = sr.id then 0 else 1 end,
+            sr.purchased_at desc,
+            sr.id asc
+        ) as match_rank
+      from selected_registrations sr
+      inner join orders o on
+        o.reference_id = sr.id
+        or (
+          o.reference_id not in (select id from selected_registrations)
+          and o.expo_name = ${assigned.name}
+          and o.booth_ref = sr.booth_ref
+        )
+      where o.order_type = 'booth_registration'
+    )
+    select
+      id,
+      registration_id,
+      booth_ref,
+      booth_tier,
+      payment_method,
+      status,
+      original_amount,
+      discount_amount,
+      amount,
+      created_at,
+      updated_at
+    from matched_order_candidates
+    where match_rank = 1
+    order by created_at desc
+  `) as {
+    id: string
+    registration_id: string | null
+    booth_ref: string | null
+    booth_tier: string | null
+    payment_method: string
+    status: string
+    original_amount: number | string
+    discount_amount: number | string
+    amount: number | string
+    created_at: string | Date
+    updated_at: string | Date
+  }[]
+
+  const performanceRows = (await sql`
+    with expo_window as (
+      select
+        coalesce(start_at, start_date::timestamptz) as starts_at,
+        coalesce(end_at, (end_date::date + interval '1 day')::timestamptz) as ends_at
+      from expos
+      where id = ${expoId}
+    ),
+    profile_stats as (
+      select count(*)::int as eprofile_visits
+      from expo_exhibitor_profile_visits event
+      cross join expo_window ew
+      where event.expo_id = ${expoId}
+        and event.exhibitor_id = ${exhibitorId}
+        and event.created_at >= ew.starts_at
+        and event.created_at < ew.ends_at
+    ),
+    rfq_stats as (
+      select count(*)::int as rfq_count
+      from expo_exhibitor_rfq_events event
+      cross join expo_window ew
+      where event.expo_id = ${expoId}
+        and event.exhibitor_id = ${exhibitorId}
+        and event.created_at >= ew.starts_at
+        and event.created_at < ew.ends_at
+    ),
+    chat_stats as (
+      select count(*)::int as chat_count
+      from expo_exhibitor_product_chat_events event
+      cross join expo_window ew
+      where event.expo_id = ${expoId}
+        and event.exhibitor_id = ${exhibitorId}
+        and event.created_at >= ew.starts_at
+        and event.created_at < ew.ends_at
+    )
+    select
+      coalesce((select eprofile_visits from profile_stats), 0)::int as eprofile_visits,
+      coalesce((select rfq_count from rfq_stats), 0)::int as rfq_count,
+      coalesce((select chat_count from chat_stats), 0)::int as chat_count
+  `) as {
+    eprofile_visits: number | string
+    rfq_count: number | string
+    chat_count: number | string
+  }[]
+
+  const topViewedRows = (await sql`
+    with expo_window as (
+      select
+        coalesce(start_at, start_date::timestamptz) as starts_at,
+        coalesce(end_at, (end_date::date + interval '1 day')::timestamptz) as ends_at
+      from expos
+      where id = ${expoId}
+    )
+    select
+      event.product_id,
+      coalesce(nullif(cp.name, ''), event.product_id) as product_name,
+      count(*)::int as value
+    from expo_exhibitor_product_views event
+    cross join expo_window ew
+    left join company_products cp on cp.id = event.product_id
+    where event.expo_id = ${expoId}
+      and event.exhibitor_id = ${exhibitorId}
+      and event.created_at >= ew.starts_at
+      and event.created_at < ew.ends_at
+    group by event.product_id, cp.name
+    order by value desc, product_name asc
+    limit 1
+  `) as { product_id: string; product_name: string; value: number | string }[]
+
+  const topChattedRows = (await sql`
+    with expo_window as (
+      select
+        coalesce(start_at, start_date::timestamptz) as starts_at,
+        coalesce(end_at, (end_date::date + interval '1 day')::timestamptz) as ends_at
+      from expos
+      where id = ${expoId}
+    )
+    select
+      event.product_id,
+      coalesce(nullif(cp.name, ''), event.product_id) as product_name,
+      count(*)::int as value
+    from expo_exhibitor_product_chat_events event
+    cross join expo_window ew
+    left join company_products cp on cp.id = event.product_id
+    where event.expo_id = ${expoId}
+      and event.exhibitor_id = ${exhibitorId}
+      and event.product_id is not null
+      and event.created_at >= ew.starts_at
+      and event.created_at < ew.ends_at
+    group by event.product_id, cp.name
+    order by value desc, product_name asc
+    limit 1
+  `) as { product_id: string; product_name: string; value: number | string }[]
+
+  const topWishlistedRows = (await sql`
+    with expo_window as (
+      select
+        coalesce(start_at, start_date::timestamptz) as starts_at,
+        coalesce(end_at, (end_date::date + interval '1 day')::timestamptz) as ends_at
+      from expos
+      where id = ${expoId}
+    ),
+    selected_products as (
+      select distinct product_id
+      from (
+        select jsonb_array_elements(coalesce(bc.products, '[]'::jsonb))->>'id' as product_id
+        from seller_booth_registrations sbr
+        inner join users u on u.id = sbr.user_id
+        left join booth_customizations bc on bc.registration_id = sbr.id
+        where sbr.expo_id = ${expoId}
+          and coalesce(u.company_id, u.id) = ${exhibitorId}
+      ) products
+      where product_id is not null and product_id <> ''
+    )
+    select
+      wi.target_id as product_id,
+      coalesce(nullif(cp.name, ''), wi.target_id) as product_name,
+      count(*)::int as value
+    from user_wishlist_items wi
+    inner join selected_products sp on sp.product_id = wi.target_id
+    cross join expo_window ew
+    left join company_products cp on cp.id = wi.target_id
+    where wi.target_type = 'product'
+      and wi.created_at >= ew.starts_at
+      and wi.created_at < ew.ends_at
+    group by wi.target_id, cp.name
+    order by value desc, product_name asc
+    limit 1
+  `) as { product_id: string; product_name: string; value: number | string }[]
+
+  const toPerformanceProduct = (row?: {
+    product_id: string
+    product_name: string
+    value: number | string
+  }): PartnerExpoExhibitorPerformanceProduct | null =>
+    row
+      ? {
+          productId: row.product_id,
+          productName: row.product_name,
+          count: toNumber(row.value)
+        }
+      : null
+
+  return {
+    exhibitor,
+    registrations: registrationRows.map((row) => ({
+      id: row.id,
+      boothRef: row.booth_ref,
+      boothTier: normalizePartnerBoothTier(row.booth_tier),
+      status: row.status,
+      publishStatus: row.publish_status,
+      productCount: toNumber(row.product_count),
+      purchasedAt: toIso(row.purchased_at)
+    })),
+    orders: orderRows.map((row) => ({
+      id: row.id,
+      registrationId: row.registration_id,
+      boothRef: row.booth_ref,
+      boothTier: row.booth_tier,
+      paymentMethod: row.payment_method,
+      status: row.status,
+      originalAmount: toNumber(row.original_amount),
+      discountAmount: toNumber(row.discount_amount),
+      amount: toNumber(row.amount),
+      createdAt: toIso(row.created_at),
+      updatedAt: toIso(row.updated_at)
+    })),
+    performance: {
+      rfqCount: toNumber(performanceRows[0]?.rfq_count),
+      chatCount: toNumber(performanceRows[0]?.chat_count),
+      eProfileVisits: toNumber(performanceRows[0]?.eprofile_visits),
+      topViewedProduct: toPerformanceProduct(topViewedRows[0]),
+      topChattedProduct: toPerformanceProduct(topChattedRows[0]),
+      topWishlistedProduct: toPerformanceProduct(topWishlistedRows[0])
+    }
+  }
+}
+
+export async function getPartnerExpoOperationsDetail(
+  userId: string,
+  expoId: string
+): Promise<PartnerExpoOperationsDetail | null> {
+  const assigned = await getAssignedPartnerExpoName(userId, expoId)
   if (!assigned) return null
 
   const summaryRows = (await sql`
