@@ -238,6 +238,23 @@ export async function setPartnerScopesForAdmin(input: {
   }
 }
 
+export async function listPartnerMiniSitesForAdmin(partnerOrgId: string) {
+  return sql`
+    select
+      id,
+      version_label,
+      status,
+      content_json,
+      reject_reason,
+      submitted_at,
+      published_at,
+      updated_at
+    from partner_mini_sites
+    where partner_org_id = ${partnerOrgId}
+    order by updated_at desc
+  `
+}
+
 export async function decidePartnerMiniSiteForAdmin(input: {
   actorUserId: string
   partnerOrgId: string
