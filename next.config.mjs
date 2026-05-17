@@ -1,4 +1,8 @@
 /** @type {import('next').NextConfig} */
+const r2PublicHostname = process.env.R2_PUBLIC_DOMAIN
+  ? process.env.R2_PUBLIC_DOMAIN.replace(/^https?:\/\//, "").replace(/\/$/, "")
+  : ""
+
 const nextConfig = {
   images: {
     remotePatterns: [
@@ -12,7 +16,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: process.env.R2_PUBLIC_DOMAIN || ""
+        hostname: r2PublicHostname
       }
     ].filter((pattern) => pattern.hostname !== "")
   }

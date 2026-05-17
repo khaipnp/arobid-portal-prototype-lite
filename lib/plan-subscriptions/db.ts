@@ -73,6 +73,18 @@ export type PackageDefinitionWorkspace = {
   }
 }
 
+export type PackageDefinitionDetailWorkspace = {
+  package: PackageDefinition
+  plans: PlanOption[]
+  roles: RoleOption[]
+  expos: ExpoOption[]
+  totals: {
+    packagePlans: number
+    eventBound: number
+    warnings: number
+  }
+}
+
 export type PackagePlanInput = {
   planId: string
   roleCode: string
@@ -260,50 +272,7 @@ function composePackages(rows: PackageRow[], planRows: PackagePlanRow[]) {
   })
 }
 
-export async function getPackageDefinitionWorkspace(): Promise<PackageDefinitionWorkspace> {
-  await ensurePlatformSchema()
-
-  const packageRows = (await sql`
-    select
-      id,
-      code,
-      name,
-      description,
-      price,
-      price_unit as "priceUnit",
-      image_url as "imageUrl",
-      is_public as "isPublic",
-      is_active as "isActive",
-      created_by as "createdBy",
-      created_at as "createdAt",
-      updated_at as "updatedAt"
-    from packages
-    order by updated_at desc, name asc
-  `) as PackageRow[]
-
-  const planRows = (await sql`
-    select
-      pp.id,
-      pp.package_id as "packageId",
-      pp.plan_id as "planId",
-      p.code as "planCode",
-      p.name as "planName",
-      p.target_type as "planTargetType",
-      p.is_active as "planIsActive",
-      pp.role_code as "roleCode",
-      r.name as "roleName",
-      pp.validity_type as "validityType",
-      pp.duration_months as "durationMonths",
-      pp.expo_id as "expoId",
-      e.name as "expoName",
-      e.status as "expoStatus"
-    from package_plans pp
-    inner join plans p on p.id = pp.plan_id
-    inner join roles r on r.id = pp.role_code
-    left join expos e on e.id = pp.expo_id
-    order by pp.created_at asc
-  `) as PackagePlanRow[]
-
+async function getPackageDefinitionOptions() {
   const plans = (await sql`
     select
       id,
@@ -333,6 +302,58 @@ export async function getPackageDefinitionWorkspace(): Promise<PackageDefinition
     order by start_date desc, name asc
   `) as ExpoOption[]
 
+  return { plans, roles, expos }
+}
+
+async function getPackagePlanRows(packageId?: string) {
+  return (await sql`
+    select
+      pp.id,
+      pp.package_id as "packageId",
+      pp.plan_id as "planId",
+      p.code as "planCode",
+      p.name as "planName",
+      p.target_type as "planTargetType",
+      p.is_active as "planIsActive",
+      pp.role_code as "roleCode",
+      r.name as "roleName",
+      pp.validity_type as "validityType",
+      pp.duration_months as "durationMonths",
+      pp.expo_id as "expoId",
+      e.name as "expoName",
+      e.status as "expoStatus"
+    from package_plans pp
+    inner join plans p on p.id = pp.plan_id
+    inner join roles r on r.id = pp.role_code
+    left join expos e on e.id = pp.expo_id
+    where ${packageId ?? null}::uuid is null or pp.package_id = ${packageId ?? null}
+    order by pp.created_at asc
+  `) as PackagePlanRow[]
+}
+
+export async function getPackageDefinitionWorkspace(): Promise<PackageDefinitionWorkspace> {
+  await ensurePlatformSchema()
+
+  const packageRows = (await sql`
+    select
+      id,
+      code,
+      name,
+      description,
+      price,
+      price_unit as "priceUnit",
+      image_url as "imageUrl",
+      is_public as "isPublic",
+      is_active as "isActive",
+      created_by as "createdBy",
+      created_at as "createdAt",
+      updated_at as "updatedAt"
+    from packages
+    order by updated_at desc, name asc
+  `) as PackageRow[]
+
+  const planRows = await getPackagePlanRows()
+  const { plans, roles, expos } = await getPackageDefinitionOptions()
   const packages = composePackages(packageRows, planRows)
   return {
     packages,
@@ -345,6 +366,56 @@ export async function getPackageDefinitionWorkspace(): Promise<PackageDefinition
       packagePlans: planRows.length,
       eventBound: planRows.filter((plan) => plan.validityType === "EVENT_BOUND")
         .length
+    }
+  }
+}
+
+export async function getPackageDefinition(packageId: string) {
+  await ensurePlatformSchema()
+
+  const packageRows = (await sql`
+    select
+      id,
+      code,
+      name,
+      description,
+      price,
+      price_unit as "priceUnit",
+      image_url as "imageUrl",
+      is_public as "isPublic",
+      is_active as "isActive",
+      created_by as "createdBy",
+      created_at as "createdAt",
+      updated_at as "updatedAt"
+    from packages
+    where id = ${packageId}
+  `) as PackageRow[]
+
+  if (packageRows.length === 0) return null
+
+  const planRows = await getPackagePlanRows(packageId)
+  return composePackages(packageRows, planRows)[0] ?? null
+}
+
+export async function getPackageDefinitionDetailWorkspace(
+  packageId: string
+): Promise<PackageDefinitionDetailWorkspace | null> {
+  const pkg = await getPackageDefinition(packageId)
+  if (!pkg) return null
+
+  const { plans, roles, expos } = await getPackageDefinitionOptions()
+
+  return {
+    package: pkg,
+    plans,
+    roles,
+    expos,
+    totals: {
+      packagePlans: pkg.plans.length,
+      eventBound: pkg.plans.filter(
+        (plan) => plan.validityType === "EVENT_BOUND"
+      ).length,
+      warnings: pkg.warnings.length
     }
   }
 }

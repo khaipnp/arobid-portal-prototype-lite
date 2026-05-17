@@ -2,7 +2,8 @@ import { userHasRole } from "@/lib/auth/rbac"
 import {
   getPrimaryPartnerOrganization,
   type PartnerMembershipRole,
-  type PartnerPortalOrganization
+  type PartnerPortalOrganization,
+  type PartnerType
 } from "@/lib/partner/db"
 
 export type PartnerPortalTab =
@@ -12,6 +13,7 @@ export type PartnerPortalTab =
   | "quota"
   | "bundles"
   | "communications"
+  | "site_management"
   | "finance"
   | "analytics"
   | "government"
@@ -48,6 +50,7 @@ const allTabs: PartnerPortalTab[] = [
   "quota",
   "bundles",
   "communications",
+  "site_management",
   "finance",
   "analytics",
   "government"
@@ -116,6 +119,91 @@ const financeActions: PartnerPortalAction[] = [
   "analytics.view"
 ]
 
+type PartnerCapabilityOverride<T extends string> = {
+  add?: readonly T[]
+  remove?: readonly T[]
+}
+
+const partnerTypeTabOverrides: Record<
+  PartnerType,
+  PartnerCapabilityOverride<PartnerPortalTab>
+> = {
+  expo_partner: {
+    remove: ["bundles", "site_management", "government"]
+  },
+  alliance_partner: {
+    add: ["bundles", "communications", "finance", "analytics"],
+    remove: ["expo", "quota", "site_management", "government"]
+  },
+  government_program_partner: {
+    add: ["government", "quota", "enterprises", "analytics"],
+    remove: ["bundles", "site_management"]
+  },
+  distribution_partner: {
+    add: ["quota", "enterprises", "finance", "analytics"],
+    remove: ["bundles", "site_management", "government"]
+  },
+  strategic_partner: {
+    add: ["overview", "enterprises", "analytics"],
+    remove: [
+      "expo",
+      "quota",
+      "bundles",
+      "communications",
+      "site_management",
+      "finance",
+      "government"
+    ]
+  }
+}
+
+const partnerTypeActionOverrides: Record<
+  PartnerType,
+  PartnerCapabilityOverride<PartnerPortalAction>
+> = {
+  expo_partner: {
+    remove: ["bundle.manage", "bundle.purchase", "government.manage"]
+  },
+  alliance_partner: {
+    add: [
+      "bundle.manage",
+      "bundle.purchase",
+      "communications.manage",
+      "chat.use"
+    ],
+    remove: [
+      "expo.edit",
+      "turnkey.create",
+      "quota.manage",
+      "invite.manage",
+      "tradeCredits.manage",
+      "government.manage"
+    ]
+  },
+  government_program_partner: {
+    add: governmentActions,
+    remove: ["bundle.manage", "bundle.purchase", "expo.edit", "turnkey.create"]
+  },
+  distribution_partner: {
+    add: [
+      "quota.manage",
+      "invite.manage",
+      "enterprise.manage",
+      "analytics.view"
+    ],
+    remove: [
+      "turnkey.create",
+      "bundle.manage",
+      "bundle.purchase",
+      "government.manage"
+    ]
+  },
+  strategic_partner: {
+    add: ["analytics.view"],
+    remove: allActions.filter((action) => action !== "analytics.view")
+  }
+}
+
 const roleTabs: Record<PartnerMembershipRole, PartnerPortalTab[]> = {
   primary_representative: allTabs,
   admin: allTabs,
@@ -172,6 +260,16 @@ const roleActions: Record<PartnerMembershipRole, PartnerPortalAction[]> = {
   viewer: ["analytics.view"]
 }
 
+function applyOverrides<T extends string>(
+  base: readonly T[],
+  override: PartnerCapabilityOverride<T>
+) {
+  const values = new Set(base)
+  for (const item of override.add ?? []) values.add(item)
+  for (const item of override.remove ?? []) values.delete(item)
+  return Array.from(values)
+}
+
 function makeRecord<T extends string>(
   keys: readonly T[],
   allowed: readonly T[]
@@ -207,14 +305,16 @@ export async function getPartnerAccess(userId: string): Promise<PartnerAccess> {
 
   const baseTabs = roleTabs[organization.membershipRole] ?? []
   const baseActions = roleActions[organization.membershipRole] ?? []
-  const actions =
-    organization.partnerType === "government_program_partner"
-      ? Array.from(new Set([...baseActions, ...governmentActions]))
-      : baseActions
-  const tabs =
-    organization.partnerType === "government_program_partner"
-      ? Array.from(new Set([...baseTabs, "government" as const]))
-      : baseTabs
+  const tabs = applyOverrides(
+    baseTabs,
+    partnerTypeTabOverrides[organization.partnerType]
+  ).filter(
+    (tab) => tab !== "site_management" || organization.model === "tenant"
+  )
+  const actions = applyOverrides(
+    baseActions,
+    partnerTypeActionOverrides[organization.partnerType]
+  )
 
   return {
     organization,

@@ -1,11 +1,10 @@
 import { notFound } from "next/navigation"
-import { PartnerExpoDetailOverview } from "@/components/partner/partner-expo-detail-overview"
+import { PartnerExpoDetailTabs } from "@/components/partner/partner-expo-detail-tabs"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
-import { GoLIVEManager } from "@/components/tradexpo/golive-manager"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { requireRole } from "@/lib/auth/rbac"
 import {
   getPartnerAssignedExpo,
+  getPartnerExpoExhibitors,
   getPartnerExpoOperationsDetail
 } from "@/lib/partner/db"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
@@ -36,14 +35,15 @@ export default async function PartnerExpoDetailPage({
   if (!assignedExpo) notFound()
   const { expo } = assignedExpo
 
-  const [operations, initialGoLIVEEvents, initialStreamSessions] =
+  const [operations, exhibitorsWorkspace, initialGoLIVEEvents, initialStreamSessions] =
     await Promise.all([
       getPartnerExpoOperationsDetail(userId, expoId),
+      getPartnerExpoExhibitors(userId, expoId),
       listGoLIVEEvents(),
       listStreamSessions()
     ])
 
-  if (!operations) notFound()
+  if (!operations || !exhibitorsWorkspace) notFound()
 
   return (
     <DashboardShell
@@ -56,27 +56,16 @@ export default async function PartnerExpoDetailPage({
       ]}
       showBackButton
     >
-      <Tabs defaultValue="overview" className="gap-4">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="golive">GoLIVE</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview">
-          <PartnerExpoDetailOverview
-            assignedExpo={assignedExpo}
-            operations={operations}
-          />
-        </TabsContent>
-
-        <TabsContent value="golive">
-          <GoLIVEManager
-            expoId={expoId}
-            initialGoLIVEEvents={initialGoLIVEEvents}
-            initialStreamSessions={initialStreamSessions}
-          />
-        </TabsContent>
-      </Tabs>
+      <div className="px-4">
+        <PartnerExpoDetailTabs
+          expoId={expoId}
+          assignedExpo={assignedExpo}
+          operations={operations}
+          exhibitorsWorkspace={exhibitorsWorkspace}
+          initialGoLIVEEvents={initialGoLIVEEvents}
+          initialStreamSessions={initialStreamSessions}
+        />
+      </div>
     </DashboardShell>
   )
 }

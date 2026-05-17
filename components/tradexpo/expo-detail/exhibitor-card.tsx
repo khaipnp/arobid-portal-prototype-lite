@@ -1,6 +1,6 @@
 import { ArrowRightIcon, GemIcon, RocketIcon, StarIcon } from "lucide-react"
 import Image from "next/image"
-import { type ReactNode, useState } from "react"
+import { type ReactNode, useEffect, useState } from "react"
 import { ExhibitorCardActions } from "@/components/tradexpo/expo-detail/exhibitor-card-actions"
 import { ExhibitorProductDetailDialog } from "@/components/tradexpo/expo-detail/exhibitor-product-detail-dialog"
 import { Card } from "@/components/ui/card"
@@ -16,6 +16,7 @@ const productFallbackImages = [
 ]
 
 type ExhibitorCardProps = {
+  expoId: string
   exhibitor: ExpoDetailExhibitor
   isAuthenticated?: boolean
   onChatClick?: (
@@ -26,6 +27,26 @@ type ExhibitorCardProps = {
       isWishlisted?: boolean
     } | null
   ) => void
+}
+
+function getVisitorKey() {
+  const key = "arobid-expo-visitor-key"
+  const existing = window.localStorage.getItem(key)
+  if (existing) return existing
+  const next = crypto.randomUUID()
+  window.localStorage.setItem(key, next)
+  return next
+}
+
+export function trackExpoAnalytics(
+  path: string,
+  body: Record<string, string | null>
+) {
+  fetch(path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...body, visitorKey: getVisitorKey() })
+  }).catch(() => undefined)
 }
 
 function Dot() {
@@ -52,6 +73,7 @@ function MetaBadge({
 }
 
 export function ExhibitorCard({
+  expoId,
   exhibitor,
   isAuthenticated = false,
   onChatClick
@@ -72,6 +94,13 @@ export function ExhibitorCard({
     label: product.name,
     isWishlisted: product.isWishlisted
   }))
+
+  useEffect(() => {
+    trackExpoAnalytics("/api/tradexpo/analytics/profile-view", {
+      expoId,
+      exhibitorId: exhibitor.id
+    })
+  }, [expoId, exhibitor.id])
 
   return (
     <Card className="rounded-3xl bg-white px-5 py-4">
@@ -138,7 +167,14 @@ export function ExhibitorCard({
               type="button"
               key={`${exhibitor.id}-${item.image}`}
               className="relative aspect-square overflow-hidden rounded-2xl border border-muted transition hover:border-legend"
-              onClick={() => setSelectedProduct(item)}
+              onClick={() => {
+                trackExpoAnalytics("/api/tradexpo/analytics/product-view", {
+                  expoId,
+                  exhibitorId: exhibitor.id,
+                  productId: item.id
+                })
+                setSelectedProduct(item)
+              }}
               aria-label={`View product details: ${item.label}`}
             >
               <Image
@@ -157,17 +193,38 @@ export function ExhibitorCard({
         exhibitorCompany={exhibitor.company}
         isAuthenticated={isAuthenticated}
         initialIsWishlisted={exhibitor.isWishlisted}
-        onChatClick={() => onChatClick?.(null)}
+        onChatClick={() => {
+          trackExpoAnalytics("/api/tradexpo/analytics/product-chat", {
+            expoId,
+            exhibitorId: exhibitor.id,
+            productId: null
+          })
+          onChatClick?.(null)
+        }}
       />
 
       <ExhibitorProductDetailDialog
+        expoId={expoId}
+        exhibitorId={exhibitor.id}
         exhibitorCompany={exhibitor.company}
         products={productImages}
         selectedProduct={selectedProduct}
         onSelectedProductChange={setSelectedProduct}
         isAuthenticated={isAuthenticated}
         onChatNow={(product) => {
+          trackExpoAnalytics("/api/tradexpo/analytics/product-chat", {
+            expoId,
+            exhibitorId: exhibitor.id,
+            productId: product.id
+          })
           onChatClick?.(product)
+        }}
+        onRfqSubmitted={(product) => {
+          trackExpoAnalytics("/api/tradexpo/analytics/rfq", {
+            expoId,
+            exhibitorId: exhibitor.id,
+            productId: product.id
+          })
         }}
       />
     </Card>

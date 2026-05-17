@@ -12,6 +12,7 @@ import {
   RadioIcon,
   SearchIcon,
   ShieldCheckIcon,
+  XIcon,
   ZapIcon
 } from "lucide-react"
 import Image from "next/image"
@@ -46,7 +47,12 @@ import type {
 import type { ExpoStatus } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
 import { ExpoStatusBadge } from "../tradexpo/status-badge"
-import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group"
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput
+} from "../ui/input-group"
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", {
@@ -155,9 +161,9 @@ export function PartnerExpoList({
     <div className="space-y-6 px-4">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
-          <InputGroup className="max-w-xs">
-            <InputGroupAddon>
-              <SearchIcon className="h-4 w-4 text-muted-foreground" />
+          <InputGroup className="max-w-xs rounded-full">
+            <InputGroupAddon align="inline-start">
+              <SearchIcon />
             </InputGroupAddon>
             <InputGroupInput
               placeholder="Search expos..."
@@ -167,7 +173,21 @@ export function PartnerExpoList({
                 setCurrentPage(1)
               }}
             />
+            {searchQuery && (
+              <InputGroupAddon align="inline-end">
+                <InputGroupButton
+                  variant="secondary"
+                  size="icon-xs"
+                  className="rounded-full"
+                  onClick={() => setSearchQuery("")}
+                >
+                  <XIcon className="size-3.5" />
+                </InputGroupButton>
+              </InputGroupAddon>
+            )}
           </InputGroup>
+
+          {/* Filter Status */}
           <Select
             value={statusFilter}
             onValueChange={(value) => {
@@ -175,7 +195,7 @@ export function PartnerExpoList({
               setCurrentPage(1)
             }}
           >
-            <SelectTrigger className="w-45">
+            <SelectTrigger className="w-44 rounded-full">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -186,6 +206,8 @@ export function PartnerExpoList({
               ))}
             </SelectContent>
           </Select>
+
+          {/* Select Model */}
           <Select
             value={modelFilter}
             onValueChange={(value) => {
@@ -193,7 +215,7 @@ export function PartnerExpoList({
               setCurrentPage(1)
             }}
           >
-            <SelectTrigger className="w-45">
+            <SelectTrigger className="w-44 rounded-full">
               <SelectValue placeholder="Model" />
             </SelectTrigger>
             <SelectContent>
@@ -204,9 +226,6 @@ export function PartnerExpoList({
               ))}
             </SelectContent>
           </Select>
-        </div>
-        <div className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
-          {filteredExpos.length} expos found
         </div>
       </div>
 

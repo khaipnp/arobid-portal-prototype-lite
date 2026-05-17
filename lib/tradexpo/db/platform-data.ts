@@ -143,14 +143,14 @@ export async function listExpoCategories(): Promise<ExpoCategory[]> {
   }))
 }
 
-function rowToExpo(r: ExpoRow): Expo {
+export function rowToExpo(r: ExpoRow): Expo {
   const startAt = r.start_at ? toIso(r.start_at) : undefined
   const endAt = r.end_at ? toIso(r.end_at) : undefined
   return {
     id: r.id,
     slug: r.slug ?? undefined,
     name: r.name,
-    thumbnailUrl: r.thumbnail_url,
+    thumbnailUrl: getAssetUrl(r.thumbnail_url, r.id),
     ownerEmail: r.owner_email,
     startDate: startAt
       ? toDateOnly(r.start_at as string | Date)
