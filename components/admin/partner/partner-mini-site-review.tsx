@@ -29,7 +29,10 @@ export function PartnerMiniSiteReview({
   const [reasonById, setReasonById] = useState<Record<string, string>>({})
   const [errorById, setErrorById] = useState<Record<string, string>>({})
 
-  async function review(miniSiteId: string, decision: "published" | "rejected") {
+  async function review(
+    miniSiteId: string,
+    decision: "published" | "rejected"
+  ) {
     const reason = reasonById[miniSiteId]?.trim() ?? ""
     if (decision === "rejected" && reason.length === 0) {
       setErrorById((current) => ({
@@ -85,7 +88,8 @@ export function PartnerMiniSiteReview({
               <div>
                 <div className="font-medium">{version.version_label}</div>
                 <div className="text-muted-foreground text-sm">
-                  {version.status} · {new Date(version.updated_at).toLocaleString()}
+                  {version.status} ·{" "}
+                  {new Date(version.updated_at).toLocaleString()}
                 </div>
                 {version.reject_reason ? (
                   <div className="mt-2 text-destructive text-sm">

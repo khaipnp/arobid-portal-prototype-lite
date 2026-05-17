@@ -1,5 +1,12 @@
 import Image from "next/image"
-import type { SiteBranding } from "../types"
+import type { CtaOption, SiteBranding } from "../types"
+
+const ctaLabels: Record<CtaOption, string> = {
+  contact_tenant: "Contact Tenant",
+  view_member_companies: "View Member Companies",
+  view_assigned_expos: "View Assigned Expos",
+  contact_arobid: "Contact Arobid"
+}
 
 export function CtaSection({ branding }: { branding: SiteBranding }) {
   return (
@@ -14,19 +21,14 @@ export function CtaSection({ branding }: { branding: SiteBranding }) {
             width={160}
           />
         ) : null}
-        <h2 className="font-bold text-4xl">
-          Ready to grow your business globally?
-        </h2>
-        <p className="text-white/70">
-          Connect with thousands of businesses in the TBSG community to scale
-          your reach and shape your future.
-        </p>
+        <h2 className="font-bold text-4xl">{branding.tenantName}</h2>
+        <p className="text-white/70">{branding.serviceBundleText}</p>
         <button
           className="rounded-full px-5 py-3 font-semibold text-sm text-white"
           style={{ backgroundColor: "var(--site-primary)" }}
           type="button"
         >
-          Get started
+          {ctaLabels[branding.ctaOption]}
         </button>
       </div>
     </section>

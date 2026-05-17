@@ -2,7 +2,7 @@ import { sql } from "@/lib/db/neon"
 import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
 let platformSchemaReady = false
-const LATEST_PLATFORM_MIGRATION = "partner_portal_rewrite_v1"
+const LATEST_PLATFORM_MIGRATION = "partner_membership_management_v1"
 
 type SqlClient = typeof sql
 
@@ -1332,16 +1332,79 @@ async function migratePartnerOrganizationSchema() {
   await sql`
     do $$
     begin
+      alter table partner_memberships drop constraint if exists partner_memberships_status_ck;
       alter table partner_memberships
       add constraint partner_memberships_status_ck
-      check (status in ('active', 'inactive'));
-    exception
-      when duplicate_object then null;
+      check (status in ('active', 'inactive', 'disabled', 'removed'));
     end $$;
   `
   await sql`
     create index if not exists idx_partner_memberships_user
     on partner_memberships (user_id)
+  `
+
+  await sql`
+    create table if not exists partner_user_invitations (
+      id text primary key,
+      partner_org_id text not null references partner_organizations(id) on delete cascade,
+      email text not null,
+      display_name text,
+      message text,
+      role text not null,
+      status text not null default 'pending',
+      invited_by_user_id text not null references users(id) on delete cascade,
+      accepted_by_user_id text references users(id) on delete set null,
+      expires_at timestamptz not null,
+      accepted_at timestamptz,
+      cancelled_at timestamptz,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    do $$
+    begin
+      alter table partner_user_invitations
+      add constraint partner_user_invitations_role_ck
+      check (role in ('partner_owner', 'partner_admin', 'viewer'));
+    exception
+      when duplicate_object then null;
+    end $$;
+  `
+  await sql`
+    do $$
+    begin
+      alter table partner_user_invitations
+      add constraint partner_user_invitations_status_ck
+      check (status in ('pending', 'accepted', 'cancelled', 'expired'));
+    exception
+      when duplicate_object then null;
+    end $$;
+  `
+  await sql`
+    create unique index if not exists idx_partner_user_invitations_pending_email
+    on partner_user_invitations (partner_org_id, lower(email))
+    where status = 'pending'
+  `
+  await sql`
+    create table if not exists partner_membership_audit_events (
+      id text primary key,
+      partner_org_id text not null references partner_organizations(id) on delete cascade,
+      actor_user_id text references users(id) on delete set null,
+      target_user_id text references users(id) on delete set null,
+      invitation_id text references partner_user_invitations(id) on delete set null,
+      action text not null,
+      old_role text,
+      new_role text,
+      old_status text,
+      new_status text,
+      reason text,
+      created_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    create index if not exists idx_partner_membership_audit_events_org
+    on partner_membership_audit_events (partner_org_id, created_at desc)
   `
 
   await sql`

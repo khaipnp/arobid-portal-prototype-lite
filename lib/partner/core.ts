@@ -51,6 +51,10 @@ export type PartnerMiniSiteStatus =
   | "published"
   | "draft_update"
 
+export type PartnerMembershipStatus = "active" | "disabled" | "removed"
+
+export type PartnerMembershipStatusAction = "disable" | "remove" | "reactivate"
+
 export type PartnerScopeSummary = {
   expoIds: string[]
   programIds: string[]
@@ -90,7 +94,11 @@ export function normalizePartnerRole(
     return "partner_admin"
   }
 
-  if (role === "partner_owner" || role === "partner_admin" || role === "viewer") {
+  if (
+    role === "partner_owner" ||
+    role === "partner_admin" ||
+    role === "viewer"
+  ) {
     return role
   }
 
@@ -99,6 +107,109 @@ export function normalizePartnerRole(
 
 export function isPartnerRoleReadOnly(role: PartnerMvpRole): boolean {
   return role === "viewer"
+}
+
+export function canInvitePartnerRole(
+  inviterRole: PartnerMvpRole,
+  targetRole: PartnerMvpRole
+): boolean {
+  if (inviterRole === "partner_owner") return true
+  if (inviterRole === "partner_admin") return targetRole !== "partner_owner"
+  return false
+}
+
+type CanAssignPartnerRoleArgs = {
+  actorRole: PartnerMvpRole
+  targetCurrentRole: PartnerMvpRole
+  targetNextRole: PartnerMvpRole
+  isSelf: boolean
+}
+
+export function canAssignPartnerRole({
+  actorRole,
+  targetCurrentRole,
+  targetNextRole,
+  isSelf
+}: CanAssignPartnerRoleArgs): boolean {
+  if (actorRole === "viewer") return false
+  if (actorRole === "partner_owner") return true
+  if (isSelf) return false
+  if (targetCurrentRole === "partner_owner") return false
+  return targetNextRole !== "partner_owner"
+}
+
+type CanChangePartnerMembershipStatusArgs = {
+  actorRole: PartnerMvpRole
+  targetRole: PartnerMvpRole
+  action: PartnerMembershipStatusAction
+  isSelf: boolean
+}
+
+export function canChangePartnerMembershipStatus({
+  actorRole,
+  targetRole,
+  isSelf
+}: CanChangePartnerMembershipStatusArgs): boolean {
+  if (actorRole === "viewer") return false
+  if (actorRole === "partner_owner") return true
+  if (isSelf) return false
+  return targetRole !== "partner_owner"
+}
+
+type GetPartnerMemberActionVisibilityArgs = {
+  actorRole: PartnerMvpRole
+  targetRole: PartnerMvpRole
+  targetStatus: PartnerMembershipStatus | "inactive"
+  isSelf: boolean
+}
+
+export function getPartnerMemberActionVisibility({
+  actorRole,
+  targetRole,
+  targetStatus,
+  isSelf
+}: GetPartnerMemberActionVisibilityArgs) {
+  const canInvite = actorRole !== "viewer"
+  const canChangeRole =
+    targetStatus === "active" &&
+    canAssignPartnerRole({
+      actorRole,
+      targetCurrentRole: targetRole,
+      targetNextRole: targetRole,
+      isSelf
+    })
+  const canDisable =
+    targetStatus === "active" &&
+    canChangePartnerMembershipStatus({
+      actorRole,
+      targetRole,
+      action: "disable",
+      isSelf
+    })
+  const canRemove =
+    targetStatus !== "removed" &&
+    canChangePartnerMembershipStatus({
+      actorRole,
+      targetRole,
+      action: "remove",
+      isSelf
+    })
+  const canReactivate =
+    targetStatus === "disabled" &&
+    canChangePartnerMembershipStatus({
+      actorRole,
+      targetRole,
+      action: "reactivate",
+      isSelf
+    })
+
+  return {
+    canInvite,
+    canChangeRole,
+    canDisable,
+    canRemove,
+    canReactivate
+  }
 }
 
 type GetPartnerModuleVisibilityArgs = {

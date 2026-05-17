@@ -4,7 +4,11 @@ import { invitePartnerUserForAdmin } from "@/lib/partner/admin"
 import type { PartnerMvpRole } from "@/lib/partner/core"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 
-const partnerRoles: PartnerMvpRole[] = ["partner_owner", "partner_admin", "viewer"]
+const partnerRoles: PartnerMvpRole[] = [
+  "partner_owner",
+  "partner_admin",
+  "viewer"
+]
 
 function isPartnerRole(value: unknown): value is PartnerMvpRole {
   return partnerRoles.includes(value as PartnerMvpRole)

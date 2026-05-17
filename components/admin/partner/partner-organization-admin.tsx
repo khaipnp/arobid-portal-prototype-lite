@@ -100,11 +100,15 @@ export function PartnerOrganizationAdmin({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="expo_partner">Expo partner</SelectItem>
-                <SelectItem value="strategic_partner">Strategic partner</SelectItem>
+                <SelectItem value="strategic_partner">
+                  Strategic partner
+                </SelectItem>
                 <SelectItem value="distribution_partner">
                   Distribution partner
                 </SelectItem>
-                <SelectItem value="alliance_partner">Alliance partner</SelectItem>
+                <SelectItem value="alliance_partner">
+                  Alliance partner
+                </SelectItem>
                 <SelectItem value="government_program_partner">
                   Government program partner
                 </SelectItem>
@@ -112,7 +116,10 @@ export function PartnerOrganizationAdmin({
             </Select>
           </div>
           {error ? <p className="text-destructive text-sm">{error}</p> : null}
-          <Button onClick={createOrganization} disabled={isSaving || !name.trim()}>
+          <Button
+            onClick={createOrganization}
+            disabled={isSaving || !name.trim()}
+          >
             {isSaving ? "Creating..." : "Create organization"}
           </Button>
         </CardContent>

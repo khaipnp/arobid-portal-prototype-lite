@@ -17,10 +17,13 @@ export function FooterSection({ branding }: { branding: SiteBranding }) {
           ) : (
             <div className="font-semibold text-xl">{branding.tenantName}</div>
           )}
-          <p className="text-sm text-white/65">
-            The representative organization for businesses operating in
-            manufacturing, trade, and services.
-          </p>
+          <div className="space-y-1 text-sm text-white/65">
+            <p>{branding.tagline}</p>
+            <p>{branding.publicEmail}</p>
+            <p>{branding.publicPhone}</p>
+            <p>{branding.publicAddress}</p>
+            <p>{branding.publicWebsite}</p>
+          </div>
         </div>
         <div className="grid gap-6 sm:grid-cols-4">
           {["Buy", "Sell", "Support", "Company"].map((title) => (

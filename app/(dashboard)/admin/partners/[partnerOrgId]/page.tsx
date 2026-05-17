@@ -28,8 +28,8 @@ export default async function AdminPartnerDetailPage({
         <div className="space-y-2">
           <h2 className="font-medium text-base">Control plane</h2>
           <p className="text-muted-foreground">
-            Admin APIs for memberships, roles, capabilities, and scope assignment
-            are available for this Partner Organization.
+            Admin APIs for memberships, roles, capabilities, and scope
+            assignment are available for this Partner Organization.
           </p>
         </div>
         <Link

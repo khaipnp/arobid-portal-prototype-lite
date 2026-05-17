@@ -4,7 +4,11 @@ import { updatePartnerMembershipForAdmin } from "@/lib/partner/admin"
 import type { PartnerMvpRole } from "@/lib/partner/core"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 
-const partnerRoles: PartnerMvpRole[] = ["partner_owner", "partner_admin", "viewer"]
+const partnerRoles: PartnerMvpRole[] = [
+  "partner_owner",
+  "partner_admin",
+  "viewer"
+]
 const membershipStatuses = ["active", "inactive", "removed"] as const
 
 type MembershipStatus = (typeof membershipStatuses)[number]

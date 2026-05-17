@@ -1,3 +1,4 @@
+import Image from "next/image"
 import type { SiteBranding } from "../types"
 
 export function BannerSection({ branding }: { branding: SiteBranding }) {
@@ -14,7 +15,7 @@ export function BannerSection({ branding }: { branding: SiteBranding }) {
           </div>
           <div className="space-y-4">
             <h1 className="max-w-3xl font-bold text-5xl leading-tight">
-              Build stronger global trade connections
+              {branding.tenantName}
             </h1>
             <p className="max-w-2xl text-lg text-white/75">
               {branding.tagline}
@@ -37,7 +38,16 @@ export function BannerSection({ branding }: { branding: SiteBranding }) {
           </div>
         </div>
         <div className="rounded-[2rem] border border-white/10 bg-white/10 p-5 shadow-2xl backdrop-blur">
-          <div className="aspect-[4/3] rounded-[1.5rem] bg-[linear-gradient(135deg,rgba(255,255,255,0.9),rgba(255,255,255,0.2)),radial-gradient(circle_at_70%_30%,rgba(249,115,22,0.55),transparent_35%)]" />
+          <div className="relative aspect-[4/3] overflow-hidden rounded-[1.5rem] bg-[linear-gradient(135deg,rgba(255,255,255,0.9),rgba(255,255,255,0.2)),radial-gradient(circle_at_70%_30%,rgba(249,115,22,0.55),transparent_35%)]">
+            {branding.bannerUrl ? (
+              <Image
+                alt={`${branding.tenantName} banner`}
+                className="object-cover"
+                fill
+                src={branding.bannerUrl}
+              />
+            ) : null}
+          </div>
         </div>
       </div>
     </section>

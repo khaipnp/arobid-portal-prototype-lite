@@ -10,7 +10,9 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { NativeSelect } from "@/components/ui/native-select"
 import { Switch } from "@/components/ui/switch"
+import { Textarea } from "@/components/ui/textarea"
 import { sectionOptions } from "./constants"
 import type { EnabledSiteSections, SiteBranding, SiteSectionKey } from "./types"
 
@@ -50,6 +52,26 @@ export function SitePreviewControls({
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 lg:grid-cols-2">
+          <div className="grid gap-2 lg:col-span-2">
+            <Label>Public display name</Label>
+            <Input
+              disabled={isReadOnly}
+              value={branding.tenantName}
+              onChange={(event) =>
+                onBrandingChange("tenantName", event.target.value)
+              }
+            />
+          </div>
+          <div className="grid gap-2 lg:col-span-2">
+            <Label>Tagline</Label>
+            <Textarea
+              disabled={isReadOnly}
+              value={branding.tagline}
+              onChange={(event) =>
+                onBrandingChange("tagline", event.target.value)
+              }
+            />
+          </div>
           <LogoUploadField
             branding={branding}
             isReadOnly={isReadOnly}
@@ -69,6 +91,98 @@ export function SitePreviewControls({
             value={branding.accentColor}
             onChange={(value) => onBrandingChange("accentColor", value)}
           />
+          <div className="grid gap-2 lg:col-span-2">
+            <Label>Banner image URL</Label>
+            <Input
+              disabled={isReadOnly}
+              placeholder="https://..."
+              value={branding.bannerUrl}
+              onChange={(event) =>
+                onBrandingChange("bannerUrl", event.target.value)
+              }
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>CTA and public contact</CardTitle>
+          <CardDescription>
+            CTA uses allowed MVP destinations only. Contact fields are public.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4 lg:grid-cols-2">
+          <div className="grid gap-2">
+            <Label>CTA option</Label>
+            <NativeSelect
+              disabled={isReadOnly}
+              value={branding.ctaOption}
+              onChange={(event) =>
+                onBrandingChange(
+                  "ctaOption",
+                  event.target.value as SiteBranding["ctaOption"]
+                )
+              }
+            >
+              <option value="contact_tenant">Contact Tenant</option>
+              <option value="view_member_companies">
+                View Member Companies
+              </option>
+              <option value="view_assigned_expos">View Assigned Expos</option>
+              <option value="contact_arobid">Contact Arobid</option>
+            </NativeSelect>
+          </div>
+          <div className="grid gap-2">
+            <Label>Public email</Label>
+            <Input
+              disabled={isReadOnly}
+              value={branding.publicEmail}
+              onChange={(event) =>
+                onBrandingChange("publicEmail", event.target.value)
+              }
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label>Public phone</Label>
+            <Input
+              disabled={isReadOnly}
+              value={branding.publicPhone}
+              onChange={(event) =>
+                onBrandingChange("publicPhone", event.target.value)
+              }
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label>Public website</Label>
+            <Input
+              disabled={isReadOnly}
+              value={branding.publicWebsite}
+              onChange={(event) =>
+                onBrandingChange("publicWebsite", event.target.value)
+              }
+            />
+          </div>
+          <div className="grid gap-2 lg:col-span-2">
+            <Label>Public address</Label>
+            <Input
+              disabled={isReadOnly}
+              value={branding.publicAddress}
+              onChange={(event) =>
+                onBrandingChange("publicAddress", event.target.value)
+              }
+            />
+          </div>
+          <div className="grid gap-2 lg:col-span-2">
+            <Label>Service / bundle section text</Label>
+            <Textarea
+              disabled={isReadOnly}
+              value={branding.serviceBundleText}
+              onChange={(event) =>
+                onBrandingChange("serviceBundleText", event.target.value)
+              }
+            />
+          </div>
         </CardContent>
       </Card>
 

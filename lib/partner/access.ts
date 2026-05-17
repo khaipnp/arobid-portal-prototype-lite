@@ -1,12 +1,5 @@
 import { userHasRole } from "@/lib/auth/rbac"
 import {
-  getPartnerCapabilities,
-  getPartnerScopes,
-  getPrimaryPartnerOrganization,
-  type PartnerMembershipRole,
-  type PartnerPortalOrganization
-} from "@/lib/partner/db"
-import {
   getPartnerModuleVisibility,
   isPartnerRoleReadOnly,
   normalizePartnerRole,
@@ -15,6 +8,13 @@ import {
   type PartnerMvpRole,
   type PartnerScopeSummary
 } from "@/lib/partner/core"
+import {
+  getPartnerCapabilities,
+  getPartnerScopes,
+  getPrimaryPartnerOrganization,
+  type PartnerMembershipRole,
+  type PartnerPortalOrganization
+} from "@/lib/partner/db"
 
 export type PartnerPortalTab =
   | PartnerModule
@@ -104,10 +104,9 @@ function makeTabs(modules: Record<PartnerModule, boolean>) {
 }
 
 function makeEmptyActions() {
-  return Object.fromEntries(actionKeys.map((action) => [action, false])) as Record<
-    PartnerPortalAction,
-    boolean
-  >
+  return Object.fromEntries(
+    actionKeys.map((action) => [action, false])
+  ) as Record<PartnerPortalAction, boolean>
 }
 
 export function buildPartnerAccess(input: {

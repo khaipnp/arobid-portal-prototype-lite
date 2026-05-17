@@ -1,6 +1,6 @@
+import { describe, expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
-import { describe, expect, test } from "bun:test"
 import {
   assertAdminMiniSiteDecision,
   normalizePartnerOrganizationInput,
@@ -89,10 +89,22 @@ describe("admin mutation SQL", () => {
 
   test("clears stale opposite mini-site decision metadata", () => {
     expect(source).toContain(
-      "published_by_user_id = case when ${input.decision} = 'published' then ${input.actoruserid} else null end"
+      [
+        "published_by_user_id = case when ",
+        "$" + "{input.decision}",
+        " = 'published' then ",
+        "$" + "{input.actoruserid}",
+        " else null end"
+      ].join("")
     )
     expect(source).toContain(
-      "rejected_by_user_id = case when ${input.decision} = 'rejected' then ${input.actoruserid} else null end"
+      [
+        "rejected_by_user_id = case when ",
+        "$" + "{input.decision}",
+        " = 'rejected' then ",
+        "$" + "{input.actoruserid}",
+        " else null end"
+      ].join("")
     )
   })
 })

@@ -5,6 +5,7 @@ import {
   LayoutDashboardIcon,
   PaletteIcon,
   PieChartIcon,
+  UserCogIcon,
   UsersIcon,
   WalletCardsIcon
 } from "lucide-react"
@@ -20,6 +21,12 @@ import type { PartnerAccess } from "@/lib/partner/access"
 import type { PartnerModule } from "@/lib/partner/core"
 
 const partnerLinks = [
+  {
+    name: "User Management",
+    url: "/partner/users",
+    module: "overview",
+    icon: <UserCogIcon />
+  },
   {
     name: "Mini-site",
     url: "/partner/site-management",

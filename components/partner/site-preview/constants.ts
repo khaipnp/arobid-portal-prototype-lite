@@ -11,8 +11,16 @@ export const initialBranding: SiteBranding = {
   tenantName: "Arobid Trade Partner",
   tagline: "Your trusted gateway to digital trade exhibitions.",
   logoUrl: "",
+  bannerUrl: "",
   primaryColor: "#f97316",
-  accentColor: "#2563eb"
+  accentColor: "#2563eb",
+  ctaOption: "contact_tenant",
+  publicEmail: "partner@arobid.com",
+  publicPhone: "+84 28 0000 0000",
+  publicAddress: "Ho Chi Minh City, Vietnam",
+  publicWebsite: "https://arobid.com",
+  serviceBundleText:
+    "Partner support services are available through Arobid Business."
 }
 
 export const alwaysVisibleSections: AlwaysVisibleSiteSectionKey[] = [

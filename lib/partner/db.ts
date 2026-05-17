@@ -1,11 +1,17 @@
 import { createHash, randomUUID } from "node:crypto"
 import { sql } from "@/lib/db/neon"
 import type {
-  PartnerCapability as PartnerMvpCapability,
+  PartnerMembershipStatus,
+  PartnerMembershipStatusAction,
   PartnerMiniSiteStatus,
+  PartnerCapability as PartnerMvpCapability,
+  PartnerMvpRole,
   PartnerScopeSummary
 } from "@/lib/partner/core"
 import {
+  canAssignPartnerRole,
+  canChangePartnerMembershipStatus,
+  canInvitePartnerRole,
   canTransitionMiniSiteStatus,
   normalizePartnerRole
 } from "@/lib/partner/core"
@@ -61,6 +67,44 @@ export type PartnerAssignment = {
 
 export type PartnerPortalOrganization = PartnerOrganization & {
   membershipRole: PartnerMembershipRole
+}
+
+export type PartnerUserInvitationStatus =
+  | "pending"
+  | "accepted"
+  | "cancelled"
+  | "expired"
+
+export type PartnerUserInvitation = {
+  id: string
+  partnerOrgId: string
+  email: string
+  displayName: string | null
+  message: string | null
+  role: "partner_owner" | "partner_admin" | "viewer"
+  status: PartnerUserInvitationStatus
+  invitedByUserId: string
+  acceptedByUserId: string | null
+  expiresAt: string
+  acceptedAt: string | null
+  cancelledAt: string | null
+  createdAt: string
+}
+
+export type PartnerOrganizationMember = {
+  userId: string
+  name: string | null
+  email: string
+  role: PartnerMvpRole
+  rawRole: PartnerMembershipRole
+  status: PartnerMembershipStatus | "inactive"
+  createdAt: string
+}
+
+export type PartnerUserManagementWorkspace = {
+  organization: PartnerPortalOrganization | null
+  members: PartnerOrganizationMember[]
+  invitations: PartnerUserInvitation[]
 }
 
 export type PartnerPortalSummary = {
@@ -824,6 +868,487 @@ export async function getPartnerScopes(
   }
 }
 
+async function recordPartnerMembershipAudit(input: {
+  partnerOrgId: string
+  actorUserId: string | null
+  targetUserId?: string | null
+  invitationId?: string | null
+  action: string
+  oldRole?: string | null
+  newRole?: string | null
+  oldStatus?: string | null
+  newStatus?: string | null
+  reason?: string | null
+}) {
+  await sql`
+    insert into partner_membership_audit_events (
+      id,
+      partner_org_id,
+      actor_user_id,
+      target_user_id,
+      invitation_id,
+      action,
+      old_role,
+      new_role,
+      old_status,
+      new_status,
+      reason
+    )
+    values (
+      ${`partner-membership-audit-${randomUUID()}`},
+      ${input.partnerOrgId},
+      ${input.actorUserId},
+      ${input.targetUserId ?? null},
+      ${input.invitationId ?? null},
+      ${input.action},
+      ${input.oldRole ?? null},
+      ${input.newRole ?? null},
+      ${input.oldStatus ?? null},
+      ${input.newStatus ?? null},
+      ${input.reason?.trim() || null}
+    )
+  `
+}
+
+export async function getPartnerUserManagementWorkspace(
+  userId: string
+): Promise<PartnerUserManagementWorkspace> {
+  const organization = await getPrimaryPartnerOrganization(userId)
+  if (!organization) return { organization: null, members: [], invitations: [] }
+
+  const [memberRows, invitationRows] = await Promise.all([
+    sql`
+      select
+        u.id,
+        u.name,
+        u.email,
+        pm.role,
+        pm.status,
+        pm.created_at
+      from partner_memberships pm
+      inner join users u on u.id = pm.user_id
+      where pm.partner_org_id = ${organization.id}
+      order by pm.created_at asc
+    `,
+    sql`
+      select
+        id,
+        partner_org_id,
+        email,
+        display_name,
+        message,
+        role,
+        status,
+        invited_by_user_id,
+        accepted_by_user_id,
+        expires_at,
+        accepted_at,
+        cancelled_at,
+        created_at
+      from partner_user_invitations
+      where partner_org_id = ${organization.id}
+      order by created_at desc
+    `
+  ])
+
+  return {
+    organization,
+    members: (
+      memberRows as {
+        id: string
+        name: string | null
+        email: string
+        role: PartnerMembershipRole
+        status: PartnerMembershipStatus | "inactive"
+        created_at: string | Date
+      }[]
+    ).map((row) => ({
+      userId: row.id,
+      name: row.name,
+      email: row.email,
+      rawRole: row.role,
+      role: normalizePartnerRole(row.role),
+      status: row.status,
+      createdAt: toIso(row.created_at)
+    })),
+    invitations: (
+      invitationRows as {
+        id: string
+        partner_org_id: string
+        email: string
+        display_name: string | null
+        message: string | null
+        role: PartnerUserInvitation["role"]
+        status: PartnerUserInvitationStatus
+        invited_by_user_id: string
+        accepted_by_user_id: string | null
+        expires_at: string | Date
+        accepted_at: string | Date | null
+        cancelled_at: string | Date | null
+        created_at: string | Date
+      }[]
+    ).map((row) => ({
+      id: row.id,
+      partnerOrgId: row.partner_org_id,
+      email: row.email,
+      displayName: row.display_name,
+      message: row.message,
+      role: row.role,
+      status: row.status,
+      invitedByUserId: row.invited_by_user_id,
+      acceptedByUserId: row.accepted_by_user_id,
+      expiresAt: toIso(row.expires_at),
+      acceptedAt: row.accepted_at ? toIso(row.accepted_at) : null,
+      cancelledAt: row.cancelled_at ? toIso(row.cancelled_at) : null,
+      createdAt: toIso(row.created_at)
+    }))
+  }
+}
+
+async function getActiveOwnerCount(partnerOrgId: string) {
+  const rows = (await sql`
+    select count(*)::int as count
+    from partner_memberships
+    where partner_org_id = ${partnerOrgId}
+      and status = 'active'
+      and role in ('partner_owner', 'primary_representative')
+  `) as { count: number | string }[]
+
+  return toNumber(rows[0]?.count)
+}
+
+export async function createPartnerUserInvitation(
+  actorUserId: string,
+  input: {
+    email: string
+    role: PartnerMvpRole
+    displayName?: string | null
+    message?: string | null
+  }
+) {
+  const organization = await requirePrimaryPartnerOrganization(actorUserId)
+  const actorRole = normalizePartnerRole(organization.membershipRole)
+  if (!canInvitePartnerRole(actorRole, input.role))
+    throw new Error("Forbidden.")
+
+  const email = input.email.trim().toLowerCase()
+  if (!email?.includes("@")) throw new Error("Valid email is required.")
+
+  const activeRows = (await sql`
+    select 1
+    from partner_memberships pm
+    inner join users u on u.id = pm.user_id
+    where pm.partner_org_id = ${organization.id}
+      and lower(u.email) = ${email}
+      and pm.status = 'active'
+    limit 1
+  `) as { "?column?": number }[]
+  if (activeRows.length > 0)
+    throw new Error("User is already an active member.")
+
+  const id = `partner-user-invite-${randomUUID()}`
+  const rows = (await sql`
+    insert into partner_user_invitations (
+      id,
+      partner_org_id,
+      email,
+      display_name,
+      message,
+      role,
+      invited_by_user_id,
+      expires_at
+    )
+    values (
+      ${id},
+      ${organization.id},
+      ${email},
+      ${input.displayName?.trim() || null},
+      ${input.message?.trim() || null},
+      ${input.role},
+      ${actorUserId},
+      now() + interval '7 days'
+    )
+    on conflict (partner_org_id, lower(email)) where status = 'pending'
+    do update set
+      role = excluded.role,
+      display_name = excluded.display_name,
+      message = excluded.message,
+      invited_by_user_id = excluded.invited_by_user_id,
+      expires_at = excluded.expires_at,
+      updated_at = now()
+    returning id
+  `) as { id: string }[]
+
+  await recordPartnerMembershipAudit({
+    partnerOrgId: organization.id,
+    actorUserId,
+    invitationId: rows[0].id,
+    action: rows[0].id === id ? "invite_created" : "invite_resent",
+    newRole: input.role,
+    newStatus: "pending"
+  })
+
+  return { id: rows[0].id }
+}
+
+export async function cancelPartnerUserInvitation(
+  actorUserId: string,
+  invitationId: string
+) {
+  const organization = await requirePrimaryPartnerOrganization(actorUserId)
+  const actorRole = normalizePartnerRole(organization.membershipRole)
+  if (actorRole === "viewer") throw new Error("Forbidden.")
+
+  const rows = (await sql`
+    update partner_user_invitations
+    set status = 'cancelled', cancelled_at = now(), updated_at = now()
+    where id = ${invitationId}
+      and partner_org_id = ${organization.id}
+      and status = 'pending'
+    returning id, role
+  `) as { id: string; role: string }[]
+  if (rows.length === 0) throw new Error("Invitation not found.")
+
+  await recordPartnerMembershipAudit({
+    partnerOrgId: organization.id,
+    actorUserId,
+    invitationId,
+    action: "invite_cancelled",
+    oldRole: rows[0].role,
+    oldStatus: "pending",
+    newStatus: "cancelled"
+  })
+}
+
+export async function acceptPartnerUserInvitation(
+  actorUserId: string,
+  invitationId: string
+) {
+  await sql`begin`
+  try {
+    const rows = (await sql`
+      select
+        pui.id,
+        pui.partner_org_id,
+        pui.role,
+        pui.email,
+        pui.expires_at,
+        po.status as partner_org_status,
+        u.email as user_email
+      from partner_user_invitations pui
+      inner join partner_organizations po on po.id = pui.partner_org_id
+      inner join users u on u.id = ${actorUserId}
+      where pui.id = ${invitationId}
+        and pui.status = 'pending'
+      for update
+      limit 1
+    `) as {
+      id: string
+      partner_org_id: string
+      role: PartnerMvpRole
+      email: string
+      expires_at: string | Date
+      partner_org_status: string
+      user_email: string
+    }[]
+
+    const invite = rows[0]
+    if (!invite) throw new Error("Invitation not found.")
+    if (invite.partner_org_status !== "active") {
+      throw new Error("Partner organization is not active.")
+    }
+    if (new Date(invite.expires_at).getTime() < Date.now()) {
+      await sql`
+        update partner_user_invitations
+        set status = 'expired', updated_at = now()
+        where id = ${invitationId}
+      `
+      throw new Error("Invitation has expired.")
+    }
+    if (invite.email.toLowerCase() !== invite.user_email.toLowerCase()) {
+      throw new Error("Invitation email does not match current user.")
+    }
+
+    await sql`
+      insert into partner_memberships (partner_org_id, user_id, role, status)
+      values (${invite.partner_org_id}, ${actorUserId}, ${invite.role}, 'active')
+      on conflict (partner_org_id, user_id) do update set
+        role = excluded.role,
+        status = 'active'
+    `
+    await sql`
+      update partner_user_invitations
+      set
+        status = 'accepted',
+        accepted_by_user_id = ${actorUserId},
+        accepted_at = now(),
+        updated_at = now()
+      where id = ${invitationId}
+    `
+    await recordPartnerMembershipAudit({
+      partnerOrgId: invite.partner_org_id,
+      actorUserId,
+      targetUserId: actorUserId,
+      invitationId,
+      action: "invite_accepted",
+      newRole: invite.role,
+      newStatus: "active"
+    })
+    await sql`commit`
+  } catch (error) {
+    await sql`rollback`
+    throw error
+  }
+}
+
+export async function updatePartnerMemberRole(
+  actorUserId: string,
+  targetUserId: string,
+  input: { role: PartnerMvpRole; reason?: string | null }
+) {
+  const organization = await requirePrimaryPartnerOrganization(actorUserId)
+  const actorRole = normalizePartnerRole(organization.membershipRole)
+
+  await sql`begin`
+  try {
+    const rows = (await sql`
+      select role
+      from partner_memberships
+      where partner_org_id = ${organization.id}
+        and user_id = ${targetUserId}
+        and status = 'active'
+      for update
+      limit 1
+    `) as { role: PartnerMembershipRole }[]
+    const target = rows[0]
+    if (!target) throw new Error("Member not found.")
+
+    const targetRole = normalizePartnerRole(target.role)
+    if (
+      !canAssignPartnerRole({
+        actorRole,
+        targetCurrentRole: targetRole,
+        targetNextRole: input.role,
+        isSelf: actorUserId === targetUserId
+      })
+    ) {
+      throw new Error("Forbidden.")
+    }
+
+    if (targetRole === "partner_owner" && input.role !== "partner_owner") {
+      const ownerCount = await getActiveOwnerCount(organization.id)
+      if (ownerCount <= 1) {
+        throw new Error("At least one Partner Owner is required.")
+      }
+    }
+
+    await sql`
+      update partner_memberships
+      set role = ${input.role}
+      where partner_org_id = ${organization.id}
+        and user_id = ${targetUserId}
+    `
+    await recordPartnerMembershipAudit({
+      partnerOrgId: organization.id,
+      actorUserId,
+      targetUserId,
+      action: "role_changed",
+      oldRole: targetRole,
+      newRole: input.role,
+      reason: input.reason ?? null
+    })
+    await sql`commit`
+  } catch (error) {
+    await sql`rollback`
+    throw error
+  }
+}
+
+export async function updatePartnerMemberStatus(
+  actorUserId: string,
+  targetUserId: string,
+  input: { action: PartnerMembershipStatusAction; reason?: string | null }
+) {
+  const organization = await requirePrimaryPartnerOrganization(actorUserId)
+  const actorRole = normalizePartnerRole(organization.membershipRole)
+
+  if (
+    (input.action === "disable" || input.action === "remove") &&
+    !input.reason?.trim()
+  ) {
+    throw new Error("Reason is required.")
+  }
+
+  await sql`begin`
+  try {
+    const rows = (await sql`
+      select role, status
+      from partner_memberships
+      where partner_org_id = ${organization.id}
+        and user_id = ${targetUserId}
+      for update
+      limit 1
+    `) as {
+      role: PartnerMembershipRole
+      status: PartnerMembershipStatus | "inactive"
+    }[]
+    const target = rows[0]
+    if (!target) throw new Error("Member not found.")
+
+    const targetRole = normalizePartnerRole(target.role)
+    if (
+      !canChangePartnerMembershipStatus({
+        actorRole,
+        targetRole,
+        action: input.action,
+        isSelf: actorUserId === targetUserId
+      })
+    ) {
+      throw new Error("Forbidden.")
+    }
+
+    if (
+      target.status === "active" &&
+      targetRole === "partner_owner" &&
+      (input.action === "disable" || input.action === "remove")
+    ) {
+      const ownerCount = await getActiveOwnerCount(organization.id)
+      if (ownerCount <= 1) {
+        throw new Error("At least one Partner Owner is required.")
+      }
+    }
+
+    const nextStatus: PartnerMembershipStatus =
+      input.action === "disable"
+        ? "disabled"
+        : input.action === "remove"
+          ? "removed"
+          : "active"
+
+    await sql`
+      update partner_memberships
+      set status = ${nextStatus}
+      where partner_org_id = ${organization.id}
+        and user_id = ${targetUserId}
+    `
+    await recordPartnerMembershipAudit({
+      partnerOrgId: organization.id,
+      actorUserId,
+      targetUserId,
+      action: `membership_${input.action}`,
+      oldRole: targetRole,
+      newRole: targetRole,
+      oldStatus: target.status,
+      newStatus: nextStatus,
+      reason: input.reason ?? null
+    })
+    await sql`commit`
+  } catch (error) {
+    await sql`rollback`
+    throw error
+  }
+}
+
 export async function getPartnerPortalSummary(
   userId: string
 ): Promise<PartnerPortalSummary> {
@@ -1421,7 +1946,8 @@ export async function savePartnerMiniSiteDraft(
 
     const existing = existingRows[0]
     if (existing) {
-      const nextStatus = existing.status === "rejected" ? "draft" : existing.status
+      const nextStatus =
+        existing.status === "rejected" ? "draft" : existing.status
       await sql`
         update partner_mini_sites
         set
@@ -1443,7 +1969,9 @@ export async function savePartnerMiniSiteDraft(
       limit 1
     `) as { id: string }[]
 
-    const status: PartnerMiniSiteStatus = publishedRows[0] ? "draft_update" : "draft"
+    const status: PartnerMiniSiteStatus = publishedRows[0]
+      ? "draft_update"
+      : "draft"
     const id = `partner-mini-site-${randomUUID()}`
     await sql`
       insert into partner_mini_sites (
@@ -1471,16 +1999,20 @@ export async function savePartnerMiniSiteDraft(
 
 export async function submitPartnerMiniSiteDraft(
   userId: string,
-  miniSiteId: string
+  miniSiteId: string,
+  submitNote?: string | null
 ) {
   const organization = await requirePrimaryPartnerOrganization(userId)
   const rows = (await sql`
-    select status
+    select status, content_json
     from partner_mini_sites
     where id = ${miniSiteId}
       and partner_org_id = ${organization.id}
     limit 1
-  `) as { status: PartnerMiniSiteStatus }[]
+  `) as {
+    status: PartnerMiniSiteStatus
+    content_json: Record<string, unknown>
+  }[]
 
   const current = rows[0]
   if (!current) throw new Error("Mini-site version not found.")
@@ -1491,7 +2023,28 @@ export async function submitPartnerMiniSiteDraft(
       to: "submitted"
     })
   ) {
-    throw new Error("Mini-site version cannot be submitted from current status.")
+    throw new Error(
+      "Mini-site version cannot be submitted from current status."
+    )
+  }
+
+  const branding = current.content_json.branding as
+    | { tenantName?: unknown; ctaOption?: unknown }
+    | undefined
+  if (typeof branding?.tenantName !== "string" || !branding.tenantName.trim()) {
+    throw new Error("Public display name is required.")
+  }
+  const allowedCtaOptions = new Set([
+    "contact_tenant",
+    "view_member_companies",
+    "view_assigned_expos",
+    "contact_arobid"
+  ])
+  if (
+    typeof branding.ctaOption !== "string" ||
+    !allowedCtaOptions.has(branding.ctaOption)
+  ) {
+    throw new Error("CTA option is invalid.")
   }
 
   const updatedRows = (await sql`
@@ -1508,8 +2061,31 @@ export async function submitPartnerMiniSiteDraft(
   `) as { id: string }[]
 
   if (updatedRows.length === 0) {
-    throw new Error("Mini-site version cannot be submitted from current status.")
+    throw new Error(
+      "Mini-site version cannot be submitted from current status."
+    )
   }
+
+  await sql`
+    insert into partner_mini_site_review_events (
+      id,
+      mini_site_id,
+      partner_org_id,
+      from_status,
+      to_status,
+      actor_user_id,
+      reason
+    )
+    values (
+      ${`partner-mini-site-submit-${randomUUID()}`},
+      ${miniSiteId},
+      ${organization.id},
+      ${current.status},
+      'submitted',
+      ${userId},
+      ${submitNote?.trim() || null}
+    )
+  `
 }
 
 export async function getPartnerQuotaWorkspace(
