@@ -90,11 +90,7 @@ export function normalizePartnerRole(
     return "partner_admin"
   }
 
-  if (
-    role === "partner_owner" ||
-    role === "partner_admin" ||
-    role === "viewer"
-  ) {
+  if (role === "partner_owner" || role === "partner_admin" || role === "viewer") {
     return role
   }
 

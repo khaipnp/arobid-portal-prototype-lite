@@ -1,8 +1,8 @@
 import { createHash, randomUUID } from "node:crypto"
 import { sql } from "@/lib/db/neon"
 import type {
-  PartnerMiniSiteStatus,
   PartnerCapability as PartnerMvpCapability,
+  PartnerMiniSiteStatus,
   PartnerScopeSummary
 } from "@/lib/partner/core"
 import {
@@ -1421,8 +1421,7 @@ export async function savePartnerMiniSiteDraft(
 
     const existing = existingRows[0]
     if (existing) {
-      const nextStatus =
-        existing.status === "rejected" ? "draft" : existing.status
+      const nextStatus = existing.status === "rejected" ? "draft" : existing.status
       await sql`
         update partner_mini_sites
         set
@@ -1444,9 +1443,7 @@ export async function savePartnerMiniSiteDraft(
       limit 1
     `) as { id: string }[]
 
-    const status: PartnerMiniSiteStatus = publishedRows[0]
-      ? "draft_update"
-      : "draft"
+    const status: PartnerMiniSiteStatus = publishedRows[0] ? "draft_update" : "draft"
     const id = `partner-mini-site-${randomUUID()}`
     await sql`
       insert into partner_mini_sites (
@@ -1494,9 +1491,7 @@ export async function submitPartnerMiniSiteDraft(
       to: "submitted"
     })
   ) {
-    throw new Error(
-      "Mini-site version cannot be submitted from current status."
-    )
+    throw new Error("Mini-site version cannot be submitted from current status.")
   }
 
   const updatedRows = (await sql`
@@ -1513,9 +1508,7 @@ export async function submitPartnerMiniSiteDraft(
   `) as { id: string }[]
 
   if (updatedRows.length === 0) {
-    throw new Error(
-      "Mini-site version cannot be submitted from current status."
-    )
+    throw new Error("Mini-site version cannot be submitted from current status.")
   }
 }
 

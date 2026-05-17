@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server"
 import { getCurrentUserIdFromRequest, requireRole } from "@/lib/auth/rbac"
+import type { PartnerModel, PartnerType } from "@/lib/partner/db"
 import {
   createPartnerOrganizationForAdmin,
   listPartnerOrganizationsForAdmin
 } from "@/lib/partner/admin"
-import type { PartnerModel, PartnerType } from "@/lib/partner/db"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 
 const partnerModels: PartnerModel[] = ["co_host", "turnkey", "tenant"]

@@ -269,9 +269,7 @@ export function PartnerSiteManagementManager({
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="secondary">Demo local</Badge>
               {versionStatus ? <Badge>{versionStatus}</Badge> : null}
-              {access.readOnly ? (
-                <Badge variant="outline">Read-only role</Badge>
-              ) : null}
+              {access.readOnly ? <Badge variant="outline">Read-only role</Badge> : null}
               {isSubmitted ? <Badge variant="outline">Submitted</Badge> : null}
             </div>
             <p className="text-muted-foreground text-sm">

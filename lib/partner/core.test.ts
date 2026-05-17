@@ -9,7 +9,9 @@ import {
 
 describe("normalizePartnerRole", () => {
   test("maps primary_representative to partner_owner", () => {
-    expect(normalizePartnerRole("primary_representative")).toBe("partner_owner")
+    expect(normalizePartnerRole("primary_representative")).toBe(
+      "partner_owner"
+    )
   })
 
   test("maps admin to partner_admin", () => {

@@ -27,11 +27,8 @@ export async function POST(request: Request) {
   await ensurePlatformSchema()
   const userId = await requirePartnerApiAction("mini_site.write")
   const body = await readJson(request)
-  if (typeof body?.content !== "object" || !body.content) {
-    return NextResponse.json(
-      { error: "Invalid mini-site payload." },
-      { status: 400 }
-    )
+  if (!body || !body.content || typeof body.content !== "object") {
+    return NextResponse.json({ error: "Invalid mini-site payload." }, { status: 400 })
   }
   const result = await savePartnerMiniSiteDraft(
     userId,
@@ -46,10 +43,7 @@ export async function PUT(request: Request) {
   await requirePartnerApiAction("mini_site.submit")
   const body = await readJson(request)
   if (!body || typeof body.miniSiteId !== "string") {
-    return NextResponse.json(
-      { error: "Invalid mini-site payload." },
-      { status: 400 }
-    )
+    return NextResponse.json({ error: "Invalid mini-site payload." }, { status: 400 })
   }
   await submitPartnerMiniSiteDraft(userId, body.miniSiteId)
   return NextResponse.json({ ok: true })

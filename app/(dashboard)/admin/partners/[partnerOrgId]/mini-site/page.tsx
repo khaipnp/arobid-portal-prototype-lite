@@ -22,9 +22,8 @@ export default async function AdminPartnerMiniSitePage({
   await requireRole("sys_admin")
   await ensurePlatformSchema()
   const { partnerOrgId } = await params
-  const versions = (await listPartnerMiniSitesForAdmin(
-    partnerOrgId
-  )) as MiniSiteReviewRow[]
+  const versions =
+    (await listPartnerMiniSitesForAdmin(partnerOrgId)) as MiniSiteReviewRow[]
 
   return (
     <DashboardShell

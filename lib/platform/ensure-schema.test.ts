@@ -26,9 +26,7 @@ describe("platform schema consistency", () => {
     expect(sqlText).toContain(
       "check (capability in ('overview', 'mini_site', 'enterprise_association', 'expo_programs', 'tradecredit_reporting', 'analytics_reporting'))"
     )
-    expect(sqlText).toContain(
-      "check (scope_type in ('expo', 'program', 'company'))"
-    )
+    expect(sqlText).toContain("check (scope_type in ('expo', 'program', 'company'))")
     expect(sqlText).toContain("check (status in ('active', 'inactive'))")
     expect(sqlText).toContain("idx_partner_scope_assignments_active_unique")
     expect(sqlText).toContain("idx_partner_mini_sites_one_published")
