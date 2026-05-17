@@ -21,7 +21,6 @@ export const alwaysVisibleSections: AlwaysVisibleSiteSectionKey[] = [
   "bfm",
   "footer"
 ]
-
 export const initialSections: EnabledSiteSections = {
   community: true,
   categories: true,

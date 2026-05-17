@@ -7,7 +7,6 @@ export type SiteBranding = {
 }
 
 export type AlwaysVisibleSiteSectionKey = "header" | "banner" | "bfm" | "footer"
-
 export type SiteSectionKey =
   | "community"
   | "categories"
