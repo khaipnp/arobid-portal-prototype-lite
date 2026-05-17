@@ -37,7 +37,7 @@ export function CommunitySection() {
               key={title}
             >
               <div>
-                <h3 className="font-semibold text-xl text-slate-950">
+                <h3 className="font-semibold text-slate-950 text-xl">
                   {title}
                 </h3>
                 <p className="text-slate-500 text-sm">{text}</p>

@@ -3,13 +3,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { PartnerExpoExhibitorDetail } from "@/lib/partner/db"
 import { Label } from "../ui/label"
 
@@ -293,7 +287,7 @@ function PerformanceMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="space-y-0.5">
       <Label className="font-normal text-muted-foreground">{label}</Label>
-      <p className="text-base truncate line-clamp-1">{value}</p>
+      <p className="line-clamp-1 truncate text-base">{value}</p>
     </div>
   )
 }

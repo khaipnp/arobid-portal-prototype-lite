@@ -1,6 +1,5 @@
 "use client"
 
-import { Trash2Icon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import * as React from "react"
 import {

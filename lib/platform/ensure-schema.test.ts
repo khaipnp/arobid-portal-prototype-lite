@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { config } from "dotenv"
 
@@ -6,6 +7,41 @@ config({ path: resolve(process.cwd(), ".env.local") })
 config({ path: resolve(process.cwd(), ".env") })
 
 describe("platform schema consistency", () => {
+  test("includes partner governance and mini-site schema DDL", () => {
+    const sqlText = readFileSync(
+      resolve(process.cwd(), "lib/platform/ensure-schema.ts"),
+      "utf8"
+    ).toLowerCase()
+
+    expect(sqlText).toContain(
+      "create table if not exists partner_capability_assignments"
+    )
+    expect(sqlText).toContain(
+      "create table if not exists partner_scope_assignments"
+    )
+    expect(sqlText).toContain("create table if not exists partner_mini_sites")
+    expect(sqlText).toContain(
+      "create table if not exists partner_mini_site_review_events"
+    )
+    expect(sqlText).toContain(
+      "check (capability in ('overview', 'mini_site', 'enterprise_association', 'expo_programs', 'tradecredit_reporting', 'analytics_reporting'))"
+    )
+    expect(sqlText).toContain(
+      "check (scope_type in ('expo', 'program', 'company'))"
+    )
+    expect(sqlText).toContain("check (status in ('active', 'inactive'))")
+    expect(sqlText).toContain("idx_partner_scope_assignments_active_unique")
+    expect(sqlText).toContain("idx_partner_mini_sites_one_published")
+    expect(sqlText).toContain(
+      "check (status in ('draft', 'submitted', 'rejected', 'published', 'draft_update'))"
+    )
+    expect(sqlText).toContain("insert into partner_capability_assignments")
+    expect(sqlText).toContain("('tradecredit_reporting')")
+    expect(sqlText).toContain("insert into partner_scope_assignments")
+    expect(sqlText).toContain("from partner_expo_assignments pea")
+    expect(sqlText).toContain("inner join expos e on e.id = pea.expo_id")
+  })
+
   test("allows non-TradeXpo orders without booth fields", async () => {
     const { sql } = await import("@/lib/db/neon")
     const { ensurePlatformSchema } = await import(
