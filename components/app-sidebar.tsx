@@ -28,7 +28,7 @@ const portals = [
   {
     name: "Partner Portal",
     logo: <HandshakeIcon />,
-    plan: "Expo Owner View",
+    plan: "Partner Workspace",
     url: "/partner"
   },
   {

@@ -2,6 +2,7 @@ import { hashPassword, verifyPassword } from "@/lib/auth/password"
 import type { AppRole } from "@/lib/auth/rbac"
 import { APP_ROLES } from "@/lib/auth/rbac"
 import { sql } from "@/lib/db/neon"
+import type { PartnerMembershipRole, PartnerType } from "@/lib/partner/db"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 import { CURRENT_USER_PROFILE } from "@/lib/user/current-user"
 
@@ -11,6 +12,13 @@ const DEFAULT_ADMIN_PASSWORD = "ChangeMe123!"
 export const DEMO_LOGIN_ROLES = ["admin", "partner", "seller", "buyer"] as const
 export type DemoLoginRole = (typeof DEMO_LOGIN_ROLES)[number]
 
+type DemoPartnerProfile = {
+  organizationId: string
+  organizationName: string
+  partnerType: PartnerType
+  membershipRole: PartnerMembershipRole
+}
+
 type DemoAccount = {
   role: DemoLoginRole
   appRoles: AppRole[]
@@ -18,6 +26,7 @@ type DemoAccount = {
   name: string
   email: string
   password: string
+  partner?: DemoPartnerProfile
 }
 
 export const DEMO_ACCOUNTS: DemoAccount[] = [
@@ -33,9 +42,141 @@ export const DEMO_ACCOUNTS: DemoAccount[] = [
     role: "partner",
     appRoles: ["partner"],
     userId: "88888888-8888-4888-8888-888888888888",
-    name: "Partner Demo",
+    name: "Expo Partner Owner",
     email: "partner.demo@arobid.com",
-    password: "Partner@Arobid123"
+    password: "Partner@Arobid123",
+    partner: {
+      organizationId: "partner-org-demo-expo",
+      organizationName: "Arobid Expo Partner Demo",
+      partnerType: "expo_partner",
+      membershipRole: "partner_owner"
+    }
+  },
+  {
+    role: "partner",
+    appRoles: ["partner"],
+    userId: "88888888-8888-4888-8888-888888888881",
+    name: "Expo Partner Operations",
+    email: "partner.expo.ops@arobid.com",
+    password: "Partner@Arobid123",
+    partner: {
+      organizationId: "partner-org-demo-expo",
+      organizationName: "Arobid Expo Partner Demo",
+      partnerType: "expo_partner",
+      membershipRole: "operations"
+    }
+  },
+  {
+    role: "partner",
+    appRoles: ["partner"],
+    userId: "88888888-8888-4888-8888-888888888882",
+    name: "Expo Partner Viewer",
+    email: "partner.expo.viewer@arobid.com",
+    password: "Partner@Arobid123",
+    partner: {
+      organizationId: "partner-org-demo-expo",
+      organizationName: "Arobid Expo Partner Demo",
+      partnerType: "expo_partner",
+      membershipRole: "viewer"
+    }
+  },
+  {
+    role: "partner",
+    appRoles: ["partner"],
+    userId: "88888888-8888-4888-8888-888888888883",
+    name: "Alliance Partner Owner",
+    email: "partner.alliance.owner@arobid.com",
+    password: "Partner@Arobid123",
+    partner: {
+      organizationId: "partner-org-demo-alliance",
+      organizationName: "Arobid Alliance Partner Demo",
+      partnerType: "alliance_partner",
+      membershipRole: "partner_owner"
+    }
+  },
+  {
+    role: "partner",
+    appRoles: ["partner"],
+    userId: "88888888-8888-4888-8888-888888888884",
+    name: "Alliance Business Manager",
+    email: "partner.alliance.business@arobid.com",
+    password: "Partner@Arobid123",
+    partner: {
+      organizationId: "partner-org-demo-alliance",
+      organizationName: "Arobid Alliance Partner Demo",
+      partnerType: "alliance_partner",
+      membershipRole: "business_manager"
+    }
+  },
+  {
+    role: "partner",
+    appRoles: ["partner"],
+    userId: "88888888-8888-4888-8888-888888888885",
+    name: "Alliance Finance",
+    email: "partner.alliance.finance@arobid.com",
+    password: "Partner@Arobid123",
+    partner: {
+      organizationId: "partner-org-demo-alliance",
+      organizationName: "Arobid Alliance Partner Demo",
+      partnerType: "alliance_partner",
+      membershipRole: "finance"
+    }
+  },
+  {
+    role: "partner",
+    appRoles: ["partner"],
+    userId: "88888888-8888-4888-8888-888888888886",
+    name: "Government Program Manager",
+    email: "partner.gov.program@arobid.com",
+    password: "Partner@Arobid123",
+    partner: {
+      organizationId: "partner-org-demo-government",
+      organizationName: "Arobid Government Partner Demo",
+      partnerType: "government_program_partner",
+      membershipRole: "program_manager"
+    }
+  },
+  {
+    role: "partner",
+    appRoles: ["partner"],
+    userId: "88888888-8888-4888-8888-888888888887",
+    name: "Government Finance",
+    email: "partner.gov.finance@arobid.com",
+    password: "Partner@Arobid123",
+    partner: {
+      organizationId: "partner-org-demo-government",
+      organizationName: "Arobid Government Partner Demo",
+      partnerType: "government_program_partner",
+      membershipRole: "finance"
+    }
+  },
+  {
+    role: "partner",
+    appRoles: ["partner"],
+    userId: "88888888-8888-4888-8888-888888888889",
+    name: "Distribution Partner Owner",
+    email: "partner.distribution.owner@arobid.com",
+    password: "Partner@Arobid123",
+    partner: {
+      organizationId: "partner-org-demo-distribution",
+      organizationName: "Arobid Distribution Partner Demo",
+      partnerType: "distribution_partner",
+      membershipRole: "partner_owner"
+    }
+  },
+  {
+    role: "partner",
+    appRoles: ["partner"],
+    userId: "88888888-8888-4888-8888-888888888890",
+    name: "Strategic Partner Analyst",
+    email: "partner.strategic.analyst@arobid.com",
+    password: "Partner@Arobid123",
+    partner: {
+      organizationId: "partner-org-demo-strategic",
+      organizationName: "Arobid Strategic Partner Demo",
+      partnerType: "strategic_partner",
+      membershipRole: "analyst"
+    }
   },
   {
     role: "seller",
@@ -127,6 +268,51 @@ export async function ensureDemoAccounts() {
         is_active = excluded.is_active,
         updated_at = now()
     `
+
+    if (account.partner) {
+      await sql`
+        insert into partner_organizations (
+          id,
+          name,
+          model,
+          partner_type,
+          status,
+          primary_user_id,
+          created_at,
+          updated_at
+        )
+        values (
+          ${account.partner.organizationId},
+          ${account.partner.organizationName},
+          'co_host',
+          ${account.partner.partnerType},
+          'active',
+          ${account.userId},
+          now(),
+          now()
+        )
+        on conflict (id) do update
+        set
+          name = excluded.name,
+          partner_type = excluded.partner_type,
+          status = excluded.status,
+          updated_at = now()
+      `
+
+      await sql`
+        insert into partner_memberships (partner_org_id, user_id, role, status)
+        values (
+          ${account.partner.organizationId},
+          ${account.userId},
+          ${account.partner.membershipRole},
+          'active'
+        )
+        on conflict (partner_org_id, user_id) do update
+        set
+          role = excluded.role,
+          status = excluded.status
+      `
+    }
   }
 }
 

@@ -1,22 +1,35 @@
 import { userHasRole } from "@/lib/auth/rbac"
 import {
+  getPartnerCapabilities,
+  getPartnerScopes,
   getPrimaryPartnerOrganization,
   type PartnerMembershipRole,
   type PartnerPortalOrganization
 } from "@/lib/partner/db"
+import {
+  getPartnerModuleVisibility,
+  isPartnerRoleReadOnly,
+  normalizePartnerRole,
+  type PartnerCapability,
+  type PartnerModule,
+  type PartnerMvpRole,
+  type PartnerScopeSummary
+} from "@/lib/partner/core"
 
 export type PartnerPortalTab =
-  | "overview"
+  | PartnerModule
   | "expo"
-  | "enterprises"
   | "quota"
-  | "bundles"
-  | "communications"
-  | "finance"
+  | "site_management"
   | "analytics"
-  | "government"
 
 export type PartnerPortalAction =
+  | "mini_site.write"
+  | "mini_site.submit"
+  | "enterprise.view"
+  | "expo.view"
+  | "tradecredit.view"
+  | "analytics.view"
   | "expo.edit"
   | "turnkey.create"
   | "enterprise.manage"
@@ -30,30 +43,32 @@ export type PartnerPortalAction =
   | "chat.use"
   | "finance.manage"
   | "settlement.manage"
-  | "analytics.view"
   | "government.manage"
 
 export type PartnerAccess = {
   organization: PartnerPortalOrganization | null
-  role: PartnerMembershipRole | null
+  role: PartnerMvpRole | null
+  capabilities: PartnerCapability[]
+  scopes: PartnerScopeSummary
+  modules: Record<PartnerModule, boolean>
   tabs: Record<PartnerPortalTab, boolean>
   actions: Record<PartnerPortalAction, boolean>
   readOnly: boolean
 }
 
-const allTabs: PartnerPortalTab[] = [
-  "overview",
-  "expo",
-  "enterprises",
-  "quota",
-  "bundles",
-  "communications",
-  "finance",
-  "analytics",
-  "government"
-]
+const emptyScopes: PartnerScopeSummary = {
+  expoIds: [],
+  programIds: [],
+  companyIds: []
+}
 
-const allActions: PartnerPortalAction[] = [
+const actionKeys: PartnerPortalAction[] = [
+  "mini_site.write",
+  "mini_site.submit",
+  "enterprise.view",
+  "expo.view",
+  "tradecredit.view",
+  "analytics.view",
   "expo.edit",
   "turnkey.create",
   "enterprise.manage",
@@ -67,162 +82,121 @@ const allActions: PartnerPortalAction[] = [
   "chat.use",
   "finance.manage",
   "settlement.manage",
-  "analytics.view",
   "government.manage"
 ]
 
-const emptyTabs = Object.fromEntries(
-  allTabs.map((tab) => [tab, false])
-) as Record<PartnerPortalTab, boolean>
-
-const emptyActions = Object.fromEntries(
-  allActions.map((action) => [action, false])
-) as Record<PartnerPortalAction, boolean>
-
-const ownerActions = allActions
-const programManagerActions = allActions.filter(
-  (action) => action !== "finance.manage" && action !== "settlement.manage"
-)
-const governmentActions: PartnerPortalAction[] = [
-  "quota.manage",
-  "invite.manage",
-  "tradeCredits.manage",
-  "enterprise.manage",
-  "enterprise.advance",
-  "analytics.view",
-  "government.manage"
-]
-const businessManagerActions: PartnerPortalAction[] = [
-  "enterprise.manage",
-  "enterprise.advance",
-  "bundle.manage",
-  "bundle.purchase",
-  "communications.manage",
-  "chat.use",
-  "analytics.view"
-]
-const operationsActions: PartnerPortalAction[] = [
-  "expo.edit",
-  "turnkey.create",
-  "enterprise.manage",
-  "enterprise.advance",
-  "communications.manage",
-  "chat.use",
-  "analytics.view"
-]
-const financeActions: PartnerPortalAction[] = [
-  "finance.manage",
-  "settlement.manage",
-  "analytics.view"
-]
-
-const roleTabs: Record<PartnerMembershipRole, PartnerPortalTab[]> = {
-  primary_representative: allTabs,
-  admin: allTabs,
-  operator: ["overview", "expo", "enterprises", "communications", "analytics"],
-  analyst: [
-    "overview",
-    "expo",
-    "enterprises",
-    "quota",
-    "bundles",
-    "finance",
-    "analytics"
-  ],
-  partner_owner: allTabs,
-  partner_admin: allTabs,
-  program_manager: allTabs.filter((tab) => tab !== "finance"),
-  business_manager: [
-    "overview",
-    "enterprises",
-    "bundles",
-    "communications",
-    "analytics"
-  ],
-  operations: [
-    "overview",
-    "expo",
-    "enterprises",
-    "communications",
-    "analytics"
-  ],
-  finance: ["finance", "analytics"],
-  viewer: [
-    "overview",
-    "expo",
-    "enterprises",
-    "quota",
-    "bundles",
-    "finance",
-    "analytics"
-  ]
+function getEmptyModules() {
+  return getPartnerModuleVisibility({
+    model: "co_host",
+    capabilities: [],
+    scope: emptyScopes
+  })
 }
 
-const roleActions: Record<PartnerMembershipRole, PartnerPortalAction[]> = {
-  primary_representative: ownerActions,
-  admin: ownerActions,
-  operator: operationsActions,
-  analyst: ["analytics.view"],
-  partner_owner: ownerActions,
-  partner_admin: ownerActions,
-  program_manager: programManagerActions,
-  business_manager: businessManagerActions,
-  operations: operationsActions,
-  finance: financeActions,
-  viewer: ["analytics.view"]
+function makeTabs(modules: Record<PartnerModule, boolean>) {
+  return {
+    ...modules,
+    expo: modules.expo_programs,
+    quota: modules.tradecredit_reports,
+    site_management: modules.mini_site,
+    analytics: modules.analytics_reports
+  } satisfies Record<PartnerPortalTab, boolean>
 }
 
-function makeRecord<T extends string>(
-  keys: readonly T[],
-  allowed: readonly T[]
-) {
-  const allowedSet = new Set(allowed)
-  return Object.fromEntries(
-    keys.map((key) => [key, allowedSet.has(key)])
-  ) as Record<T, boolean>
+function makeEmptyActions() {
+  return Object.fromEntries(actionKeys.map((action) => [action, false])) as Record<
+    PartnerPortalAction,
+    boolean
+  >
+}
+
+export function buildPartnerAccess(input: {
+  organization: PartnerPortalOrganization
+  capabilities: PartnerCapability[]
+  scopes: PartnerScopeSummary
+}): PartnerAccess {
+  const role = normalizePartnerRole(input.organization.membershipRole)
+  const readOnly = isPartnerRoleReadOnly(role)
+  const modules = getPartnerModuleVisibility({
+    model: input.organization.model,
+    capabilities: input.capabilities,
+    scope: input.scopes
+  })
+  const canWriteMiniSite = modules.mini_site && !readOnly
+  const canWriteEnterprise = modules.enterprises && !readOnly
+  const canWriteExpo = modules.expo_programs && !readOnly
+  const canWriteTradeCredit = modules.tradecredit_reports && !readOnly
+
+  return {
+    organization: input.organization,
+    role,
+    capabilities: input.capabilities,
+    scopes: input.scopes,
+    modules,
+    tabs: makeTabs(modules),
+    actions: {
+      "mini_site.write": canWriteMiniSite,
+      "mini_site.submit": canWriteMiniSite,
+      "enterprise.view": modules.enterprises,
+      "expo.view": modules.expo_programs,
+      "tradecredit.view": modules.tradecredit_reports,
+      "analytics.view": modules.analytics_reports,
+      "expo.edit": canWriteExpo,
+      "turnkey.create": canWriteExpo,
+      "enterprise.manage": canWriteEnterprise,
+      "enterprise.advance": canWriteEnterprise,
+      "quota.manage": canWriteTradeCredit,
+      "invite.manage": canWriteEnterprise,
+      "tradeCredits.manage": canWriteTradeCredit,
+      "bundle.manage": false,
+      "bundle.purchase": false,
+      "communications.manage": false,
+      "chat.use": false,
+      "finance.manage": false,
+      "settlement.manage": false,
+      "government.manage": false
+    },
+    readOnly
+  }
+}
+
+export function emptyPartnerAccess(): PartnerAccess {
+  const modules = getEmptyModules()
+
+  return {
+    organization: null,
+    role: null,
+    capabilities: [],
+    scopes: emptyScopes,
+    modules,
+    tabs: makeTabs(modules),
+    actions: makeEmptyActions(),
+    readOnly: true
+  }
 }
 
 export async function getPartnerAccess(userId: string): Promise<PartnerAccess> {
   const hasPartnerRole = await userHasRole(userId, "partner")
-  if (!hasPartnerRole) {
-    return {
-      organization: null,
-      role: null,
-      tabs: emptyTabs,
-      actions: emptyActions,
-      readOnly: true
-    }
-  }
+  if (!hasPartnerRole) return emptyPartnerAccess()
 
   const organization = await getPrimaryPartnerOrganization(userId)
-  if (!organization) {
-    return {
-      organization: null,
-      role: null,
-      tabs: emptyTabs,
-      actions: emptyActions,
-      readOnly: true
-    }
-  }
+  if (!organization) return emptyPartnerAccess()
 
-  const baseTabs = roleTabs[organization.membershipRole] ?? []
-  const baseActions = roleActions[organization.membershipRole] ?? []
-  const actions =
-    organization.partnerType === "government_program_partner"
-      ? Array.from(new Set([...baseActions, ...governmentActions]))
-      : baseActions
-  const tabs =
-    organization.partnerType === "government_program_partner"
-      ? Array.from(new Set([...baseTabs, "government" as const]))
-      : baseTabs
+  const [capabilities, scopes] = await Promise.all([
+    getPartnerCapabilities(organization.id),
+    getPartnerScopes(organization.id)
+  ])
 
-  return {
-    organization,
-    role: organization.membershipRole,
-    tabs: makeRecord(allTabs, tabs),
-    actions: makeRecord(allActions, actions),
-    readOnly: actions.every((action) => action === "analytics.view")
-  }
+  return buildPartnerAccess({ organization, capabilities, scopes })
+}
+
+export async function requirePartnerModule(
+  userId: string,
+  module: PartnerModule
+) {
+  const access = await getPartnerAccess(userId)
+  if (!access.modules[module]) throw new Error("Forbidden.")
+  return access
 }
 
 export async function requirePartnerTab(userId: string, tab: PartnerPortalTab) {
@@ -246,3 +220,5 @@ export async function requirePartnerApiAction(action: PartnerPortalAction) {
   await requirePartnerAction(userId, action)
   return userId
 }
+
+export type { PartnerMembershipRole }

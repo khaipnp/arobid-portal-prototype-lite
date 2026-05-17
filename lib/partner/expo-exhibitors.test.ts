@@ -1,10 +1,10 @@
-import { afterEach, beforeEach, describe, expect, test } from "bun:test"
+import { beforeEach, describe, expect, test } from "bun:test"
 import { sql } from "@/lib/db/neon"
-import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 import {
   getPartnerExpoExhibitorDetail,
   getPartnerExpoExhibitors
 } from "@/lib/partner/db"
+import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 
 const ids = {
   partnerUser: "test-partner-exhibitors-owner",
@@ -25,6 +25,11 @@ const ids = {
 }
 
 async function cleanup() {
+  await sql`delete from expo_exhibitor_profile_visits where id like 'test-partner-exhibitors-%'`
+  await sql`delete from expo_exhibitor_product_views where id like 'test-partner-exhibitors-%'`
+  await sql`delete from expo_exhibitor_product_chat_events where id like 'test-partner-exhibitors-%'`
+  await sql`delete from expo_exhibitor_rfq_events where id like 'test-partner-exhibitors-%'`
+  await sql`delete from user_wishlist_items where user_id like 'test-partner-exhibitors-%'`
   await sql`delete from orders where id like 'test-partner-exhibitors-%'`
   await sql`delete from booth_customizations where registration_id like 'test-partner-exhibitors-%'`
   await sql`delete from seller_booth_registrations where id like 'test-partner-exhibitors-%'`
@@ -106,29 +111,60 @@ beforeEach(async () => {
       (${ids.orderB}, ${ids.sellerB}, 'Seller B', 'seller-b@test.local', 'Acme Exhibitor Co', 'booth_registration', 'legacy-ref', 'Partner Exhibitors Expo', 'B-01', 'Premium', 2000000, 500000, 1500000, 'vnpay', 'Pending', now(), now()),
       (${ids.orderFallback}, ${ids.fallbackSeller}, 'Fallback Seller', 'fallback@test.local', 'Fallback Seller', 'booth_registration', ${ids.regFallback}, 'Partner Exhibitors Expo', 'C-01', 'Professional', 3000000, 0, 3000000, 'bank_transfer', 'Pending', now(), now())
   `
-})
 
-afterEach(cleanup)
+  await sql`
+    insert into expo_exhibitor_profile_visits (id, expo_id, exhibitor_id, visitor_key, created_at)
+    values
+      ('test-partner-exhibitors-profile-1', ${ids.expo}, ${ids.company}, 'visitor-a', '2026-06-01T10:00:00Z'),
+      ('test-partner-exhibitors-profile-2', ${ids.expo}, ${ids.company}, 'visitor-b', '2026-06-02T10:00:00Z'),
+      ('test-partner-exhibitors-profile-outside', ${ids.expo}, ${ids.company}, 'visitor-c', '2026-07-01T10:00:00Z')
+  `
+  await sql`
+    insert into expo_exhibitor_product_views (id, expo_id, exhibitor_id, product_id, visitor_key, created_at)
+    values
+      ('test-partner-exhibitors-view-1', ${ids.expo}, ${ids.company}, 'p1', 'visitor-a', '2026-06-01T10:00:00Z'),
+      ('test-partner-exhibitors-view-2', ${ids.expo}, ${ids.company}, 'p1', 'visitor-b', '2026-06-01T11:00:00Z'),
+      ('test-partner-exhibitors-view-3', ${ids.expo}, ${ids.company}, 'p3', 'visitor-c', '2026-06-01T12:00:00Z')
+  `
+  await sql`
+    insert into expo_exhibitor_product_chat_events (id, expo_id, exhibitor_id, product_id, visitor_key, created_at)
+    values
+      ('test-partner-exhibitors-chat-1', ${ids.expo}, ${ids.company}, 'p3', 'visitor-a', '2026-06-01T10:00:00Z'),
+      ('test-partner-exhibitors-chat-2', ${ids.expo}, ${ids.company}, 'p3', 'visitor-b', '2026-06-01T11:00:00Z')
+  `
+  await sql`
+    insert into expo_exhibitor_rfq_events (id, expo_id, exhibitor_id, product_id, requester_key, created_at)
+    values ('test-partner-exhibitors-rfq-1', ${ids.expo}, ${ids.company}, 'p1', 'buyer-a', '2026-06-02T10:00:00Z')
+  `
+  await sql`
+    insert into user_wishlist_items (user_id, target_type, target_id, created_at)
+    values
+      ('test-partner-exhibitors-wishlist-user-a', 'product', 'p1', '2026-06-01T10:00:00Z'),
+      ('test-partner-exhibitors-wishlist-user-b', 'product', 'p1', '2026-06-02T10:00:00Z'),
+      ('test-partner-exhibitors-wishlist-user-c', 'product', 'p3', '2026-06-02T10:00:00Z')
+    on conflict do nothing
+  `
+})
 
 describe("getPartnerExpoExhibitors", () => {
   test("groups multiple booth registrations from the same company", async () => {
     const workspace = await getPartnerExpoExhibitors(ids.partnerUser, ids.expo)
 
     expect(workspace).not.toBeNull()
-    const company = workspace?.exhibitors.find((item) => item.id === ids.company)
+    const company = workspace?.exhibitors.find(
+      (item) => item.id === ids.company
+    )
 
-    expect(company).toMatchObject({
-      id: ids.company,
-      displayName: "Acme Exhibitor Co",
-      contactEmail: "seller-a@test.local",
-      boothCount: 2,
-      boothRefs: ["A-01", "B-01"],
-      tierMix: { Basic: 1, Professional: 0, Premium: 1 },
-      publishedBoothCount: 1,
-      productCount: 3,
-      paidAmount: 1000000,
-      paymentStatus: "Paid"
-    })
+    expect(company?.id).toBe(ids.company)
+    expect(company?.displayName).toBe("Acme Exhibitor Co")
+    expect(company?.contactEmail).toBe("seller-a@test.local")
+    expect(company?.boothCount).toBe(2)
+    expect(company?.tierMix).toEqual({ Basic: 1, Professional: 0, Premium: 1 })
+    expect(company?.publishedBoothCount).toBe(1)
+    expect(company?.productCount).toBe(3)
+    expect(company?.paidAmount).toBe(1000000)
+    expect(company?.paymentStatus).toBe("Paid")
+    expect([...(company?.boothRefs ?? [])].sort()).toEqual(["A-01", "B-01"])
   })
 
   test("falls back to seller identity when company is missing", async () => {
@@ -138,13 +174,11 @@ describe("getPartnerExpoExhibitors", () => {
       (item) => item.id === ids.fallbackSeller
     )
 
-    expect(fallback).toMatchObject({
-      id: ids.fallbackSeller,
-      displayName: "Fallback Seller",
-      contactEmail: "fallback@test.local",
-      boothCount: 1,
-      paymentStatus: "Pending"
-    })
+    expect(fallback?.id).toBe(ids.fallbackSeller)
+    expect(fallback?.displayName).toBe("Fallback Seller")
+    expect(fallback?.contactEmail).toBe("fallback@test.local")
+    expect(fallback?.boothCount).toBe(1)
+    expect(fallback?.paymentStatus).toBe("Pending")
   })
 
   test("blocks unassigned partner users", async () => {
@@ -171,6 +205,14 @@ describe("getPartnerExpoExhibitorDetail", () => {
       ids.orderA,
       ids.orderB
     ])
+    expect(detail?.performance).toEqual({
+      rfqCount: 1,
+      chatCount: 2,
+      eProfileVisits: 2,
+      topViewedProduct: { productId: "p1", productName: "p1", count: 2 },
+      topChattedProduct: { productId: "p3", productName: "p3", count: 2 },
+      topWishlistedProduct: { productId: "p1", productName: "p1", count: 2 }
+    })
   })
 
   test("returns null for unassigned partner users", async () => {

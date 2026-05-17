@@ -2,7 +2,32 @@ import { sql } from "@/lib/db/neon"
 import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
 let platformSchemaReady = false
-const LATEST_PLATFORM_MIGRATION = "partner_portal_workflows_v1"
+const LATEST_PLATFORM_MIGRATION = "partner_portal_rewrite_v1"
+
+type SqlClient = typeof sql
+
+export async function ensurePlatformPaymentConfig(db: SqlClient = sql) {
+  await db`
+    create table if not exists platform_payment_config (
+      id text primary key,
+      vnpay_enabled boolean not null,
+      bank_transfer_enabled boolean not null,
+      updated_at timestamptz not null,
+      updated_by text not null
+    )
+  `
+  await db`
+    insert into platform_payment_config (
+      id,
+      vnpay_enabled,
+      bank_transfer_enabled,
+      updated_at,
+      updated_by
+    )
+    values ('default', true, true, now(), 'system')
+    on conflict (id) do nothing
+  `
+}
 
 /** Creates platform tables (expos, orders, chat, streaming) for Neon. Idempotent. */
 export async function ensurePlatformSchema() {
@@ -17,6 +42,7 @@ export async function ensurePlatformSchema() {
 
     // If the latest migration is applied, we can assume everything before it is also applied.
     if (appliedNames.has(LATEST_PLATFORM_MIGRATION)) {
+      await ensurePlatformPaymentConfig()
       platformSchemaReady = true
       return
     }
@@ -25,6 +51,8 @@ export async function ensurePlatformSchema() {
   }
 
   // 2. Initialize Core Tables (Individual calls to avoid NeonDbError)
+  await sql`create extension if not exists pgcrypto`
+
   await sql`
     create table if not exists platform_schema_migrations (
       name text primary key,
@@ -129,6 +157,32 @@ export async function ensurePlatformSchema() {
     await sql`insert into platform_schema_migrations (name) values ('expos_slug_v1') on conflict do nothing`
   }
   await sql`
+    create table if not exists exhibitor_categories (
+      id text primary key,
+      name text not null,
+      level int not null check (level between 1 and 3),
+      parent_id text references exhibitor_categories(id) on delete cascade,
+      sort_order int not null default 0,
+      is_active boolean not null default true
+    )
+  `
+
+  await sql`
+    create table if not exists companies (
+      id text primary key,
+      name text not null,
+      tax_id text,
+      logo_url text,
+      website text,
+      address text,
+      industry_id text references exhibitor_categories(id) on delete set null,
+      is_active boolean not null default true,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
+    )
+  `
+
+  await sql`
     create table if not exists company_products (
       id text primary key,
       company_id text not null references companies(id) on delete cascade,
@@ -161,30 +215,7 @@ export async function ensurePlatformSchema() {
   `
 
   await sql`drop table if exists exhibitor_catalog_products cascade`
-  await sql`
-    create table if not exists exhibitor_categories (
-      id text primary key,
-      name text not null,
-      level int not null check (level between 1 and 3),
-      parent_id text references exhibitor_categories(id) on delete cascade,
-      sort_order int not null default 0,
-      is_active boolean not null default true
-    )
-  `
-  await sql`
-    create table if not exists companies (
-      id text primary key,
-      name text not null,
-      tax_id text,
-      logo_url text,
-      website text,
-      address text,
-      industry_id text references exhibitor_categories(id) on delete set null,
-      is_active boolean not null default true,
-      created_at timestamptz not null default now(),
-      updated_at timestamptz not null default now()
-    )
-  `
+
   await sql`
     create index if not exists idx_exhibitor_categories_parent
     on exhibitor_categories (parent_id, sort_order asc, name asc)
@@ -285,26 +316,7 @@ export async function ensurePlatformSchema() {
     )
   `
 
-  await sql`
-    create table if not exists platform_payment_config (
-      id text primary key,
-      vnpay_enabled boolean not null,
-      bank_transfer_enabled boolean not null,
-      updated_at timestamptz not null,
-      updated_by text not null
-    )
-  `
-  await sql`
-    insert into platform_payment_config (
-      id,
-      vnpay_enabled,
-      bank_transfer_enabled,
-      updated_at,
-      updated_by
-    )
-    values ('default', true, true, now(), 'system')
-    on conflict (id) do nothing
-  `
+  await ensurePlatformPaymentConfig()
 
   await sql`
     create table if not exists expo_payment_configs (
@@ -1072,6 +1084,70 @@ export async function ensurePlatformSchema() {
     `
   }
 
+  await sql`
+    create table if not exists expo_exhibitor_profile_visits (
+      id text primary key,
+      expo_id text not null references expos(id) on delete cascade,
+      exhibitor_id text not null,
+      visitor_user_id text references users(id) on delete set null,
+      visitor_key text,
+      created_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    create index if not exists idx_expo_exhibitor_profile_visits_lookup
+    on expo_exhibitor_profile_visits (expo_id, exhibitor_id, created_at desc)
+  `
+
+  await sql`
+    create table if not exists expo_exhibitor_product_views (
+      id text primary key,
+      expo_id text not null references expos(id) on delete cascade,
+      exhibitor_id text not null,
+      product_id text not null,
+      visitor_user_id text references users(id) on delete set null,
+      visitor_key text,
+      created_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    create index if not exists idx_expo_exhibitor_product_views_lookup
+    on expo_exhibitor_product_views (expo_id, exhibitor_id, product_id, created_at desc)
+  `
+
+  await sql`
+    create table if not exists expo_exhibitor_product_chat_events (
+      id text primary key,
+      expo_id text not null references expos(id) on delete cascade,
+      exhibitor_id text not null,
+      product_id text,
+      conversation_id text,
+      visitor_user_id text references users(id) on delete set null,
+      visitor_key text,
+      created_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    create index if not exists idx_expo_exhibitor_product_chat_events_lookup
+    on expo_exhibitor_product_chat_events (expo_id, exhibitor_id, product_id, created_at desc)
+  `
+
+  await sql`
+    create table if not exists expo_exhibitor_rfq_events (
+      id text primary key,
+      expo_id text not null references expos(id) on delete cascade,
+      exhibitor_id text not null,
+      product_id text,
+      requester_user_id text references users(id) on delete set null,
+      requester_key text,
+      created_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    create index if not exists idx_expo_exhibitor_rfq_events_lookup
+    on expo_exhibitor_rfq_events (expo_id, exhibitor_id, product_id, created_at desc)
+  `
+
   await migrateExpoManagementSchema()
   await migratePartnerOrganizationSchema()
   await migrateExpoStatusSchema()
@@ -1269,6 +1345,75 @@ async function migratePartnerOrganizationSchema() {
   `
 
   await sql`
+    create table if not exists partner_capability_assignments (
+      partner_org_id text not null references partner_organizations(id) on delete cascade,
+      capability text not null,
+      granted_by_user_id text references users(id) on delete set null,
+      created_at timestamptz not null default now(),
+      primary key (partner_org_id, capability),
+      check (capability in ('overview', 'mini_site', 'enterprise_association', 'expo_programs', 'tradecredit_reporting', 'analytics_reporting'))
+    )
+  `
+
+  await sql`
+    create table if not exists partner_scope_assignments (
+      id text primary key,
+      partner_org_id text not null references partner_organizations(id) on delete cascade,
+      scope_type text not null,
+      scope_id text not null,
+      assigned_by_user_id text references users(id) on delete set null,
+      status text not null default 'active',
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now(),
+      check (scope_type in ('expo', 'program', 'company')),
+      check (status in ('active', 'inactive'))
+    )
+  `
+  await sql`
+    create unique index if not exists idx_partner_scope_assignments_active_unique
+    on partner_scope_assignments (partner_org_id, scope_type, scope_id)
+    where status = 'active'
+  `
+
+  await sql`
+    create table if not exists partner_mini_sites (
+      id text primary key,
+      partner_org_id text not null references partner_organizations(id) on delete cascade,
+      version_label text not null,
+      status text not null default 'draft',
+      content_json jsonb not null default '{}'::jsonb,
+      submitted_by_user_id text references users(id) on delete set null,
+      submitted_at timestamptz,
+      published_by_user_id text references users(id) on delete set null,
+      published_at timestamptz,
+      rejected_by_user_id text references users(id) on delete set null,
+      rejected_at timestamptz,
+      reject_reason text,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now(),
+      check (status in ('draft', 'submitted', 'rejected', 'published', 'draft_update'))
+    )
+  `
+  await sql`
+    create unique index if not exists idx_partner_mini_sites_one_published
+    on partner_mini_sites (partner_org_id)
+    where status = 'published'
+  `
+
+  await sql`
+    create table if not exists partner_mini_site_review_events (
+      id text primary key,
+      mini_site_id text not null references partner_mini_sites(id) on delete cascade,
+      partner_org_id text not null references partner_organizations(id) on delete cascade,
+      from_status text,
+      to_status text not null,
+      actor_user_id text references users(id) on delete set null,
+      reason text,
+      created_at timestamptz not null default now()
+    )
+  `
+
+  await sql`
     create table if not exists partner_expo_assignments (
       partner_org_id text not null references partner_organizations(id) on delete cascade,
       expo_id text not null references expos(id) on delete cascade,
@@ -1291,60 +1436,6 @@ async function migratePartnerOrganizationSchema() {
   await sql`
     create index if not exists idx_partner_expo_assignments_expo
     on partner_expo_assignments (expo_id)
-  `
-
-  await sql`
-    create table if not exists partner_turnkey_expo_requests (
-      id text primary key,
-      partner_org_id text not null references partner_organizations(id) on delete cascade,
-      title text not null,
-      industry text not null default '',
-      target_start_date date,
-      expected_enterprises int not null default 0,
-      requested_booths int not null default 0,
-      status text not null default 'submitted',
-      notes text not null default '',
-      created_at timestamptz not null default now(),
-      updated_at timestamptz not null default now()
-    )
-  `
-  await sql`
-    do $$
-    begin
-      alter table partner_turnkey_expo_requests
-      add constraint partner_turnkey_expo_requests_status_ck
-      check (status in ('draft', 'submitted', 'in_review', 'approved', 'rejected', 'converted'));
-    exception
-      when duplicate_object then null;
-    end $$;
-  `
-  await sql`
-    create index if not exists idx_partner_turnkey_requests_org
-    on partner_turnkey_expo_requests (partner_org_id, created_at desc)
-  `
-  await sql`
-    alter table partner_turnkey_expo_requests
-    add column if not exists reviewed_by text references users(id) on delete set null
-  `
-  await sql`
-    alter table partner_turnkey_expo_requests
-    add column if not exists reviewed_at timestamptz
-  `
-  await sql`
-    alter table partner_turnkey_expo_requests
-    add column if not exists rejection_reason text not null default ''
-  `
-  await sql`
-    alter table partner_turnkey_expo_requests
-    add column if not exists approved_payload_json jsonb not null default '{}'::jsonb
-  `
-  await sql`
-    alter table partner_turnkey_expo_requests
-    add column if not exists converted_expo_id text references expos(id) on delete set null
-  `
-  await sql`
-    alter table partner_turnkey_expo_requests
-    add column if not exists converted_at timestamptz
   `
 
   await sql`
@@ -1807,6 +1898,55 @@ async function migratePartnerOrganizationSchema() {
     inner join users u on u.id = e.owner_user_id
     where e.owner_user_id is not null
     on conflict (partner_org_id, expo_id) do nothing
+  `
+
+  await sql`
+    insert into partner_capability_assignments (
+      partner_org_id,
+      capability,
+      granted_by_user_id
+    )
+    select
+      po.id,
+      c.capability,
+      po.primary_user_id
+    from partner_organizations po
+    cross join (
+      values
+        ('overview'),
+        ('mini_site'),
+        ('enterprise_association'),
+        ('expo_programs'),
+        ('tradecredit_reporting'),
+        ('analytics_reporting')
+    ) as c(capability)
+    on conflict (partner_org_id, capability) do nothing
+  `
+
+  await sql`
+    insert into partner_scope_assignments (
+      id,
+      partner_org_id,
+      scope_type,
+      scope_id,
+      assigned_by_user_id,
+      status,
+      created_at,
+      updated_at
+    )
+    select
+      'scope-' || encode(sha256((pea.partner_org_id || ':' || pea.expo_id)::bytea), 'hex'),
+      pea.partner_org_id,
+      'expo',
+      pea.expo_id,
+      po.primary_user_id,
+      'active',
+      now(),
+      now()
+    from partner_expo_assignments pea
+    inner join expos e on e.id = pea.expo_id
+    left join partner_organizations po on po.id = pea.partner_org_id
+    on conflict do nothing
   `
 }
 
