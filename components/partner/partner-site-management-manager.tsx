@@ -9,7 +9,7 @@ import {
   Trash2Icon
 } from "lucide-react"
 import Image from "next/image"
-import { type ReactNode, useId, useState } from "react"
+import { type ReactNode, useEffect, useId, useState } from "react"
 import {
   emptyRelationForm,
   initialBranding,
@@ -86,8 +86,52 @@ export function PartnerSiteManagementManager({
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<TenantRelation | null>(null)
   const { uploadFile, isUploading } = useUpload()
+  const [draftId, setDraftId] = useState<string | null>(null)
+  const [versionStatus, setVersionStatus] = useState<string | null>(null)
+  const [isSavingDraft, setIsSavingDraft] = useState(false)
+  const [statusMessage, setStatusMessage] = useState<string | null>(null)
 
+  const isSubmitted = versionStatus === "submitted"
+  const isReadOnly = access.readOnly || isSubmitted
   const canSubmitRelation = form.name.trim().length > 0
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadPreviewVersion() {
+      const response = await fetch("/api/partner/mini-site/preview")
+      if (!response.ok) return
+      const payload = (await response.json()) as {
+        version: {
+          id: string
+          status: string
+          content?: {
+            branding?: SiteBranding
+            relations?: TenantRelation[]
+            sections?: Record<SiteSectionKey, boolean>
+          }
+        } | null
+      }
+      if (!isMounted || !payload.version) return
+      setDraftId(payload.version.id)
+      setVersionStatus(payload.version.status)
+      if (payload.version.content?.branding) {
+        setBranding(payload.version.content.branding)
+      }
+      if (payload.version.content?.relations) {
+        setRelations(payload.version.content.relations)
+      }
+      if (payload.version.content?.sections) {
+        setSections(payload.version.content.sections)
+      }
+    }
+
+    loadPreviewVersion()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   function updateBranding<Key extends keyof SiteBranding>(
     key: Key,
@@ -167,6 +211,50 @@ export function PartnerSiteManagementManager({
     setDeleteTarget(null)
   }
 
+  async function saveDraft() {
+    if (isReadOnly) return
+    setIsSavingDraft(true)
+    setStatusMessage(null)
+    try {
+      const response = await fetch("/api/partner/mini-site", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: { branding, relations, sections } })
+      })
+      if (!response.ok) {
+        setStatusMessage("Could not save mini-site draft.")
+        return
+      }
+      const result = (await response.json()) as { id: string; status: string }
+      setDraftId(result.id)
+      setVersionStatus(result.status)
+      setStatusMessage("Draft saved.")
+    } finally {
+      setIsSavingDraft(false)
+    }
+  }
+
+  async function submitDraft() {
+    if (isReadOnly || !draftId) return
+    setIsSavingDraft(true)
+    setStatusMessage(null)
+    try {
+      const response = await fetch("/api/partner/mini-site", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ miniSiteId: draftId })
+      })
+      if (response.ok) {
+        setVersionStatus("submitted")
+        setStatusMessage("Draft submitted for Admin review.")
+      } else {
+        setStatusMessage("Could not submit mini-site draft.")
+      }
+    } finally {
+      setIsSavingDraft(false)
+    }
+  }
+
   function resetDemo() {
     setBranding(initialBranding)
     setSections(initialSections)
@@ -180,22 +268,37 @@ export function PartnerSiteManagementManager({
           <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="secondary">Demo local</Badge>
-              {access.readOnly ? (
-                <Badge variant="outline">Read-only role</Badge>
-              ) : null}
+              {versionStatus ? <Badge>{versionStatus}</Badge> : null}
+              {access.readOnly ? <Badge variant="outline">Read-only role</Badge> : null}
+              {isSubmitted ? <Badge variant="outline">Submitted</Badge> : null}
             </div>
             <p className="text-muted-foreground text-sm">
-              Changes update the preview only and reset when the page reloads.
+              Preview is Partner Portal-only. Published public mini-site remains
+              controlled by Admin review.
             </p>
+            {statusMessage ? (
+              <p className="text-muted-foreground text-sm">{statusMessage}</p>
+            ) : null}
           </div>
-          <Button
-            disabled={access.readOnly}
-            variant="outline"
-            onClick={resetDemo}
-          >
-            <RefreshCwIcon className="size-4" />
-            Reset demo
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              disabled={isReadOnly || isSavingDraft}
+              variant="outline"
+              onClick={saveDraft}
+            >
+              Save draft
+            </Button>
+            <Button
+              disabled={isReadOnly || isSavingDraft || !draftId}
+              onClick={submitDraft}
+            >
+              Submit for review
+            </Button>
+            <Button disabled={isReadOnly} variant="outline" onClick={resetDemo}>
+              <RefreshCwIcon className="size-4" />
+              Reset demo
+            </Button>
+          </div>
         </CardContent>
       </Card>
 
@@ -203,7 +306,7 @@ export function PartnerSiteManagementManager({
         <div className="space-y-4">
           <SitePreviewControls
             branding={branding}
-            isReadOnly={access.readOnly}
+            isReadOnly={isReadOnly}
             isUploadingLogo={isUploading}
             sections={sections}
             onBrandingChange={updateBranding}
@@ -213,7 +316,7 @@ export function PartnerSiteManagementManager({
           />
           <RelationsCard
             relations={relations}
-            isReadOnly={access.readOnly}
+            isReadOnly={isReadOnly}
             onCreate={openCreateDialog}
             onEdit={openEditDialog}
             onDelete={setDeleteTarget}
@@ -244,7 +347,7 @@ export function PartnerSiteManagementManager({
         form={form}
         isOpen={isDialogOpen}
         isEditing={Boolean(editingRelation)}
-        isReadOnly={access.readOnly}
+        isReadOnly={isReadOnly}
         canSubmit={canSubmitRelation}
         onChange={setForm}
         onOpenChange={setIsDialogOpen}
