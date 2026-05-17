@@ -54,7 +54,7 @@ const partnerLinks = [
     icon: <MessageSquareIcon />
   },
   {
-    name: "Site Management",
+    name: "Mini-site",
     url: "/partner/site-management",
     tab: "site_management",
     icon: <PaletteIcon />
