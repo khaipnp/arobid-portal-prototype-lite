@@ -1,5 +1,7 @@
 import type {
+  AlwaysVisibleSiteSectionKey,
   EnabledSiteSections,
+  RelationForm,
   SectionOption,
   SiteBranding,
   TenantRelation
@@ -13,6 +15,12 @@ export const initialBranding: SiteBranding = {
   accentColor: "#2563eb"
 }
 
+export const alwaysVisibleSections: AlwaysVisibleSiteSectionKey[] = [
+  "header",
+  "banner",
+  "bfm",
+  "footer"
+]
 export const initialSections: EnabledSiteSections = {
   community: true,
   categories: true,
@@ -121,9 +129,9 @@ export const initialRelations: TenantRelation[] = [
   }
 ]
 
-export const emptyRelationForm = {
+export const emptyRelationForm: RelationForm = {
   name: "",
-  type: "partner" as const,
+  type: "partner",
   tier: "Strategic Partner",
   logoUrl: "",
   websiteUrl: "",

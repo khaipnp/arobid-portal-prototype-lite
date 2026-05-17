@@ -7,7 +7,7 @@
     "defaultBranch": "main"
   },
   "files": {
-    "includes": ["**", "!.agents"]
+    "includes": ["**", "!.agents", "!.claude"]
   },
   "assist": {
     "actions": {

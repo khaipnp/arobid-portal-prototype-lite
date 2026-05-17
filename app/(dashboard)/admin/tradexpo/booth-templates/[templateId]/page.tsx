@@ -4,7 +4,6 @@ import { BoothTemplateActiveToggleButton } from "@/components/tradexpo/booth-tem
 import { BoothTemplateDeleteButton } from "@/components/tradexpo/booth-template-delete-button"
 import { BoothTemplateDetailManager } from "@/components/tradexpo/booth-template-detail-manager"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -14,7 +13,6 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
 import {
   listBoothTemplates,
   listBoothTemplateUsage,
@@ -62,7 +60,7 @@ export default async function BoothTemplateDetailPage({
       ]}
       showBackButton
     >
-      <div className="px-4 grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-4 px-4">
         <Card className="lg:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">

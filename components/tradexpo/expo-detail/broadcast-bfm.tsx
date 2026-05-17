@@ -58,15 +58,15 @@ export function BroadcastBFM({ items }: { items: BFMBroadcastItem[] }) {
         onMouseLeave={() => setIsPaused(false)}
       >
         <div className="container mx-auto flex min-h-16 items-center gap-3 px-4 py-3 md:px-0">
-          <div
-            key={activeBroadcast.id}
-            className="flex flex-1 animate-[bfm-slide-up_320ms_ease-out] items-center gap-3"
-          >
+          <div className="flex flex-1 items-center gap-3">
             <span className="inline-flex h-7 select-none items-center gap-1 rounded-full bg-legend-100 px-2 font-medium text-legend text-xs">
-              <RadarIcon className="size-4" />
+              <RadarIcon className="size-4 animate-pulse" />
               Buyer Recommendations
             </span>
-            <p className="select-none text-sm leading-5">
+            <p
+              key={activeBroadcast.id}
+              className="animate-[bfm-slide-up_320ms_ease-out] select-none text-sm leading-5"
+            >
               <span className="font-semibold">
                 {activeBroadcast.companyName}
               </span>

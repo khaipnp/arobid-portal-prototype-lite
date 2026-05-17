@@ -34,6 +34,7 @@ import { FloatingChat } from "../chat/floating-chat"
 import { ExhibitorCard } from "./exhibitor-card"
 
 type Props = {
+  expoId: string
   expoName: string
   initialExhibitors: ExpoDetailExhibitor[]
   isAuthenticated?: boolean
@@ -47,6 +48,7 @@ type ChatProductContext = {
 } | null
 
 export function ExhibitorsSection({
+  expoId,
   expoName,
   initialExhibitors,
   isAuthenticated = false
@@ -193,6 +195,7 @@ export function ExhibitorsSection({
           {sortedItems.map((exhibitor) => (
             <ExhibitorCard
               key={exhibitor.id}
+              expoId={expoId}
               exhibitor={exhibitor}
               isAuthenticated={isAuthenticated}
               onChatClick={(product) => handleChatClick(exhibitor, product)}

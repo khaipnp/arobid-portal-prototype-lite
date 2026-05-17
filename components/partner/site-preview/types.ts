@@ -6,6 +6,7 @@ export type SiteBranding = {
   accentColor: string
 }
 
+export type AlwaysVisibleSiteSectionKey = "header" | "banner" | "bfm" | "footer"
 export type SiteSectionKey =
   | "community"
   | "categories"
