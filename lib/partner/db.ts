@@ -1,5 +1,9 @@
 import { createHash, randomUUID } from "node:crypto"
 import { sql } from "@/lib/db/neon"
+import type {
+  PartnerCapability as PartnerMvpCapability,
+  PartnerScopeSummary
+} from "@/lib/partner/core"
 import type { Expo, ExpoStatus } from "@/lib/tradexpo/types"
 
 export type PartnerModel = "co_host" | "turnkey" | "tenant"
@@ -762,6 +766,56 @@ export async function getPrimaryPartnerOrganization(
     status: row.status,
     primaryUserId: row.primary_user_id,
     membershipRole: row.membership_role
+  }
+}
+
+export async function getPartnerCapabilities(
+  partnerOrgId: string
+): Promise<PartnerMvpCapability[]> {
+  const rows = (await sql`
+    select capability
+    from partner_capability_assignments
+    where partner_org_id = ${partnerOrgId}
+    order by capability asc
+  `) as { capability: PartnerMvpCapability }[]
+
+  if (rows.length === 0) return ["overview"]
+  return Array.from(new Set(rows.map((row) => row.capability)))
+}
+
+export async function getPartnerScopes(
+  partnerOrgId: string
+): Promise<PartnerScopeSummary> {
+  const rows = (await sql`
+    select scope_type, scope_id
+    from partner_scope_assignments
+    where partner_org_id = ${partnerOrgId}
+      and status = 'active'
+    order by created_at asc
+  `) as { scope_type: "expo" | "program" | "company"; scope_id: string }[]
+
+  return {
+    expoIds: Array.from(
+      new Set(
+        rows
+          .filter((row) => row.scope_type === "expo")
+          .map((row) => row.scope_id)
+      )
+    ),
+    programIds: Array.from(
+      new Set(
+        rows
+          .filter((row) => row.scope_type === "program")
+          .map((row) => row.scope_id)
+      )
+    ),
+    companyIds: Array.from(
+      new Set(
+        rows
+          .filter((row) => row.scope_type === "company")
+          .map((row) => row.scope_id)
+      )
+    )
   }
 }
 

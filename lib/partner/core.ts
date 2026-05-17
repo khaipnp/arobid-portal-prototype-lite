@@ -11,8 +11,13 @@ export type PartnerMembershipRole =
   | "primary_representative"
   | "admin"
   | "operator"
+  | "analyst"
   | "partner_owner"
   | "partner_admin"
+  | "program_manager"
+  | "business_manager"
+  | "operations"
+  | "finance"
   | "viewer"
 
 export type PartnerMvpRole = "partner_owner" | "partner_admin" | "viewer"
@@ -85,11 +90,11 @@ export function normalizePartnerRole(
     return "partner_admin"
   }
 
-  if (role === "operator") {
-    return "viewer"
+  if (role === "partner_owner" || role === "partner_admin" || role === "viewer") {
+    return role
   }
 
-  return role
+  return "viewer"
 }
 
 export function isPartnerRoleReadOnly(role: PartnerMvpRole): boolean {
