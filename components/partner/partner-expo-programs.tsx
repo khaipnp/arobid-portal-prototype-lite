@@ -49,8 +49,10 @@ export function PartnerExpoPrograms({
       <section className="grid gap-3 px-4 sm:grid-cols-2 xl:grid-cols-3">
         <MetricCard
           title="Assigned Programs"
-          value={numberFormat.format(summary.assigned)}
-          note="Arobid Business creates and assigns expo programs"
+          value={numberFormat.format(
+            summary.coHost + summary.turnkey + summary.tenant
+          )}
+          note={`${numberFormat.format(summary.coHost)} co-host / ${numberFormat.format(summary.turnkey)} turnkey / ${numberFormat.format(summary.tenant)} tenant`}
           icon={<Building2Icon />}
         />
         <MetricCard
