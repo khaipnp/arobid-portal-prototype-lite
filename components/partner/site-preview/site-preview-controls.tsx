@@ -42,10 +42,7 @@ export function SitePreviewControls({
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <ImageIcon className="size-5" />
-            Branding
-          </CardTitle>
+          <CardTitle>Branding</CardTitle>
           <CardDescription>
             Configure logo and brand colors for branded buttons, headings, and
             accents.
@@ -188,10 +185,7 @@ export function SitePreviewControls({
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <LayoutTemplateIcon className="size-5" />
-            Homepage sections
-          </CardTitle>
+          <CardTitle>Homepage sections</CardTitle>
           <CardDescription>
             Header, banner, Buyer Find & Match, and footer always stay visible.
           </CardDescription>
@@ -259,7 +253,7 @@ function LogoUploadField({
         <div className="min-w-0 flex-1 space-y-1">
           <p className="font-medium text-sm">Tenant logo</p>
           <p className="truncate text-muted-foreground text-xs">
-            {branding.logoUrl || "Upload PNG, JPG, SVG, or WebP to R2."}
+            {branding.logoUrl || "Upload PNG, JPG, SVG, or WebP"}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

@@ -338,17 +338,14 @@ export function PartnerSiteManagementManager({
       </section>
 
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="h-[calc(100vh-2rem)] max-h-none w-[calc(100vw-2rem)] max-w-none overflow-hidden p-0">
-          <DialogHeader className="border-b px-6 py-4">
-            <DialogTitle className="flex items-center gap-2">
-              <EyeIcon className="size-5" />
-              Live preview
-            </DialogTitle>
+        <DialogContent className="h-screen max-h-none w-screen sm:max-w-screen overflow-hidden rounded-none">
+          <DialogHeader>
+            <DialogTitle>Live preview</DialogTitle>
             <DialogDescription>
               {previewLabel} in Partner Portal preview mode.
             </DialogDescription>
           </DialogHeader>
-          <div className="h-full overflow-y-auto bg-muted p-4">
+          <div className="h-full overflow-y-auto">
             <SiteLivePreview
               branding={branding}
               relations={relations}
@@ -456,16 +453,18 @@ function RelationsCard({
       <CardHeader>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2">
-              <GlobeIcon className="size-5" />
-              Partners & sponsors
-            </CardTitle>
+            <CardTitle>Partners & sponsors</CardTitle>
             <CardDescription>
               Manage tenant homepage partner and sponsor entries locally.
             </CardDescription>
           </div>
-          <Button disabled={isReadOnly} onClick={onCreate}>
-            <PlusIcon className="size-4" />
+          <Button
+            size="sm"
+            className="rounded-full"
+            disabled={isReadOnly}
+            onClick={onCreate}
+          >
+            <PlusIcon />
             Add entry
           </Button>
         </div>

@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto"
 import { sql } from "@/lib/db/neon"
+import { publishNotification } from "@/lib/notifications/service"
 import type {
   PartnerCapability,
   PartnerMiniSiteStatus,
@@ -255,6 +256,67 @@ export async function listPartnerMiniSitesForAdmin(partnerOrgId: string) {
   `
 }
 
+export async function getPublishedPartnerMiniSiteForAdmin(partnerOrgId: string) {
+  const rows = await sql`
+    select
+      id,
+      version_label,
+      status,
+      content_json,
+      reject_reason,
+      submitted_at,
+      published_at,
+      updated_at
+    from partner_mini_sites
+    where partner_org_id = ${partnerOrgId}
+      and status = 'published'
+    order by published_at desc nulls last, updated_at desc
+    limit 1
+  `
+
+  return rows[0] ?? null
+}
+
+async function notifyPartnerMiniSiteReviewResult(input: {
+  actorUserId: string
+  partnerOrgId: string
+  miniSiteId: string
+  decision: "published" | "rejected"
+  reason?: string | null
+}) {
+  const recipients = (await sql`
+    select distinct user_id
+    from partner_memberships
+    where partner_org_id = ${input.partnerOrgId}
+      and role in ('partner_owner', 'partner_admin')
+      and status = 'active'
+  `) as { user_id: string }[]
+
+  const isPublished = input.decision === "published"
+  await Promise.all(
+    recipients.map((recipient) =>
+      publishNotification({
+        userId: recipient.user_id,
+        source: "partner_portal",
+        type: isPublished
+          ? "partner_mini_site_published"
+          : "partner_mini_site_rejected",
+        title: isPublished
+          ? "Tenant mini-site published"
+          : "Tenant mini-site needs revision",
+        body: isPublished
+          ? "Your Tenant mini-site content has been approved and published."
+          : `Your Tenant mini-site submission was rejected.${
+              input.reason ? ` ${input.reason}` : ""
+            }`,
+        deepLinkPath: "/partner/site-management",
+        referenceId: input.miniSiteId,
+        referenceType: "partner_mini_site"
+      })
+    )
+  )
+}
+
 export async function decidePartnerMiniSiteForAdmin(input: {
   actorUserId: string
   partnerOrgId: string
@@ -284,7 +346,7 @@ export async function decidePartnerMiniSiteForAdmin(input: {
     if (input.decision === "published") {
       await sql`
         update partner_mini_sites
-        set status = 'rejected', updated_at = now()
+        set status = 'superseded', updated_at = now()
         where partner_org_id = ${input.partnerOrgId}
           and status = 'published'
       `
@@ -328,5 +390,11 @@ export async function decidePartnerMiniSiteForAdmin(input: {
   } catch (error) {
     await sql`rollback`
     throw error
+  }
+
+  try {
+    await notifyPartnerMiniSiteReviewResult(input)
+  } catch (error) {
+    console.error("Failed to notify mini-site review result", error)
   }
 }

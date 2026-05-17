@@ -49,6 +49,7 @@ export type PartnerMiniSiteStatus =
   | "submitted"
   | "rejected"
   | "published"
+  | "superseded"
   | "draft_update"
 
 export type PartnerMembershipStatus = "active" | "disabled" | "removed"

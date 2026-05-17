@@ -1454,8 +1454,17 @@ async function migratePartnerOrganizationSchema() {
       reject_reason text,
       created_at timestamptz not null default now(),
       updated_at timestamptz not null default now(),
-      check (status in ('draft', 'submitted', 'rejected', 'published', 'draft_update'))
+      check (status in ('draft', 'submitted', 'rejected', 'published', 'superseded', 'draft_update'))
     )
+  `
+  await sql`
+    alter table partner_mini_sites
+    drop constraint if exists partner_mini_sites_status_check
+  `
+  await sql`
+    alter table partner_mini_sites
+    add constraint partner_mini_sites_status_check
+    check (status in ('draft', 'submitted', 'rejected', 'published', 'superseded', 'draft_update'))
   `
   await sql`
     create unique index if not exists idx_partner_mini_sites_one_published

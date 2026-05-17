@@ -1,7 +1,10 @@
 import { PartnerMiniSiteReview } from "@/components/admin/partner/partner-mini-site-review"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import { requireRole } from "@/lib/auth/rbac"
-import { listPartnerMiniSitesForAdmin } from "@/lib/partner/admin"
+import {
+  getPublishedPartnerMiniSiteForAdmin,
+  listPartnerMiniSitesForAdmin
+} from "@/lib/partner/admin"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 
 export const dynamic = "force-dynamic"
@@ -10,7 +13,10 @@ type MiniSiteReviewRow = {
   id: string
   version_label: string
   status: string
+  content_json: Record<string, unknown>
   reject_reason: string | null
+  submitted_at: string | null
+  published_at: string | null
   updated_at: string
 }
 
@@ -22,9 +28,10 @@ export default async function AdminPartnerMiniSitePage({
   await requireRole("sys_admin")
   await ensurePlatformSchema()
   const { partnerOrgId } = await params
-  const versions = (await listPartnerMiniSitesForAdmin(
-    partnerOrgId
-  )) as MiniSiteReviewRow[]
+  const [versions, publishedVersion] = (await Promise.all([
+    listPartnerMiniSitesForAdmin(partnerOrgId),
+    getPublishedPartnerMiniSiteForAdmin(partnerOrgId)
+  ])) as [MiniSiteReviewRow[], MiniSiteReviewRow | null]
 
   return (
     <DashboardShell
@@ -37,7 +44,11 @@ export default async function AdminPartnerMiniSitePage({
         { label: "Mini-site Review" }
       ]}
     >
-      <PartnerMiniSiteReview partnerOrgId={partnerOrgId} versions={versions} />
+      <PartnerMiniSiteReview
+        partnerOrgId={partnerOrgId}
+        publishedVersion={publishedVersion}
+        versions={versions}
+      />
     </DashboardShell>
   )
 }
