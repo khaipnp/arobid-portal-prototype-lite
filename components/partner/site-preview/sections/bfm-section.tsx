@@ -10,7 +10,7 @@ export function BfmSection() {
             >
               Buyer Find & Match
             </h2>
-            <p className="text-slate-600 text-lg leading-8">
+            <p className="text-lg text-slate-600 leading-8">
               Instantly connecting standardized supplier data with verified
               buyer intent for absolute precision in global sourcing.
             </p>

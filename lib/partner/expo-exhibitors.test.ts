@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, test } from "bun:test"
 import { sql } from "@/lib/db/neon"
-import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 import {
   getPartnerExpoExhibitorDetail,
   getPartnerExpoExhibitors
 } from "@/lib/partner/db"
+import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 
 const ids = {
   partnerUser: "test-partner-exhibitors-owner",
@@ -151,7 +151,9 @@ describe("getPartnerExpoExhibitors", () => {
     const workspace = await getPartnerExpoExhibitors(ids.partnerUser, ids.expo)
 
     expect(workspace).not.toBeNull()
-    const company = workspace?.exhibitors.find((item) => item.id === ids.company)
+    const company = workspace?.exhibitors.find(
+      (item) => item.id === ids.company
+    )
 
     expect(company?.id).toBe(ids.company)
     expect(company?.displayName).toBe("Acme Exhibitor Co")

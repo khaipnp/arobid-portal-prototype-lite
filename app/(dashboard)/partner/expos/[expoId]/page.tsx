@@ -35,13 +35,17 @@ export default async function PartnerExpoDetailPage({
   if (!assignedExpo) notFound()
   const { expo } = assignedExpo
 
-  const [operations, exhibitorsWorkspace, initialGoLIVEEvents, initialStreamSessions] =
-    await Promise.all([
-      getPartnerExpoOperationsDetail(userId, expoId),
-      getPartnerExpoExhibitors(userId, expoId),
-      listGoLIVEEvents(),
-      listStreamSessions()
-    ])
+  const [
+    operations,
+    exhibitorsWorkspace,
+    initialGoLIVEEvents,
+    initialStreamSessions
+  ] = await Promise.all([
+    getPartnerExpoOperationsDetail(userId, expoId),
+    getPartnerExpoExhibitors(userId, expoId),
+    listGoLIVEEvents(),
+    listStreamSessions()
+  ])
 
   if (!operations || !exhibitorsWorkspace) notFound()
 

@@ -5,14 +5,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { useMemo, useState } from "react"
 import { Badge } from "@/components/ui/badge"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Select,
   SelectContent,
@@ -45,7 +38,7 @@ const currencyFormat = new Intl.NumberFormat("vi-VN", {
   maximumFractionDigits: 1
 })
 
-function formatDate(iso: string | null) {
+function _formatDate(iso: string | null) {
   if (!iso) return "No purchase date"
   return new Date(iso).toLocaleDateString("en-GB", {
     day: "2-digit",
@@ -207,7 +200,7 @@ export function PartnerExpoExhibitorsTable({
                     <TableCell className="font-medium">
                       <Link
                         href={`/partner/expos/${expoId}/exhibitors/${exhibitor.id}`}
-                        className="hover:underline flex gap-2 items-center"
+                        className="flex items-center gap-2 hover:underline"
                       >
                         {exhibitor.logoUrl ? (
                           <Image
@@ -215,7 +208,7 @@ export function PartnerExpoExhibitorsTable({
                             alt={exhibitor.displayName}
                             width={256}
                             height={256}
-                            className="rounded-lg border object-contain size-10 bg-white p-0.5"
+                            className="size-10 rounded-lg border bg-white object-contain p-0.5"
                           />
                         ) : null}
                         {exhibitor.displayName}

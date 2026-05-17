@@ -15,7 +15,9 @@ function cleanText(value: unknown) {
   return typeof value === "string" && value.trim() ? value.trim() : null
 }
 
-export function parseExpoAnalyticsPayload(value: unknown): ExpoAnalyticsPayload {
+export function parseExpoAnalyticsPayload(
+  value: unknown
+): ExpoAnalyticsPayload {
   if (!value || typeof value !== "object") {
     throw new Error("Invalid analytics payload.")
   }

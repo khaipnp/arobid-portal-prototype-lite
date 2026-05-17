@@ -2,15 +2,7 @@
 
 import * as React from "react"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table"
+import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table"
 import { reuploadBoothTemplateAsset } from "@/lib/tradexpo/actions/booth-templates"
 import { updateModelAssetStatus } from "@/lib/tradexpo/actions/model-assets"
 import type { BoothTemplate, ModelAsset } from "@/lib/tradexpo/types"
@@ -23,7 +15,7 @@ import {
   CardTitle
 } from "../ui/card"
 
-function assetStatusVariant(
+function _assetStatusVariant(
   status: string
 ): "default" | "secondary" | "destructive" | "outline" {
   if (status === "ready") return "default"
@@ -43,7 +35,7 @@ export function BoothTemplateDetailManager({
     initialAssets.map((a) => ({ ...a }))
   )
   const [template, setTemplate] = React.useState<BoothTemplate>(initialTemplate)
-  const [notice, setNotice] = React.useState<{
+  const [_notice, setNotice] = React.useState<{
     type: "success" | "error"
     text: string
   } | null>(null)
@@ -85,7 +77,7 @@ export function BoothTemplateDetailManager({
     [template.id]
   )
 
-  async function handleReuploadAsset(kind: "glb" | "thumbnail" | "blend") {
+  async function _handleReuploadAsset(kind: "glb" | "thumbnail" | "blend") {
     try {
       const { asset, templateFields } = await reuploadBoothTemplateAsset(
         template.id,

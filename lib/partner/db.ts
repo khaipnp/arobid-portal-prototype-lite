@@ -1,5 +1,14 @@
 import { createHash, randomUUID } from "node:crypto"
 import { sql } from "@/lib/db/neon"
+import type {
+  PartnerCapability as PartnerMvpCapability,
+  PartnerMiniSiteStatus,
+  PartnerScopeSummary
+} from "@/lib/partner/core"
+import {
+  canTransitionMiniSiteStatus,
+  normalizePartnerRole
+} from "@/lib/partner/core"
 import type { Expo, ExpoStatus } from "@/lib/tradexpo/types"
 
 export type PartnerModel = "co_host" | "turnkey" | "tenant"
@@ -765,6 +774,56 @@ export async function getPrimaryPartnerOrganization(
   }
 }
 
+export async function getPartnerCapabilities(
+  partnerOrgId: string
+): Promise<PartnerMvpCapability[]> {
+  const rows = (await sql`
+    select capability
+    from partner_capability_assignments
+    where partner_org_id = ${partnerOrgId}
+    order by capability asc
+  `) as { capability: PartnerMvpCapability }[]
+
+  if (rows.length === 0) return ["overview"]
+  return Array.from(new Set(rows.map((row) => row.capability)))
+}
+
+export async function getPartnerScopes(
+  partnerOrgId: string
+): Promise<PartnerScopeSummary> {
+  const rows = (await sql`
+    select scope_type, scope_id
+    from partner_scope_assignments
+    where partner_org_id = ${partnerOrgId}
+      and status = 'active'
+    order by created_at asc
+  `) as { scope_type: "expo" | "program" | "company"; scope_id: string }[]
+
+  return {
+    expoIds: Array.from(
+      new Set(
+        rows
+          .filter((row) => row.scope_type === "expo")
+          .map((row) => row.scope_id)
+      )
+    ),
+    programIds: Array.from(
+      new Set(
+        rows
+          .filter((row) => row.scope_type === "program")
+          .map((row) => row.scope_id)
+      )
+    ),
+    companyIds: Array.from(
+      new Set(
+        rows
+          .filter((row) => row.scope_type === "company")
+          .map((row) => row.scope_id)
+      )
+    )
+  }
+}
+
 export async function getPartnerPortalSummary(
   userId: string
 ): Promise<PartnerPortalSummary> {
@@ -1272,6 +1331,184 @@ async function ensurePartnerDealContext(input: {
         ${input.note ?? null}
       )
     `
+  }
+}
+
+export type PartnerMiniSiteVersion = {
+  id: string
+  partnerOrgId: string
+  versionLabel: string
+  status: PartnerMiniSiteStatus
+  content: Record<string, unknown>
+  rejectReason: string | null
+  submittedAt: string | null
+  publishedAt: string | null
+  updatedAt: string
+}
+
+export async function listPartnerMiniSiteVersions(
+  userId: string
+): Promise<PartnerMiniSiteVersion[]> {
+  const organization = await requirePrimaryPartnerOrganization(userId)
+  const rows = (await sql`
+    select
+      id,
+      partner_org_id,
+      version_label,
+      status,
+      content_json,
+      reject_reason,
+      submitted_at,
+      published_at,
+      updated_at
+    from partner_mini_sites
+    where partner_org_id = ${organization.id}
+    order by updated_at desc
+  `) as {
+    id: string
+    partner_org_id: string
+    version_label: string
+    status: PartnerMiniSiteStatus
+    content_json: Record<string, unknown>
+    reject_reason: string | null
+    submitted_at: string | Date | null
+    published_at: string | Date | null
+    updated_at: string | Date
+  }[]
+
+  return rows.map((row) => ({
+    id: row.id,
+    partnerOrgId: row.partner_org_id,
+    versionLabel: row.version_label,
+    status: row.status,
+    content: row.content_json,
+    rejectReason: row.reject_reason,
+    submittedAt: row.submitted_at ? toIso(row.submitted_at) : null,
+    publishedAt: row.published_at ? toIso(row.published_at) : null,
+    updatedAt: toIso(row.updated_at)
+  }))
+}
+
+export async function savePartnerMiniSiteDraft(
+  userId: string,
+  content: Record<string, unknown>
+) {
+  const organization = await requirePrimaryPartnerOrganization(userId)
+  await sql`begin`
+  try {
+    const submittedRows = (await sql`
+      select id
+      from partner_mini_sites
+      where partner_org_id = ${organization.id}
+        and status = 'submitted'
+      for update
+      limit 1
+    `) as { id: string }[]
+
+    if (submittedRows.length > 0) {
+      throw new Error("Mini-site version is under Admin review.")
+    }
+
+    const existingRows = (await sql`
+      select id, status
+      from partner_mini_sites
+      where partner_org_id = ${organization.id}
+        and status in ('draft', 'draft_update', 'rejected')
+      order by updated_at desc
+      for update
+      limit 1
+    `) as { id: string; status: PartnerMiniSiteStatus }[]
+
+    const existing = existingRows[0]
+    if (existing) {
+      const nextStatus = existing.status === "rejected" ? "draft" : existing.status
+      await sql`
+        update partner_mini_sites
+        set
+          status = ${nextStatus},
+          content_json = ${JSON.stringify(content)}::jsonb,
+          updated_at = now()
+        where id = ${existing.id}
+      `
+      await sql`commit`
+      return { id: existing.id, status: nextStatus }
+    }
+
+    const publishedRows = (await sql`
+      select id
+      from partner_mini_sites
+      where partner_org_id = ${organization.id}
+        and status = 'published'
+      for update
+      limit 1
+    `) as { id: string }[]
+
+    const status: PartnerMiniSiteStatus = publishedRows[0] ? "draft_update" : "draft"
+    const id = `partner-mini-site-${randomUUID()}`
+    await sql`
+      insert into partner_mini_sites (
+        id,
+        partner_org_id,
+        version_label,
+        status,
+        content_json
+      )
+      values (
+        ${id},
+        ${organization.id},
+        ${status === "draft_update" ? "Draft update" : "Initial draft"},
+        ${status},
+        ${JSON.stringify(content)}::jsonb
+      )
+    `
+    await sql`commit`
+    return { id, status }
+  } catch (error) {
+    await sql`rollback`
+    throw error
+  }
+}
+
+export async function submitPartnerMiniSiteDraft(
+  userId: string,
+  miniSiteId: string
+) {
+  const organization = await requirePrimaryPartnerOrganization(userId)
+  const rows = (await sql`
+    select status
+    from partner_mini_sites
+    where id = ${miniSiteId}
+      and partner_org_id = ${organization.id}
+    limit 1
+  `) as { status: PartnerMiniSiteStatus }[]
+
+  const current = rows[0]
+  if (!current) throw new Error("Mini-site version not found.")
+  if (
+    !canTransitionMiniSiteStatus({
+      actorRole: normalizePartnerRole(organization.membershipRole),
+      from: current.status,
+      to: "submitted"
+    })
+  ) {
+    throw new Error("Mini-site version cannot be submitted from current status.")
+  }
+
+  const updatedRows = (await sql`
+    update partner_mini_sites
+    set
+      status = 'submitted',
+      submitted_by_user_id = ${userId},
+      submitted_at = now(),
+      updated_at = now()
+    where id = ${miniSiteId}
+      and partner_org_id = ${organization.id}
+      and status = ${current.status}
+    returning id
+  `) as { id: string }[]
+
+  if (updatedRows.length === 0) {
+    throw new Error("Mini-site version cannot be submitted from current status.")
   }
 }
 

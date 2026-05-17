@@ -9,7 +9,7 @@ export function PromoSection() {
                 className="mb-6 size-12 rounded-2xl"
                 style={{ backgroundColor: "var(--site-accent)" }}
               />
-              <h3 className="font-bold text-xl text-slate-950">{title}</h3>
+              <h3 className="font-bold text-slate-950 text-xl">{title}</h3>
               <p className="mt-2 text-slate-500 text-sm">
                 Support business growth through trusted marketplace operations.
               </p>
