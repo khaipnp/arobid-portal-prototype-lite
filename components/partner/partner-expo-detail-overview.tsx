@@ -23,20 +23,14 @@ import {
 } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow
-} from "@/components/ui/table"
 import type {
   PartnerAssignedExpo,
+  PartnerExpoExhibitorsWorkspace,
   PartnerExpoOperationsDetail
 } from "@/lib/partner/db"
 import { cn } from "@/lib/utils"
 import { ExpoStatusBadge } from "../tradexpo/status-badge"
+import { PartnerExpoExhibitorsOverviewCard } from "./partner-expo-exhibitors-overview-card"
 
 const numberFormat = new Intl.NumberFormat("en")
 
@@ -149,16 +143,16 @@ function TierRow({
   const utilization = capacity > 0 ? Math.round((sold / capacity) * 100) : 0
 
   return (
-    <div className="space-y-2 rounded-lg border bg-background/50 p-3">
+    <div className="space-y-2">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="font-medium text-sm">{tier}</p>
           <p className="text-muted-foreground text-xs">
-            {numberFormat.format(published)} published
+            {numberFormat.format(published)} purchased
           </p>
         </div>
         <div className="text-right">
-          <p className="font-mono text-sm tabular-nums">
+          <p className="text-sm tabular-nums">
             {numberFormat.format(sold)} / {numberFormat.format(capacity)}
           </p>
           <p className="text-muted-foreground text-xs">{utilization}% sold</p>
@@ -171,10 +165,14 @@ function TierRow({
 
 export function PartnerExpoDetailOverview({
   assignedExpo,
-  operations
+  operations,
+  exhibitorsWorkspace,
+  onViewAllExhibitors
 }: {
   assignedExpo: PartnerAssignedExpo
   operations: PartnerExpoOperationsDetail
+  exhibitorsWorkspace: PartnerExpoExhibitorsWorkspace
+  onViewAllExhibitors?: () => void
 }) {
   const { expo, assignment, goLiveCount } = assignedExpo
   const publicHref = publicExpoHref(expo.slug)
@@ -253,9 +251,14 @@ export function PartnerExpoDetailOverview({
               <div className="flex flex-wrap gap-2">
                 {publicHref ? (
                   <Button asChild size="sm">
-                    <Link href={publicHref}>
+                    <Link
+                      href={publicHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-full"
+                    >
                       <ExternalLinkIcon />
-                      Public page
+                      View Expo
                     </Link>
                   </Button>
                 ) : null}
@@ -350,10 +353,10 @@ export function PartnerExpoDetailOverview({
         />
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+      <section>
         <Card>
           <CardHeader>
-            <CardTitle>Booth Tier Mix</CardTitle>
+            <CardTitle>Booth Tier</CardTitle>
             <CardDescription>
               Capacity, sold booths, and published booth readiness.
             </CardDescription>
@@ -364,57 +367,10 @@ export function PartnerExpoDetailOverview({
             ))}
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Hall Capacity</CardTitle>
-            <CardDescription>
-              Booth distribution by configured expo hall.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {operations.hallBreakdown.length > 0 ? (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Hall</TableHead>
-                    <TableHead className="text-right">Basic</TableHead>
-                    <TableHead className="text-right">Professional</TableHead>
-                    <TableHead className="text-right">Premium</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {operations.hallBreakdown.map((hall) => (
-                    <TableRow key={hall.id}>
-                      <TableCell className="font-medium">{hall.name}</TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {numberFormat.format(hall.basicQty)}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {numberFormat.format(hall.professionalQty)}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {numberFormat.format(hall.premiumQty)}
-                      </TableCell>
-                      <TableCell className="text-right font-medium tabular-nums">
-                        {numberFormat.format(hall.capacity)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            ) : (
-              <div className="flex min-h-40 items-center justify-center rounded-lg border border-dashed text-muted-foreground text-sm">
-                No hall capacity configured.
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </section>
 
       <section className="grid gap-4 xl:grid-cols-3">
-        <Card className="xl:col-span-2">
+        <Card>
           <CardHeader>
             <CardTitle>Operational Snapshot</CardTitle>
             <CardDescription>
@@ -442,6 +398,11 @@ export function PartnerExpoDetailOverview({
             />
           </CardContent>
         </Card>
+
+        <PartnerExpoExhibitorsOverviewCard
+          workspace={exhibitorsWorkspace}
+          onViewAll={onViewAllExhibitors}
+        />
 
         <Card>
           <CardHeader>

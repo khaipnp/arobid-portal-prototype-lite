@@ -2,7 +2,7 @@ import { sql } from "@/lib/db/neon"
 import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
 let platformSchemaReady = false
-const LATEST_PLATFORM_MIGRATION = "partner_portal_workflows_v1"
+const LATEST_PLATFORM_MIGRATION = "exhibitor_analytics_v1"
 
 type SqlClient = typeof sql
 
@@ -1078,6 +1078,70 @@ export async function ensurePlatformSchema() {
       on conflict (name) do update set applied_at = now()
     `
   }
+
+  await sql`
+    create table if not exists expo_exhibitor_profile_visits (
+      id text primary key,
+      expo_id text not null references expos(id) on delete cascade,
+      exhibitor_id text not null,
+      visitor_user_id text references users(id) on delete set null,
+      visitor_key text,
+      created_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    create index if not exists idx_expo_exhibitor_profile_visits_lookup
+    on expo_exhibitor_profile_visits (expo_id, exhibitor_id, created_at desc)
+  `
+
+  await sql`
+    create table if not exists expo_exhibitor_product_views (
+      id text primary key,
+      expo_id text not null references expos(id) on delete cascade,
+      exhibitor_id text not null,
+      product_id text not null,
+      visitor_user_id text references users(id) on delete set null,
+      visitor_key text,
+      created_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    create index if not exists idx_expo_exhibitor_product_views_lookup
+    on expo_exhibitor_product_views (expo_id, exhibitor_id, product_id, created_at desc)
+  `
+
+  await sql`
+    create table if not exists expo_exhibitor_product_chat_events (
+      id text primary key,
+      expo_id text not null references expos(id) on delete cascade,
+      exhibitor_id text not null,
+      product_id text,
+      conversation_id text,
+      visitor_user_id text references users(id) on delete set null,
+      visitor_key text,
+      created_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    create index if not exists idx_expo_exhibitor_product_chat_events_lookup
+    on expo_exhibitor_product_chat_events (expo_id, exhibitor_id, product_id, created_at desc)
+  `
+
+  await sql`
+    create table if not exists expo_exhibitor_rfq_events (
+      id text primary key,
+      expo_id text not null references expos(id) on delete cascade,
+      exhibitor_id text not null,
+      product_id text,
+      requester_user_id text references users(id) on delete set null,
+      requester_key text,
+      created_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    create index if not exists idx_expo_exhibitor_rfq_events_lookup
+    on expo_exhibitor_rfq_events (expo_id, exhibitor_id, product_id, created_at desc)
+  `
 
   await migrateExpoManagementSchema()
   await migratePartnerOrganizationSchema()

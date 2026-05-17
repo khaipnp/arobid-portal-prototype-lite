@@ -17,11 +17,14 @@ type ProductItem = {
 }
 
 type ExhibitorProductDetailDialogProps = {
+  expoId: string
+  exhibitorId: string
   exhibitorCompany: string
   products: ProductItem[]
   selectedProduct: ProductItem | null
   onSelectedProductChange: (product: ProductItem | null) => void
   onChatNow?: (product: ProductItem) => void
+  onRfqSubmitted?: (product: ProductItem) => void
   isAuthenticated?: boolean
 }
 
@@ -31,6 +34,7 @@ export function ExhibitorProductDetailDialog({
   selectedProduct,
   onSelectedProductChange,
   onChatNow,
+  onRfqSubmitted,
   isAuthenticated = false
 }: ExhibitorProductDetailDialogProps) {
   const [isRfqDialogOpen, setIsRfqDialogOpen] = useState(false)
@@ -408,6 +412,7 @@ export function ExhibitorProductDetailDialog({
         open={isRfqDialogOpen}
         selectedProduct={selectedProduct}
         onClose={() => setIsRfqDialogOpen(false)}
+        onSubmitted={onRfqSubmitted}
       />
     </div>
   )

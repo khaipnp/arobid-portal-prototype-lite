@@ -1,0 +1,65 @@
+<h2>Partner Expo Detail: Exhibitors list</h2>
+<p class="subtitle">Chọn vị trí phù hợp cho Expo Owner xem doanh nghiệp tham gia, booth đã mua, booth ref/tier, trạng thái publish.</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">Option A — new Exhibitors tab</div>
+        <div class="mockup-body">
+          <div class="mock-nav">Overview | GoLIVE | <strong>Exhibitors</strong></div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0">
+            <div class="placeholder">24 Exhibitors</div>
+            <div class="placeholder">31 Booths sold</div>
+            <div class="placeholder">18 Published</div>
+            <div class="placeholder">6 Pending</div>
+          </div>
+          <div class="placeholder" style="height:170px">Table: Company · Contact · Booths · Tier mix · Booth refs · Status · Purchased</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A. Dedicated tab</h3>
+      <p>Best if list grows. Keeps Overview clean. URL stays same, tab state only.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">Option B — section inside Overview</div>
+        <div class="mockup-body">
+          <div class="mock-nav"><strong>Overview</strong> | GoLIVE</div>
+          <div class="placeholder" style="height:70px">Existing metrics and booth mix</div>
+          <div class="placeholder" style="height:180px">Exhibitors card below Operational Snapshot</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B. Overview section</h3>
+      <p>Fastest to scan. But Overview gets long and table competes with operational metrics.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">Option C — summary in Overview + tab detail</div>
+        <div class="mockup-body">
+          <div class="mock-nav">Overview | GoLIVE | <strong>Exhibitors</strong></div>
+          <div class="placeholder" style="height:80px">Overview card: top 5 exhibitors + View all</div>
+          <div class="placeholder" style="height:150px">Exhibitors tab: full table + filters</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C. Hybrid</h3>
+      <p>Best discoverability. More UI/data plumbing than A, but useful if owner needs frequent overview glance.</p>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Recommendation</h3>
+  <p>Pick A first: clean boundary, low scope, matches existing tabs. Add Overview teaser later only if users miss it.</p>
+</div>
