@@ -2,7 +2,7 @@ import { sql } from "@/lib/db/neon"
 import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
 let platformSchemaReady = false
-const LATEST_PLATFORM_MIGRATION = "exhibitor_analytics_v1"
+const LATEST_PLATFORM_MIGRATION = "partner_portal_rewrite_v1"
 
 type SqlClient = typeof sql
 

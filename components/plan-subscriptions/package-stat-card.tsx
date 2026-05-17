@@ -17,7 +17,7 @@ export function PackageStatCard({
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0 space-y-1.5">
             <p className="font-medium text-muted-foreground text-sm">{title}</p>
-            <p className="truncate font-semibold text-2xl tracking-tight tabular-nums">
+            <p className="truncate font-semibold text-2xl tabular-nums tracking-tight">
               {value}
             </p>
             <p className="line-clamp-2 text-muted-foreground text-xs leading-relaxed">

@@ -27,7 +27,7 @@ export function SuppliersSection({ title }: { title: string }) {
             >
               <div className="mb-5 aspect-[16/9] rounded-2xl bg-slate-100" />
               <div className="space-y-3">
-                <h3 className="font-semibold text-xl text-slate-950">
+                <h3 className="font-semibold text-slate-950 text-xl">
                   {supplier}
                 </h3>
                 <p className="text-slate-500 text-sm">

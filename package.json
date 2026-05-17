@@ -14,6 +14,7 @@
     "typecheck": "tsc --noEmit",
     "tradexpo:seed": "bun scripts/tradexpo/seed.ts",
     "evoucher:seed": "bun scripts/evoucher/seed.ts",
+    "platform:ensure-schema": "bun scripts/platform/ensure-schema.ts",
     "platform:seed": "bun scripts/platform/seed.ts",
     "platform:seed:live-exhibitors": "bun scripts/platform/seed-live-exhibitors.ts",
     "platform:seed:seller-demo-expos": "bun scripts/platform/seed-seller-demo-expos.ts",

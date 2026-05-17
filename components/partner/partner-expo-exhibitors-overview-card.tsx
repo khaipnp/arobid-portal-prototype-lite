@@ -32,8 +32,8 @@ export function PartnerExpoExhibitorsOverviewCard({
           <div>
             <CardTitle>Top Exhibitors</CardTitle>
             <CardDescription>
-              {numberFormat.format(workspace.summary.exhibitorCount)} exhibitors ·{" "}
-              {numberFormat.format(workspace.summary.boothCount)} booths ·{" "}
+              {numberFormat.format(workspace.summary.exhibitorCount)} exhibitors
+              · {numberFormat.format(workspace.summary.boothCount)} booths ·{" "}
               {currencyFormat.format(workspace.summary.paidAmount)} paid
             </CardDescription>
           </div>

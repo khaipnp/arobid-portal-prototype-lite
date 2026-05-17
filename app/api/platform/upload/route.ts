@@ -45,7 +45,10 @@ export async function POST(req: Request) {
       !allowedContentTypes.has(contentType) ||
       !safeFileNamePattern.test(fileName)
     ) {
-      return NextResponse.json({ error: "Invalid upload request" }, { status: 400 })
+      return NextResponse.json(
+        { error: "Invalid upload request" },
+        { status: 400 }
+      )
     }
 
     const fileId = randomUUID()

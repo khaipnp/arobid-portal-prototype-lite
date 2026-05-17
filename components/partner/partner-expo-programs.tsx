@@ -1,10 +1,6 @@
 "use client"
 
-import {
-  BadgeCheckIcon,
-  Building2Icon,
-  HandshakeIcon
-} from "lucide-react"
+import { BadgeCheckIcon, Building2Icon, HandshakeIcon } from "lucide-react"
 import { useMemo } from "react"
 import {
   Card,
