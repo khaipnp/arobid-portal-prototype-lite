@@ -1,6 +1,5 @@
 import { createHash, randomUUID } from "node:crypto"
 import { sql } from "@/lib/db/neon"
-import { createExpoWithHalls } from "@/lib/tradexpo/db/platform-data"
 import type { Expo, ExpoStatus } from "@/lib/tradexpo/types"
 
 export type PartnerModel = "co_host" | "turnkey" | "tenant"
@@ -200,33 +199,9 @@ export type PartnerQuotaWorkspace = {
   ledger: PartnerTradeCreditLedgerEntry[]
 }
 
-export type PartnerTurnkeyExpoRequest = {
-  id: string
-  title: string
-  industry: string
-  targetStartDate: string | null
-  expectedEnterprises: number
-  requestedBooths: number
-  status:
-    | "draft"
-    | "submitted"
-    | "in_review"
-    | "approved"
-    | "rejected"
-    | "converted"
-  notes: string
-  reviewedBy: string | null
-  reviewedAt: string | null
-  rejectionReason: string
-  convertedExpoId: string | null
-  convertedAt: string | null
-  createdAt: string
-}
-
 export type PartnerExpoProgramsWorkspace = {
   assignedExpos: PartnerAssignedExpo[]
   quotaWorkspace: PartnerQuotaWorkspace
-  turnkeyRequests: PartnerTurnkeyExpoRequest[]
 }
 
 export type PartnerServiceExecutionStatus =
@@ -1485,252 +1460,18 @@ export async function getPartnerQuotaWorkspace(
   }
 }
 
-export async function getPartnerTurnkeyExpoRequests(
-  userId: string
-): Promise<PartnerTurnkeyExpoRequest[]> {
-  const organization = await getPrimaryPartnerOrganization(userId)
-  if (!organization) return []
-
-  const rows = (await sql`
-    select
-      id,
-      title,
-      industry,
-      target_start_date,
-      expected_enterprises,
-      requested_booths,
-      status,
-      notes,
-      reviewed_by,
-      reviewed_at,
-      rejection_reason,
-      converted_expo_id,
-      converted_at,
-      created_at
-    from partner_turnkey_expo_requests
-    where partner_org_id = ${organization.id}
-    order by created_at desc
-  `) as {
-    id: string
-    title: string
-    industry: string
-    target_start_date: string | Date | null
-    expected_enterprises: number | string
-    requested_booths: number | string
-    status: PartnerTurnkeyExpoRequest["status"]
-    notes: string
-    reviewed_by: string | null
-    reviewed_at: string | Date | null
-    rejection_reason: string
-    converted_expo_id: string | null
-    converted_at: string | Date | null
-    created_at: string | Date
-  }[]
-
-  return rows.map((row) => ({
-    id: row.id,
-    title: row.title,
-    industry: row.industry,
-    targetStartDate: row.target_start_date
-      ? toDateOnly(row.target_start_date)
-      : null,
-    expectedEnterprises: toNumber(row.expected_enterprises),
-    requestedBooths: toNumber(row.requested_booths),
-    status: row.status,
-    notes: row.notes,
-    reviewedBy: row.reviewed_by,
-    reviewedAt: row.reviewed_at ? toIso(row.reviewed_at) : null,
-    rejectionReason: row.rejection_reason,
-    convertedExpoId: row.converted_expo_id,
-    convertedAt: row.converted_at ? toIso(row.converted_at) : null,
-    createdAt: toIso(row.created_at)
-  }))
-}
-
 export async function getPartnerExpoProgramsWorkspace(
   userId: string
 ): Promise<PartnerExpoProgramsWorkspace> {
-  const [assignedExpos, quotaWorkspace, turnkeyRequests] = await Promise.all([
+  const [assignedExpos, quotaWorkspace] = await Promise.all([
     listPartnerAssignedExpos(userId),
-    getPartnerQuotaWorkspace(userId),
-    getPartnerTurnkeyExpoRequests(userId)
+    getPartnerQuotaWorkspace(userId)
   ])
 
   return {
     assignedExpos,
-    quotaWorkspace,
-    turnkeyRequests
+    quotaWorkspace
   }
-}
-
-export async function createPartnerTurnkeyExpoRequest(
-  userId: string,
-  input: {
-    title: string
-    industry?: string | null
-    targetStartDate?: string | null
-    expectedEnterprises?: number
-    requestedBooths?: number
-    notes?: string | null
-  }
-) {
-  const organization = await requirePrimaryPartnerOrganization(userId)
-  const title = input.title.trim()
-  if (!title) throw new Error("Expo request title is required.")
-  const expectedEnterprises = Math.max(
-    0,
-    Math.floor(Number(input.expectedEnterprises) || 0)
-  )
-  const requestedBooths = Math.max(
-    0,
-    Math.floor(Number(input.requestedBooths) || 0)
-  )
-  const id = `partner-turnkey-request-${randomUUID()}`
-
-  await sql`
-    insert into partner_turnkey_expo_requests (
-      id,
-      partner_org_id,
-      title,
-      industry,
-      target_start_date,
-      expected_enterprises,
-      requested_booths,
-      status,
-      notes
-    )
-    values (
-      ${id},
-      ${organization.id},
-      ${title},
-      ${input.industry?.trim() || ""},
-      ${input.targetStartDate || null},
-      ${expectedEnterprises},
-      ${requestedBooths},
-      'submitted',
-      ${input.notes?.trim() || ""}
-    )
-  `
-
-  return { id }
-}
-
-export async function reviewPartnerTurnkeyExpoRequest(
-  userId: string,
-  requestId: string,
-  input: { decision: "approved" | "rejected"; rejectionReason?: string | null }
-) {
-  const organization = await requirePrimaryPartnerOrganization(userId)
-  const rows = (await sql`
-    update partner_turnkey_expo_requests
-    set
-      status = ${input.decision},
-      reviewed_by = ${userId},
-      reviewed_at = now(),
-      rejection_reason = ${input.decision === "rejected" ? input.rejectionReason?.trim() || "Rejected." : ""},
-      approved_payload_json = case
-        when ${input.decision} = 'approved' then jsonb_build_object('approvedBy', ${userId})
-        else '{}'::jsonb
-      end,
-      updated_at = now()
-    where id = ${requestId}
-      and partner_org_id = ${organization.id}
-      and status in ('submitted', 'in_review', 'approved', 'rejected')
-    returning id
-  `) as { id: string }[]
-
-  if (rows.length === 0) throw new Error("Turnkey request not found.")
-}
-
-export async function convertPartnerTurnkeyExpoRequest(
-  userId: string,
-  requestId: string
-) {
-  const organization = await requirePrimaryPartnerOrganization(userId)
-  const rows = (await sql`
-    select
-      id,
-      title,
-      industry,
-      target_start_date,
-      requested_booths,
-      status,
-      converted_expo_id
-    from partner_turnkey_expo_requests
-    where id = ${requestId}
-      and partner_org_id = ${organization.id}
-    limit 1
-  `) as {
-    id: string
-    title: string
-    industry: string
-    target_start_date: string | Date | null
-    requested_booths: number | string
-    status: PartnerTurnkeyExpoRequest["status"]
-    converted_expo_id: string | null
-  }[]
-
-  const request = rows[0]
-  if (!request) throw new Error("Turnkey request not found.")
-  if (request.converted_expo_id) return { expoId: request.converted_expo_id }
-  if (request.status !== "approved") {
-    throw new Error("Only approved turnkey requests can be converted.")
-  }
-
-  const start = request.target_start_date
-    ? new Date(request.target_start_date)
-    : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-  start.setHours(2, 0, 0, 0)
-  const end = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000)
-  const requestedBooths = Math.max(toNumber(request.requested_booths), 1)
-  const basicQty = Math.max(requestedBooths - 10, 1)
-  const professionalQty = Math.min(8, Math.max(requestedBooths - basicQty, 0))
-  const premiumQty = Math.max(requestedBooths - basicQty - professionalQty, 0)
-
-  const expo = await createExpoWithHalls({
-    name: request.title,
-    description: request.industry || "Partner turnkey expo program",
-    thumbnailUrl: "/placeholder.svg",
-    categoryIds: [],
-    expoTemplateId: "layout-standard",
-    startAt: start.toISOString(),
-    endAt: end.toISOString(),
-    timezone: "Asia/Ho_Chi_Minh",
-    ownerUserId: userId,
-    ownerEmail: organization.primaryUserId ?? userId,
-    halls: [
-      {
-        hallName: "Main Hall",
-        hallTemplateId: "hall-template-1",
-        basicQty,
-        professionalQty,
-        premiumQty
-      }
-    ]
-  })
-
-  await sql`
-    insert into partner_expo_assignments (
-      partner_org_id,
-      expo_id,
-      partnership_model,
-      capabilities
-    )
-    values (${organization.id}, ${expo.id}, 'turnkey', '{}'::jsonb)
-    on conflict (partner_org_id, expo_id) do update
-    set partnership_model = excluded.partnership_model
-  `
-  await sql`
-    update partner_turnkey_expo_requests
-    set
-      status = 'converted',
-      converted_expo_id = ${expo.id},
-      converted_at = now(),
-      updated_at = now()
-    where id = ${request.id}
-  `
-
-  return { expoId: expo.id }
 }
 
 function mapPartnerServiceBundle(row: {

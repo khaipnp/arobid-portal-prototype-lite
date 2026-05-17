@@ -227,9 +227,6 @@ export function PartnerExpoList({
             </SelectContent>
           </Select>
         </div>
-        <div className="font-medium text-muted-foreground text-xs uppercase tracking-wider">
-          {filteredExpos.length} expos found
-        </div>
       </div>
 
       {pagedExpos.length > 0 ? (

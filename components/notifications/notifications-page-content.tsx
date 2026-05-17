@@ -158,7 +158,7 @@ export function NotificationsPageContent() {
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {notifications.map((notification) => (
             <NotificationItemRow
               key={notification.notificationId}

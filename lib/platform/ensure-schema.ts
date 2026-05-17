@@ -1365,60 +1365,6 @@ async function migratePartnerOrganizationSchema() {
   `
 
   await sql`
-    create table if not exists partner_turnkey_expo_requests (
-      id text primary key,
-      partner_org_id text not null references partner_organizations(id) on delete cascade,
-      title text not null,
-      industry text not null default '',
-      target_start_date date,
-      expected_enterprises int not null default 0,
-      requested_booths int not null default 0,
-      status text not null default 'submitted',
-      notes text not null default '',
-      created_at timestamptz not null default now(),
-      updated_at timestamptz not null default now()
-    )
-  `
-  await sql`
-    do $$
-    begin
-      alter table partner_turnkey_expo_requests
-      add constraint partner_turnkey_expo_requests_status_ck
-      check (status in ('draft', 'submitted', 'in_review', 'approved', 'rejected', 'converted'));
-    exception
-      when duplicate_object then null;
-    end $$;
-  `
-  await sql`
-    create index if not exists idx_partner_turnkey_requests_org
-    on partner_turnkey_expo_requests (partner_org_id, created_at desc)
-  `
-  await sql`
-    alter table partner_turnkey_expo_requests
-    add column if not exists reviewed_by text references users(id) on delete set null
-  `
-  await sql`
-    alter table partner_turnkey_expo_requests
-    add column if not exists reviewed_at timestamptz
-  `
-  await sql`
-    alter table partner_turnkey_expo_requests
-    add column if not exists rejection_reason text not null default ''
-  `
-  await sql`
-    alter table partner_turnkey_expo_requests
-    add column if not exists approved_payload_json jsonb not null default '{}'::jsonb
-  `
-  await sql`
-    alter table partner_turnkey_expo_requests
-    add column if not exists converted_expo_id text references expos(id) on delete set null
-  `
-  await sql`
-    alter table partner_turnkey_expo_requests
-    add column if not exists converted_at timestamptz
-  `
-
-  await sql`
     create table if not exists partner_enterprise_members (
       id text primary key,
       partner_org_id text not null references partner_organizations(id) on delete cascade,

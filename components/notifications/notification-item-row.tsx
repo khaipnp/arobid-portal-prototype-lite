@@ -37,7 +37,6 @@ function getRelativeTimeLabel(timestamp: string) {
 
 export function NotificationItemRow({
   notification,
-  isBusy = false,
   onRowClick
 }: NotificationItemRowProps) {
   const SourceIcon = getNotificationSourceIcon(notification.source)
@@ -47,36 +46,33 @@ export function NotificationItemRow({
     <Item
       size="sm"
       variant="outline"
-      className={cn(notification.isRead ? "bg-background" : "bg-muted/40")}
+      className={cn(
+        "cursor-pointer",
+        notification.isRead ? "bg-background" : "bg-muted/40"
+      )}
+      onClick={() => onRowClick(notification)}
     >
-      <button
-        type="button"
-        className="flex min-w-0 flex-1 items-start gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        disabled={isBusy}
-        onClick={() => onRowClick(notification)}
-      >
-        <ItemMedia className="rounded-full bg-muted p-2">
-          <SourceIcon className="size-4 text-muted-foreground" />
-        </ItemMedia>
-        <ItemContent className="min-w-0">
-          <div className="flex items-start justify-between gap-2">
-            <div className="min-w-0">
-              <ItemTitle className="truncate">{notification.title}</ItemTitle>
-              <ItemDescription className="mt-1 text-xs">
-                {notification.body}
-              </ItemDescription>
-            </div>
-            {!notification.isRead ? (
-              <span className="mt-1 size-2 shrink-0 rounded-full bg-primary">
-                <span className="sr-only">Unread notification</span>
-              </span>
-            ) : null}
+      <ItemMedia className="rounded-full bg-muted p-2">
+        <SourceIcon className="size-4 text-muted-foreground" />
+      </ItemMedia>
+      <ItemContent className="min-w-0">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <ItemTitle className="truncate">{notification.title}</ItemTitle>
+            <ItemDescription className="mt-1 text-xs">
+              {notification.body}
+            </ItemDescription>
           </div>
-          <span className="mt-1 text-muted-foreground text-xs">
-            {relativeTime}
-          </span>
-        </ItemContent>
-      </button>
+          {!notification.isRead ? (
+            <span className="mt-1 size-2 shrink-0 rounded-full bg-primary">
+              <span className="sr-only">Unread notification</span>
+            </span>
+          ) : null}
+        </div>
+        <span className="mt-1 text-muted-foreground text-xs">
+          {relativeTime}
+        </span>
+      </ItemContent>
     </Item>
   )
 }
