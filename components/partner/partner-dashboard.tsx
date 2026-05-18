@@ -264,19 +264,9 @@ export function PartnerDashboard({
                 value={numberFormat.format(metrics.totals.liveExpos)}
                 icon={<UsersIcon className="size-4" />}
               />
-              <HeroStat
-                label="Booth usage"
-                value={formatPercent(metrics.totals.boothUtilization)}
-                icon={<ActivityIcon className="size-4" />}
-              />
             </div>
 
             <div className="w-1/2 grid grid-cols-3 gap-3 xl:grid-cols-1">
-              <HeroStat
-                label="Live expos"
-                value={numberFormat.format(metrics.totals.liveExpos)}
-                icon={<RadioTowerIcon className="size-4" />}
-              />
               <HeroStat
                 label="Live expos"
                 value={numberFormat.format(metrics.totals.liveExpos)}
