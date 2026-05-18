@@ -5665,7 +5665,29 @@ export async function ensureCoHostPartnerAssignment(input: {
   expoId: string
   replaceExisting?: boolean
 }) {
-  const orgId = `partner-org-${createHash("sha256").update(input.userId).digest("hex")}`
+  const existingOrgRows = (await sql`
+    select po.id, po.name
+    from partner_memberships pm
+    inner join partner_organizations po on po.id = pm.partner_org_id
+    where pm.user_id = ${input.userId}
+      and pm.status = 'active'
+      and po.status = 'active'
+      and po.partner_type = 'expo_partner'
+    order by
+      case pm.role
+        when 'partner_owner' then 1
+        when 'primary_representative' then 2
+        when 'partner_admin' then 3
+        when 'admin' then 4
+        else 5
+      end,
+      po.created_at asc
+    limit 1
+  `) as { id: string; name: string }[]
+  const existingOrg = existingOrgRows[0]
+  const orgId =
+    existingOrg?.id ??
+    `partner-org-${createHash("sha256").update(input.userId).digest("hex")}`
 
   const userRows = (await sql`
     select name
@@ -5673,7 +5695,7 @@ export async function ensureCoHostPartnerAssignment(input: {
     where id = ${input.userId}
     limit 1
   `) as { name: string }[]
-  const userName = userRows[0]?.name ?? input.userEmail
+  const userName = existingOrg?.name ?? userRows[0]?.name ?? input.userEmail
 
   await sql`
     insert into partner_organizations (
