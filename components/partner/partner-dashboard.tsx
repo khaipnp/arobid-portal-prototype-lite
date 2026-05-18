@@ -3,13 +3,10 @@
 import {
   ActivityIcon,
   BarChart3Icon,
-  Building2Icon,
   CheckCircle2Icon,
-  ClipboardListIcon,
-  ExternalLinkIcon,
-  FileClockIcon,
+  CircleDollarSignIcon,
   Globe2Icon,
-  ShieldCheckIcon,
+  RadioTowerIcon,
   TrendingUpIcon,
   UsersIcon
 } from "lucide-react"
@@ -126,7 +123,7 @@ function shortName(name: string) {
 
 function EmptyChart({ label }: { label: string }) {
   return (
-    <div className="flex h-55 items-center justify-center rounded-md border border-dashed text-muted-foreground text-sm">
+    <div className="flex h-55 items-center justify-center rounded-xl border border-dashed bg-muted/20 text-muted-foreground text-sm">
       {label}
     </div>
   )
@@ -146,65 +143,79 @@ function MetricCard({
   eyebrow: string
 }) {
   return (
-    <Card size="sm" className="overflow-hidden">
-      <CardHeader>
-        <CardDescription>{eyebrow}</CardDescription>
-        <CardTitle className="font-semibold text-2xl tabular-nums">
+    <Card
+      size="sm"
+      className="overflow-hidden border-border/70 bg-card/90 shadow-xs"
+    >
+      <CardHeader className="pb-2">
+        <CardDescription className="font-medium text-[0.7rem] uppercase tracking-[0.18em]">
+          {eyebrow}
+        </CardDescription>
+        <CardTitle className="font-semibold text-3xl tabular-nums tracking-tight">
           {value}
         </CardTitle>
-        <CardAction className="rounded-md bg-muted p-2 text-muted-foreground">
+        <CardAction className="rounded-xl bg-primary/10 p-2.5 text-primary">
           {icon}
         </CardAction>
       </CardHeader>
-      <CardContent className="space-y-1 text-muted-foreground text-xs">
+      <CardContent className="space-y-1.5 text-muted-foreground text-xs">
         <div className="font-medium text-foreground text-sm">{title}</div>
-        <div>{note}</div>
+        <div className="leading-relaxed">{note}</div>
       </CardContent>
     </Card>
   )
 }
 
-function CapabilityTile({
-  title,
-  description,
-  status,
-  href,
-  icon,
-  muted = false
+function HeroStat({
+  label,
+  value,
+  icon
 }: {
-  title: string
-  description: string
-  status: string
-  href?: string
+  label: string
+  value: string
   icon: ReactNode
-  muted?: boolean
 }) {
-  const content = (
-    <div className="flex h-full gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-muted/40">
-      <div className="mt-0.5 rounded-md bg-muted p-2 text-muted-foreground">
+  return (
+    <div className="rounded-2xl border border-white/20 bg-white/10 p-4 text-primary-foreground shadow-sm backdrop-blur">
+      <div className="mb-3 flex items-center gap-2 text-primary-foreground/75 text-xs uppercase tracking-[0.16em]">
         {icon}
+        {label}
       </div>
-      <div className="min-w-0 flex-1 space-y-2">
-        <div className="flex items-start justify-between gap-3">
-          <div className="font-medium text-sm">{title}</div>
-          <Badge variant={muted ? "outline" : "secondary"}>{status}</Badge>
-        </div>
-        <p className="text-muted-foreground text-xs leading-relaxed">
-          {description}
-        </p>
+      <div className="font-semibold text-xl tabular-nums tracking-tight">
+        {value}
       </div>
-      {href ? (
-        <ExternalLinkIcon className="h-3.5 w-3.5 text-muted-foreground" />
-      ) : null}
     </div>
   )
+}
 
-  if (!href) return content
-
+function InsightCard({
+  label,
+  value,
+  description,
+  icon
+}: {
+  label: string
+  value: string
+  description: string
+  icon: ReactNode
+}) {
   return (
-    <Link href={href} className="block h-full">
-      {content}
-    </Link>
+    <div className="rounded-xl border bg-muted/30 p-4">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="font-medium text-muted-foreground text-xs uppercase tracking-[0.16em]">
+          {label}
+        </div>
+        <div className="rounded-lg bg-background p-2 text-primary shadow-xs">
+          {icon}
+        </div>
+      </div>
+      <div className="font-semibold text-2xl tabular-nums tracking-tight">
+        {value}
+      </div>
+      <p className="mt-1.5 text-muted-foreground text-xs leading-relaxed">
+        {description}
+      </p>
+    </div>
   )
 }
 
@@ -221,9 +232,71 @@ export function PartnerDashboard({
   const hasCountryData = metrics.countryBreakdown.length > 0
   const hasTierData = metrics.boothTierBreakdown.length > 0
   const demoMiniSiteViews = 2480
+  const totalRevenue = metrics.expoMetrics.reduce(
+    (sum, item) => sum + item.revenue,
+    0
+  )
+  const totalGoLiveEvents = metrics.expoMetrics.reduce(
+    (sum, item) => sum + item.goLiveEvents,
+    0
+  )
+  const totalPeakViewers = metrics.expoMetrics.reduce(
+    (sum, item) => sum + item.peakViewers,
+    0
+  )
+  const leadingStatus = metrics.statusBreakdown[0]
 
   return (
-    <div className="space-y-4 px-4">
+    <div className="space-y-6 px-4 pb-8">
+      <section className="overflow-hidden rounded-3xl border bg-primary text-primary-foreground shadow-sm">
+        <div className="grid gap-5 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.28),_transparent_34rem)] p-5 sm:p-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="flex min-h-52 flex-col justify-between gap-6">
+            <div className="space-y-4">
+              <Badge className="border-white/20 bg-white/15 text-primary-foreground hover:bg-white/20">
+                Analytics hub
+              </Badge>
+              <div className="space-y-3">
+                <h1 className="max-w-3xl font-semibold text-3xl tracking-tight sm:text-4xl lg:text-[2.65rem]">
+                  Partner Analytics Command Center
+                </h1>
+                <p className="max-w-2xl text-primary-foreground/75 text-sm leading-6 sm:text-base">
+                  Follow capacity, activation, revenue, and live engagement
+                  signals across assigned Expo Programs.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2 text-primary-foreground/70 text-xs">
+              <span className="rounded-full bg-white/10 px-3 py-1">
+                Scoped partner data
+              </span>
+              <span className="rounded-full bg-white/10 px-3 py-1">
+                Realtime-ready signals
+              </span>
+              <span className="rounded-full bg-white/10 px-3 py-1">
+                Expo operations health
+              </span>
+            </div>
+          </div>
+          <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-1">
+            <HeroStat
+              label="Live expos"
+              value={numberFormat.format(metrics.totals.liveExpos)}
+              icon={<RadioTowerIcon className="h-3.5 w-3.5" />}
+            />
+            <HeroStat
+              label="Booth usage"
+              value={formatPercent(metrics.totals.boothUtilization)}
+              icon={<ActivityIcon className="h-3.5 w-3.5" />}
+            />
+            <HeroStat
+              label="Revenue"
+              value={currencyFormat.format(totalRevenue)}
+              icon={<CircleDollarSignIcon className="h-3.5 w-3.5" />}
+            />
+          </div>
+        </div>
+      </section>
+
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           eyebrow="Assigned Expos"
@@ -256,22 +329,26 @@ export function PartnerDashboard({
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.55fr)]">
-        <Card>
+        <Card className="overflow-hidden">
           <CardHeader>
-            <CardTitle>Expo Program Capacity</CardTitle>
-            <CardDescription>
-              Booth quota consumed versus available inventory across assigned
-              programs.
-            </CardDescription>
+            <div>
+              <CardDescription>Capacity analytics</CardDescription>
+              <CardTitle>Expo Program Capacity</CardTitle>
+            </div>
+            <CardAction>
+              <Badge variant="secondary">
+                {numberFormat.format(metrics.totals.soldBooths)} used
+              </Badge>
+            </CardAction>
           </CardHeader>
           <CardContent>
             {hasExpoMetrics ? (
               <ChartContainer
                 config={chartConfig}
                 className="h-80 w-full"
-                initialDimension={{ width: 720, height: 320 }}
+                initialDimension={{ width: 760, height: 320 }}
               >
-                <BarChart data={expoChartData} margin={{ top: 20, right: 16 }}>
+                <BarChart data={expoChartData} margin={{ top: 24, right: 16 }}>
                   <CartesianGrid vertical={false} />
                   <XAxis
                     dataKey="label"
@@ -286,13 +363,13 @@ export function PartnerDashboard({
                     dataKey="soldBooths"
                     stackId="booths"
                     fill="var(--color-soldBooths)"
-                    radius={[0, 0, 4, 4]}
+                    radius={[0, 0, 6, 6]}
                   />
                   <Bar
                     dataKey="unsoldBooths"
                     stackId="booths"
                     fill="var(--color-unsoldBooths)"
-                    radius={[4, 4, 0, 0]}
+                    radius={[6, 6, 0, 0]}
                   >
                     <LabelList
                       dataKey="boothUtilization"
@@ -309,66 +386,93 @@ export function PartnerDashboard({
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Operating Status Mix</CardTitle>
-            <CardDescription>
-              Lifecycle distribution for assigned Expo Programs.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {metrics.statusBreakdown.length > 0 ? (
-              <ChartContainer
-                config={chartConfig}
-                className="mx-auto h-80 max-w-90"
-                initialDimension={{ width: 360, height: 320 }}
-              >
-                <PieChart>
-                  <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                  <Pie
-                    data={metrics.statusBreakdown}
-                    dataKey="value"
-                    nameKey="name"
-                    innerRadius={62}
-                    outerRadius={104}
-                    paddingAngle={2}
-                  >
-                    {metrics.statusBreakdown.map((item) => (
-                      <Cell
-                        key={item.name}
-                        fill={statusColors[item.name] ?? "var(--chart-1)"}
+        <div className="grid gap-4">
+          <Card>
+            <CardHeader>
+              <CardDescription>Operating mix</CardDescription>
+              <CardTitle>Status Distribution</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {metrics.statusBreakdown.length > 0 ? (
+                <ChartContainer
+                  config={chartConfig}
+                  className="mx-auto h-52 max-w-76"
+                  initialDimension={{ width: 304, height: 208 }}
+                >
+                  <PieChart>
+                    <ChartTooltip content={<ChartTooltipContent hideLabel />} />
+                    <Pie
+                      data={metrics.statusBreakdown}
+                      dataKey="value"
+                      nameKey="name"
+                      innerRadius={48}
+                      outerRadius={82}
+                      paddingAngle={2}
+                    >
+                      {metrics.statusBreakdown.map((item) => (
+                        <Cell
+                          key={item.name}
+                          fill={statusColors[item.name] ?? "var(--chart-1)"}
+                        />
+                      ))}
+                      <LabelList
+                        dataKey="name"
+                        position="outside"
+                        className="fill-muted-foreground text-xs"
                       />
-                    ))}
-                    <LabelList
-                      dataKey="name"
-                      position="outside"
-                      className="fill-muted-foreground text-xs"
-                    />
-                  </Pie>
-                </PieChart>
-              </ChartContainer>
-            ) : (
-              <EmptyChart label="No status data yet." />
-            )}
-          </CardContent>
-        </Card>
+                    </Pie>
+                  </PieChart>
+                </ChartContainer>
+              ) : (
+                <EmptyChart label="No status data yet." />
+              )}
+            </CardContent>
+          </Card>
+
+          <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-1">
+            <InsightCard
+              label="Dominant status"
+              value={leadingStatus?.name ?? "No data"}
+              description={
+                leadingStatus
+                  ? `${numberFormat.format(leadingStatus.value)} programs in this lifecycle state.`
+                  : "No lifecycle data for scoped programs yet."
+              }
+              icon={<TrendingUpIcon className="h-4 w-4" />}
+            />
+            <InsightCard
+              label="GoLIVE events"
+              value={numberFormat.format(totalGoLiveEvents)}
+              description="Event activity across assigned expo programs."
+              icon={<RadioTowerIcon className="h-4 w-4" />}
+            />
+            <InsightCard
+              label="Peak viewers"
+              value={compactNumber.format(totalPeakViewers)}
+              description="Combined peak audience signal from available analytics."
+              icon={<UsersIcon className="h-4 w-4" />}
+            />
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
         <Card className="xl:col-span-2">
           <CardHeader>
-            <CardTitle>Analytics Signal Trend</CardTitle>
-            <CardDescription>
-              Latest GoLIVE reach and event activity available for assigned
-              expos.
-            </CardDescription>
+            <div>
+              <CardDescription>Engagement trend</CardDescription>
+              <CardTitle>Analytics Signal Trend</CardTitle>
+            </div>
+            <CardAction>
+              <Badge variant="outline">Viewers + events</Badge>
+            </CardAction>
           </CardHeader>
           <CardContent>
             {hasExpoMetrics ? (
               <ChartContainer
                 config={chartConfig}
-                className="h-70 w-full"
-                initialDimension={{ width: 680, height: 280 }}
+                className="h-72 w-full"
+                initialDimension={{ width: 700, height: 288 }}
               >
                 <LineChart data={expoChartData} margin={{ top: 16, right: 16 }}>
                   <CartesianGrid vertical={false} />
@@ -393,14 +497,14 @@ export function PartnerDashboard({
                     type="monotone"
                     dataKey="peakViewers"
                     stroke="var(--color-peakViewers)"
-                    strokeWidth={2}
+                    strokeWidth={2.5}
                     dot={{ r: 3 }}
                   />
                   <Line
                     type="monotone"
                     dataKey="goLiveEvents"
                     stroke="var(--color-goLiveEvents)"
-                    strokeWidth={2}
+                    strokeWidth={2.5}
                     dot={{ r: 3 }}
                   />
                 </LineChart>
@@ -413,10 +517,8 @@ export function PartnerDashboard({
 
         <Card>
           <CardHeader>
-            <CardTitle>Enterprise Activation Proxies</CardTitle>
-            <CardDescription>
-              Geography and booth tier demand from scoped expo registrations.
-            </CardDescription>
+            <CardDescription>Activation proxies</CardDescription>
+            <CardTitle>Enterprise Demand</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <BreakdownList
@@ -435,77 +537,85 @@ export function PartnerDashboard({
 
       <Card>
         <CardHeader>
-          <CardTitle>Expo Operations Board</CardTitle>
-          <CardDescription>
-            Assigned programs ranked by operating health and monetization.
-          </CardDescription>
+          <div>
+            <CardDescription>Program drilldown</CardDescription>
+            <CardTitle>Expo Operations Board</CardTitle>
+          </div>
+          <CardAction>
+            <Badge variant="secondary">
+              {numberFormat.format(metrics.expoMetrics.length)} programs
+            </Badge>
+          </CardAction>
         </CardHeader>
         <CardContent>
-          <Table className="min-w-[820px]">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Program</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Quota used</TableHead>
-                <TableHead className="text-right">Utilization</TableHead>
-                <TableHead className="text-right">Published</TableHead>
-                <TableHead className="text-right">Signals</TableHead>
-                <TableHead className="text-right">Revenue</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {metrics.expoMetrics.map((item) => (
-                <TableRow key={item.expoId}>
-                  <TableCell className="max-w-70 whitespace-normal font-medium">
-                    <Link
-                      href={`/partner/expos/${item.expoId}`}
-                      className="underline-offset-4 hover:underline"
-                    >
-                      {item.expoName}
-                    </Link>
-                    <div className="text-muted-foreground text-xs">
-                      {formatDate(item.startDate)} - {formatDate(item.endDate)}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <ExpoStatusBadge status={item.status} />
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {numberFormat.format(item.soldBooths)} /{" "}
-                    {numberFormat.format(item.totalBooths)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {formatPercent(item.boothUtilization)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {numberFormat.format(item.publishedBooths)}
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {compactNumber.format(item.peakViewers)} viewers ·{" "}
-                    {numberFormat.format(item.comments)} comments
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {currencyFormat.format(item.revenue)}
-                  </TableCell>
+          <div className="overflow-x-auto rounded-xl border">
+            <Table className="min-w-[860px]">
+              <TableHeader>
+                <TableRow className="bg-muted/40">
+                  <TableHead>Program</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Quota used</TableHead>
+                  <TableHead className="text-right">Utilization</TableHead>
+                  <TableHead className="text-right">Published</TableHead>
+                  <TableHead className="text-right">Signals</TableHead>
+                  <TableHead className="text-right">Revenue</TableHead>
                 </TableRow>
-              ))}
-              {metrics.expoMetrics.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="h-32 text-center">
-                    <div className="flex flex-col items-center gap-3 text-muted-foreground">
-                      <span>No assigned expo programs available yet.</span>
+              </TableHeader>
+              <TableBody>
+                {metrics.expoMetrics.map((item) => (
+                  <TableRow key={item.expoId}>
+                    <TableCell className="max-w-72 whitespace-normal py-4 font-medium">
                       <Link
-                        href="/partner/expos"
-                        className="rounded-md border px-3 py-2 font-medium text-foreground text-sm underline-offset-4 hover:underline"
+                        href={`/partner/expos/${item.expoId}`}
+                        className="underline-offset-4 hover:underline"
                       >
-                        Go to Expo Programs
+                        {item.expoName}
                       </Link>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ) : null}
-            </TableBody>
-          </Table>
+                      <div className="text-muted-foreground text-xs">
+                        {formatDate(item.startDate)} -{" "}
+                        {formatDate(item.endDate)}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <ExpoStatusBadge status={item.status} />
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {numberFormat.format(item.soldBooths)} /{" "}
+                      {numberFormat.format(item.totalBooths)}
+                    </TableCell>
+                    <TableCell className="text-right font-medium tabular-nums">
+                      {formatPercent(item.boothUtilization)}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {numberFormat.format(item.publishedBooths)}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {compactNumber.format(item.peakViewers)} viewers ·{" "}
+                      {numberFormat.format(item.comments)} comments
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {currencyFormat.format(item.revenue)}
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {metrics.expoMetrics.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="h-32 text-center">
+                      <div className="flex flex-col items-center gap-3 text-muted-foreground">
+                        <span>No assigned expo programs available yet.</span>
+                        <Link
+                          href="/partner/expos"
+                          className="rounded-md border px-3 py-2 font-medium text-foreground text-sm underline-offset-4 hover:underline"
+                        >
+                          Go to Expo Programs
+                        </Link>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : null}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </div>
@@ -526,27 +636,27 @@ function BreakdownList({
   return (
     <section className="space-y-3">
       <div className="flex items-center gap-2 font-medium text-sm">
-        <UsersIcon className="h-4 w-4 text-muted-foreground" />
+        <UsersIcon className="h-4 w-4 text-primary" />
         {title}
       </div>
       {empty ? (
-        <div className="rounded-md border border-dashed p-4 text-muted-foreground text-sm">
+        <div className="rounded-xl border border-dashed bg-muted/20 p-4 text-muted-foreground text-sm">
           No data yet.
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-3">
           {items.map((item) => {
             const percent = total > 0 ? (item.value / total) * 100 : 0
 
             return (
               <div key={item.name} className="space-y-1.5">
                 <div className="flex items-center justify-between gap-3 text-sm">
-                  <span className="truncate">{item.name}</span>
+                  <span className="truncate font-medium">{item.name}</span>
                   <span className="font-mono text-muted-foreground text-xs tabular-nums">
-                    {numberFormat.format(item.value)}
+                    {numberFormat.format(item.value)} · {formatPercent(percent)}
                   </span>
                 </div>
-                <div className="h-2 overflow-hidden rounded-full bg-muted">
+                <div className="h-2.5 overflow-hidden rounded-full bg-muted">
                   <div
                     className="h-full rounded-full bg-primary"
                     style={{ width: `${percent}%` }}
