@@ -1,13 +1,10 @@
 import {
   ActivityIcon,
-  Building2Icon,
-  CalendarDaysIcon,
   Edit3Icon,
   ExternalLinkIcon,
   LockIcon,
   RadioIcon,
   StoreIcon,
-  UsersIcon,
   WalletCardsIcon
 } from "lucide-react"
 import Image from "next/image"
@@ -23,7 +20,6 @@ import {
   CardTitle
 } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { Separator } from "@/components/ui/separator"
 import type {
   PartnerAssignedExpo,
   PartnerExpoExhibitorsWorkspace,
@@ -100,12 +96,10 @@ function publicExpoHref(slug?: string) {
 function MetricCard({
   title,
   value,
-  note,
   icon
 }: {
   title: string
   value: string
-  note: string
   icon: React.ReactNode
 }) {
   return (
@@ -121,9 +115,6 @@ function MetricCard({
           {icon}
         </CardAction>
       </CardHeader>
-      <CardContent className="text-muted-foreground text-xs">
-        {note}
-      </CardContent>
     </Card>
   )
 }
