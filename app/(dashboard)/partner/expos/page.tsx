@@ -16,7 +16,6 @@ export default async function PartnerExposPage() {
   return (
     <DashboardShell
       title="Expo Programs"
-      description="View assigned Expo and program scopes granted to your Partner Organization."
       breadcrumbs={[
         { label: "Overview", href: "/partner" },
         { label: "Expo Programs" }

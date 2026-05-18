@@ -2,7 +2,7 @@
 
 import {
   MoreHorizontalIcon,
-  ShieldIcon,
+  SearchIcon,
   UserPlusIcon,
   UsersIcon
 } from "lucide-react"
@@ -10,13 +10,7 @@ import { useRouter } from "next/navigation"
 import { useMemo, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -53,6 +47,7 @@ import type {
   PartnerUserInvitation,
   PartnerUserManagementWorkspace
 } from "@/lib/partner/db"
+import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group"
 
 const roleLabels: Record<PartnerMvpRole, string> = {
   partner_owner: "Partner Owner",
@@ -60,20 +55,16 @@ const roleLabels: Record<PartnerMvpRole, string> = {
   viewer: "Viewer"
 }
 
-const statusLabels: Record<PartnerOrganizationMember["status"], string> = {
+const statusLabels: Record<
+  PartnerOrganizationMember["status"] | "pending",
+  string
+> = {
   active: "Active",
   inactive: "Inactive",
   disabled: "Disabled",
-  removed: "Removed"
+  removed: "Removed",
+  pending: "Pending"
 }
-
-const invitationStatusLabels: Record<PartnerUserInvitation["status"], string> =
-  {
-    pending: "Pending",
-    accepted: "Accepted",
-    cancelled: "Cancelled",
-    expired: "Expired"
-  }
 
 type InviteForm = {
   email: string
@@ -90,6 +81,10 @@ type MemberDialog =
       action: "disable" | "remove" | "reactivate"
     }
   | null
+
+type UserTableRow =
+  | { kind: "member"; member: PartnerOrganizationMember }
+  | { kind: "invitation"; invitation: PartnerUserInvitation }
 
 export function PartnerUserManagementManager({
   access,
@@ -114,6 +109,11 @@ export function PartnerUserManagementManager({
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [filters, setFilters] = useState({
+    search: "",
+    role: "all",
+    memberStatus: "all"
+  })
 
   const canInvite = actorRole !== "viewer"
   const pendingInvites = workspace.invitations.filter(
@@ -132,6 +132,51 @@ export function PartnerUserManagementManager({
     }
     return ["viewer"] as PartnerMvpRole[]
   }, [actorRole])
+
+  const filteredUsers = useMemo(() => {
+    const search = filters.search.trim().toLowerCase()
+    const rows: UserTableRow[] = [
+      ...workspace.members.map((member) => ({
+        kind: "member" as const,
+        member
+      })),
+      ...workspace.invitations
+        .filter((invitation) => invitation.status === "pending")
+        .map((invitation) => ({
+          kind: "invitation" as const,
+          invitation
+        }))
+    ]
+
+    return rows.filter((row) => {
+      const email =
+        row.kind === "member" ? row.member.email : row.invitation.email
+      const name =
+        row.kind === "member" ? row.member.name : row.invitation.displayName
+      const role = row.kind === "member" ? row.member.role : row.invitation.role
+      const status = row.kind === "member" ? row.member.status : "pending"
+      const matchesSearch =
+        !search ||
+        email.toLowerCase().includes(search) ||
+        name?.toLowerCase().includes(search)
+      const matchesRole = filters.role === "all" || role === filters.role
+      const matchesStatus =
+        filters.memberStatus === "all" || status === filters.memberStatus
+      return matchesSearch && matchesRole && matchesStatus
+    })
+  }, [filters, workspace.members, workspace.invitations])
+
+  function updateFilter(key: keyof typeof filters, value: string) {
+    setFilters((prev) => ({ ...prev, [key]: value }))
+  }
+
+  function clearFilters() {
+    setFilters({
+      search: "",
+      role: "all",
+      memberStatus: "all"
+    })
+  }
 
   async function submitJson(url: string, method: string, body?: unknown) {
     setIsSaving(true)
@@ -199,24 +244,16 @@ export function PartnerUserManagementManager({
 
   return (
     <div className="space-y-4 px-4">
-      <section className="grid gap-3 sm:grid-cols-3">
+      <section className="grid gap-3 sm:grid-cols-2">
         <MetricCard
           title="Active members"
           value={activeMembers.length}
-          note="Can access Partner Portal"
           icon={<UsersIcon />}
         />
         <MetricCard
           title="Pending invites"
           value={pendingInvites.length}
-          note="Awaiting acceptance"
           icon={<UserPlusIcon />}
-        />
-        <MetricCard
-          title="Current role"
-          value={roleLabels[actorRole]}
-          note="Controls membership actions"
-          icon={<ShieldIcon />}
         />
       </section>
 
@@ -227,216 +264,206 @@ export function PartnerUserManagementManager({
       ) : null}
       {error ? <p className="text-destructive text-sm">{error}</p> : null}
 
-      <Card>
-        <CardHeader>
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <CardTitle>Partner Users</CardTitle>
-              <CardDescription>
-                Membership is scoped to current Partner Organization.
-              </CardDescription>
-            </div>
-            {canInvite ? (
-              <Button size="sm" onClick={() => setInviteOpen(true)}>
-                <UserPlusIcon />
-                Invite user
-              </Button>
-            ) : null}
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Joined</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {workspace.members.map((member) => {
-                const actionVisibility = getPartnerMemberActionVisibility({
-                  actorRole,
-                  targetRole: member.role,
-                  targetStatus: member.status,
-                  isSelf: member.userId === currentUserId
-                })
-                const hasActions =
-                  actionVisibility.canChangeRole ||
-                  actionVisibility.canDisable ||
-                  actionVisibility.canRemove ||
-                  actionVisibility.canReactivate
+      <div className="flex justify-between items-center">
+        <div className="flex gap-2">
+          <InputGroup className="rounded-full">
+            <InputGroupAddon align="inline-start">
+              <SearchIcon />
+            </InputGroupAddon>
+            <InputGroupInput
+              value={filters.search}
+              onChange={(event) => updateFilter("search", event.target.value)}
+              placeholder="Search name, email, message..."
+            />
+          </InputGroup>
+          <NativeSelect
+            className="w-44"
+            value={filters.memberStatus}
+            onChange={(event) =>
+              updateFilter("memberStatus", event.target.value)
+            }
+          >
+            <option value="all">Status</option>
+            {Object.entries(statusLabels).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </NativeSelect>
+        </div>
+        {canInvite ? (
+          <Button size="sm" onClick={() => setInviteOpen(true)}>
+            <UserPlusIcon />
+            Invite user
+          </Button>
+        ) : null}
+      </div>
 
-                return (
-                  <TableRow key={member.userId}>
-                    <TableCell>
-                      <p className="font-medium">
-                        {member.name ?? member.email}
-                      </p>
-                      <p className="text-muted-foreground text-xs">
-                        {member.email}
-                      </p>
-                    </TableCell>
-                    <TableCell>{roleLabels[member.role]}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          member.status === "active" ? "default" : "outline"
-                        }
+      <Table className="border">
+        <TableHeader>
+          <TableRow>
+            <TableHead>User</TableHead>
+            <TableHead>Role</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead>Joined</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {filteredUsers.length === 0 ? (
+            <TableRow>
+              <TableCell
+                colSpan={5}
+                className="h-24 text-center text-muted-foreground"
+              >
+                No users match current filters.
+              </TableCell>
+            </TableRow>
+          ) : null}
+          {filteredUsers.map((row) => {
+            if (row.kind === "invitation") {
+              const { invitation } = row
+              return (
+                <TableRow key={invitation.id}>
+                  <TableCell>
+                    <p className="font-medium">
+                      {invitation.displayName || invitation.email}
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      {invitation.email}
+                    </p>
+                  </TableCell>
+                  <TableCell>{roleLabels[invitation.role]}</TableCell>
+                  <TableCell>
+                    <Badge>Pending</Badge>
+                  </TableCell>
+                  <TableCell>
+                    {new Date(invitation.expiresAt).toLocaleDateString()}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    {canInvite ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => cancelInvitation(invitation.id)}
                       >
-                        {statusLabels[member.status]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(member.createdAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {hasActions ? (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button size="icon" variant="ghost">
-                              <MoreHorizontalIcon className="h-4 w-4" />
-                              <span className="sr-only">
-                                Open member actions
-                              </span>
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {actionVisibility.canChangeRole
-                              ? roleOptions
-                                  .filter((role) => role !== member.role)
-                                  .map((role) => (
-                                    <DropdownMenuItem
-                                      key={role}
-                                      onClick={() =>
-                                        setDialog({
-                                          kind: "role",
-                                          member,
-                                          role
-                                        })
-                                      }
-                                    >
-                                      Change to {roleLabels[role]}
-                                    </DropdownMenuItem>
-                                  ))
-                              : null}
-                            {actionVisibility.canDisable ? (
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  setDialog({
-                                    kind: "status",
-                                    member,
-                                    action: "disable"
-                                  })
-                                }
-                              >
-                                Disable user
-                              </DropdownMenuItem>
-                            ) : null}
-                            {actionVisibility.canReactivate ? (
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  setDialog({
-                                    kind: "status",
-                                    member,
-                                    action: "reactivate"
-                                  })
-                                }
-                              >
-                                Reactivate user
-                              </DropdownMenuItem>
-                            ) : null}
-                            {actionVisibility.canRemove ? (
-                              <DropdownMenuItem
-                                variant="destructive"
-                                onClick={() =>
-                                  setDialog({
-                                    kind: "status",
-                                    member,
-                                    action: "remove"
-                                  })
-                                }
-                              >
-                                Remove user
-                              </DropdownMenuItem>
-                            ) : null}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      ) : null}
-                    </TableCell>
-                  </TableRow>
-                )
-              })}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Invitations</CardTitle>
-          <CardDescription>
-            Pending invitations expire after 7 calendar days.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {workspace.invitations.length === 0 ? (
-            <div className="rounded-md border border-dashed py-10 text-center text-muted-foreground text-sm">
-              No invitations yet.
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Expires</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                        Cancel
+                      </Button>
+                    ) : null}
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {workspace.invitations.map((invite) => (
-                  <TableRow key={invite.id}>
-                    <TableCell>
-                      <p className="font-medium">{invite.email}</p>
-                      <p className="text-muted-foreground text-xs">
-                        {invite.displayName || "No display name"}
-                      </p>
-                    </TableCell>
-                    <TableCell>{roleLabels[invite.role]}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          invite.status === "pending" ? "default" : "outline"
-                        }
-                      >
-                        {invitationStatusLabels[invite.status]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      {new Date(invite.expiresAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {canInvite && invite.status === "pending" ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => cancelInvitation(invite.id)}
-                        >
-                          Cancel
+              )
+            }
+
+            const { member } = row
+            const actionVisibility = getPartnerMemberActionVisibility({
+              actorRole,
+              targetRole: member.role,
+              targetStatus: member.status,
+              isSelf: member.userId === currentUserId
+            })
+            const hasActions =
+              actionVisibility.canChangeRole ||
+              actionVisibility.canDisable ||
+              actionVisibility.canRemove ||
+              actionVisibility.canReactivate
+
+            return (
+              <TableRow key={member.userId}>
+                <TableCell>
+                  <p className="font-medium">{member.name ?? member.email}</p>
+                  <p className="text-muted-foreground text-xs">
+                    {member.email}
+                  </p>
+                </TableCell>
+                <TableCell>{roleLabels[member.role]}</TableCell>
+                <TableCell>
+                  <Badge
+                    variant={member.status === "active" ? "default" : "outline"}
+                  >
+                    {statusLabels[member.status]}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  {new Date(member.createdAt).toLocaleDateString()}
+                </TableCell>
+                <TableCell className="text-right">
+                  {hasActions ? (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button size="icon" variant="ghost">
+                          <MoreHorizontalIcon className="h-4 w-4" />
+                          <span className="sr-only">Open member actions</span>
                         </Button>
-                      ) : null}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        {actionVisibility.canChangeRole
+                          ? roleOptions
+                              .filter((role) => role !== member.role)
+                              .map((role) => (
+                                <DropdownMenuItem
+                                  key={role}
+                                  onClick={() =>
+                                    setDialog({
+                                      kind: "role",
+                                      member,
+                                      role
+                                    })
+                                  }
+                                >
+                                  Change to {roleLabels[role]}
+                                </DropdownMenuItem>
+                              ))
+                          : null}
+                        {actionVisibility.canDisable ? (
+                          <DropdownMenuItem
+                            onClick={() =>
+                              setDialog({
+                                kind: "status",
+                                member,
+                                action: "disable"
+                              })
+                            }
+                          >
+                            Disable user
+                          </DropdownMenuItem>
+                        ) : null}
+                        {actionVisibility.canReactivate ? (
+                          <DropdownMenuItem
+                            onClick={() =>
+                              setDialog({
+                                kind: "status",
+                                member,
+                                action: "reactivate"
+                              })
+                            }
+                          >
+                            Reactivate user
+                          </DropdownMenuItem>
+                        ) : null}
+                        {actionVisibility.canRemove ? (
+                          <DropdownMenuItem
+                            variant="destructive"
+                            onClick={() =>
+                              setDialog({
+                                kind: "status",
+                                member,
+                                action: "remove"
+                              })
+                            }
+                          >
+                            Remove user
+                          </DropdownMenuItem>
+                        ) : null}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : null}
+                </TableCell>
+              </TableRow>
+            )
+          })}
+        </TableBody>
+      </Table>
 
       <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
         <DialogContent>
@@ -561,25 +588,22 @@ function getDialogTitle(dialog: MemberDialog) {
 function MetricCard({
   title,
   value,
-  note,
   icon
 }: {
   title: string
   value: string | number
-  note: string
   icon: React.ReactNode
 }) {
   return (
-    <Card size="sm">
-      <CardHeader>
-        <CardDescription>{title}</CardDescription>
-        <CardTitle className="font-semibold text-2xl tabular-nums">
-          {value}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex items-center gap-2 text-muted-foreground text-xs [&_svg]:h-4 [&_svg]:w-4">
-        {icon}
-        <span>{note}</span>
+    <Card>
+      <CardContent className="flex items-start justify-between gap-2">
+        <div className="flex flex-col">
+          <span className="text-muted-foreground text-sm">{title}</span>
+          <span className="font-medium text-2xl">{value}</span>
+        </div>
+        <div className="rounded-full bg-muted p-3 text-foreground [&_svg]:h-4 [&_svg]:w-4">
+          {icon}
+        </div>
       </CardContent>
     </Card>
   )

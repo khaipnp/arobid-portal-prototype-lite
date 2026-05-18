@@ -18,7 +18,6 @@ export default async function PartnerUsersPage() {
   return (
     <DashboardShell
       title="User Management"
-      description="Invite, role-change, disable, remove, and reactivate users within the current Partner Organization."
       breadcrumbs={[
         { label: "Overview", href: "/partner" },
         { label: "User Management" }

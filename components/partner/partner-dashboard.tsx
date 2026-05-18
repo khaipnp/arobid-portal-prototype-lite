@@ -3,9 +3,15 @@
 import {
   ActivityIcon,
   BarChart3Icon,
-  RadioIcon,
-  UsersIcon,
-  WalletCardsIcon
+  Building2Icon,
+  CheckCircle2Icon,
+  ClipboardListIcon,
+  ExternalLinkIcon,
+  FileClockIcon,
+  Globe2Icon,
+  ShieldCheckIcon,
+  TrendingUpIcon,
+  UsersIcon
 } from "lucide-react"
 import Link from "next/link"
 import type { ReactNode } from "react"
@@ -22,6 +28,7 @@ import {
   XAxis,
   YAxis
 } from "recharts"
+import { Badge } from "@/components/ui/badge"
 import {
   Card,
   CardAction,
@@ -63,11 +70,11 @@ const currencyFormat = new Intl.NumberFormat("vi-VN", {
 
 const chartConfig = {
   soldBooths: {
-    label: "Sold booths",
+    label: "Used booths",
     color: "var(--chart-1)"
   },
   unsoldBooths: {
-    label: "Unsold booths",
+    label: "Available booths",
     color: "var(--chart-3)"
   },
   boothUtilization: {
@@ -129,17 +136,19 @@ function MetricCard({
   title,
   value,
   note,
-  icon
+  icon,
+  eyebrow
 }: {
   title: string
   value: string
   note: string
   icon: ReactNode
+  eyebrow: string
 }) {
   return (
-    <Card size="sm">
+    <Card size="sm" className="overflow-hidden">
       <CardHeader>
-        <CardDescription>{title}</CardDescription>
+        <CardDescription>{eyebrow}</CardDescription>
         <CardTitle className="font-semibold text-2xl tabular-nums">
           {value}
         </CardTitle>
@@ -147,10 +156,55 @@ function MetricCard({
           {icon}
         </CardAction>
       </CardHeader>
-      <CardContent className="text-muted-foreground text-xs">
-        {note}
+      <CardContent className="space-y-1 text-muted-foreground text-xs">
+        <div className="font-medium text-foreground text-sm">{title}</div>
+        <div>{note}</div>
       </CardContent>
     </Card>
+  )
+}
+
+function CapabilityTile({
+  title,
+  description,
+  status,
+  href,
+  icon,
+  muted = false
+}: {
+  title: string
+  description: string
+  status: string
+  href?: string
+  icon: ReactNode
+  muted?: boolean
+}) {
+  const content = (
+    <div className="flex h-full gap-3 rounded-lg border bg-card p-3 transition-colors hover:bg-muted/40">
+      <div className="mt-0.5 rounded-md bg-muted p-2 text-muted-foreground">
+        {icon}
+      </div>
+      <div className="min-w-0 flex-1 space-y-2">
+        <div className="flex items-start justify-between gap-3">
+          <div className="font-medium text-sm">{title}</div>
+          <Badge variant={muted ? "outline" : "secondary"}>{status}</Badge>
+        </div>
+        <p className="text-muted-foreground text-xs leading-relaxed">
+          {description}
+        </p>
+      </div>
+      {href ? (
+        <ExternalLinkIcon className="h-3.5 w-3.5 text-muted-foreground" />
+      ) : null}
+    </div>
+  )
+
+  if (!href) return content
+
+  return (
+    <Link href={href} className="block h-full">
+      {content}
+    </Link>
   )
 }
 
@@ -166,42 +220,106 @@ export function PartnerDashboard({
   const hasExpoMetrics = metrics.expoMetrics.length > 0
   const hasCountryData = metrics.countryBreakdown.length > 0
   const hasTierData = metrics.boothTierBreakdown.length > 0
+  const demoMiniSiteViews = 2480
 
   return (
     <div className="space-y-4 px-4">
+      <Card className="overflow-hidden border-primary/15 bg-gradient-to-br from-card via-card to-muted/50">
+        <CardContent className="grid gap-6 p-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="secondary">Partner Overview</Badge>
+              <Badge variant="outline">Scoped SSOT data</Badge>
+              <Badge variant="outline">Report-only finance controls</Badge>
+            </div>
+            <div className="max-w-3xl space-y-2">
+              <h2 className="font-semibold text-2xl tracking-tight md:text-3xl">
+                Partner operating command center
+              </h2>
+              <p className="text-muted-foreground text-sm leading-relaxed md:text-base">
+                Monitor assigned expo programs, booth quota usage, audience
+                signals, and reporting surfaces without exposing unassigned
+                Arobid platform data.
+              </p>
+            </div>
+          </div>
+          <div className="rounded-xl border bg-background/75 p-4">
+            <div className="flex items-center gap-2 font-medium text-sm">
+              <ShieldCheckIcon className="h-4 w-4 text-primary" />
+              MVP capability surface
+            </div>
+            <div className="mt-4 grid gap-2">
+              <CapabilityTile
+                title="Expo Programs"
+                description="Assigned expo operations and booth distribution."
+                status="Active"
+                href="/partner/expos"
+                icon={<ClipboardListIcon className="h-4 w-4" />}
+              />
+              <CapabilityTile
+                title="Enterprises & Members"
+                description="Tenant-associated companies remain scoped SSOT records."
+                status="Scoped"
+                href="/partner/enterprises"
+                icon={<Building2Icon className="h-4 w-4" />}
+              />
+              <CapabilityTile
+                title="Analytics & Reports"
+                description="Read-only summaries filtered to assigned partner scope."
+                status="Report"
+                href="/partner/analytics"
+                icon={<TrendingUpIcon className="h-4 w-4" />}
+              />
+              <CapabilityTile
+                title="Mini-site analytics"
+                description="Prototype traffic view for tenant branded mini-site."
+                status="Prototype"
+                href="/partner/site-management"
+                icon={<FileClockIcon className="h-4 w-4" />}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
-          title="Assigned Expos"
+          eyebrow="Assigned Expos"
+          title="Programs under partner scope"
           value={numberFormat.format(metrics.totals.assignedExpos)}
-          note={`${metrics.totals.liveExpos} live now across assigned expos`}
+          note={`${metrics.totals.liveExpos} live now; hidden data stays outside partner scope`}
           icon={<BarChart3Icon className="h-4 w-4" />}
         />
         <MetricCard
-          title="Booth Utilization"
+          eyebrow="Booth Quota"
+          title="Expo booths used"
           value={formatPercent(metrics.totals.boothUtilization)}
-          note={`${numberFormat.format(metrics.totals.soldBooths)} / ${numberFormat.format(metrics.totals.totalBooths)} booths sold`}
+          note={`${numberFormat.format(metrics.totals.soldBooths)} / ${numberFormat.format(metrics.totals.totalBooths)} booths consumed`}
           icon={<ActivityIcon className="h-4 w-4" />}
         />
         <MetricCard
-          title="GoLIVE Reach"
-          value={compactNumber.format(metrics.totals.peakViewers)}
-          note={`${numberFormat.format(metrics.totals.goLiveEvents)} sessions / ${numberFormat.format(metrics.totals.comments)} comments`}
-          icon={<RadioIcon className="h-4 w-4" />}
+          eyebrow="Tenant Mini-site"
+          title="Mini-site views"
+          value={compactNumber.format(demoMiniSiteViews)}
+          note="Prototype traffic signal until public mini-site analytics is connected"
+          icon={<Globe2Icon className="h-4 w-4" />}
         />
         <MetricCard
-          title="Paid Revenue"
-          value={currencyFormat.format(metrics.totals.revenue)}
-          note={`${numberFormat.format(metrics.totals.publishedBooths)} booths published across assigned expos`}
-          icon={<WalletCardsIcon className="h-4 w-4" />}
+          eyebrow="Activation"
+          title="Published exhibitor booths"
+          value={numberFormat.format(metrics.totals.publishedBooths)}
+          note="Proxy for enterprise activation until association funnel data lands"
+          icon={<CheckCircle2Icon className="h-4 w-4" />}
         />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.55fr)]">
         <Card>
           <CardHeader>
-            <CardTitle>Expo Inventory and Booth Sales</CardTitle>
+            <CardTitle>Expo Program Capacity</CardTitle>
             <CardDescription>
-              Compare booth capacity, sold booths, and utilization across expos.
+              Booth quota consumed versus available inventory across assigned
+              programs.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -244,16 +362,16 @@ export function PartnerDashboard({
                 </BarChart>
               </ChartContainer>
             ) : (
-              <EmptyChart label="No assigned expo metrics yet." />
+              <EmptyChart label="No assigned expo program metrics yet." />
             )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Expo Status Mix</CardTitle>
+            <CardTitle>Operating Status Mix</CardTitle>
             <CardDescription>
-              Current lifecycle distribution for partner-owned events.
+              Lifecycle distribution for assigned Expo Programs.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -297,9 +415,10 @@ export function PartnerDashboard({
       <div className="grid gap-4 xl:grid-cols-3">
         <Card className="xl:col-span-2">
           <CardHeader>
-            <CardTitle>GoLIVE and Visitor Signals</CardTitle>
+            <CardTitle>Analytics Signal Trend</CardTitle>
             <CardDescription>
-              Peak viewers and scheduled GoLIVE activity by expo date.
+              Latest GoLIVE reach and event activity available for assigned
+              expos.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -345,26 +464,26 @@ export function PartnerDashboard({
                 </LineChart>
               </ChartContainer>
             ) : (
-              <EmptyChart label="No GoLIVE activity yet." />
+              <EmptyChart label="No analytics signals yet." />
             )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Audience and Booth Mix</CardTitle>
+            <CardTitle>Enterprise Activation Proxies</CardTitle>
             <CardDescription>
-              Exhibitor geography and booth tier demand.
+              Geography and booth tier demand from scoped expo registrations.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <BreakdownList
-              title="Country"
+              title="Company geography"
               items={metrics.countryBreakdown}
               empty={!hasCountryData}
             />
             <BreakdownList
-              title="Booth tier"
+              title="Booth tier demand"
               items={metrics.boothTierBreakdown}
               empty={!hasTierData}
             />
@@ -376,19 +495,19 @@ export function PartnerDashboard({
         <CardHeader>
           <CardTitle>Expo Operations Board</CardTitle>
           <CardDescription>
-            Assigned expos ranked by operational health and monetization.
+            Assigned programs ranked by operating health and monetization.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Table className="min-w-[820px]">
             <TableHeader>
               <TableRow>
-                <TableHead>Expo Name</TableHead>
+                <TableHead>Program</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-right">Booths</TableHead>
+                <TableHead className="text-right">Quota used</TableHead>
                 <TableHead className="text-right">Utilization</TableHead>
                 <TableHead className="text-right">Published</TableHead>
-                <TableHead className="text-right">Peak viewers</TableHead>
+                <TableHead className="text-right">Signals</TableHead>
                 <TableHead className="text-right">Revenue</TableHead>
               </TableRow>
             </TableHeader>
@@ -420,7 +539,8 @@ export function PartnerDashboard({
                     {numberFormat.format(item.publishedBooths)}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
-                    {numberFormat.format(item.peakViewers)}
+                    {compactNumber.format(item.peakViewers)} viewers ·{" "}
+                    {numberFormat.format(item.comments)} comments
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
                     {currencyFormat.format(item.revenue)}
@@ -431,7 +551,7 @@ export function PartnerDashboard({
                 <TableRow>
                   <TableCell colSpan={7} className="h-32 text-center">
                     <div className="flex flex-col items-center gap-3 text-muted-foreground">
-                      <span>No assigned expos available for this partner.</span>
+                      <span>No assigned expo programs available yet.</span>
                       <Link
                         href="/partner/expos"
                         className="rounded-md border px-3 py-2 font-medium text-foreground text-sm underline-offset-4 hover:underline"

@@ -1,6 +1,6 @@
 "use client"
 
-import { BadgeCheckIcon, Building2Icon, HandshakeIcon } from "lucide-react"
+import { BadgeCheckIcon, Building2Icon } from "lucide-react"
 import { useMemo } from "react"
 import {
   Card,
@@ -46,27 +46,18 @@ export function PartnerExpoPrograms({
 
   return (
     <div className="space-y-4">
-      <section className="grid gap-3 px-4 sm:grid-cols-2 xl:grid-cols-3">
+      <section className="grid gap-3 px-4 sm:grid-cols-2">
         <MetricCard
           title="Assigned Programs"
           value={numberFormat.format(
             summary.coHost + summary.turnkey + summary.tenant
           )}
-          note={`${numberFormat.format(summary.coHost)} co-host / ${numberFormat.format(summary.turnkey)} turnkey / ${numberFormat.format(summary.tenant)} tenant`}
           icon={<Building2Icon />}
         />
-        <MetricCard
-          title="Partnership Models"
-          value={numberFormat.format(
-            summary.coHost + summary.turnkey + summary.tenant
-          )}
-          note={`${numberFormat.format(summary.coHost)} co-host / ${numberFormat.format(summary.turnkey)} turnkey / ${numberFormat.format(summary.tenant)} tenant`}
-          icon={<HandshakeIcon />}
-        />
+
         <MetricCard
           title="Booth Utilization"
           value={`${summary.booths > 0 ? Math.round((summary.soldBooths / summary.booths) * 100) : 0}%`}
-          note={`${numberFormat.format(summary.soldBooths)} / ${numberFormat.format(summary.booths)} booths`}
           icon={<BadgeCheckIcon />}
         />
       </section>
@@ -82,25 +73,22 @@ export function PartnerExpoPrograms({
 function MetricCard({
   title,
   value,
-  note,
   icon
 }: {
   title: string
   value: string
-  note: string
   icon: React.ReactNode
 }) {
   return (
-    <Card size="sm">
-      <CardHeader>
-        <CardDescription>{title}</CardDescription>
-        <CardTitle className="font-semibold text-2xl tabular-nums">
-          {value}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="flex items-center gap-2 text-muted-foreground text-xs [&_svg]:h-4 [&_svg]:w-4">
-        {icon}
-        <span>{note}</span>
+    <Card>
+      <CardContent className="flex items-start justify-between gap-2">
+        <div className="flex flex-col">
+          <span className="text-muted-foreground text-sm">{title}</span>
+          <span className="font-medium text-2xl">{value}</span>
+        </div>
+        <div className="rounded-full bg-muted p-3 text-foreground [&_svg]:h-4 [&_svg]:w-4">
+          {icon}
+        </div>
       </CardContent>
     </Card>
   )

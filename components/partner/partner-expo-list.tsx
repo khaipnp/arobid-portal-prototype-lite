@@ -184,7 +184,7 @@ export function PartnerExpoList({
               setCurrentPage(1)
             }}
           >
-            <SelectTrigger className="w-44 rounded-full">
+            <SelectTrigger className="w-40 rounded-full">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -220,16 +220,16 @@ export function PartnerExpoList({
               ].includes(expo.status)
 
               return (
-                <Card
+                <div
                   key={expo.id}
                   className={cn(
-                    "overflow-hidden border-sidebar-border transition-all duration-200",
+                    "overflow-hidden transition-all duration-200 border rounded-2xl",
                     isExpanded ? "ring-1 ring-primary/50" : "hover:shadow-sm"
                   )}
                 >
                   <div className="flex flex-col items-stretch md:flex-row">
                     {/* Thumbnail */}
-                    <div className="relative aspect-video h-32 shrink-0 overflow-hidden border-b bg-muted md:h-auto md:w-48 md:border-r md:border-b-0">
+                    <div className="relative aspect-video h-32 shrink-0 overflow-hidden border-b bg-muted md:h-auto md:w-96 md:border-r md:border-b-0">
                       <Image
                         src={expo.thumbnailUrl}
                         alt={expo.name}
@@ -245,10 +245,10 @@ export function PartnerExpoList({
                     <div className="flex flex-1 flex-col p-4">
                       <div className="flex items-start justify-between gap-4">
                         <div className="space-y-1">
-                          <h3 className="font-semibold text-sm leading-tight transition-colors group-hover:text-primary">
+                          <h3 className="font-medium text-lg leading-tight transition-colors group-hover:text-primary">
                             {expo.name}
                           </h3>
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground text-xs">
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground text-sm">
                             <div className="flex items-center gap-1">
                               <CalendarIcon className="h-3 w-3" />
                               <span>
@@ -323,12 +323,12 @@ export function PartnerExpoList({
                             asChild
                             variant="outline"
                             size="sm"
-                            className="h-7 px-3 font-semibold text-xs"
+                            className="rounded-full"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <Link href={`/partner/expos/${expo.id}`}>
-                              Open operational view
-                              <ChevronRightIcon className="ml-1 h-3 w-3" />
+                              Go to Detail
+                              <ChevronRightIcon />
                             </Link>
                           </Button>
                         ) : null}
@@ -338,15 +338,11 @@ export function PartnerExpoList({
 
                   {/* Expanded Details */}
                   {isExpanded && (
-                    <div className="fade-in slide-in-from-top-1 animate-in border-t bg-muted/5 px-4 py-4 duration-200 md:px-6 md:py-6">
-                      <div className="space-y-8 md:ml-48">
+                    <div className="fade-in slide-in-from-top-1 animate-in px-4 py-4 duration-200 md:px-6 md:py-6">
+                      <div className="space-y-8">
                         {/* Metrics Section */}
                         {showMetrics && (
                           <div className="space-y-4">
-                            <div className="flex items-center gap-2 font-bold font-mono text-muted-foreground text-xs uppercase tracking-wider">
-                              <ZapIcon className="h-3 w-3 text-amber-500" />
-                              Operational Metrics
-                            </div>
                             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                               <div className="flex flex-col gap-1 rounded-xl border border-sidebar-border bg-card p-3 shadow-xs">
                                 <div className="flex items-center gap-2 text-muted-foreground">
@@ -400,85 +396,10 @@ export function PartnerExpoList({
                             </div>
                           </div>
                         )}
-
-                        <div className="grid gap-6 sm:grid-cols-2">
-                          <div className="space-y-4">
-                            <div className="flex items-center gap-2 font-bold text-muted-foreground text-xs uppercase tracking-wider">
-                              <InfoIcon className="h-3 w-3" />
-                              Organization Details
-                            </div>
-                            <div className="space-y-2 text-xs">
-                              <div className="flex justify-between border-sidebar-border border-b border-dashed py-1.5">
-                                <span className="text-muted-foreground">
-                                  Organization:
-                                </span>
-                                <span className="text-right font-medium">
-                                  {assignment.partnerOrganization.name}
-                                </span>
-                              </div>
-                              <div className="flex justify-between border-sidebar-border border-b border-dashed py-1.5">
-                                <span className="text-muted-foreground">
-                                  Status:
-                                </span>
-                                <Badge
-                                  variant={
-                                    assignment.partnerOrganization.status ===
-                                    "active"
-                                      ? "outline"
-                                      : "destructive"
-                                  }
-                                  className="h-4 px-1.5 font-bold text-xs uppercase"
-                                >
-                                  {assignment.partnerOrganization.status ===
-                                  "active"
-                                    ? "Active"
-                                    : "Inactive"}
-                                </Badge>
-                              </div>
-                              {isTurnkey ? (
-                                <div className="flex justify-between border-sidebar-border border-b border-dashed py-1.5">
-                                  <span className="text-muted-foreground">
-                                    Configured by:
-                                  </span>
-                                  <span className="text-right font-medium">
-                                    Arobid Admin
-                                  </span>
-                                </div>
-                              ) : null}
-                              <div className="flex justify-between py-1.5">
-                                <span className="text-muted-foreground">
-                                  Description:
-                                </span>
-                                <span className="max-w-45 truncate text-right text-muted-foreground italic">
-                                  {expo.description ||
-                                    "No description provided"}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="space-y-4">
-                            <div className="flex items-center gap-2 font-bold text-muted-foreground text-xs uppercase tracking-wider">
-                              <ShieldCheckIcon className="h-3 w-3" />
-                              Capabilities
-                            </div>
-                            <div className="flex flex-wrap gap-1.5">
-                              {assignment.capabilities.map((cap) => (
-                                <Badge
-                                  key={cap}
-                                  variant="secondary"
-                                  className="border px-1.5 py-0 font-normal text-xs"
-                                >
-                                  {CAPABILITY_LABELS[cap] || cap}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
                       </div>
                     </div>
                   )}
-                </Card>
+                </div>
               )
             }
           )}
