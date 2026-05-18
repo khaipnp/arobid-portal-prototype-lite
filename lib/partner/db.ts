@@ -113,7 +113,7 @@ export type PartnerPortalSummary = {
   overview: {
     enterprisesActivated: number
     expoBoothsUsed: number
-    tradeCreditsAllocated: number
+    activeInviteCampaigns: number
     rfqGenerated: number
     dealContexts: number
     bundleSales: number
@@ -139,9 +139,6 @@ export type PartnerPortalSummary = {
     consumedQuantity: number
     availableQuantity: number
     activeInviteCampaigns: number
-    walletBalance: number
-    walletAllocated: number
-    walletConsumed: number
   }
   bundles: {
     total: number
@@ -269,8 +266,6 @@ export type PartnerEnterpriseMember = {
   dealContextEvents?: number
   quotaAllocatedQuantity?: number
   quotaConsumedQuantity?: number
-  tradeCreditsAllocated?: number
-  tradeCreditsConsumed?: number
 }
 
 export type PartnerEnterpriseActivity = {
@@ -311,27 +306,11 @@ export type PartnerInviteCampaign = {
   createdAt: string
 }
 
-export type PartnerTradeCreditLedgerEntry = {
-  id: string
-  entryType: "purchase" | "allocate" | "consume" | "release"
-  amount: number
-  enterpriseMemberId: string | null
-  enterpriseName: string | null
-  note: string | null
-  createdAt: string
-}
-
 export type PartnerQuotaWorkspace = {
   organization: PartnerPortalOrganization | null
   quotas: PartnerQuota[]
   enterpriseMembers: PartnerEnterpriseMember[]
   inviteCampaigns: PartnerInviteCampaign[]
-  wallet: {
-    balance: number
-    allocated: number
-    consumed: number
-  }
-  ledger: PartnerTradeCreditLedgerEntry[]
 }
 
 export type PartnerExpoProgramsWorkspace = {
@@ -502,7 +481,6 @@ export type PartnerGovernmentProgramWorkspace = {
   quotaWorkspace: PartnerQuotaWorkspace
   supportedSmes: number
   activeCampaigns: number
-  creditUtilization: number
   quotaUtilization: number
 }
 
@@ -1456,7 +1434,7 @@ export async function getPartnerPortalSummary(
     overview: {
       enterprisesActivated: 0,
       expoBoothsUsed: 0,
-      tradeCreditsAllocated: 0,
+      activeInviteCampaigns: 0,
       rfqGenerated: 0,
       dealContexts: 0,
       bundleSales: 0,
@@ -1481,10 +1459,7 @@ export async function getPartnerPortalSummary(
       allocatedQuantity: 0,
       consumedQuantity: 0,
       availableQuantity: 0,
-      activeInviteCampaigns: 0,
-      walletBalance: 0,
-      walletAllocated: 0,
-      walletConsumed: 0
+      activeInviteCampaigns: 0
     },
     bundles: {
       total: 0,
@@ -1518,7 +1493,6 @@ export async function getPartnerPortalSummary(
     enterpriseRows,
     dealRows,
     quotaRows,
-    walletRows,
     bundleRows,
     revenueRows,
     settlementRows,
@@ -1573,15 +1547,6 @@ export async function getPartnerPortalSummary(
         ), 0)::int as active_invite_campaigns
       from partner_quotas
       where partner_org_id = ${orgId}
-    `,
-    sql`
-      select
-        coalesce(balance, 0)::numeric as balance,
-        coalesce(allocated, 0)::numeric as allocated,
-        coalesce(consumed, 0)::numeric as consumed
-      from partner_trade_credit_wallets
-      where partner_org_id = ${orgId}
-      limit 1
     `,
     sql`
       select
@@ -1654,13 +1619,6 @@ export async function getPartnerPortalSummary(
       active_invite_campaigns: number | string
     }[]
   )[0]
-  const wallet = (
-    walletRows as {
-      balance: number | string
-      allocated: number | string
-      consumed: number | string
-    }[]
-  )[0]
   const bundle = (
     bundleRows as {
       total: number | string
@@ -1704,7 +1662,7 @@ export async function getPartnerPortalSummary(
     overview: {
       enterprisesActivated: toNumber(enterprise?.expo_activated),
       expoBoothsUsed: toNumber(expo?.expo_booths_used),
-      tradeCreditsAllocated: toNumber(wallet?.allocated),
+      activeInviteCampaigns: toNumber(quota?.active_invite_campaigns),
       rfqGenerated,
       dealContexts,
       bundleSales,
@@ -1732,10 +1690,7 @@ export async function getPartnerPortalSummary(
         quotaTotal - quotaAllocated - quotaConsumed,
         0
       ),
-      activeInviteCampaigns: toNumber(quota?.active_invite_campaigns),
-      walletBalance: toNumber(wallet?.balance),
-      walletAllocated: toNumber(wallet?.allocated),
-      walletConsumed: toNumber(wallet?.consumed)
+      activeInviteCampaigns: toNumber(quota?.active_invite_campaigns)
     },
     bundles: {
       total: toNumber(bundle?.total),
@@ -1981,9 +1936,7 @@ async function requirePartnerEnterpriseMember(
       dealContextStage: null,
       dealContextEvents: 0,
       quotaAllocatedQuantity: 0,
-      quotaConsumedQuantity: 0,
-      tradeCreditsAllocated: 0,
-      tradeCreditsConsumed: 0
+      quotaConsumedQuantity: 0
     }
   }
 }
@@ -2303,16 +2256,13 @@ export async function getPartnerQuotaWorkspace(
       organization: null,
       quotas: [],
       enterpriseMembers: [],
-      inviteCampaigns: [],
-      wallet: { balance: 0, allocated: 0, consumed: 0 },
-      ledger: []
+      inviteCampaigns: []
     }
   }
 
   const orgId = organization.id
-  const [quotaRows, memberRows, campaignRows, walletRows, ledgerRows] =
-    await Promise.all([
-      sql`
+  const [quotaRows, memberRows, campaignRows] = await Promise.all([
+    sql`
         select
           id,
           quota_type,
@@ -2325,7 +2275,7 @@ export async function getPartnerQuotaWorkspace(
         where partner_org_id = ${orgId}
         order by created_at desc
       `,
-      sql`
+    sql`
         select
           pem.id,
           pem.enterprise_name,
@@ -2349,7 +2299,7 @@ export async function getPartnerQuotaWorkspace(
         where pem.partner_org_id = ${orgId}
         order by pem.created_at desc
       `,
-      sql`
+    sql`
         select
           pic.id,
           pic.name,
@@ -2363,29 +2313,8 @@ export async function getPartnerQuotaWorkspace(
         left join partner_quotas pq on pq.id = pic.quota_id
         where pic.partner_org_id = ${orgId}
         order by pic.created_at desc
-      `,
-      sql`
-        select balance, allocated, consumed
-        from partner_trade_credit_wallets
-        where partner_org_id = ${orgId}
-        limit 1
-      `,
-      sql`
-        select
-          l.id,
-          l.entry_type,
-          l.amount,
-          l.enterprise_member_id,
-          pem.enterprise_name,
-          l.note,
-          l.created_at
-        from partner_trade_credit_ledger l
-        left join partner_enterprise_members pem on pem.id = l.enterprise_member_id
-        where l.partner_org_id = ${orgId}
-        order by l.created_at desc
-        limit 20
       `
-    ])
+  ])
 
   return {
     organization,
@@ -2475,36 +2404,6 @@ export async function getPartnerQuotaWorkspace(
       quotaLabel: row.quota_label,
       status: row.status,
       claimedCount: toNumber(row.claimed_count),
-      createdAt: toIso(row.created_at)
-    })),
-    wallet: {
-      balance: toNumber(
-        (walletRows as { balance: number | string }[])[0]?.balance
-      ),
-      allocated: toNumber(
-        (walletRows as { allocated: number | string }[])[0]?.allocated
-      ),
-      consumed: toNumber(
-        (walletRows as { consumed: number | string }[])[0]?.consumed
-      )
-    },
-    ledger: (
-      ledgerRows as {
-        id: string
-        entry_type: PartnerTradeCreditLedgerEntry["entryType"]
-        amount: number | string
-        enterprise_member_id: string | null
-        enterprise_name: string | null
-        note: string | null
-        created_at: string | Date
-      }[]
-    ).map((row) => ({
-      id: row.id,
-      entryType: row.entry_type,
-      amount: toNumber(row.amount),
-      enterpriseMemberId: row.enterprise_member_id,
-      enterpriseName: row.enterprise_name,
-      note: row.note,
       createdAt: toIso(row.created_at)
     }))
   }
@@ -3683,16 +3582,6 @@ export async function getPartnerEnterpriseWorkspace(
       where partner_org_id = ${organization.id}
       group by enterprise_member_id
     ),
-    credit_totals as (
-      select
-        enterprise_member_id,
-        coalesce(sum(amount) filter (where entry_type = 'allocate'), 0)::numeric as trade_credits_allocated,
-        coalesce(sum(amount) filter (where entry_type = 'consume'), 0)::numeric as trade_credits_consumed
-      from partner_trade_credit_ledger
-      where partner_org_id = ${organization.id}
-        and enterprise_member_id is not null
-      group by enterprise_member_id
-    ),
     deal_totals as (
       select
         pdc.enterprise_member_id,
@@ -3724,14 +3613,11 @@ export async function getPartnerEnterpriseWorkspace(
       pem.trade_signal_count,
       coalesce(qt.quota_allocated_quantity, 0)::int as quota_allocated_quantity,
       coalesce(qt.quota_consumed_quantity, 0)::int as quota_consumed_quantity,
-      coalesce(ct.trade_credits_allocated, 0)::numeric as trade_credits_allocated,
-      coalesce(ct.trade_credits_consumed, 0)::numeric as trade_credits_consumed,
       dt.deal_context_stage,
       coalesce(dt.deal_context_events, 0)::int as deal_context_events
     from partner_enterprise_members pem
     left join companies c on c.id = pem.enterprise_id
     left join quota_totals qt on qt.enterprise_member_id = pem.id
-    left join credit_totals ct on ct.enterprise_member_id = pem.id
     left join deal_totals dt on dt.enterprise_member_id = pem.id
     where pem.partner_org_id = ${organization.id}
     order by pem.created_at desc
@@ -3747,8 +3633,6 @@ export async function getPartnerEnterpriseWorkspace(
     trade_signal_count: number | string
     quota_allocated_quantity: number | string
     quota_consumed_quantity: number | string
-    trade_credits_allocated: number | string
-    trade_credits_consumed: number | string
     deal_context_stage: PartnerDealContextStage | null
     deal_context_events: number | string
     source: string
@@ -3784,9 +3668,7 @@ export async function getPartnerEnterpriseWorkspace(
     dealContextStage: row.deal_context_stage,
     dealContextEvents: toNumber(row.deal_context_events),
     quotaAllocatedQuantity: toNumber(row.quota_allocated_quantity),
-    quotaConsumedQuantity: toNumber(row.quota_consumed_quantity),
-    tradeCreditsAllocated: toNumber(row.trade_credits_allocated),
-    tradeCreditsConsumed: toNumber(row.trade_credits_consumed)
+    quotaConsumedQuantity: toNumber(row.quota_consumed_quantity)
   }))
 
   return {
@@ -3918,17 +3800,12 @@ export async function getPartnerGovernmentProgramWorkspace(
     (sum, quota) => sum + quota.consumedQuantity,
     0
   )
-  const creditTotal = Math.max(quotaWorkspace.wallet.balance, 0)
 
   return {
     organization: quotaWorkspace.organization,
     quotaWorkspace,
     supportedSmes,
     activeCampaigns,
-    creditUtilization:
-      creditTotal > 0
-        ? Math.round((quotaWorkspace.wallet.consumed / creditTotal) * 100)
-        : 0,
     quotaUtilization:
       quotaTotal > 0 ? Math.round((quotaConsumed / quotaTotal) * 100) : 0
   }
@@ -4722,110 +4599,6 @@ export async function claimPartnerInviteCampaign(
         and partner_org_id = ${organization.id}
     `
   }
-}
-
-export async function recordPartnerTradeCreditEntry(
-  userId: string,
-  input: {
-    entryType: PartnerTradeCreditLedgerEntry["entryType"]
-    amount: number
-    enterpriseMemberId?: string | null
-    note?: string | null
-  }
-) {
-  const organization = await requirePrimaryPartnerOrganization(userId)
-  if (!Number.isFinite(input.amount) || input.amount <= 0) {
-    throw new Error("Amount must be greater than 0.")
-  }
-  if (input.enterpriseMemberId) {
-    await requirePartnerEnterpriseMember(userId, input.enterpriseMemberId)
-  }
-
-  const walletRows = (await sql`
-    insert into partner_trade_credit_wallets (
-      partner_org_id,
-      balance,
-      allocated,
-      consumed,
-      updated_at
-    )
-    values (${organization.id}, 0, 0, 0, now())
-    on conflict (partner_org_id) do update
-    set updated_at = now()
-    returning balance, allocated, consumed
-  `) as {
-    balance: number | string
-    allocated: number | string
-    consumed: number | string
-  }[]
-
-  const wallet = walletRows[0]
-  const balance = toNumber(wallet?.balance)
-  const allocated = toNumber(wallet?.allocated)
-  const amount = input.amount
-
-  if (input.entryType === "allocate" && amount > balance) {
-    throw new Error("Not enough TradeCredit balance.")
-  }
-  if (input.entryType === "consume" && amount > allocated) {
-    throw new Error("Not enough allocated TradeCredits.")
-  }
-
-  if (input.entryType === "purchase") {
-    await sql`
-      update partner_trade_credit_wallets
-      set balance = balance + ${amount}, updated_at = now()
-      where partner_org_id = ${organization.id}
-    `
-  } else if (input.entryType === "allocate") {
-    await sql`
-      update partner_trade_credit_wallets
-      set
-        balance = balance - ${amount},
-        allocated = allocated + ${amount},
-        updated_at = now()
-      where partner_org_id = ${organization.id}
-    `
-  } else if (input.entryType === "consume") {
-    await sql`
-      update partner_trade_credit_wallets
-      set
-        allocated = allocated - ${amount},
-        consumed = consumed + ${amount},
-        updated_at = now()
-      where partner_org_id = ${organization.id}
-    `
-  } else {
-    await sql`
-      update partner_trade_credit_wallets
-      set
-        balance = balance + ${amount},
-        allocated = greatest(allocated - ${amount}, 0),
-        updated_at = now()
-      where partner_org_id = ${organization.id}
-    `
-  }
-
-  const id = `partner-credit-${randomUUID()}`
-  await sql`
-    insert into partner_trade_credit_ledger (
-      id,
-      partner_org_id,
-      entry_type,
-      amount,
-      enterprise_member_id,
-      note
-    )
-    values (
-      ${id},
-      ${organization.id},
-      ${input.entryType},
-      ${amount},
-      ${input.enterpriseMemberId || null},
-      ${input.note?.trim() || null}
-    )
-  `
-  return { id }
 }
 
 function toNumber(value: unknown): number {

@@ -1,8 +1,9 @@
 import { sql } from "@/lib/db/neon"
+import { ensureTradeCreditSchema } from "@/lib/tradecredit/db"
 import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
 let platformSchemaReady = false
-const LATEST_PLATFORM_MIGRATION = "partner_enterprise_association_audit_v1"
+const LATEST_PLATFORM_MIGRATION = "tradecredit_core_v1"
 
 type SqlClient = typeof sql
 
@@ -43,6 +44,7 @@ export async function ensurePlatformSchema() {
     // If the latest migration is applied, we can assume everything before it is also applied.
     if (appliedNames.has(LATEST_PLATFORM_MIGRATION)) {
       await ensurePlatformPaymentConfig()
+      await ensureTradeCreditSchema()
       platformSchemaReady = true
       return
     }
@@ -1035,6 +1037,8 @@ export async function ensurePlatformSchema() {
     where reference_id is not null and reference_type is not null
   `
 
+  await ensureTradeCreditSchema()
+
   await sql`
     create table if not exists user_wishlist_exhibitors (
       user_id text not null references users(id) on delete cascade,
@@ -1754,33 +1758,6 @@ async function migratePartnerOrganizationSchema() {
   await sql`
     create index if not exists idx_partner_quota_allocations_member
     on partner_quota_allocations (enterprise_member_id)
-  `
-
-  await sql`
-    create table if not exists partner_trade_credit_wallets (
-      partner_org_id text primary key references partner_organizations(id) on delete cascade,
-      balance numeric(15, 2) not null default 0,
-      allocated numeric(15, 2) not null default 0,
-      consumed numeric(15, 2) not null default 0,
-      updated_at timestamptz not null default now()
-    )
-  `
-  await sql`
-    create table if not exists partner_trade_credit_ledger (
-      id text primary key,
-      partner_org_id text not null references partner_organizations(id) on delete cascade,
-      entry_type text not null,
-      amount numeric(15, 2) not null,
-      enterprise_member_id text references partner_enterprise_members(id) on delete set null,
-      reference_type text,
-      reference_id text,
-      note text,
-      created_at timestamptz not null default now()
-    )
-  `
-  await sql`
-    create index if not exists idx_partner_trade_credit_ledger_org
-    on partner_trade_credit_ledger (partner_org_id, created_at desc)
   `
 
   await sql`

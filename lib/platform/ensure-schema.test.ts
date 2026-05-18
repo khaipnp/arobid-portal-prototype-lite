@@ -33,7 +33,7 @@ describe("platform schema consistency", () => {
     expect(sqlText).toContain("idx_partner_scope_assignments_active_unique")
     expect(sqlText).toContain("idx_partner_mini_sites_one_published")
     expect(sqlText).toContain(
-      "check (status in ('draft', 'submitted', 'rejected', 'published', 'draft_update'))"
+      "check (status in ('draft', 'submitted', 'rejected', 'published', 'superseded', 'draft_update'))"
     )
     expect(sqlText).toContain("insert into partner_capability_assignments")
     expect(sqlText).toContain("('tradecredit_reporting')")

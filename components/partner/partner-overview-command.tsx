@@ -4,9 +4,9 @@ import {
   Building2Icon,
   HandshakeIcon,
   RadioIcon,
+  SendIcon,
   StoreIcon,
   UsersIcon,
-  WalletCardsIcon,
   ZapIcon
 } from "lucide-react"
 import type { ComponentType } from "react"
@@ -46,10 +46,10 @@ export function PartnerOverviewCommand({
       icon: StoreIcon
     },
     {
-      label: "TradeCredits allocated",
-      value: numberFormat.format(summary.overview.tradeCreditsAllocated),
-      note: "Credits usage",
-      icon: WalletCardsIcon
+      label: "Invite campaigns",
+      value: numberFormat.format(summary.overview.activeInviteCampaigns),
+      note: "Partner scoped activation",
+      icon: SendIcon
     },
     {
       label: "RFQ generated",

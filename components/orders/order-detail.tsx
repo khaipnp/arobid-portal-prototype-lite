@@ -1,27 +1,27 @@
-"use client"
+"use client";
 
-import { CopyIcon, DownloadIcon, MailCheckIcon } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { useState } from "react"
+import { CopyIcon, DownloadIcon, MailCheckIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import {
   getOrderStatusLabel,
-  OrderStatusBadge
-} from "@/components/orders/order-status-badge"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+  OrderStatusBadge,
+} from "@/components/orders/order-status-badge";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type {
   InvoiceStatus,
   Order,
   OrderStatus,
-  TransactionLogEntry
-} from "@/lib/tradexpo/types"
+  TransactionLogEntry,
+} from "@/lib/tradexpo/types";
 
 function formatVND(amount: number) {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
     currency: "VND",
-    maximumFractionDigits: 0
-  }).format(amount)
+    maximumFractionDigits: 0,
+  }).format(amount);
 }
 
 function formatDate(iso: string) {
@@ -30,117 +30,117 @@ function formatDate(iso: string) {
     month: "2-digit",
     year: "numeric",
     hour: "2-digit",
-    minute: "2-digit"
-  })
+    minute: "2-digit",
+  });
 }
 
 function statusColor(status: OrderStatus): string {
-  if (status === "Paid") return "text-emerald-600"
-  if (status === "Failed") return "text-rose-600"
-  return "text-muted-foreground"
+  if (status === "Paid") return "text-emerald-600";
+  if (status === "Failed") return "text-rose-600";
+  return "text-muted-foreground";
 }
 
 function getInvoiceStatusAppearance(status: InvoiceStatus) {
   switch (status) {
     case "not_requested":
-      return { label: "Not requested", className: "text-zinc-600" }
+      return { label: "Not requested", className: "text-zinc-600" };
     case "requested_pending_payment":
-      return { label: "Pending payment", className: "text-zinc-600" }
+      return { label: "Pending payment", className: "text-zinc-600" };
     case "requested_paid":
-      return { label: "Ready to export", className: "text-amber-700" }
+      return { label: "Ready to export", className: "text-amber-700" };
     case "exported":
-      return { label: "Exported", className: "text-sky-700" }
+      return { label: "Exported", className: "text-sky-700" };
     case "issued":
-      return { label: "Issued", className: "text-violet-700" }
+      return { label: "Issued", className: "text-violet-700" };
     case "sent":
-      return { label: "Sent", className: "text-emerald-700" }
+      return { label: "Sent", className: "text-emerald-700" };
   }
 }
 
 interface OrderDetailProps {
-  orderId: string
-  initialOrder: Order
-  initialTransactionLog: TransactionLogEntry[]
+  orderId: string;
+  initialOrder: Order;
+  initialTransactionLog: TransactionLogEntry[];
 }
 
 export function OrderDetail({
   orderId,
   initialOrder,
-  initialTransactionLog
+  initialTransactionLog,
 }: OrderDetailProps) {
-  const _router = useRouter()
-  const [order, setOrder] = useState<Order>(() => initialOrder)
+  const _router = useRouter();
+  const [order, setOrder] = useState<Order>(() => initialOrder);
   const [log, setLog] = useState<TransactionLogEntry[]>(() =>
     [...initialTransactionLog].sort(
       (a, b) =>
-        new Date(a.processedAt).getTime() - new Date(b.processedAt).getTime()
-    )
-  )
-  const [toast, setToast] = useState<string | null>(null)
-  const [isProcessingInvoice, setIsProcessingInvoice] = useState(false)
+        new Date(a.processedAt).getTime() - new Date(b.processedAt).getTime(),
+    ),
+  );
+  const [toast, setToast] = useState<string | null>(null);
+  const [isProcessingInvoice, setIsProcessingInvoice] = useState(false);
 
   function showToast(msg: string) {
-    setToast(msg)
-    setTimeout(() => setToast(null), 4000)
+    setToast(msg);
+    setTimeout(() => setToast(null), 4000);
   }
 
   async function processInvoiceAction(action: "export" | "issue" | "send") {
     try {
-      setIsProcessingInvoice(true)
+      setIsProcessingInvoice(true);
       const response = await fetch(`/api/orders/${orderId}/invoice`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action })
-      })
+        body: JSON.stringify({ action }),
+      });
       if (!response.ok) {
-        throw new Error("Unable to update invoice")
+        throw new Error("Unable to update invoice");
       }
       const data = (await response.json()) as {
-        order: Order
-        logEntry: TransactionLogEntry
-      }
-      setOrder(data.order)
+        order: Order;
+        logEntry: TransactionLogEntry;
+      };
+      setOrder(data.order);
       setLog((prev) =>
         [...prev, data.logEntry].sort(
           (a, b) =>
             new Date(a.processedAt).getTime() -
-            new Date(b.processedAt).getTime()
-        )
-      )
+            new Date(b.processedAt).getTime(),
+        ),
+      );
       showToast(
         action === "export"
           ? "Invoice data exported."
           : action === "issue"
             ? "Invoice marked as issued."
-            : "Invoice marked as sent."
-      )
+            : "Invoice marked as sent.",
+      );
     } catch {
-      showToast("Unable to update invoice request.")
+      showToast("Unable to update invoice request.");
     } finally {
-      setIsProcessingInvoice(false)
+      setIsProcessingInvoice(false);
     }
   }
 
   async function copyBillingInfo() {
-    const snapshot = order.billingInfoSnapshot
-    if (!snapshot) return
+    const snapshot = order.billingInfoSnapshot;
+    if (!snapshot) return;
     const lines = [
       snapshot.companyName ? `Company: ${snapshot.companyName}` : null,
       snapshot.fullName ? `Name: ${snapshot.fullName}` : null,
       `Invoice email: ${snapshot.invoiceEmail}`,
       `Tax code: ${snapshot.taxCode}`,
       `Address: ${snapshot.address}`,
-      snapshot.phoneNumber ? `Phone: ${snapshot.phoneNumber}` : null
-    ].filter(Boolean)
+      snapshot.phoneNumber ? `Phone: ${snapshot.phoneNumber}` : null,
+    ].filter(Boolean);
 
-    await navigator.clipboard.writeText(lines.join("\n"))
-    showToast("Billing information copied.")
+    await navigator.clipboard.writeText(lines.join("\n"));
+    showToast("Billing information copied.");
   }
 
-  const invoiceAppearance = getInvoiceStatusAppearance(order.invoiceStatus)
+  const invoiceAppearance = getInvoiceStatusAppearance(order.invoiceStatus);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 px-4">
       {/* Back + header */}
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -164,7 +164,7 @@ export function OrderDetail({
         </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         {/* Order Info */}
         <div className="space-y-4 rounded-lg border p-5">
           <h2 className="font-semibold text-muted-foreground text-sm uppercase tracking-wide">
@@ -414,5 +414,5 @@ export function OrderDetail({
         </div>
       )}
     </div>
-  )
+  );
 }

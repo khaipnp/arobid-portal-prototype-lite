@@ -4,7 +4,7 @@ import { CheckIcon, ChevronLeftIcon, MapPinIcon } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import { useMemo, useState } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { BookingOrderSummary } from "@/components/tradexpo/expo-detail/booking-order-summary"
 import { BOOTH_TIERS } from "@/components/tradexpo/expo-detail/data"
 import { PaymentProcessingDialog } from "@/components/tradexpo/expo-detail/payment-processing-dialog"
@@ -19,10 +19,23 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger
 } from "@/components/ui/alert-dialog"
+import { getBoothBookingTradeCreditPreview } from "@/lib/tradecredit/booking"
 import type { Expo as TradexpoExpo } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
 
 type BookingExpo = Pick<TradexpoExpo, "id" | "name" | "slug">
+type BookingTradeCreditWallet = {
+  availableCredits: number
+  creditValueVnd: number
+}
+type PreparedBooking = {
+  orderId: string
+  reservationId: string | null
+  creditAmount: number
+  tradeCreditDiscountAmountVnd: number
+  finalPayableVnd: number
+  expiresAt: string
+}
 
 interface HallLocation {
   id: string
@@ -31,7 +44,13 @@ interface HallLocation {
   exhibitor: string | null
 }
 
-export function BookingContent({ expo }: { expo: BookingExpo }) {
+export function BookingContent({
+  expo,
+  tradeCreditWallet
+}: {
+  expo: BookingExpo
+  tradeCreditWallet: BookingTradeCreditWallet
+}) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const initialTierId = searchParams.get("tier") || "premium"
@@ -44,9 +63,29 @@ export function BookingContent({ expo }: { expo: BookingExpo }) {
   const [selectedHall, setSelectedHall] = useState("A")
   const [step, setStep] = useState(1) // 1: Select Location, 2: Confirmation
   const [isProcessing, setIsProcessing] = useState(false)
+  const [isPreparing, setIsPreparing] = useState(false)
+  const [bookingError, setBookingError] = useState<string | null>(null)
+  const [tradeCreditAmount, setTradeCreditAmount] = useState(0)
+  const [preparedBooking, setPreparedBooking] =
+    useState<PreparedBooking | null>(null)
 
   const activeTier =
     BOOTH_TIERS.find((t) => t.id === selectedTierId) || BOOTH_TIERS[2]
+  const bookingPreview = useMemo(
+    () =>
+      getBoothBookingTradeCreditPreview({
+        boothPriceUsd: activeTier.price,
+        availableCredits: tradeCreditWallet.availableCredits,
+        requestedCredits: tradeCreditAmount,
+        creditValueVnd: tradeCreditWallet.creditValueVnd
+      }),
+    [
+      activeTier.price,
+      tradeCreditAmount,
+      tradeCreditWallet.availableCredits,
+      tradeCreditWallet.creditValueVnd
+    ]
+  )
 
   const steps = [
     { id: 1, name: "Booth Selection" },
@@ -88,25 +127,121 @@ export function BookingContent({ expo }: { expo: BookingExpo }) {
     return data
   }, [halls])
 
-  const handleProceed = () => {
+  const handleProceed = async () => {
     if (step < 2) {
+      setBookingError(null)
       setStep(step + 1)
-    } else {
+      return
+    }
+
+    if (!selectedLocation) {
+      setBookingError("Please select an available booth before payment.")
+      return
+    }
+
+    setIsPreparing(true)
+    setBookingError(null)
+
+    try {
+      const response = await fetch("/api/tradecredit/booking/prepare", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          expoId: expo.id,
+          expoName: expo.name,
+          boothRef: selectedLocation.id,
+          boothTier: activeTier.id,
+          originalAmountVnd: bookingPreview.originalAmountVnd,
+          eVoucherDiscountVnd: bookingPreview.eVoucherDiscountVnd,
+          tradeCreditAmount: bookingPreview.creditAmount
+        })
+      })
+      const payload = (await response.json()) as Partial<PreparedBooking> & {
+        error?: string
+      }
+      if (!response.ok) {
+        throw new Error(payload.error || "Unable to prepare booking payment.")
+      }
+
+      setPreparedBooking({
+        orderId: String(payload.orderId),
+        reservationId: payload.reservationId
+          ? String(payload.reservationId)
+          : null,
+        creditAmount: Number(payload.creditAmount ?? 0),
+        tradeCreditDiscountAmountVnd: Number(
+          payload.tradeCreditDiscountAmountVnd ?? 0
+        ),
+        finalPayableVnd: Number(payload.finalPayableVnd ?? 0),
+        expiresAt: String(payload.expiresAt)
+      })
+      setStep(3)
       setIsProcessing(true)
+    } catch (error) {
+      setBookingError(
+        error instanceof Error ? error.message : "Unable to prepare booking."
+      )
+    } finally {
+      setIsPreparing(false)
     }
   }
 
-  const handlePaymentComplete = () => {
-    setIsProcessing(false)
+  const handlePaymentComplete = useCallback(async () => {
+    if (!preparedBooking) {
+      setIsProcessing(false)
+      setStep(2)
+      setBookingError("Payment session was not prepared.")
+      return
+    }
+
+    try {
+      const response = await fetch("/api/tradecredit/booking/resolve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: preparedBooking.orderId,
+          reservationId: preparedBooking.reservationId,
+          outcome: "success"
+        })
+      })
+      const payload = (await response.json()) as { error?: string }
+      if (!response.ok) {
+        throw new Error(payload.error || "Unable to confirm booking payment.")
+      }
+
+      setIsProcessing(false)
+    } catch (error) {
+      setIsProcessing(false)
+      setStep(2)
+      setBookingError(
+        error instanceof Error ? error.message : "Unable to confirm payment."
+      )
+      return
+    }
+
     const params = new URLSearchParams()
     params.set("tier", selectedTierId)
     params.set("hall", selectedLocation?.hall || "A")
     params.set("booth", selectedLocation?.id || "--")
+    params.set("orderId", preparedBooking.orderId)
+    params.set("credits", String(preparedBooking.creditAmount))
+    params.set(
+      "tradeCreditDiscountVnd",
+      String(preparedBooking.tradeCreditDiscountAmountVnd)
+    )
+    params.set("finalPayableVnd", String(preparedBooking.finalPayableVnd))
 
     router.push(
       `/expos/${expo.slug || expo.id}/booking/success?${params.toString()}`
     )
-  }
+  }, [
+    expo.id,
+    expo.slug,
+    preparedBooking,
+    router,
+    selectedLocation,
+    selectedTierId
+  ])
 
   const handleLocationSelect = (
     locId: string,
@@ -414,6 +549,12 @@ export function BookingContent({ expo }: { expo: BookingExpo }) {
           expoName={expo.name}
           isLocationStep={step === 1}
           onProceed={handleProceed}
+          availableTradeCredits={tradeCreditWallet.availableCredits}
+          creditValueVnd={tradeCreditWallet.creditValueVnd}
+          tradeCreditAmount={bookingPreview.creditAmount}
+          onTradeCreditAmountChange={setTradeCreditAmount}
+          isPreparing={isPreparing}
+          bookingError={bookingError}
         />
       </div>
 

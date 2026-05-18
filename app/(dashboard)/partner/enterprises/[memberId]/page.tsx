@@ -177,7 +177,7 @@ export default async function PartnerEnterpriseDetailPage({
                   Program metrics
                 </CardTitle>
                 <CardDescription>
-                  Quota, TradeCredits, and deal context usage.
+                  Quota, trade signals, and deal context usage.
                 </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-3 md:grid-cols-3">
@@ -195,9 +195,9 @@ export default async function PartnerEnterpriseDetailPage({
                   note={`${numberFormat.format(member.quotaConsumedQuantity)} consumed`}
                 />
                 <MetricCard
-                  title="TradeCredits"
-                  value={numberFormat.format(member.tradeCreditsAllocated)}
-                  note={`${numberFormat.format(member.tradeCreditsConsumed)} consumed`}
+                  title="Trade signals"
+                  value={numberFormat.format(member.tradeSignalCount)}
+                  note={`${numberFormat.format(member.rfqGeneratedCount)} RFQs generated`}
                 />
               </CardContent>
             </Card>

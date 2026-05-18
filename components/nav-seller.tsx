@@ -7,7 +7,8 @@ import {
   MessageCircleIcon,
   ReceiptTextIcon,
   ShoppingCartIcon,
-  TvMinimalIcon
+  TvMinimalIcon,
+  WalletCardsIcon
 } from "lucide-react"
 import Link from "next/link"
 import { NotificationNavLink } from "@/components/notifications/notification-nav-link"
@@ -120,6 +121,17 @@ export function NavSeller({
             <Link href="/seller/orders">
               <ReceiptTextIcon />
               <span>Orders</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton asChild>
+            <Link href="/seller/tradecredit">
+              <WalletCardsIcon />
+              <span>TradeCredit</span>
             </Link>
           </SidebarMenuButton>
         </SidebarMenuItem>

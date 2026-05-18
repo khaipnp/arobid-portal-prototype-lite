@@ -47,7 +47,7 @@ const partnerLinks = [
   },
   {
     name: "TradeCredit Reports",
-    url: "/partner/quota",
+    url: "/partner/tradecredit",
     module: "tradecredit_reports",
     icon: <WalletCardsIcon />
   },

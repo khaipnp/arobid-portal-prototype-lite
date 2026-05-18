@@ -65,6 +65,11 @@ const servicesLinks = [
     icon: <TicketIcon />
   },
   {
+    name: "TradeCredit",
+    url: "/admin/tradecredit",
+    icon: <WalletCardsIcon />
+  },
+  {
     name: "Plan Packages",
     url: "/admin/plan-subscriptions/packages",
     icon: <PackageCheckIcon />

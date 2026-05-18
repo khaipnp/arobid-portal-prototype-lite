@@ -226,13 +226,18 @@ export function getPartnerModuleVisibility({
 }: GetPartnerModuleVisibilityArgs): Record<PartnerModule, boolean> {
   const hasCapability = (capability: PartnerCapability) =>
     capabilities.includes(capability)
+  const hasAssignedScope =
+    scope.expoIds.length > 0 ||
+    scope.programIds.length > 0 ||
+    scope.companyIds.length > 0
 
   return {
     overview: hasCapability("overview"),
     mini_site: model === "tenant" && hasCapability("mini_site"),
     enterprises: model === "tenant" && hasCapability("enterprise_association"),
-    expo_programs: hasCapability("expo_programs"),
-    tradecredit_reports: hasCapability("tradecredit_reporting"),
+    expo_programs: hasCapability("expo_programs") && hasAssignedScope,
+    tradecredit_reports:
+      hasCapability("tradecredit_reporting") && hasAssignedScope,
     analytics_reports: hasCapability("analytics_reporting"),
     bundles: false,
     communications: false,

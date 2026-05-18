@@ -1,4 +1,5 @@
 import { sql } from "@/lib/db/neon"
+import { resolveTradeCreditReservation } from "@/lib/tradecredit/db"
 import type {
   BankAccount,
   BillingInfoSnapshot,
@@ -96,6 +97,9 @@ type OrderRow = {
   discount_amount: string | number
   amount: string | number
   voucher_id: string | null
+  trade_credit_reservation_id: string | null
+  trade_credit_amount: string | number
+  trade_credit_discount_amount: string | number
   payment_method: Order["paymentMethod"]
   status: Order["status"]
   invoice_requested: boolean
@@ -132,6 +136,9 @@ function rowToOrder(r: OrderRow): Order {
     discountAmount: Number(r.discount_amount),
     amount: Number(r.amount),
     voucherId: r.voucher_id ?? undefined,
+    tradeCreditReservationId: r.trade_credit_reservation_id ?? undefined,
+    tradeCreditAmount: Number(r.trade_credit_amount),
+    tradeCreditDiscountAmount: Number(r.trade_credit_discount_amount),
     paymentMethod: r.payment_method,
     status: r.status,
     invoiceRequested: r.invoice_requested,
@@ -162,10 +169,21 @@ async function expirePendingPaymentOrders(): Promise<void> {
       and payment_method = 'vnpay'
       and expires_at is not null
       and expires_at <= now()
-    returning id, expires_at
-  `) as { id: string; expires_at: string | Date }[]
+    returning id, expires_at, trade_credit_reservation_id
+  `) as {
+    id: string
+    expires_at: string | Date
+    trade_credit_reservation_id: string | null
+  }[]
 
   for (const order of expired) {
+    if (order.trade_credit_reservation_id) {
+      await resolveTradeCreditReservation({
+        reservationId: order.trade_credit_reservation_id,
+        outcome: "released"
+      })
+    }
+
     await sql`
       insert into transaction_log (
         id,

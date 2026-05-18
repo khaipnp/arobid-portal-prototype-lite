@@ -36,7 +36,6 @@ export type PartnerPortalAction =
   | "enterprise.advance"
   | "quota.manage"
   | "invite.manage"
-  | "tradeCredits.manage"
   | "bundle.manage"
   | "bundle.purchase"
   | "communications.manage"
@@ -75,7 +74,6 @@ const actionKeys: PartnerPortalAction[] = [
   "enterprise.advance",
   "quota.manage",
   "invite.manage",
-  "tradeCredits.manage",
   "bundle.manage",
   "bundle.purchase",
   "communications.manage",
@@ -125,7 +123,7 @@ export function buildPartnerAccess(input: {
   const canWriteEnterprise = modules.enterprises && !readOnly
   const canWriteExpo =
     modules.expo_programs && input.organization.model !== "turnkey" && !readOnly
-  const canWriteTradeCredit = false
+  const canManageQuota = modules.tradecredit_reports && !readOnly
 
   return {
     organization: input.organization,
@@ -145,9 +143,8 @@ export function buildPartnerAccess(input: {
       "turnkey.create": canWriteExpo,
       "enterprise.manage": canWriteEnterprise,
       "enterprise.advance": canWriteEnterprise,
-      "quota.manage": canWriteTradeCredit,
+      "quota.manage": canManageQuota,
       "invite.manage": canWriteEnterprise,
-      "tradeCredits.manage": canWriteTradeCredit,
       "bundle.manage": false,
       "bundle.purchase": false,
       "communications.manage": false,

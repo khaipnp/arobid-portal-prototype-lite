@@ -1,11 +1,6 @@
 "use client"
 
-import {
-  LandmarkIcon,
-  SendIcon,
-  UsersRoundIcon,
-  WalletCardsIcon
-} from "lucide-react"
+import { LandmarkIcon, SendIcon, UsersRoundIcon } from "lucide-react"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -39,6 +34,14 @@ export function PartnerGovernmentProgramManager({
 }) {
   const canManage = access.actions["government.manage"]
   const { quotaWorkspace } = workspace
+  const totalAvailableQuota = quotaWorkspace.quotas.reduce(
+    (sum, quota) => sum + quota.availableQuantity,
+    0
+  )
+  const totalClaims = quotaWorkspace.inviteCampaigns.reduce(
+    (sum, campaign) => sum + campaign.claimedCount,
+    0
+  )
 
   return (
     <div className="space-y-4 px-4">
@@ -62,10 +65,10 @@ export function PartnerGovernmentProgramManager({
           icon={<LandmarkIcon />}
         />
         <MetricCard
-          title="Credit Utilization"
-          value={`${workspace.creditUtilization}%`}
-          note={`${numberFormat.format(quotaWorkspace.wallet.consumed)} consumed`}
-          icon={<WalletCardsIcon />}
+          title="Available Quota"
+          value={numberFormat.format(totalAvailableQuota)}
+          note="Remaining assignable units"
+          icon={<LandmarkIcon />}
         />
       </section>
 
@@ -126,25 +129,25 @@ export function PartnerGovernmentProgramManager({
 
         <Card>
           <CardHeader>
-            <CardTitle>TradeCredit Wallet</CardTitle>
+            <CardTitle>Invite-Code Distribution</CardTitle>
             <CardDescription>
-              Government credit balance allocated to supported enterprises.
+              Campaign performance for supported enterprise onboarding.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <WalletRow label="Balance" value={quotaWorkspace.wallet.balance} />
-            <WalletRow
-              label="Allocated"
-              value={quotaWorkspace.wallet.allocated}
+            <DistributionRow
+              label="Active campaigns"
+              value={workspace.activeCampaigns}
             />
-            <WalletRow
-              label="Consumed"
-              value={quotaWorkspace.wallet.consumed}
+            <DistributionRow label="Total claims" value={totalClaims} />
+            <DistributionRow
+              label="Available quota"
+              value={totalAvailableQuota}
             />
-            <Progress value={workspace.creditUtilization} />
+            <Progress value={workspace.quotaUtilization} />
             {canManage ? (
               <Button asChild className="w-full" variant="outline">
-                <Link href="/partner/quota">Allocate TradeCredits</Link>
+                <Link href="/partner/quota">Manage quota</Link>
               </Button>
             ) : null}
           </CardContent>
@@ -226,7 +229,7 @@ function MetricCard({
   )
 }
 
-function WalletRow({ label, value }: { label: string; value: number }) {
+function DistributionRow({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex items-center justify-between gap-3 rounded-md border p-3 text-sm">
       <span className="text-muted-foreground">{label}</span>
