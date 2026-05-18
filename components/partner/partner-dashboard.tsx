@@ -224,64 +224,6 @@ export function PartnerDashboard({
 
   return (
     <div className="space-y-4 px-4">
-      <Card className="overflow-hidden border-primary/15 bg-gradient-to-br from-card via-card to-muted/50">
-        <CardContent className="grid gap-6 p-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="space-y-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="secondary">Partner Overview</Badge>
-              <Badge variant="outline">Scoped SSOT data</Badge>
-              <Badge variant="outline">Report-only finance controls</Badge>
-            </div>
-            <div className="max-w-3xl space-y-2">
-              <h2 className="font-semibold text-2xl tracking-tight md:text-3xl">
-                Partner operating command center
-              </h2>
-              <p className="text-muted-foreground text-sm leading-relaxed md:text-base">
-                Monitor assigned expo programs, booth quota usage, audience
-                signals, and reporting surfaces without exposing unassigned
-                Arobid platform data.
-              </p>
-            </div>
-          </div>
-          <div className="rounded-xl border bg-background/75 p-4">
-            <div className="flex items-center gap-2 font-medium text-sm">
-              <ShieldCheckIcon className="h-4 w-4 text-primary" />
-              MVP capability surface
-            </div>
-            <div className="mt-4 grid gap-2">
-              <CapabilityTile
-                title="Expo Programs"
-                description="Assigned expo operations and booth distribution."
-                status="Active"
-                href="/partner/expos"
-                icon={<ClipboardListIcon className="h-4 w-4" />}
-              />
-              <CapabilityTile
-                title="Enterprises & Members"
-                description="Tenant-associated companies remain scoped SSOT records."
-                status="Scoped"
-                href="/partner/enterprises"
-                icon={<Building2Icon className="h-4 w-4" />}
-              />
-              <CapabilityTile
-                title="Analytics & Reports"
-                description="Read-only summaries filtered to assigned partner scope."
-                status="Report"
-                href="/partner/analytics"
-                icon={<TrendingUpIcon className="h-4 w-4" />}
-              />
-              <CapabilityTile
-                title="Mini-site analytics"
-                description="Prototype traffic view for tenant branded mini-site."
-                status="Prototype"
-                href="/partner/site-management"
-                icon={<FileClockIcon className="h-4 w-4" />}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           eyebrow="Assigned Expos"
