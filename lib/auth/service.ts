@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto"
 import { hashPassword, verifyPassword } from "@/lib/auth/password"
 import type { AppRole } from "@/lib/auth/rbac"
 import { APP_ROLES } from "@/lib/auth/rbac"
@@ -29,6 +30,44 @@ type DemoAccount = {
   password: string
   partner?: DemoPartnerProfile
 }
+
+type DemoPartnerExpoAssignment = {
+  organizationId: string
+  expoId: string
+  partnershipModel: "co_host" | "turnkey" | "tenant"
+}
+
+const DEMO_PARTNER_CAPABILITIES = [
+  "overview",
+  "mini_site",
+  "enterprise_association",
+  "expo_programs",
+  "tradecredit_reporting",
+  "analytics_reporting"
+] as const
+
+const DEMO_PARTNER_EXPO_ASSIGNMENTS: DemoPartnerExpoAssignment[] = [
+  {
+    organizationId: "partner-org-demo-expo",
+    expoId: "expo-015",
+    partnershipModel: "co_host"
+  },
+  {
+    organizationId: "partner-org-demo-tenant",
+    expoId: "expo-001",
+    partnershipModel: "tenant"
+  },
+  {
+    organizationId: "partner-org-demo-tenant",
+    expoId: "expo-003",
+    partnershipModel: "tenant"
+  },
+  {
+    organizationId: "partner-org-demo-tenant",
+    expoId: "expo-009",
+    partnershipModel: "tenant"
+  }
+]
 
 export const DEMO_ACCOUNTS: DemoAccount[] = [
   {
@@ -258,6 +297,144 @@ function toRedirectPath(input: { roles: AppRole[] }) {
   return "/seller"
 }
 
+function generatedPartnerOrganizationId(userId: string) {
+  return `partner-org-${createHash("sha256").update(userId).digest("hex")}`
+}
+
+function demoPartnerScopeAssignmentId(partnerOrgId: string, expoId: string) {
+  return `partner-scope-${partnerOrgId}-expo-${expoId}`
+}
+
+async function ensureDemoPartnerCapabilities() {
+  const partnerOrgIds = Array.from(
+    new Set(
+      DEMO_ACCOUNTS.map((account) => account.partner?.organizationId).filter(
+        Boolean
+      )
+    )
+  ) as string[]
+
+  for (const partnerOrgId of partnerOrgIds) {
+    await sql`
+      insert into partner_capability_assignments (
+        partner_org_id,
+        capability,
+        granted_by_user_id
+      )
+      select ${partnerOrgId}, capability, null
+      from unnest(${Array.from(DEMO_PARTNER_CAPABILITIES)}::text[]) as capability
+      on conflict (partner_org_id, capability) do nothing
+    `
+  }
+}
+
+async function moveGeneratedDemoPartnerAssignments() {
+  const demoPartnerAccounts = DEMO_ACCOUNTS.filter(
+    (account): account is DemoAccount & { partner: DemoPartnerProfile } =>
+      Boolean(account.partner)
+  )
+
+  for (const account of demoPartnerAccounts) {
+    const generatedOrgId = generatedPartnerOrganizationId(account.userId)
+    if (generatedOrgId === account.partner.organizationId) continue
+
+    await sql`begin`
+    try {
+      await sql`
+        insert into partner_expo_assignments (
+          partner_org_id,
+          expo_id,
+          partnership_model,
+          capabilities,
+          assigned_at
+        )
+        select
+          ${account.partner.organizationId},
+          expo_id,
+          partnership_model,
+          capabilities,
+          assigned_at
+        from partner_expo_assignments
+        where partner_org_id = ${generatedOrgId}
+        on conflict (partner_org_id, expo_id) do update set
+          partnership_model = excluded.partnership_model,
+          capabilities = excluded.capabilities
+      `
+
+      await sql`
+        delete from partner_organizations
+        where id = ${generatedOrgId}
+      `
+
+      await sql`commit`
+    } catch (error) {
+      await sql`rollback`
+      throw error
+    }
+  }
+}
+
+async function ensureDemoPartnerExpoAssignments() {
+  for (const assignment of DEMO_PARTNER_EXPO_ASSIGNMENTS) {
+    await sql`
+      insert into partner_expo_assignments (
+        partner_org_id,
+        expo_id,
+        partnership_model,
+        capabilities
+      )
+      select
+        ${assignment.organizationId},
+        e.id,
+        ${assignment.partnershipModel},
+        '{}'::jsonb
+      from expos e
+      inner join partner_organizations po on po.id = ${assignment.organizationId}
+      where e.id = ${assignment.expoId}
+      on conflict (partner_org_id, expo_id) do update set
+        partnership_model = excluded.partnership_model,
+        capabilities = excluded.capabilities
+    `
+
+    await sql`
+      insert into partner_scope_assignments (
+        id,
+        partner_org_id,
+        scope_type,
+        scope_id,
+        assigned_by_user_id,
+        status,
+        created_at,
+        updated_at
+      )
+      select
+        ${demoPartnerScopeAssignmentId(assignment.organizationId, assignment.expoId)},
+        po.id,
+        'expo',
+        e.id,
+        po.primary_user_id,
+        'active',
+        now(),
+        now()
+      from expos e
+      inner join partner_organizations po on po.id = ${assignment.organizationId}
+      where e.id = ${assignment.expoId}
+      on conflict (partner_org_id, scope_type, scope_id)
+      where status = 'active'
+      do update set
+        assigned_by_user_id = excluded.assigned_by_user_id,
+        status = 'active',
+        updated_at = now()
+    `
+  }
+}
+
+async function ensureDemoPartnerPortalData() {
+  await ensureDemoPartnerCapabilities()
+  await moveGeneratedDemoPartnerAssignments()
+  await ensureDemoPartnerExpoAssignments()
+}
+
 export async function ensureDemoAccounts() {
   await sql`
     insert into companies (id, name)
@@ -361,6 +538,8 @@ export async function ensureDemoAccounts() {
       `
     }
   }
+
+  await ensureDemoPartnerPortalData()
 }
 
 export async function ensureAuthBootstrapIdentity() {
