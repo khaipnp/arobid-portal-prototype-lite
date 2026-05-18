@@ -16,7 +16,7 @@ export default async function PartnerQuotaPage() {
   return (
     <DashboardShell
       title="Quota & TradeCredits"
-      description="Manage booth quota, invite-code allocation, and TradeCredit wallet usage."
+      description="Manage booth quota and invite-code allocation; view TradeCredit reporting without configuration actions."
       breadcrumbs={[
         { label: "Overview", href: "/partner" },
         { label: "Quota & TradeCredits" }

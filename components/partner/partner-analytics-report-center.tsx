@@ -82,6 +82,10 @@ export function PartnerAnalyticsReportCenter({
       label: expo.expoName
     }))
   ]
+  const filteredTopExpos =
+    filters.scope === "all"
+      ? workspace.topExpos
+      : workspace.topExpos.filter((expo) => expo.expoId === filters.scope)
 
   function updateFilter(key: keyof typeof filters, value: string) {
     setFilters((prev) => ({ ...prev, [key]: value }))
@@ -257,8 +261,8 @@ export function PartnerAnalyticsReportCenter({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {workspace.topExpos.length === 0 ? (
-              <EmptyState label="No assigned expo data yet." />
+            {filteredTopExpos.length === 0 ? (
+              <EmptyState label="No expo data matches current filters." />
             ) : (
               <Table>
                 <TableHeader>
@@ -271,7 +275,7 @@ export function PartnerAnalyticsReportCenter({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {workspace.topExpos.map((expo) => (
+                  {filteredTopExpos.map((expo) => (
                     <TableRow key={expo.expoId}>
                       <TableCell>
                         <p className="font-medium">{expo.expoName}</p>
