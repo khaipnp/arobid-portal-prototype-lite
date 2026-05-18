@@ -46,13 +46,13 @@ const partnerLinks = [
     icon: <ApertureIcon />
   },
   {
-    name: "Quota & TradeCredit Reports",
+    name: "TradeCredit Reports",
     url: "/partner/quota",
     module: "tradecredit_reports",
     icon: <WalletCardsIcon />
   },
   {
-    name: "Analytics & Reports",
+    name: "Analytics",
     url: "/partner/analytics",
     module: "analytics_reports",
     icon: <PieChartIcon />

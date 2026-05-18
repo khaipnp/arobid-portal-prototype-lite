@@ -3854,15 +3854,17 @@ export async function getPartnerEnterpriseMemberDetail(
   ])
 
   const activities: PartnerEnterpriseActivity[] = [
-    ...(auditRows as {
-      id: string
-      action: string
-      old_status: string | null
-      new_status: string | null
-      actor_label: string | null
-      reason: string | null
-      created_at: string | Date
-    }[]).map((row) => ({
+    ...(
+      auditRows as {
+        id: string
+        action: string
+        old_status: string | null
+        new_status: string | null
+        actor_label: string | null
+        reason: string | null
+        created_at: string | Date
+      }[]
+    ).map((row) => ({
       id: row.id,
       type: "association" as const,
       title: row.new_status
@@ -3872,14 +3874,16 @@ export async function getPartnerEnterpriseMemberDetail(
       actorLabel: row.actor_label,
       createdAt: toIso(row.created_at)
     })),
-    ...(dealRows as {
-      id: string
-      from_stage: PartnerDealContextStage | null
-      to_stage: PartnerDealContextStage
-      note: string | null
-      actor_label: string | null
-      created_at: string | Date
-    }[]).map((row) => ({
+    ...(
+      dealRows as {
+        id: string
+        from_stage: PartnerDealContextStage | null
+        to_stage: PartnerDealContextStage
+        note: string | null
+        actor_label: string | null
+        created_at: string | Date
+      }[]
+    ).map((row) => ({
       id: row.id,
       type: "deal_context" as const,
       title: `Deal context: ${row.from_stage ?? "none"} → ${row.to_stage}`,

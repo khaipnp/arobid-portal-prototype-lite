@@ -9,6 +9,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -19,7 +20,6 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card"
-import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import { requireRole } from "@/lib/auth/rbac"
 import { getPartnerEnterpriseMemberDetail } from "@/lib/partner/db"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
@@ -89,7 +89,9 @@ export default async function PartnerEnterpriseDetailPage({
                       {member.activationStatus.replaceAll("_", " ")}
                     </Badge>
                     <Badge variant="secondary">{member.relationshipType}</Badge>
-                    <Badge variant={member.publicProfile ? "default" : "outline"}>
+                    <Badge
+                      variant={member.publicProfile ? "default" : "outline"}
+                    >
                       {member.publicProfile ? "Public" : "Private"}
                     </Badge>
                   </div>
@@ -153,9 +155,18 @@ export default async function PartnerEnterpriseDetailPage({
               </CardHeader>
               <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <DetailItem label="Source" value={member.source} />
-                <DetailItem label="Last action" value={member.lastAction ?? "—"} />
-                <DetailItem label="Accepted date" value={formatDate(member.acceptedAt)} />
-                <DetailItem label="Removed date" value={formatDate(member.removedAt)} />
+                <DetailItem
+                  label="Last action"
+                  value={member.lastAction ?? "—"}
+                />
+                <DetailItem
+                  label="Accepted date"
+                  value={formatDate(member.acceptedAt)}
+                />
+                <DetailItem
+                  label="Removed date"
+                  value={formatDate(member.removedAt)}
+                />
               </CardContent>
             </Card>
 
@@ -172,7 +183,10 @@ export default async function PartnerEnterpriseDetailPage({
               <CardContent className="grid gap-3 md:grid-cols-3">
                 <MetricCard
                   title="Deal context"
-                  value={member.dealContextStage?.replaceAll("_", " ") ?? "No context"}
+                  value={
+                    member.dealContextStage?.replaceAll("_", " ") ??
+                    "No context"
+                  }
                   note={`${numberFormat.format(member.dealContextEvents)} events`}
                 />
                 <MetricCard
@@ -195,13 +209,17 @@ export default async function PartnerEnterpriseDetailPage({
                 <HistoryIcon className="h-5 w-5 text-primary" />
                 Activity timeline
               </CardTitle>
-              <CardDescription>Newest association and deal events.</CardDescription>
+              <CardDescription>
+                Newest association and deal events.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {activities.length === 0 ? (
                 <div className="flex min-h-48 flex-col items-center justify-center rounded-xl border border-dashed bg-muted/30 p-6 text-center">
                   <HistoryIcon className="h-8 w-8 text-muted-foreground" />
-                  <p className="mt-3 font-medium text-sm">No activity recorded</p>
+                  <p className="mt-3 font-medium text-sm">
+                    No activity recorded
+                  </p>
                   <p className="mt-1 text-muted-foreground text-xs">
                     New association updates will appear here.
                   </p>
@@ -216,11 +234,15 @@ export default async function PartnerEnterpriseDetailPage({
                           <Badge variant="secondary">
                             {activity.type.replaceAll("_", " ")}
                           </Badge>
-                          <p className="font-medium text-sm">{activity.title}</p>
+                          <p className="font-medium text-sm">
+                            {activity.title}
+                          </p>
                         </div>
                         <p className="mt-2 text-muted-foreground text-xs">
                           {formatDate(activity.createdAt)}
-                          {activity.actorLabel ? ` · ${activity.actorLabel}` : ""}
+                          {activity.actorLabel
+                            ? ` · ${activity.actorLabel}`
+                            : ""}
                         </p>
                         {activity.description ? (
                           <p className="mt-2 text-muted-foreground text-sm leading-relaxed">
@@ -243,7 +265,9 @@ export default async function PartnerEnterpriseDetailPage({
 function HeroStat({ label, value }: { label: string; value: string }) {
   return (
     <div className="p-5">
-      <p className="text-muted-foreground text-xs uppercase tracking-wide">{label}</p>
+      <p className="text-muted-foreground text-xs uppercase tracking-wide">
+        {label}
+      </p>
       <p className="mt-2 font-semibold text-2xl tabular-nums">{value}</p>
     </div>
   )
@@ -252,7 +276,9 @@ function HeroStat({ label, value }: { label: string; value: string }) {
 function DetailItem({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border bg-muted/20 p-4">
-      <p className="text-muted-foreground text-xs uppercase tracking-wide">{label}</p>
+      <p className="text-muted-foreground text-xs uppercase tracking-wide">
+        {label}
+      </p>
       <p className="mt-2 font-medium text-sm">{value}</p>
     </div>
   )
@@ -272,8 +298,12 @@ function MetricCard({
       <p className="text-muted-foreground text-xs uppercase tracking-wide">
         {title}
       </p>
-      <p className="mt-2 font-semibold text-xl capitalize tabular-nums">{value}</p>
-      {note ? <p className="mt-1 text-muted-foreground text-xs">{note}</p> : null}
+      <p className="mt-2 font-semibold text-xl capitalize tabular-nums">
+        {value}
+      </p>
+      {note ? (
+        <p className="mt-1 text-muted-foreground text-xs">{note}</p>
+      ) : null}
     </div>
   )
 }

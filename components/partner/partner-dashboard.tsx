@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   ActivityIcon,
@@ -8,10 +8,10 @@ import {
   Globe2Icon,
   RadioTowerIcon,
   TrendingUpIcon,
-  UsersIcon
-} from "lucide-react"
-import Link from "next/link"
-import type { ReactNode } from "react"
+  UsersIcon,
+} from "lucide-react";
+import Link from "next/link";
+import type { ReactNode } from "react";
 import {
   Bar,
   BarChart,
@@ -23,102 +23,102 @@ import {
   Pie,
   PieChart,
   XAxis,
-  YAxis
-} from "recharts"
-import { Badge } from "@/components/ui/badge"
+  YAxis,
+} from "recharts";
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardAction,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
-} from "@/components/ui/card"
+  CardTitle,
+} from "@/components/ui/card";
 import {
   type ChartConfig,
   ChartContainer,
   ChartTooltip,
-  ChartTooltipContent
-} from "@/components/ui/chart"
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
-} from "@/components/ui/table"
-import type { PartnerDashboardMetrics } from "@/lib/partner/db"
-import { ExpoStatusBadge } from "../tradexpo/status-badge"
+  TableRow,
+} from "@/components/ui/table";
+import type { PartnerDashboardMetrics } from "@/lib/partner/db";
+import { ExpoStatusBadge } from "../tradexpo/status-badge";
 
 const compactNumber = new Intl.NumberFormat("en", {
   notation: "compact",
-  maximumFractionDigits: 1
-})
+  maximumFractionDigits: 1,
+});
 
-const numberFormat = new Intl.NumberFormat("en")
+const numberFormat = new Intl.NumberFormat("en");
 
 const currencyFormat = new Intl.NumberFormat("vi-VN", {
   style: "currency",
   currency: "VND",
   notation: "compact",
-  maximumFractionDigits: 1
-})
+  maximumFractionDigits: 1,
+});
 
 const chartConfig = {
   soldBooths: {
     label: "Used booths",
-    color: "var(--chart-1)"
+    color: "var(--chart-1)",
   },
   unsoldBooths: {
     label: "Available booths",
-    color: "var(--chart-3)"
+    color: "var(--chart-3)",
   },
   boothUtilization: {
     label: "Utilization",
-    color: "var(--chart-2)"
+    color: "var(--chart-2)",
   },
   peakViewers: {
     label: "Peak viewers",
-    color: "var(--chart-4)"
+    color: "var(--chart-4)",
   },
   goLiveEvents: {
     label: "GoLIVE events",
-    color: "var(--chart-5)"
+    color: "var(--chart-5)",
   },
   value: {
     label: "Count",
-    color: "var(--chart-2)"
-  }
-} satisfies ChartConfig
+    color: "var(--chart-2)",
+  },
+} satisfies ChartConfig;
 
 const statusColors: Record<string, string> = {
   Draft: "var(--muted-foreground)",
   "Pending Review": "var(--chart-5)",
   Live: "var(--chart-2)",
   Archived: "var(--chart-4)",
-  Canceled: "var(--destructive)"
-}
+  Canceled: "var(--destructive)",
+};
 
 function formatPercent(value: number) {
-  return `${Math.round(value)}%`
+  return `${Math.round(value)}%`;
 }
 
 function formatPercentLabel(value: unknown) {
-  return formatPercent(typeof value === "number" ? value : Number(value) || 0)
+  return formatPercent(typeof value === "number" ? value : Number(value) || 0);
 }
 
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString("en-GB", {
     day: "2-digit",
-    month: "short"
-  })
+    month: "short",
+  });
 }
 
 function shortName(name: string) {
-  const words = name.split(/\s+/).filter(Boolean)
-  if (words.length <= 2) return name
-  return words.slice(0, 2).join(" ")
+  const words = name.split(/\s+/).filter(Boolean);
+  if (words.length <= 2) return name;
+  return words.slice(0, 2).join(" ");
 }
 
 function EmptyChart({ label }: { label: string }) {
@@ -126,7 +126,7 @@ function EmptyChart({ label }: { label: string }) {
     <div className="flex h-55 items-center justify-center rounded-xl border border-dashed bg-muted/20 text-muted-foreground text-sm">
       {label}
     </div>
-  )
+  );
 }
 
 function MetricCard({
@@ -134,13 +134,13 @@ function MetricCard({
   value,
   note,
   icon,
-  eyebrow
+  eyebrow,
 }: {
-  title: string
-  value: string
-  note: string
-  icon: ReactNode
-  eyebrow: string
+  title: string;
+  value: string;
+  note: string;
+  icon: ReactNode;
+  eyebrow: string;
 }) {
   return (
     <Card
@@ -163,17 +163,17 @@ function MetricCard({
         <div className="leading-relaxed">{note}</div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 function HeroStat({
   label,
   value,
-  icon
+  icon,
 }: {
-  label: string
-  value: string
-  icon: ReactNode
+  label: string;
+  value: string;
+  icon: ReactNode;
 }) {
   return (
     <div className="rounded-2xl border border-white/20 bg-white/10 p-4 text-primary-foreground shadow-sm backdrop-blur">
@@ -185,19 +185,19 @@ function HeroStat({
         {value}
       </div>
     </div>
-  )
+  );
 }
 
 function InsightCard({
   label,
   value,
   description,
-  icon
+  icon,
 }: {
-  label: string
-  value: string
-  description: string
-  icon: ReactNode
+  label: string;
+  value: string;
+  description: string;
+  icon: ReactNode;
 }) {
   return (
     <div className="rounded-xl border bg-muted/30 p-4">
@@ -216,35 +216,35 @@ function InsightCard({
         {description}
       </p>
     </div>
-  )
+  );
 }
 
 export function PartnerDashboard({
-  metrics
+  metrics,
 }: {
-  metrics: PartnerDashboardMetrics
+  metrics: PartnerDashboardMetrics;
 }) {
   const expoChartData = metrics.expoMetrics.map((item) => ({
     ...item,
-    label: shortName(item.expoName)
-  }))
-  const hasExpoMetrics = metrics.expoMetrics.length > 0
-  const hasCountryData = metrics.countryBreakdown.length > 0
-  const hasTierData = metrics.boothTierBreakdown.length > 0
-  const demoMiniSiteViews = 2480
+    label: shortName(item.expoName),
+  }));
+  const hasExpoMetrics = metrics.expoMetrics.length > 0;
+  const hasCountryData = metrics.countryBreakdown.length > 0;
+  const hasTierData = metrics.boothTierBreakdown.length > 0;
+  const demoMiniSiteViews = 2480;
   const totalRevenue = metrics.expoMetrics.reduce(
     (sum, item) => sum + item.revenue,
-    0
-  )
+    0,
+  );
   const totalGoLiveEvents = metrics.expoMetrics.reduce(
     (sum, item) => sum + item.goLiveEvents,
-    0
-  )
+    0,
+  );
   const totalPeakViewers = metrics.expoMetrics.reduce(
     (sum, item) => sum + item.peakViewers,
-    0
-  )
-  const leadingStatus = metrics.statusBreakdown[0]
+    0,
+  );
+  const leadingStatus = metrics.statusBreakdown[0];
 
   return (
     <div className="space-y-6 px-4 pb-8">
@@ -328,132 +328,29 @@ export function PartnerDashboard({
         />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.45fr)_minmax(360px,0.55fr)]">
-        <Card className="overflow-hidden">
-          <CardHeader>
-            <div>
-              <CardDescription>Capacity analytics</CardDescription>
-              <CardTitle>Expo Program Capacity</CardTitle>
-            </div>
-            <CardAction>
-              <Badge variant="secondary">
-                {numberFormat.format(metrics.totals.soldBooths)} used
-              </Badge>
-            </CardAction>
-          </CardHeader>
-          <CardContent>
-            {hasExpoMetrics ? (
-              <ChartContainer
-                config={chartConfig}
-                className="h-80 w-full"
-                initialDimension={{ width: 760, height: 320 }}
-              >
-                <BarChart data={expoChartData} margin={{ top: 24, right: 16 }}>
-                  <CartesianGrid vertical={false} />
-                  <XAxis
-                    dataKey="label"
-                    tickLine={false}
-                    axisLine={false}
-                    interval={0}
-                    tickMargin={10}
-                  />
-                  <YAxis tickLine={false} axisLine={false} width={32} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar
-                    dataKey="soldBooths"
-                    stackId="booths"
-                    fill="var(--color-soldBooths)"
-                    radius={[0, 0, 6, 6]}
-                  />
-                  <Bar
-                    dataKey="unsoldBooths"
-                    stackId="booths"
-                    fill="var(--color-unsoldBooths)"
-                    radius={[6, 6, 0, 0]}
-                  >
-                    <LabelList
-                      dataKey="boothUtilization"
-                      position="top"
-                      formatter={formatPercentLabel}
-                      className="fill-foreground font-medium"
-                    />
-                  </Bar>
-                </BarChart>
-              </ChartContainer>
-            ) : (
-              <EmptyChart label="No assigned expo program metrics yet." />
-            )}
-          </CardContent>
-        </Card>
-
-        <div className="grid gap-4">
-          <Card>
-            <CardHeader>
-              <CardDescription>Operating mix</CardDescription>
-              <CardTitle>Status Distribution</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {metrics.statusBreakdown.length > 0 ? (
-                <ChartContainer
-                  config={chartConfig}
-                  className="mx-auto h-52 max-w-76"
-                  initialDimension={{ width: 304, height: 208 }}
-                >
-                  <PieChart>
-                    <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-                    <Pie
-                      data={metrics.statusBreakdown}
-                      dataKey="value"
-                      nameKey="name"
-                      innerRadius={48}
-                      outerRadius={82}
-                      paddingAngle={2}
-                    >
-                      {metrics.statusBreakdown.map((item) => (
-                        <Cell
-                          key={item.name}
-                          fill={statusColors[item.name] ?? "var(--chart-1)"}
-                        />
-                      ))}
-                      <LabelList
-                        dataKey="name"
-                        position="outside"
-                        className="fill-muted-foreground text-xs"
-                      />
-                    </Pie>
-                  </PieChart>
-                </ChartContainer>
-              ) : (
-                <EmptyChart label="No status data yet." />
-              )}
-            </CardContent>
-          </Card>
-
-          <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-1">
-            <InsightCard
-              label="Dominant status"
-              value={leadingStatus?.name ?? "No data"}
-              description={
-                leadingStatus
-                  ? `${numberFormat.format(leadingStatus.value)} programs in this lifecycle state.`
-                  : "No lifecycle data for scoped programs yet."
-              }
-              icon={<TrendingUpIcon className="h-4 w-4" />}
-            />
-            <InsightCard
-              label="GoLIVE events"
-              value={numberFormat.format(totalGoLiveEvents)}
-              description="Event activity across assigned expo programs."
-              icon={<RadioTowerIcon className="h-4 w-4" />}
-            />
-            <InsightCard
-              label="Peak viewers"
-              value={compactNumber.format(totalPeakViewers)}
-              description="Combined peak audience signal from available analytics."
-              icon={<UsersIcon className="h-4 w-4" />}
-            />
-          </div>
-        </div>
+      <div className="grid gap-3 md:grid-cols-3">
+        <InsightCard
+          label="Dominant status"
+          value={leadingStatus?.name ?? "No data"}
+          description={
+            leadingStatus
+              ? `${numberFormat.format(leadingStatus.value)} programs in this lifecycle state.`
+              : "No lifecycle data for scoped programs yet."
+          }
+          icon={<TrendingUpIcon className="h-4 w-4" />}
+        />
+        <InsightCard
+          label="GoLIVE events"
+          value={numberFormat.format(totalGoLiveEvents)}
+          description="Event activity across assigned expo programs."
+          icon={<RadioTowerIcon className="h-4 w-4" />}
+        />
+        <InsightCard
+          label="Peak viewers"
+          value={compactNumber.format(totalPeakViewers)}
+          description="Combined peak audience signal from available analytics."
+          icon={<UsersIcon className="h-4 w-4" />}
+        />
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
@@ -619,19 +516,19 @@ export function PartnerDashboard({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
 
 function BreakdownList({
   title,
   items,
-  empty
+  empty,
 }: {
-  title: string
-  items: { name: string; value: number }[]
-  empty: boolean
+  title: string;
+  items: { name: string; value: number }[];
+  empty: boolean;
 }) {
-  const total = items.reduce((sum, item) => sum + item.value, 0)
+  const total = items.reduce((sum, item) => sum + item.value, 0);
 
   return (
     <section className="space-y-3">
@@ -646,7 +543,7 @@ function BreakdownList({
       ) : (
         <div className="space-y-3">
           {items.map((item) => {
-            const percent = total > 0 ? (item.value / total) * 100 : 0
+            const percent = total > 0 ? (item.value / total) * 100 : 0;
 
             return (
               <div key={item.name} className="space-y-1.5">
@@ -663,10 +560,10 @@ function BreakdownList({
                   />
                 </div>
               </div>
-            )
+            );
           })}
         </div>
       )}
     </section>
-  )
+  );
 }
