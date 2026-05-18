@@ -2,13 +2,11 @@
 
 import {
   BadgeCheckIcon,
-  CircleDollarSignIcon,
   KeyRoundIcon,
   PlusIcon,
   RefreshCwIcon,
   SendIcon,
-  UsersIcon,
-  WalletCardsIcon
+  UsersIcon
 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useMemo, useState } from "react"
@@ -46,8 +44,7 @@ import type {
   PartnerEnterpriseMember,
   PartnerInviteCampaign,
   PartnerQuota,
-  PartnerQuotaWorkspace,
-  PartnerTradeCreditLedgerEntry
+  PartnerQuotaWorkspace
 } from "@/lib/partner/db"
 
 const numberFormat = new Intl.NumberFormat("en")
@@ -58,23 +55,12 @@ type DialogMode =
   | "campaign"
   | "allocate-quota"
   | "claim-code"
-  | "credit"
   | null
 
 const quotaTypeLabels: Record<PartnerQuota["quotaType"], string> = {
   booth_credits: "Booth credits",
   expo_program_quota: "Expo program quota",
   bulk_booth_inventory: "Bulk booth inventory"
-}
-
-const creditTypeLabels: Record<
-  PartnerTradeCreditLedgerEntry["entryType"],
-  string
-> = {
-  purchase: "Purchase credits",
-  allocate: "Allocate to enterprise",
-  consume: "Consume allocated credits",
-  release: "Release allocation"
 }
 
 export function PartnerQuotaManager({
@@ -110,12 +96,6 @@ export function PartnerQuotaManager({
   const [claimForm, setClaimForm] = useState({
     campaignId: "",
     enterpriseMemberId: ""
-  })
-  const [creditForm, setCreditForm] = useState({
-    entryType: "purchase",
-    amount: "1000",
-    enterpriseMemberId: "",
-    note: ""
   })
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -197,13 +177,6 @@ export function PartnerQuotaManager({
           enterpriseMemberId: claimForm.enterpriseMemberId || null
         }
       )
-    } else if (dialogMode === "credit") {
-      await submitJson("/api/partner/trade-credits", {
-        entryType: creditForm.entryType,
-        amount: Number(creditForm.amount),
-        enterpriseMemberId: creditForm.enterpriseMemberId || null,
-        note: creditForm.note || null
-      })
     }
   }
 
@@ -229,10 +202,10 @@ export function PartnerQuotaManager({
           icon={<RefreshCwIcon />}
         />
         <MetricCard
-          title="TradeCredit Wallet"
-          value={numberFormat.format(workspace.wallet.balance)}
-          note={`${numberFormat.format(workspace.wallet.allocated)} allocated`}
-          icon={<WalletCardsIcon />}
+          title="Invite Campaigns"
+          value={numberFormat.format(workspace.inviteCampaigns.length)}
+          note="Active partner code programs"
+          icon={<KeyRoundIcon />}
         />
       </section>
 
@@ -265,10 +238,6 @@ export function PartnerQuotaManager({
             <SendIcon />
             Allocate / consume quota
           </Button>
-          <Button size="sm" variant="outline" onClick={() => open("credit")}>
-            <CircleDollarSignIcon />
-            Record TradeCredit
-          </Button>
         </div>
       ) : null}
 
@@ -290,13 +259,8 @@ export function PartnerQuotaManager({
         />
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <section>
         <EnterpriseTable members={workspace.enterpriseMembers} />
-        <CreditLedger
-          ledger={workspace.ledger}
-          wallet={workspace.wallet}
-          onRecord={canManageQuota ? () => open("credit") : undefined}
-        />
       </section>
 
       <Dialog open={dialogMode !== null} onOpenChange={(v) => !v && open(null)}>
@@ -558,69 +522,6 @@ export function PartnerQuotaManager({
       )
     }
 
-    if (dialogMode === "credit") {
-      return (
-        <div className="grid gap-3">
-          <Field label="Entry type">
-            <NativeSelect
-              value={creditForm.entryType}
-              onChange={(e) =>
-                setCreditForm((prev) => ({
-                  ...prev,
-                  entryType: e.target.value
-                }))
-              }
-            >
-              {Object.entries(creditTypeLabels).map(([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </NativeSelect>
-          </Field>
-          <Field label="Amount">
-            <Input
-              type="number"
-              min={1}
-              value={creditForm.amount}
-              onChange={(e) =>
-                setCreditForm((prev) => ({ ...prev, amount: e.target.value }))
-              }
-            />
-          </Field>
-          {creditForm.entryType !== "purchase" ? (
-            <Field label="Enterprise">
-              <NativeSelect
-                value={creditForm.enterpriseMemberId}
-                onChange={(e) =>
-                  setCreditForm((prev) => ({
-                    ...prev,
-                    enterpriseMemberId: e.target.value
-                  }))
-                }
-              >
-                <option value="">No enterprise selected</option>
-                {workspace.enterpriseMembers.map((member) => (
-                  <option key={member.id} value={member.id}>
-                    {member.enterpriseName}
-                  </option>
-                ))}
-              </NativeSelect>
-            </Field>
-          ) : null}
-          <Field label="Note">
-            <Input
-              value={creditForm.note}
-              onChange={(e) =>
-                setCreditForm((prev) => ({ ...prev, note: e.target.value }))
-              }
-              placeholder="Government program allocation"
-            />
-          </Field>
-        </div>
-      )
-    }
-
     return null
   }
 }
@@ -799,7 +700,7 @@ function EnterpriseTable({ members }: { members: PartnerEnterpriseMember[] }) {
       <CardHeader>
         <CardTitle>Enterprise Allocation</CardTitle>
         <CardDescription>
-          Enterprises receiving quota or TradeCredit support.
+          Enterprises receiving quota and invite-code support.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -845,75 +746,6 @@ function EnterpriseTable({ members }: { members: PartnerEnterpriseMember[] }) {
   )
 }
 
-function CreditLedger({
-  ledger,
-  wallet,
-  onRecord
-}: {
-  ledger: PartnerTradeCreditLedgerEntry[]
-  wallet: PartnerQuotaWorkspace["wallet"]
-  onRecord?: () => void
-}) {
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <CardTitle>TradeCredit Ledger</CardTitle>
-            <CardDescription>
-              Balance {numberFormat.format(wallet.balance)} / allocated{" "}
-              {numberFormat.format(wallet.allocated)} / consumed{" "}
-              {numberFormat.format(wallet.consumed)}
-            </CardDescription>
-          </div>
-          {onRecord ? (
-            <Button size="sm" variant="outline" onClick={onRecord}>
-              Record
-            </Button>
-          ) : null}
-        </div>
-      </CardHeader>
-      <CardContent>
-        {ledger.length === 0 ? (
-          <EmptyState label="No TradeCredit ledger entries yet." />
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Type</TableHead>
-                <TableHead>Enterprise</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {ledger.map((entry) => (
-                <TableRow key={entry.id}>
-                  <TableCell>
-                    <Badge variant="outline">
-                      {creditTypeLabels[entry.entryType]}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <p className="font-medium">
-                      {entry.enterpriseName ?? "Partner wallet"}
-                    </p>
-                    <p className="text-muted-foreground text-xs">
-                      {entry.note ?? "No note"}
-                    </p>
-                  </TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {numberFormat.format(entry.amount)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </CardContent>
-    </Card>
-  )
-}
-
 function EmptyState({ label }: { label: string }) {
   return (
     <div className="flex min-h-32 items-center justify-center rounded-md border border-dashed text-muted-foreground text-sm">
@@ -934,8 +766,6 @@ function getDialogTitle(mode: DialogMode) {
       return "Allocate Or Consume Quota"
     case "claim-code":
       return "Record Invite Code Claim"
-    case "credit":
-      return "Record TradeCredit"
     default:
       return "Partner Operation"
   }

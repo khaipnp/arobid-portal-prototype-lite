@@ -1,11 +1,18 @@
+"use client"
+
 import {
   BarChart3Icon,
+  Building2Icon,
   CircleDashedIcon,
   FileTextIcon,
+  LandmarkIcon,
   LineChartIcon,
+  SlidersHorizontalIcon,
   UsersRoundIcon
 } from "lucide-react"
+import { useMemo, useState } from "react"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
@@ -13,6 +20,8 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { NativeSelect } from "@/components/ui/native-select"
 import { Progress } from "@/components/ui/progress"
 import {
   Table,
@@ -42,81 +51,219 @@ const reportIcons = {
   buyer_leads: UsersRoundIcon
 }
 
+const reportLabels = {
+  expo_overview: "Operations",
+  trade_activity: "Trade",
+  industry_insight: "Insight",
+  buyer_leads: "Leads"
+}
+
 export function PartnerAnalyticsReportCenter({
   workspace
 }: {
   workspace: PartnerAnalyticsWorkspace
 }) {
-  return (
-    <div className="space-y-4 px-4">
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {workspace.reports.map((report) => (
-          <ReportCard key={report.key} report={report} />
-        ))}
-      </section>
+  const [filters, setFilters] = useState({
+    scope: "all",
+    period: "current",
+    status: "all",
+    category: "all",
+    search: ""
+  })
+  const filteredReports = useMemo(() => {
+    const search = filters.search.trim().toLowerCase()
+    return workspace.reports.filter((report) => {
+      const matchesStatus =
+        filters.status === "all" || report.status === filters.status
+      const matchesCategory =
+        filters.category === "all" || report.key === filters.category
+      const matchesSearch =
+        !search ||
+        report.title.toLowerCase().includes(search) ||
+        report.description.toLowerCase().includes(search) ||
+        report.source.toLowerCase().includes(search)
+      return matchesStatus && matchesCategory && matchesSearch
+    })
+  }, [filters, workspace.reports])
+  const scopeOptions = [
+    { value: "all", label: "All assigned scopes" },
+    ...workspace.topExpos.map((expo) => ({
+      value: expo.expoId,
+      label: expo.expoName
+    }))
+  ]
+  const filteredTopExpos =
+    filters.scope === "all"
+      ? workspace.topExpos
+      : workspace.topExpos.filter((expo) => expo.expoId === filters.scope)
+  const readyReportCount = workspace.reports.filter(
+    (report) => report.status === "ready"
+  ).length
+  const pendingReportCount = workspace.reports.length - readyReportCount
+  const topExpo = filteredTopExpos[0]
 
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Report Source Metrics</CardTitle>
-            <CardDescription>
-              Automated report inputs from shared platform data.
-            </CardDescription>
+  function updateFilter(key: keyof typeof filters, value: string) {
+    setFilters((prev) => ({ ...prev, [key]: value }))
+  }
+
+  function clearFilters() {
+    setFilters({
+      scope: "all",
+      period: "current",
+      status: "all",
+      category: "all",
+      search: ""
+    })
+  }
+
+  return (
+    <div className="space-y-5 px-4">
+      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <Card className="overflow-hidden">
+          <CardHeader className="border-b bg-muted/30">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+              <div>
+                <Badge variant="outline">Role-based dashboard</Badge>
+                <CardTitle className="mt-3 text-2xl">
+                  Analytics command center
+                </CardTitle>
+                <CardDescription className="mt-2 max-w-2xl">
+                  Start with executive health, then drill into operations or
+                  reporting readiness only when needed.
+                </CardDescription>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <SummaryPill
+                  label="Ready reports"
+                  value={`${readyReportCount}/${workspace.reports.length}`}
+                />
+                <SummaryPill
+                  label="Pending"
+                  value={numberFormat.format(pendingReportCount)}
+                />
+              </div>
+            </div>
           </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Metric</TableHead>
-                  <TableHead className="text-right">Value</TableHead>
-                  <TableHead className="text-right">Report usage</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <MetricRow
-                  label="Enterprises supported"
-                  value={workspace.summary.enterprises.total}
-                  usage="Trade activity"
-                />
-                <MetricRow
-                  label="Expo participation"
-                  value={workspace.summary.expoPrograms.assignedExpos}
-                  usage="Expo overview"
-                />
-                <MetricRow
-                  label="RFQ generated"
-                  value={workspace.summary.overview.rfqGenerated}
-                  usage="Buyer leads"
-                />
-                <MetricRow
-                  label="Meetings"
-                  value={workspace.sourceMetrics.meetings}
-                  usage="Trade activity"
-                />
-                <MetricRow
-                  label="Deal contexts"
-                  value={workspace.summary.overview.dealContexts}
-                  usage="Trade activity"
-                />
-                <MetricRow
-                  label="Trade value estimate"
-                  value={workspace.summary.finance.recordedRevenue}
-                  usage="Finance reports"
-                  currency
-                />
-              </TableBody>
-            </Table>
+          <CardContent className="grid gap-3 pt-5 sm:grid-cols-2 xl:grid-cols-4">
+            <KpiCard
+              label="Assigned expos"
+              value={workspace.summary.expoPrograms.assignedExpos}
+              detail={`${workspace.topExpos.length} active inputs`}
+            />
+            <KpiCard
+              label="RFQ generated"
+              value={workspace.summary.overview.rfqGenerated}
+              detail="Buyer demand signal"
+            />
+            <KpiCard
+              label="Trade value estimate"
+              value={workspace.summary.finance.recordedRevenue}
+              detail="Recorded revenue"
+              currency
+            />
+            <KpiCard
+              label="Enterprises supported"
+              value={workspace.summary.enterprises.total}
+              detail={`${workspace.funnel.expoActivated} expo activated`}
+            />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle>Program Funnel</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <SlidersHorizontalIcon className="h-4 w-4" />
+              View controls
+            </CardTitle>
             <CardDescription>
-              Enterprise activation stages used for government reports.
+              Scope report cards and expo table.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3">
+            <NativeSelect
+              value={filters.scope}
+              onChange={(event) => updateFilter("scope", event.target.value)}
+            >
+              {scopeOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </NativeSelect>
+            <div className="grid grid-cols-2 gap-2">
+              <NativeSelect
+                value={filters.period}
+                onChange={(event) => updateFilter("period", event.target.value)}
+              >
+                <option value="current">Current period</option>
+                <option value="30d">Last 30 days</option>
+                <option value="90d">Last 90 days</option>
+              </NativeSelect>
+              <NativeSelect
+                value={filters.status}
+                onChange={(event) => updateFilter("status", event.target.value)}
+              >
+                <option value="all">All statuses</option>
+                <option value="ready">Ready</option>
+                <option value="pending">Pending</option>
+              </NativeSelect>
+            </div>
+            <NativeSelect
+              value={filters.category}
+              onChange={(event) => updateFilter("category", event.target.value)}
+            >
+              <option value="all">All categories</option>
+              <option value="expo_overview">Expo operations</option>
+              <option value="trade_activity">RFQ / DealContext</option>
+              <option value="industry_insight">Visitor / matching</option>
+              <option value="buyer_leads">Buyer leads</option>
+            </NativeSelect>
+            <div className="flex gap-2">
+              <Input
+                value={filters.search}
+                onChange={(event) => updateFilter("search", event.target.value)}
+                placeholder="Search reports"
+              />
+              <Button variant="outline" onClick={clearFilters}>
+                Clear
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-3">
+        <RolePanel
+          icon={LandmarkIcon}
+          label="Executive / Organizer lead"
+          title="Program health"
+          description="Use this lane for quick partner performance readouts."
+        >
+          <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1">
+            <CompactMetric
+              label="Trade value"
+              value={workspace.summary.finance.recordedRevenue}
+              currency
+            />
+            <CompactMetric
+              label="Ready reports"
+              value={`${readyReportCount}/${workspace.reports.length}`}
+            />
+            <CompactMetric
+              label="Top expo"
+              value={topExpo?.expoName ?? "No expo yet"}
+              text
+            />
+          </div>
+        </RolePanel>
+
+        <RolePanel
+          icon={Building2Icon}
+          label="Operations team"
+          title="Expo execution"
+          description="Track activation and expo throughput before reading raw tables."
+        >
+          <div className="space-y-4">
             <FunnelRow label="Invited" value={workspace.funnel.invited} />
             <FunnelRow label="Registered" value={workspace.funnel.registered} />
             <FunnelRow
@@ -131,46 +278,70 @@ export function PartnerAnalyticsReportCenter({
               label="RFQ generated"
               value={workspace.funnel.rfqGenerated}
             />
-          </CardContent>
-        </Card>
+          </div>
+        </RolePanel>
+
+        <RolePanel
+          icon={FileTextIcon}
+          label="Reporting / Government program"
+          title="Report readiness"
+          description="Check whether source data is broad enough for formal reports."
+        >
+          <div className="grid grid-cols-2 gap-2">
+            <CoverageTile
+              label="Countries"
+              value={workspace.sourceMetrics.countrySegments}
+            />
+            <CoverageTile
+              label="Booth tiers"
+              value={workspace.sourceMetrics.boothTierSegments}
+            />
+            <CoverageTile
+              label="Open threads"
+              value={workspace.sourceMetrics.openThreads}
+            />
+            <CoverageTile
+              label="Settlements"
+              value={workspace.sourceMetrics.settlementCycles}
+            />
+          </div>
+        </RolePanel>
       </section>
 
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
         <Card>
           <CardHeader>
-            <CardTitle>Top Expo Inputs</CardTitle>
+            <CardTitle>Expo performance shortlist</CardTitle>
             <CardDescription>
-              Ranked by SSOT RFQ activity, revenue, then booth sales.
+              Ranked by RFQ activity, revenue, then booth sales. Detailed enough
+              for operations, compact enough for daily review.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {workspace.topExpos.length === 0 ? (
-              <EmptyState label="No assigned expo data yet." />
+            {filteredTopExpos.length === 0 ? (
+              <EmptyState label="No expo data matches current filters." />
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Expo</TableHead>
-                    <TableHead className="text-right">Booths</TableHead>
                     <TableHead className="text-right">RFQ</TableHead>
                     <TableHead className="text-right">Meetings</TableHead>
                     <TableHead className="text-right">Revenue</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {workspace.topExpos.map((expo) => (
+                  {filteredTopExpos.map((expo) => (
                     <TableRow key={expo.expoId}>
                       <TableCell>
                         <p className="font-medium">{expo.expoName}</p>
-                        <div className="mt-1 flex items-center gap-2">
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
                           <Badge variant="outline">{expo.status}</Badge>
                           <span className="text-muted-foreground text-xs">
-                            {expo.boothUtilization}% utilization
+                            {expo.soldBooths} booths · {expo.boothUtilization}%
+                            utilization
                           </span>
                         </div>
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {numberFormat.format(expo.soldBooths)}
                       </TableCell>
                       <TableCell className="text-right tabular-nums">
                         {numberFormat.format(expo.rfqCount)}
@@ -191,28 +362,19 @@ export function PartnerAnalyticsReportCenter({
 
         <Card>
           <CardHeader>
-            <CardTitle>Report Coverage</CardTitle>
+            <CardTitle>Report readiness</CardTitle>
             <CardDescription>
-              Source breadth available for automated reports.
+              Filterable report inventory without overwhelming source rows.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <CoverageRow
-              label="Country segments"
-              value={workspace.sourceMetrics.countrySegments}
-            />
-            <CoverageRow
-              label="Booth-tier segments"
-              value={workspace.sourceMetrics.boothTierSegments}
-            />
-            <CoverageRow
-              label="Open communication threads"
-              value={workspace.sourceMetrics.openThreads}
-            />
-            <CoverageRow
-              label="Settlement cycles"
-              value={workspace.sourceMetrics.settlementCycles}
-            />
+          <CardContent className="space-y-3">
+            {filteredReports.length === 0 ? (
+              <EmptyState label="No analytics results match current filters." />
+            ) : (
+              filteredReports.map((report) => (
+                <ReportReadinessRow key={report.key} report={report} />
+              ))
+            )}
           </CardContent>
         </Card>
       </section>
@@ -220,73 +382,129 @@ export function PartnerAnalyticsReportCenter({
   )
 }
 
-function ReportCard({ report }: { report: PartnerReportSnapshot }) {
-  const Icon = reportIcons[report.key]
-
+function SummaryPill({ label, value }: { label: string; value: string }) {
   return (
-    <Card size="sm">
-      <CardHeader>
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <CardDescription>{report.source}</CardDescription>
-            <CardTitle className="mt-1 text-base">{report.title}</CardTitle>
-          </div>
-          <span className="rounded-md bg-muted p-2 text-foreground">
-            <Icon className="h-4 w-4" />
-          </span>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="flex items-center justify-between gap-2">
-          <Badge variant={report.status === "ready" ? "default" : "outline"}>
-            {report.status === "ready" ? "Ready" : "Pending"}
-          </Badge>
-          <span className="text-muted-foreground text-xs">
-            {report.metrics
-              .reduce((total, metric) => total + metric.value, 0)
-              .toLocaleString("en")}{" "}
-            signals
-          </span>
-        </div>
-        <p className="text-muted-foreground text-xs">{report.description}</p>
-        <div className="grid grid-cols-2 gap-2">
-          {report.metrics.map((metric) => (
-            <div key={metric.label} className="rounded-md border p-2">
-              <p className="text-[11px] text-muted-foreground">
-                {metric.label}
-              </p>
-              <p className="font-medium tabular-nums">
-                {numberFormat.format(metric.value)}
-              </p>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+    <div className="rounded-lg border bg-background px-3 py-2">
+      <p className="text-muted-foreground text-xs">{label}</p>
+      <p className="font-semibold tabular-nums">{value}</p>
+    </div>
   )
 }
 
-function MetricRow({
+function KpiCard({
   label,
   value,
-  usage,
+  detail,
   currency = false
 }: {
   label: string
   value: number
-  usage: string
+  detail: string
   currency?: boolean
 }) {
   return (
-    <TableRow>
-      <TableCell className="font-medium">{label}</TableCell>
-      <TableCell className="text-right tabular-nums">
+    <div className="rounded-xl border bg-background p-4">
+      <p className="text-muted-foreground text-sm">{label}</p>
+      <p className="mt-2 font-semibold text-2xl tabular-nums">
         {currency ? currencyFormat.format(value) : numberFormat.format(value)}
-      </TableCell>
-      <TableCell className="text-right">
-        <Badge variant="outline">{usage}</Badge>
-      </TableCell>
-    </TableRow>
+      </p>
+      <p className="mt-1 text-muted-foreground text-xs">{detail}</p>
+    </div>
+  )
+}
+
+function RolePanel({
+  icon: Icon,
+  label,
+  title,
+  description,
+  children
+}: {
+  icon: typeof LandmarkIcon
+  label: string
+  title: string
+  description: string
+  children: React.ReactNode
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <Icon className="h-5 w-5" />
+        </div>
+        <CardDescription>{label}</CardDescription>
+        <CardTitle className="text-lg">{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent>{children}</CardContent>
+    </Card>
+  )
+}
+
+function CompactMetric({
+  label,
+  value,
+  currency = false,
+  text = false
+}: {
+  label: string
+  value: number | string
+  currency?: boolean
+  text?: boolean
+}) {
+  const displayValue = text
+    ? String(value)
+    : currency
+      ? currencyFormat.format(Number(value))
+      : numberFormat.format(Number(value))
+
+  return (
+    <div className="rounded-lg border p-3">
+      <p className="text-muted-foreground text-xs">{label}</p>
+      <p className="mt-1 line-clamp-2 font-medium tabular-nums">
+        {displayValue}
+      </p>
+    </div>
+  )
+}
+
+function ReportReadinessRow({ report }: { report: PartnerReportSnapshot }) {
+  const Icon = reportIcons[report.key]
+  const totalSignals = report.metrics.reduce(
+    (total, metric) => total + metric.value,
+    0
+  )
+
+  return (
+    <div className="rounded-lg border p-3">
+      <div className="flex items-start gap-3">
+        <span className="rounded-md bg-muted p-2 text-foreground">
+          <Icon className="h-4 w-4" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="font-medium">{report.title}</p>
+            <Badge variant="outline">{reportLabels[report.key]}</Badge>
+            <Badge variant={report.status === "ready" ? "default" : "outline"}>
+              {report.status === "ready" ? "Ready" : "Pending"}
+            </Badge>
+          </div>
+          <p className="mt-1 text-muted-foreground text-xs">
+            {report.source} · {numberFormat.format(totalSignals)} signals
+          </p>
+        </div>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        {report.metrics.slice(0, 2).map((metric) => (
+          <div key={metric.label} className="rounded-md bg-muted/40 p-2">
+            <p className="text-[11px] text-muted-foreground">{metric.label}</p>
+            <p className="font-medium tabular-nums">
+              {numberFormat.format(metric.value)}
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -306,13 +524,13 @@ function FunnelRow({ label, value }: { label: string; value: number }) {
   )
 }
 
-function CoverageRow({ label, value }: { label: string; value: number }) {
+function CoverageTile({ label, value }: { label: string; value: number }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-md border p-3">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium tabular-nums">
+    <div className="rounded-lg border p-3">
+      <p className="text-muted-foreground text-xs">{label}</p>
+      <p className="mt-1 font-semibold text-xl tabular-nums">
         {numberFormat.format(value)}
-      </span>
+      </p>
     </div>
   )
 }

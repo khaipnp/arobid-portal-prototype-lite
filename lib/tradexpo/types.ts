@@ -220,6 +220,9 @@ export interface Order {
   discountAmount: number
   amount: number
   voucherId?: string
+  tradeCreditReservationId?: string
+  tradeCreditAmount: number
+  tradeCreditDiscountAmount: number
   paymentMethod: PaymentMethod
   status: OrderStatus
   invoiceRequested: boolean

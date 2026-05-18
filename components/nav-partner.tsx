@@ -5,6 +5,7 @@ import {
   LayoutDashboardIcon,
   PaletteIcon,
   PieChartIcon,
+  UserCogIcon,
   UsersIcon,
   WalletCardsIcon
 } from "lucide-react"
@@ -21,13 +22,19 @@ import type { PartnerModule } from "@/lib/partner/core"
 
 const partnerLinks = [
   {
+    name: "User Management",
+    url: "/partner/users",
+    module: "overview",
+    icon: <UserCogIcon />
+  },
+  {
     name: "Mini-site",
     url: "/partner/site-management",
     module: "mini_site",
     icon: <PaletteIcon />
   },
   {
-    name: "Enterprises & Members",
+    name: "Members",
     url: "/partner/enterprises",
     module: "enterprises",
     icon: <UsersIcon />
@@ -39,13 +46,13 @@ const partnerLinks = [
     icon: <ApertureIcon />
   },
   {
-    name: "Quota & TradeCredit Reports",
-    url: "/partner/quota",
+    name: "TradeCredit Reports",
+    url: "/partner/tradecredit",
     module: "tradecredit_reports",
     icon: <WalletCardsIcon />
   },
   {
-    name: "Analytics & Reports",
+    name: "Analytics",
     url: "/partner/analytics",
     module: "analytics_reports",
     icon: <PieChartIcon />

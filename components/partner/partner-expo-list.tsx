@@ -8,6 +8,7 @@ import {
   FileTextIcon,
   InfoIcon,
   LayoutDashboardIcon,
+  LockIcon,
   MessageSquareIcon,
   RadioIcon,
   SearchIcon,
@@ -71,13 +72,6 @@ const EXPO_STATUSES: { label: string; value: ExpoStatus | "All" }[] = [
   { label: "Canceled", value: "Canceled" }
 ]
 
-const PARTNERSHIP_MODELS: { label: string; value: PartnerModel | "All" }[] = [
-  { label: "All Models", value: "All" },
-  { label: "Co-host", value: "co_host" },
-  { label: "Turnkey", value: "turnkey" },
-  { label: "Tenant", value: "tenant" }
-]
-
 const PARTNERSHIP_MODEL_LABELS: Record<PartnerModel, string> = {
   co_host: "Co-host",
   turnkey: "Turnkey",
@@ -122,24 +116,19 @@ export function PartnerExpoList({
   const [statusFilter, setStatusFilter] = React.useState<ExpoStatus | "All">(
     "All"
   )
-  const [modelFilter, setModelFilter] = React.useState<PartnerModel | "All">(
-    "All"
-  )
   const [expandedId, setExpandedId] = React.useState<string | null>(null)
   const [currentPage, setCurrentPage] = React.useState(1)
 
   const filteredExpos = React.useMemo(() => {
-    return assignedExpos.filter(({ expo, assignment }) => {
+    return assignedExpos.filter(({ expo }) => {
       const matchesSearch = expo.name
         .toLowerCase()
         .includes(searchQuery.toLowerCase())
       const matchesStatus =
         statusFilter === "All" || expo.status === statusFilter
-      const matchesModel =
-        modelFilter === "All" || assignment.partnershipModel === modelFilter
-      return matchesSearch && matchesStatus && matchesModel
+      return matchesSearch && matchesStatus
     })
-  }, [assignedExpos, searchQuery, statusFilter, modelFilter])
+  }, [assignedExpos, searchQuery, statusFilter])
 
   const totalPages = Math.max(1, Math.ceil(filteredExpos.length / PAGE_SIZE))
   const pagedExpos = React.useMemo(() => {
@@ -195,33 +184,13 @@ export function PartnerExpoList({
               setCurrentPage(1)
             }}
           >
-            <SelectTrigger className="w-44 rounded-full">
+            <SelectTrigger className="w-40 rounded-full">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
               {EXPO_STATUSES.map((status) => (
                 <SelectItem key={status.value} value={status.value}>
                   {status.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {/* Select Model */}
-          <Select
-            value={modelFilter}
-            onValueChange={(value) => {
-              setModelFilter(value as PartnerModel | "All")
-              setCurrentPage(1)
-            }}
-          >
-            <SelectTrigger className="w-44 rounded-full">
-              <SelectValue placeholder="Model" />
-            </SelectTrigger>
-            <SelectContent>
-              {PARTNERSHIP_MODELS.map((model) => (
-                <SelectItem key={model.value} value={model.value}>
-                  {model.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -243,6 +212,7 @@ export function PartnerExpoList({
               chatCount
             }) => {
               const isExpanded = expandedId === expo.id
+              const isTurnkey = assignment.partnershipModel === "turnkey"
               const showMetrics = [
                 "Live",
                 "Archived",
@@ -250,16 +220,16 @@ export function PartnerExpoList({
               ].includes(expo.status)
 
               return (
-                <Card
+                <div
                   key={expo.id}
                   className={cn(
-                    "overflow-hidden border-sidebar-border transition-all duration-200",
+                    "overflow-hidden transition-all duration-200 border rounded-2xl",
                     isExpanded ? "ring-1 ring-primary/50" : "hover:shadow-sm"
                   )}
                 >
                   <div className="flex flex-col items-stretch md:flex-row">
                     {/* Thumbnail */}
-                    <div className="relative aspect-video h-32 shrink-0 overflow-hidden border-b bg-muted md:h-auto md:w-48 md:border-r md:border-b-0">
+                    <div className="relative aspect-video h-32 shrink-0 overflow-hidden border-b bg-muted md:h-auto md:w-96 md:border-r md:border-b-0">
                       <Image
                         src={expo.thumbnailUrl}
                         alt={expo.name}
@@ -275,10 +245,10 @@ export function PartnerExpoList({
                     <div className="flex flex-1 flex-col p-4">
                       <div className="flex items-start justify-between gap-4">
                         <div className="space-y-1">
-                          <h3 className="font-semibold text-sm leading-tight transition-colors group-hover:text-primary">
+                          <h3 className="font-medium text-lg leading-tight transition-colors group-hover:text-primary">
                             {expo.name}
                           </h3>
-                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground text-xs">
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground text-sm">
                             <div className="flex items-center gap-1">
                               <CalendarIcon className="h-3 w-3" />
                               <span>
@@ -292,6 +262,12 @@ export function PartnerExpoList({
                                 {goLiveCount} GoLIVE
                               </div>
                             )}
+                            {isTurnkey ? (
+                              <div className="flex items-center gap-1 font-medium text-blue-600">
+                                <LockIcon className="h-3 w-3" />
+                                Arobid-configured
+                              </div>
+                            ) : null}
                           </div>
                         </div>
                         <Button
@@ -342,17 +318,17 @@ export function PartnerExpoList({
                           </div>
                         </div>
 
-                        {access.actions["expo.edit"] ? (
+                        {access.actions["expo.view"] ? (
                           <Button
                             asChild
                             variant="outline"
                             size="sm"
-                            className="h-7 px-3 font-semibold text-xs"
+                            className="rounded-full"
                             onClick={(e) => e.stopPropagation()}
                           >
                             <Link href={`/partner/expos/${expo.id}`}>
-                              Manage
-                              <ChevronRightIcon className="ml-1 h-3 w-3" />
+                              Go to Detail
+                              <ChevronRightIcon />
                             </Link>
                           </Button>
                         ) : null}
@@ -362,15 +338,11 @@ export function PartnerExpoList({
 
                   {/* Expanded Details */}
                   {isExpanded && (
-                    <div className="fade-in slide-in-from-top-1 animate-in border-t bg-muted/5 px-4 py-4 duration-200 md:px-6 md:py-6">
-                      <div className="space-y-8 md:ml-48">
+                    <div className="fade-in slide-in-from-top-1 animate-in px-4 py-4 duration-200 md:px-6 md:py-6">
+                      <div className="space-y-8">
                         {/* Metrics Section */}
                         {showMetrics && (
                           <div className="space-y-4">
-                            <div className="flex items-center gap-2 font-bold font-mono text-muted-foreground text-xs uppercase tracking-wider">
-                              <ZapIcon className="h-3 w-3 text-amber-500" />
-                              Operational Metrics
-                            </div>
                             <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
                               <div className="flex flex-col gap-1 rounded-xl border border-sidebar-border bg-card p-3 shadow-xs">
                                 <div className="flex items-center gap-2 text-muted-foreground">
@@ -424,75 +396,10 @@ export function PartnerExpoList({
                             </div>
                           </div>
                         )}
-
-                        <div className="grid gap-6 sm:grid-cols-2">
-                          <div className="space-y-4">
-                            <div className="flex items-center gap-2 font-bold text-muted-foreground text-xs uppercase tracking-wider">
-                              <InfoIcon className="h-3 w-3" />
-                              Organization Details
-                            </div>
-                            <div className="space-y-2 text-xs">
-                              <div className="flex justify-between border-sidebar-border border-b border-dashed py-1.5">
-                                <span className="text-muted-foreground">
-                                  Organization:
-                                </span>
-                                <span className="text-right font-medium">
-                                  {assignment.partnerOrganization.name}
-                                </span>
-                              </div>
-                              <div className="flex justify-between border-sidebar-border border-b border-dashed py-1.5">
-                                <span className="text-muted-foreground">
-                                  Status:
-                                </span>
-                                <Badge
-                                  variant={
-                                    assignment.partnerOrganization.status ===
-                                    "active"
-                                      ? "outline"
-                                      : "destructive"
-                                  }
-                                  className="h-4 px-1.5 font-bold text-xs uppercase"
-                                >
-                                  {assignment.partnerOrganization.status ===
-                                  "active"
-                                    ? "Active"
-                                    : "Inactive"}
-                                </Badge>
-                              </div>
-                              <div className="flex justify-between py-1.5">
-                                <span className="text-muted-foreground">
-                                  Description:
-                                </span>
-                                <span className="max-w-45 truncate text-right text-muted-foreground italic">
-                                  {expo.description ||
-                                    "No description provided"}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="space-y-4">
-                            <div className="flex items-center gap-2 font-bold text-muted-foreground text-xs uppercase tracking-wider">
-                              <ShieldCheckIcon className="h-3 w-3" />
-                              Capabilities
-                            </div>
-                            <div className="flex flex-wrap gap-1.5">
-                              {assignment.capabilities.map((cap) => (
-                                <Badge
-                                  key={cap}
-                                  variant="secondary"
-                                  className="border px-1.5 py-0 font-normal text-xs"
-                                >
-                                  {CAPABILITY_LABELS[cap] || cap}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
                       </div>
                     </div>
                   )}
-                </Card>
+                </div>
               )
             }
           )}
@@ -583,7 +490,8 @@ export function PartnerExpoList({
           </CardTitle>
           <CardDescription className="mt-1 max-w-80 text-xs">
             Ask an admin to assign your partner organization to an expo program.
-            Assigned expos will appear here for operations and GoLIVE work.
+            No self-create or self-configure action is available in Partner
+            Portal.
           </CardDescription>
           <Button
             variant="outline"
@@ -611,7 +519,6 @@ export function PartnerExpoList({
             onClick={() => {
               setSearchQuery("")
               setStatusFilter("All")
-              setModelFilter("All")
             }}
             className="mt-4 h-8 text-xs"
           >

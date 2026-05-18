@@ -1,11 +1,18 @@
 import { createHash, randomUUID } from "node:crypto"
 import { sql } from "@/lib/db/neon"
+import { publishNotification } from "@/lib/notifications/service"
 import type {
-  PartnerCapability as PartnerMvpCapability,
+  PartnerMembershipStatus,
+  PartnerMembershipStatusAction,
   PartnerMiniSiteStatus,
+  PartnerCapability as PartnerMvpCapability,
+  PartnerMvpRole,
   PartnerScopeSummary
 } from "@/lib/partner/core"
 import {
+  canAssignPartnerRole,
+  canChangePartnerMembershipStatus,
+  canInvitePartnerRole,
   canTransitionMiniSiteStatus,
   normalizePartnerRole
 } from "@/lib/partner/core"
@@ -63,12 +70,50 @@ export type PartnerPortalOrganization = PartnerOrganization & {
   membershipRole: PartnerMembershipRole
 }
 
+export type PartnerUserInvitationStatus =
+  | "pending"
+  | "accepted"
+  | "cancelled"
+  | "expired"
+
+export type PartnerUserInvitation = {
+  id: string
+  partnerOrgId: string
+  email: string
+  displayName: string | null
+  message: string | null
+  role: "partner_owner" | "partner_admin" | "viewer"
+  status: PartnerUserInvitationStatus
+  invitedByUserId: string
+  acceptedByUserId: string | null
+  expiresAt: string
+  acceptedAt: string | null
+  cancelledAt: string | null
+  createdAt: string
+}
+
+export type PartnerOrganizationMember = {
+  userId: string
+  name: string | null
+  email: string
+  role: PartnerMvpRole
+  rawRole: PartnerMembershipRole
+  status: PartnerMembershipStatus | "inactive"
+  createdAt: string
+}
+
+export type PartnerUserManagementWorkspace = {
+  organization: PartnerPortalOrganization | null
+  members: PartnerOrganizationMember[]
+  invitations: PartnerUserInvitation[]
+}
+
 export type PartnerPortalSummary = {
   organization: PartnerPortalOrganization | null
   overview: {
     enterprisesActivated: number
     expoBoothsUsed: number
-    tradeCreditsAllocated: number
+    activeInviteCampaigns: number
     rfqGenerated: number
     dealContexts: number
     bundleSales: number
@@ -94,9 +139,6 @@ export type PartnerPortalSummary = {
     consumedQuantity: number
     availableQuantity: number
     activeInviteCampaigns: number
-    walletBalance: number
-    walletAllocated: number
-    walletConsumed: number
   }
   bundles: {
     total: number
@@ -141,16 +183,82 @@ export type PartnerDealContextStage =
   | "closed_won"
   | "closed_lost"
 
+export type PartnerCompanySearchResult = {
+  id: string
+  name: string
+  taxId: string | null
+  website: string | null
+  address: string | null
+  isActive: boolean
+}
+
+export type PartnerEnterpriseAssociationAuditAction =
+  | "invite"
+  | "resend_invite"
+  | "accept"
+  | "activate"
+  | "deactivate"
+  | "remove"
+  | "block"
+  | "unblock"
+  | "reactivate"
+
+export type PartnerEnterpriseAssociationAuditActor =
+  | "partner_user"
+  | "company_user"
+  | "arobid_admin"
+  | "system"
+
+export type PartnerEnterpriseAssociationAuditEvent = {
+  id: string
+  associationId: string
+  partnerOrgId: string
+  partnerOrgName: string
+  enterpriseId: string | null
+  enterpriseName: string
+  action: PartnerEnterpriseAssociationAuditAction
+  oldStatus: PartnerEnterpriseMember["activationStatus"] | null
+  newStatus: PartnerEnterpriseMember["activationStatus"]
+  source: string
+  actorType: PartnerEnterpriseAssociationAuditActor
+  actorId: string | null
+  actorLabel: string | null
+  reason: string | null
+  createdAt: string
+}
+
+export type PartnerEnterpriseAssociationAuditFilters = {
+  partnerOrgId?: string
+  enterpriseId?: string
+  action?: PartnerEnterpriseAssociationAuditAction
+  source?: string
+  actorType?: PartnerEnterpriseAssociationAuditActor
+  q?: string
+  limit?: number
+}
+
 export type PartnerEnterpriseMember = {
   id: string
+  enterpriseId?: string | null
   enterpriseName: string
   contactEmail: string | null
+  logoUrl: string | null
   activationStatus:
     | "invited"
-    | "registered"
-    | "profile_completed"
-    | "expo_activated"
-    | "rfq_generated"
+    | "pending_acceptance"
+    | "active"
+    | "inactive"
+    | "removed"
+    | "blocked"
+  source: string
+  relationshipType: string
+  publicProfile: boolean
+  lastAction: string | null
+  acceptedAt: string | null
+  removedAt: string | null
+  createdAt: string
+  updatedAt: string
+  removedReason: string | null
   expoParticipationCount: number
   rfqGeneratedCount: number
   tradeSignalCount: number
@@ -158,8 +266,21 @@ export type PartnerEnterpriseMember = {
   dealContextEvents?: number
   quotaAllocatedQuantity?: number
   quotaConsumedQuantity?: number
-  tradeCreditsAllocated?: number
-  tradeCreditsConsumed?: number
+}
+
+export type PartnerEnterpriseActivity = {
+  id: string
+  type: "association" | "deal_context"
+  title: string
+  description: string | null
+  actorLabel: string | null
+  createdAt: string
+}
+
+export type PartnerEnterpriseMemberDetail = {
+  organization: PartnerPortalOrganization
+  member: Required<PartnerEnterpriseMember>
+  activities: PartnerEnterpriseActivity[]
 }
 
 export type PartnerEnterpriseWorkspace = {
@@ -185,27 +306,11 @@ export type PartnerInviteCampaign = {
   createdAt: string
 }
 
-export type PartnerTradeCreditLedgerEntry = {
-  id: string
-  entryType: "purchase" | "allocate" | "consume" | "release"
-  amount: number
-  enterpriseMemberId: string | null
-  enterpriseName: string | null
-  note: string | null
-  createdAt: string
-}
-
 export type PartnerQuotaWorkspace = {
   organization: PartnerPortalOrganization | null
   quotas: PartnerQuota[]
   enterpriseMembers: PartnerEnterpriseMember[]
   inviteCampaigns: PartnerInviteCampaign[]
-  wallet: {
-    balance: number
-    allocated: number
-    consumed: number
-  }
-  ledger: PartnerTradeCreditLedgerEntry[]
 }
 
 export type PartnerExpoProgramsWorkspace = {
@@ -376,7 +481,6 @@ export type PartnerGovernmentProgramWorkspace = {
   quotaWorkspace: PartnerQuotaWorkspace
   supportedSmes: number
   activeCampaigns: number
-  creditUtilization: number
   quotaUtilization: number
 }
 
@@ -791,21 +895,36 @@ export async function getPartnerCapabilities(
 export async function getPartnerScopes(
   partnerOrgId: string
 ): Promise<PartnerScopeSummary> {
-  const rows = (await sql`
-    select scope_type, scope_id
-    from partner_scope_assignments
-    where partner_org_id = ${partnerOrgId}
-      and status = 'active'
-    order by created_at asc
-  `) as { scope_type: "expo" | "program" | "company"; scope_id: string }[]
+  const [scopeRows, expoRows] = await Promise.all([
+    sql`
+      select scope_type, scope_id
+      from partner_scope_assignments
+      where partner_org_id = ${partnerOrgId}
+        and status = 'active'
+      order by created_at asc
+    `,
+    sql`
+      select expo_id
+      from partner_expo_assignments
+      where partner_org_id = ${partnerOrgId}
+    `
+  ])
+  const rows = scopeRows as {
+    scope_type: "expo" | "program" | "company"
+    scope_id: string
+  }[]
+  const assignedExpoIds = (expoRows as { expo_id: string }[]).map(
+    (row) => row.expo_id
+  )
 
   return {
     expoIds: Array.from(
-      new Set(
-        rows
+      new Set([
+        ...rows
           .filter((row) => row.scope_type === "expo")
-          .map((row) => row.scope_id)
-      )
+          .map((row) => row.scope_id),
+        ...assignedExpoIds
+      ])
     ),
     programIds: Array.from(
       new Set(
@@ -824,6 +943,487 @@ export async function getPartnerScopes(
   }
 }
 
+async function recordPartnerMembershipAudit(input: {
+  partnerOrgId: string
+  actorUserId: string | null
+  targetUserId?: string | null
+  invitationId?: string | null
+  action: string
+  oldRole?: string | null
+  newRole?: string | null
+  oldStatus?: string | null
+  newStatus?: string | null
+  reason?: string | null
+}) {
+  await sql`
+    insert into partner_membership_audit_events (
+      id,
+      partner_org_id,
+      actor_user_id,
+      target_user_id,
+      invitation_id,
+      action,
+      old_role,
+      new_role,
+      old_status,
+      new_status,
+      reason
+    )
+    values (
+      ${`partner-membership-audit-${randomUUID()}`},
+      ${input.partnerOrgId},
+      ${input.actorUserId},
+      ${input.targetUserId ?? null},
+      ${input.invitationId ?? null},
+      ${input.action},
+      ${input.oldRole ?? null},
+      ${input.newRole ?? null},
+      ${input.oldStatus ?? null},
+      ${input.newStatus ?? null},
+      ${input.reason?.trim() || null}
+    )
+  `
+}
+
+export async function getPartnerUserManagementWorkspace(
+  userId: string
+): Promise<PartnerUserManagementWorkspace> {
+  const organization = await getPrimaryPartnerOrganization(userId)
+  if (!organization) return { organization: null, members: [], invitations: [] }
+
+  const [memberRows, invitationRows] = await Promise.all([
+    sql`
+      select
+        u.id,
+        u.name,
+        u.email,
+        pm.role,
+        pm.status,
+        pm.created_at
+      from partner_memberships pm
+      inner join users u on u.id = pm.user_id
+      where pm.partner_org_id = ${organization.id}
+      order by pm.created_at asc
+    `,
+    sql`
+      select
+        id,
+        partner_org_id,
+        email,
+        display_name,
+        message,
+        role,
+        status,
+        invited_by_user_id,
+        accepted_by_user_id,
+        expires_at,
+        accepted_at,
+        cancelled_at,
+        created_at
+      from partner_user_invitations
+      where partner_org_id = ${organization.id}
+      order by created_at desc
+    `
+  ])
+
+  return {
+    organization,
+    members: (
+      memberRows as {
+        id: string
+        name: string | null
+        email: string
+        role: PartnerMembershipRole
+        status: PartnerMembershipStatus | "inactive"
+        created_at: string | Date
+      }[]
+    ).map((row) => ({
+      userId: row.id,
+      name: row.name,
+      email: row.email,
+      rawRole: row.role,
+      role: normalizePartnerRole(row.role),
+      status: row.status,
+      createdAt: toIso(row.created_at)
+    })),
+    invitations: (
+      invitationRows as {
+        id: string
+        partner_org_id: string
+        email: string
+        display_name: string | null
+        message: string | null
+        role: PartnerUserInvitation["role"]
+        status: PartnerUserInvitationStatus
+        invited_by_user_id: string
+        accepted_by_user_id: string | null
+        expires_at: string | Date
+        accepted_at: string | Date | null
+        cancelled_at: string | Date | null
+        created_at: string | Date
+      }[]
+    ).map((row) => ({
+      id: row.id,
+      partnerOrgId: row.partner_org_id,
+      email: row.email,
+      displayName: row.display_name,
+      message: row.message,
+      role: row.role,
+      status: row.status,
+      invitedByUserId: row.invited_by_user_id,
+      acceptedByUserId: row.accepted_by_user_id,
+      expiresAt: toIso(row.expires_at),
+      acceptedAt: row.accepted_at ? toIso(row.accepted_at) : null,
+      cancelledAt: row.cancelled_at ? toIso(row.cancelled_at) : null,
+      createdAt: toIso(row.created_at)
+    }))
+  }
+}
+
+async function getActiveOwnerCount(partnerOrgId: string) {
+  const rows = (await sql`
+    select count(*)::int as count
+    from partner_memberships
+    where partner_org_id = ${partnerOrgId}
+      and status = 'active'
+      and role in ('partner_owner', 'primary_representative')
+  `) as { count: number | string }[]
+
+  return toNumber(rows[0]?.count)
+}
+
+export async function createPartnerUserInvitation(
+  actorUserId: string,
+  input: {
+    email: string
+    role: PartnerMvpRole
+    displayName?: string | null
+    message?: string | null
+  }
+) {
+  const organization = await requirePrimaryPartnerOrganization(actorUserId)
+  const actorRole = normalizePartnerRole(organization.membershipRole)
+  if (!canInvitePartnerRole(actorRole, input.role))
+    throw new Error("Forbidden.")
+
+  const email = input.email.trim().toLowerCase()
+  if (!email?.includes("@")) throw new Error("Valid email is required.")
+
+  const activeRows = (await sql`
+    select 1
+    from partner_memberships pm
+    inner join users u on u.id = pm.user_id
+    where pm.partner_org_id = ${organization.id}
+      and lower(u.email) = ${email}
+      and pm.status = 'active'
+    limit 1
+  `) as { "?column?": number }[]
+  if (activeRows.length > 0)
+    throw new Error("User is already an active member.")
+
+  const id = `partner-user-invite-${randomUUID()}`
+  const rows = (await sql`
+    insert into partner_user_invitations (
+      id,
+      partner_org_id,
+      email,
+      display_name,
+      message,
+      role,
+      invited_by_user_id,
+      expires_at
+    )
+    values (
+      ${id},
+      ${organization.id},
+      ${email},
+      ${input.displayName?.trim() || null},
+      ${input.message?.trim() || null},
+      ${input.role},
+      ${actorUserId},
+      now() + interval '7 days'
+    )
+    on conflict (partner_org_id, lower(email)) where status = 'pending'
+    do update set
+      role = excluded.role,
+      display_name = excluded.display_name,
+      message = excluded.message,
+      invited_by_user_id = excluded.invited_by_user_id,
+      expires_at = excluded.expires_at,
+      updated_at = now()
+    returning id
+  `) as { id: string }[]
+
+  await recordPartnerMembershipAudit({
+    partnerOrgId: organization.id,
+    actorUserId,
+    invitationId: rows[0].id,
+    action: rows[0].id === id ? "invite_created" : "invite_resent",
+    newRole: input.role,
+    newStatus: "pending"
+  })
+
+  return { id: rows[0].id }
+}
+
+export async function cancelPartnerUserInvitation(
+  actorUserId: string,
+  invitationId: string
+) {
+  const organization = await requirePrimaryPartnerOrganization(actorUserId)
+  const actorRole = normalizePartnerRole(organization.membershipRole)
+  if (actorRole === "viewer") throw new Error("Forbidden.")
+
+  const rows = (await sql`
+    update partner_user_invitations
+    set status = 'cancelled', cancelled_at = now(), updated_at = now()
+    where id = ${invitationId}
+      and partner_org_id = ${organization.id}
+      and status = 'pending'
+    returning id, role
+  `) as { id: string; role: string }[]
+  if (rows.length === 0) throw new Error("Invitation not found.")
+
+  await recordPartnerMembershipAudit({
+    partnerOrgId: organization.id,
+    actorUserId,
+    invitationId,
+    action: "invite_cancelled",
+    oldRole: rows[0].role,
+    oldStatus: "pending",
+    newStatus: "cancelled"
+  })
+}
+
+export async function acceptPartnerUserInvitation(
+  actorUserId: string,
+  invitationId: string
+) {
+  await sql`begin`
+  try {
+    const rows = (await sql`
+      select
+        pui.id,
+        pui.partner_org_id,
+        pui.role,
+        pui.email,
+        pui.expires_at,
+        po.status as partner_org_status,
+        u.email as user_email
+      from partner_user_invitations pui
+      inner join partner_organizations po on po.id = pui.partner_org_id
+      inner join users u on u.id = ${actorUserId}
+      where pui.id = ${invitationId}
+        and pui.status = 'pending'
+      for update
+      limit 1
+    `) as {
+      id: string
+      partner_org_id: string
+      role: PartnerMvpRole
+      email: string
+      expires_at: string | Date
+      partner_org_status: string
+      user_email: string
+    }[]
+
+    const invite = rows[0]
+    if (!invite) throw new Error("Invitation not found.")
+    if (invite.partner_org_status !== "active") {
+      throw new Error("Partner organization is not active.")
+    }
+    if (new Date(invite.expires_at).getTime() < Date.now()) {
+      await sql`
+        update partner_user_invitations
+        set status = 'expired', updated_at = now()
+        where id = ${invitationId}
+      `
+      throw new Error("Invitation has expired.")
+    }
+    if (invite.email.toLowerCase() !== invite.user_email.toLowerCase()) {
+      throw new Error("Invitation email does not match current user.")
+    }
+
+    await sql`
+      insert into partner_memberships (partner_org_id, user_id, role, status)
+      values (${invite.partner_org_id}, ${actorUserId}, ${invite.role}, 'active')
+      on conflict (partner_org_id, user_id) do update set
+        role = excluded.role,
+        status = 'active'
+    `
+    await sql`
+      update partner_user_invitations
+      set
+        status = 'accepted',
+        accepted_by_user_id = ${actorUserId},
+        accepted_at = now(),
+        updated_at = now()
+      where id = ${invitationId}
+    `
+    await recordPartnerMembershipAudit({
+      partnerOrgId: invite.partner_org_id,
+      actorUserId,
+      targetUserId: actorUserId,
+      invitationId,
+      action: "invite_accepted",
+      newRole: invite.role,
+      newStatus: "active"
+    })
+    await sql`commit`
+  } catch (error) {
+    await sql`rollback`
+    throw error
+  }
+}
+
+export async function updatePartnerMemberRole(
+  actorUserId: string,
+  targetUserId: string,
+  input: { role: PartnerMvpRole; reason?: string | null }
+) {
+  const organization = await requirePrimaryPartnerOrganization(actorUserId)
+  const actorRole = normalizePartnerRole(organization.membershipRole)
+
+  await sql`begin`
+  try {
+    const rows = (await sql`
+      select role
+      from partner_memberships
+      where partner_org_id = ${organization.id}
+        and user_id = ${targetUserId}
+        and status = 'active'
+      for update
+      limit 1
+    `) as { role: PartnerMembershipRole }[]
+    const target = rows[0]
+    if (!target) throw new Error("Member not found.")
+
+    const targetRole = normalizePartnerRole(target.role)
+    if (
+      !canAssignPartnerRole({
+        actorRole,
+        targetCurrentRole: targetRole,
+        targetNextRole: input.role,
+        isSelf: actorUserId === targetUserId
+      })
+    ) {
+      throw new Error("Forbidden.")
+    }
+
+    if (targetRole === "partner_owner" && input.role !== "partner_owner") {
+      const ownerCount = await getActiveOwnerCount(organization.id)
+      if (ownerCount <= 1) {
+        throw new Error("At least one Partner Owner is required.")
+      }
+    }
+
+    await sql`
+      update partner_memberships
+      set role = ${input.role}
+      where partner_org_id = ${organization.id}
+        and user_id = ${targetUserId}
+    `
+    await recordPartnerMembershipAudit({
+      partnerOrgId: organization.id,
+      actorUserId,
+      targetUserId,
+      action: "role_changed",
+      oldRole: targetRole,
+      newRole: input.role,
+      reason: input.reason ?? null
+    })
+    await sql`commit`
+  } catch (error) {
+    await sql`rollback`
+    throw error
+  }
+}
+
+export async function updatePartnerMemberStatus(
+  actorUserId: string,
+  targetUserId: string,
+  input: { action: PartnerMembershipStatusAction; reason?: string | null }
+) {
+  const organization = await requirePrimaryPartnerOrganization(actorUserId)
+  const actorRole = normalizePartnerRole(organization.membershipRole)
+
+  if (
+    (input.action === "disable" || input.action === "remove") &&
+    !input.reason?.trim()
+  ) {
+    throw new Error("Reason is required.")
+  }
+
+  await sql`begin`
+  try {
+    const rows = (await sql`
+      select role, status
+      from partner_memberships
+      where partner_org_id = ${organization.id}
+        and user_id = ${targetUserId}
+      for update
+      limit 1
+    `) as {
+      role: PartnerMembershipRole
+      status: PartnerMembershipStatus | "inactive"
+    }[]
+    const target = rows[0]
+    if (!target) throw new Error("Member not found.")
+
+    const targetRole = normalizePartnerRole(target.role)
+    if (
+      !canChangePartnerMembershipStatus({
+        actorRole,
+        targetRole,
+        action: input.action,
+        isSelf: actorUserId === targetUserId
+      })
+    ) {
+      throw new Error("Forbidden.")
+    }
+
+    if (
+      target.status === "active" &&
+      targetRole === "partner_owner" &&
+      (input.action === "disable" || input.action === "remove")
+    ) {
+      const ownerCount = await getActiveOwnerCount(organization.id)
+      if (ownerCount <= 1) {
+        throw new Error("At least one Partner Owner is required.")
+      }
+    }
+
+    const nextStatus: PartnerMembershipStatus =
+      input.action === "disable"
+        ? "disabled"
+        : input.action === "remove"
+          ? "removed"
+          : "active"
+
+    await sql`
+      update partner_memberships
+      set status = ${nextStatus}
+      where partner_org_id = ${organization.id}
+        and user_id = ${targetUserId}
+    `
+    await recordPartnerMembershipAudit({
+      partnerOrgId: organization.id,
+      actorUserId,
+      targetUserId,
+      action: `membership_${input.action}`,
+      oldRole: targetRole,
+      newRole: targetRole,
+      oldStatus: target.status,
+      newStatus: nextStatus,
+      reason: input.reason ?? null
+    })
+    await sql`commit`
+  } catch (error) {
+    await sql`rollback`
+    throw error
+  }
+}
+
 export async function getPartnerPortalSummary(
   userId: string
 ): Promise<PartnerPortalSummary> {
@@ -834,7 +1434,7 @@ export async function getPartnerPortalSummary(
     overview: {
       enterprisesActivated: 0,
       expoBoothsUsed: 0,
-      tradeCreditsAllocated: 0,
+      activeInviteCampaigns: 0,
       rfqGenerated: 0,
       dealContexts: 0,
       bundleSales: 0,
@@ -859,10 +1459,7 @@ export async function getPartnerPortalSummary(
       allocatedQuantity: 0,
       consumedQuantity: 0,
       availableQuantity: 0,
-      activeInviteCampaigns: 0,
-      walletBalance: 0,
-      walletAllocated: 0,
-      walletConsumed: 0
+      activeInviteCampaigns: 0
     },
     bundles: {
       total: 0,
@@ -896,7 +1493,6 @@ export async function getPartnerPortalSummary(
     enterpriseRows,
     dealRows,
     quotaRows,
-    walletRows,
     bundleRows,
     revenueRows,
     settlementRows,
@@ -919,12 +1515,12 @@ export async function getPartnerPortalSummary(
     `,
     sql`
       select
-        count(*)::int as total,
-        count(*) filter (where activation_status = 'invited')::int as invited,
-        count(*) filter (where activation_status = 'registered')::int as registered,
-        count(*) filter (where activation_status = 'profile_completed')::int as profile_completed,
-        count(*) filter (where activation_status = 'expo_activated')::int as expo_activated,
-        count(*) filter (where activation_status = 'rfq_generated')::int as rfq_generated,
+        count(*) filter (where activation_status <> 'removed')::int as total,
+        count(*) filter (where activation_status in ('invited', 'pending_acceptance'))::int as invited,
+        count(*) filter (where activation_status = 'active')::int as registered,
+        count(*) filter (where activation_status = 'active')::int as profile_completed,
+        count(*) filter (where activation_status = 'active')::int as expo_activated,
+        coalesce(sum(rfq_generated_count), 0)::int as rfq_generated,
         coalesce(sum(rfq_generated_count), 0)::int as rfq_generated_count,
         coalesce(sum(trade_signal_count), 0)::int as trade_signal_count
       from partner_enterprise_members
@@ -951,15 +1547,6 @@ export async function getPartnerPortalSummary(
         ), 0)::int as active_invite_campaigns
       from partner_quotas
       where partner_org_id = ${orgId}
-    `,
-    sql`
-      select
-        coalesce(balance, 0)::numeric as balance,
-        coalesce(allocated, 0)::numeric as allocated,
-        coalesce(consumed, 0)::numeric as consumed
-      from partner_trade_credit_wallets
-      where partner_org_id = ${orgId}
-      limit 1
     `,
     sql`
       select
@@ -1032,13 +1619,6 @@ export async function getPartnerPortalSummary(
       active_invite_campaigns: number | string
     }[]
   )[0]
-  const wallet = (
-    walletRows as {
-      balance: number | string
-      allocated: number | string
-      consumed: number | string
-    }[]
-  )[0]
   const bundle = (
     bundleRows as {
       total: number | string
@@ -1082,7 +1662,7 @@ export async function getPartnerPortalSummary(
     overview: {
       enterprisesActivated: toNumber(enterprise?.expo_activated),
       expoBoothsUsed: toNumber(expo?.expo_booths_used),
-      tradeCreditsAllocated: toNumber(wallet?.allocated),
+      activeInviteCampaigns: toNumber(quota?.active_invite_campaigns),
       rfqGenerated,
       dealContexts,
       bundleSales,
@@ -1110,10 +1690,7 @@ export async function getPartnerPortalSummary(
         quotaTotal - quotaAllocated - quotaConsumed,
         0
       ),
-      activeInviteCampaigns: toNumber(quota?.active_invite_campaigns),
-      walletBalance: toNumber(wallet?.balance),
-      walletAllocated: toNumber(wallet?.allocated),
-      walletConsumed: toNumber(wallet?.consumed)
+      activeInviteCampaigns: toNumber(quota?.active_invite_campaigns)
     },
     bundles: {
       total: toNumber(bundle?.total),
@@ -1203,6 +1780,87 @@ async function requirePartnerQuota(
   }
 }
 
+async function recordPartnerEnterpriseAssociationAudit(input: {
+  associationId: string
+  partnerOrgId: string
+  partnerOrgName: string
+  enterpriseId?: string | null
+  enterpriseName: string
+  action: PartnerEnterpriseAssociationAuditAction
+  oldStatus?: PartnerEnterpriseMember["activationStatus"] | null
+  newStatus: PartnerEnterpriseMember["activationStatus"]
+  source: string
+  actorType: PartnerEnterpriseAssociationAuditActor
+  actorId?: string | null
+  reason?: string | null
+}) {
+  await sql`
+    insert into partner_enterprise_member_audit_events (
+      id,
+      association_id,
+      partner_org_id,
+      partner_org_name,
+      enterprise_id,
+      enterprise_name,
+      action,
+      old_status,
+      new_status,
+      source,
+      actor_type,
+      actor_id,
+      actor_label,
+      reason
+    )
+    values (
+      ${`partner-enterprise-audit-${randomUUID()}`},
+      ${input.associationId},
+      ${input.partnerOrgId},
+      ${input.partnerOrgName},
+      ${input.enterpriseId ?? null},
+      ${input.enterpriseName},
+      ${input.action},
+      ${input.oldStatus ?? null},
+      ${input.newStatus},
+      ${input.source},
+      ${input.actorType},
+      ${input.actorId ?? null},
+      ${input.actorId ?? input.actorType},
+      ${input.reason?.trim() || null}
+    )
+  `
+}
+
+async function notifyPartnerCompanyAccepted(input: {
+  partnerOrgId: string
+  associationId: string
+  enterpriseName: string
+  enterpriseId?: string | null
+  acceptedByUserId: string
+}) {
+  const recipients = (await sql`
+    select user_id
+    from partner_memberships
+    where partner_org_id = ${input.partnerOrgId}
+      and membership_role in ('partner_owner', 'partner_admin')
+      and membership_status = 'active'
+  `) as { user_id: string }[]
+
+  await Promise.allSettled(
+    recipients.map((recipient) =>
+      publishNotification({
+        userId: recipient.user_id,
+        source: "partner_portal",
+        type: "partner_company_association_accepted",
+        title: "Company accepted Tenant invitation",
+        body: "A Company has accepted your Tenant invite and is now active.",
+        deepLinkPath: "/partner/enterprises",
+        referenceId: input.associationId,
+        referenceType: "partner_enterprise_member"
+      })
+    )
+  )
+}
+
 async function requirePartnerEnterpriseMember(
   userId: string,
   memberId: string
@@ -1214,9 +1872,17 @@ async function requirePartnerEnterpriseMember(
   const rows = (await sql`
     select
       id,
+      enterprise_id,
       enterprise_name,
       contact_email,
       activation_status,
+      source,
+      relationship_type,
+      public_profile,
+      last_action,
+      accepted_at,
+      removed_at,
+      removed_reason,
       expo_participation_count,
       rfq_generated_count,
       trade_signal_count
@@ -1226,9 +1892,18 @@ async function requirePartnerEnterpriseMember(
     limit 1
   `) as {
     id: string
+    enterprise_id: string | null
     enterprise_name: string
     contact_email: string | null
+    logo_url: string | null
     activation_status: PartnerEnterpriseMember["activationStatus"]
+    source: string
+    relationship_type: string
+    public_profile: boolean
+    last_action: string | null
+    accepted_at: string | Date | null
+    removed_at: string | Date | null
+    removed_reason: string | null
     expo_participation_count: number | string
     rfq_generated_count: number | string
     trade_signal_count: number | string
@@ -1241,18 +1916,27 @@ async function requirePartnerEnterpriseMember(
     organization,
     member: {
       id: row.id,
+      enterpriseId: row.enterprise_id,
       enterpriseName: row.enterprise_name,
       contactEmail: row.contact_email,
+      logoUrl: null,
       activationStatus: row.activation_status,
+      source: row.source,
+      relationshipType: row.relationship_type,
+      publicProfile: row.public_profile,
+      lastAction: row.last_action,
+      acceptedAt: row.accepted_at ? toIso(row.accepted_at) : null,
+      removedAt: row.removed_at ? toIso(row.removed_at) : null,
+      removedReason: row.removed_reason,
+      createdAt: "",
+      updatedAt: "",
       expoParticipationCount: toNumber(row.expo_participation_count),
       rfqGeneratedCount: toNumber(row.rfq_generated_count),
       tradeSignalCount: toNumber(row.trade_signal_count),
       dealContextStage: null,
       dealContextEvents: 0,
       quotaAllocatedQuantity: 0,
-      quotaConsumedQuantity: 0,
-      tradeCreditsAllocated: 0,
-      tradeCreditsConsumed: 0
+      quotaConsumedQuantity: 0
     }
   }
 }
@@ -1421,7 +2105,8 @@ export async function savePartnerMiniSiteDraft(
 
     const existing = existingRows[0]
     if (existing) {
-      const nextStatus = existing.status === "rejected" ? "draft" : existing.status
+      const nextStatus =
+        existing.status === "rejected" ? "draft" : existing.status
       await sql`
         update partner_mini_sites
         set
@@ -1443,7 +2128,9 @@ export async function savePartnerMiniSiteDraft(
       limit 1
     `) as { id: string }[]
 
-    const status: PartnerMiniSiteStatus = publishedRows[0] ? "draft_update" : "draft"
+    const status: PartnerMiniSiteStatus = publishedRows[0]
+      ? "draft_update"
+      : "draft"
     const id = `partner-mini-site-${randomUUID()}`
     await sql`
       insert into partner_mini_sites (
@@ -1471,16 +2158,20 @@ export async function savePartnerMiniSiteDraft(
 
 export async function submitPartnerMiniSiteDraft(
   userId: string,
-  miniSiteId: string
+  miniSiteId: string,
+  submitNote?: string | null
 ) {
   const organization = await requirePrimaryPartnerOrganization(userId)
   const rows = (await sql`
-    select status
+    select status, content_json
     from partner_mini_sites
     where id = ${miniSiteId}
       and partner_org_id = ${organization.id}
     limit 1
-  `) as { status: PartnerMiniSiteStatus }[]
+  `) as {
+    status: PartnerMiniSiteStatus
+    content_json: Record<string, unknown>
+  }[]
 
   const current = rows[0]
   if (!current) throw new Error("Mini-site version not found.")
@@ -1491,7 +2182,28 @@ export async function submitPartnerMiniSiteDraft(
       to: "submitted"
     })
   ) {
-    throw new Error("Mini-site version cannot be submitted from current status.")
+    throw new Error(
+      "Mini-site version cannot be submitted from current status."
+    )
+  }
+
+  const branding = current.content_json.branding as
+    | { tenantName?: unknown; ctaOption?: unknown }
+    | undefined
+  if (typeof branding?.tenantName !== "string" || !branding.tenantName.trim()) {
+    throw new Error("Public display name is required.")
+  }
+  const allowedCtaOptions = new Set([
+    "contact_tenant",
+    "view_member_companies",
+    "view_assigned_expos",
+    "contact_arobid"
+  ])
+  if (
+    typeof branding.ctaOption !== "string" ||
+    !allowedCtaOptions.has(branding.ctaOption)
+  ) {
+    throw new Error("CTA option is invalid.")
   }
 
   const updatedRows = (await sql`
@@ -1508,8 +2220,31 @@ export async function submitPartnerMiniSiteDraft(
   `) as { id: string }[]
 
   if (updatedRows.length === 0) {
-    throw new Error("Mini-site version cannot be submitted from current status.")
+    throw new Error(
+      "Mini-site version cannot be submitted from current status."
+    )
   }
+
+  await sql`
+    insert into partner_mini_site_review_events (
+      id,
+      mini_site_id,
+      partner_org_id,
+      from_status,
+      to_status,
+      actor_user_id,
+      reason
+    )
+    values (
+      ${`partner-mini-site-submit-${randomUUID()}`},
+      ${miniSiteId},
+      ${organization.id},
+      ${current.status},
+      'submitted',
+      ${userId},
+      ${submitNote?.trim() || null}
+    )
+  `
 }
 
 export async function getPartnerQuotaWorkspace(
@@ -1521,16 +2256,13 @@ export async function getPartnerQuotaWorkspace(
       organization: null,
       quotas: [],
       enterpriseMembers: [],
-      inviteCampaigns: [],
-      wallet: { balance: 0, allocated: 0, consumed: 0 },
-      ledger: []
+      inviteCampaigns: []
     }
   }
 
   const orgId = organization.id
-  const [quotaRows, memberRows, campaignRows, walletRows, ledgerRows] =
-    await Promise.all([
-      sql`
+  const [quotaRows, memberRows, campaignRows] = await Promise.all([
+    sql`
         select
           id,
           quota_type,
@@ -1543,20 +2275,31 @@ export async function getPartnerQuotaWorkspace(
         where partner_org_id = ${orgId}
         order by created_at desc
       `,
-      sql`
+    sql`
         select
-          id,
-          enterprise_name,
-          contact_email,
-          activation_status,
-          expo_participation_count,
-          rfq_generated_count,
-          trade_signal_count
-        from partner_enterprise_members
-        where partner_org_id = ${orgId}
-        order by created_at desc
+          pem.id,
+          pem.enterprise_name,
+          pem.contact_email,
+          c.logo_url,
+          pem.activation_status,
+          pem.source,
+          pem.relationship_type,
+          pem.public_profile,
+          pem.last_action,
+          pem.accepted_at,
+          pem.removed_at,
+          pem.removed_reason,
+          pem.created_at,
+          pem.updated_at,
+          pem.expo_participation_count,
+          pem.rfq_generated_count,
+          pem.trade_signal_count
+        from partner_enterprise_members pem
+        left join companies c on c.id = pem.enterprise_id
+        where pem.partner_org_id = ${orgId}
+        order by pem.created_at desc
       `,
-      sql`
+    sql`
         select
           pic.id,
           pic.name,
@@ -1570,29 +2313,8 @@ export async function getPartnerQuotaWorkspace(
         left join partner_quotas pq on pq.id = pic.quota_id
         where pic.partner_org_id = ${orgId}
         order by pic.created_at desc
-      `,
-      sql`
-        select balance, allocated, consumed
-        from partner_trade_credit_wallets
-        where partner_org_id = ${orgId}
-        limit 1
-      `,
-      sql`
-        select
-          l.id,
-          l.entry_type,
-          l.amount,
-          l.enterprise_member_id,
-          pem.enterprise_name,
-          l.note,
-          l.created_at
-        from partner_trade_credit_ledger l
-        left join partner_enterprise_members pem on pem.id = l.enterprise_member_id
-        where l.partner_org_id = ${orgId}
-        order by l.created_at desc
-        limit 20
       `
-    ])
+  ])
 
   return {
     organization,
@@ -1629,7 +2351,17 @@ export async function getPartnerQuotaWorkspace(
         id: string
         enterprise_name: string
         contact_email: string | null
+        logo_url: string | null
         activation_status: PartnerEnterpriseMember["activationStatus"]
+        source: string
+        relationship_type: string
+        public_profile: boolean
+        last_action: string | null
+        accepted_at: string | Date | null
+        removed_at: string | Date | null
+        removed_reason: string | null
+        created_at: string | Date
+        updated_at: string | Date
         expo_participation_count: number | string
         rfq_generated_count: number | string
         trade_signal_count: number | string
@@ -1638,7 +2370,17 @@ export async function getPartnerQuotaWorkspace(
       id: row.id,
       enterpriseName: row.enterprise_name,
       contactEmail: row.contact_email,
+      logoUrl: row.logo_url,
       activationStatus: row.activation_status,
+      source: row.source,
+      relationshipType: row.relationship_type,
+      publicProfile: row.public_profile,
+      lastAction: row.last_action,
+      acceptedAt: row.accepted_at ? toIso(row.accepted_at) : null,
+      removedAt: row.removed_at ? toIso(row.removed_at) : null,
+      removedReason: row.removed_reason,
+      createdAt: toIso(row.created_at),
+      updatedAt: toIso(row.updated_at),
       expoParticipationCount: toNumber(row.expo_participation_count),
       rfqGeneratedCount: toNumber(row.rfq_generated_count),
       tradeSignalCount: toNumber(row.trade_signal_count)
@@ -1662,36 +2404,6 @@ export async function getPartnerQuotaWorkspace(
       quotaLabel: row.quota_label,
       status: row.status,
       claimedCount: toNumber(row.claimed_count),
-      createdAt: toIso(row.created_at)
-    })),
-    wallet: {
-      balance: toNumber(
-        (walletRows as { balance: number | string }[])[0]?.balance
-      ),
-      allocated: toNumber(
-        (walletRows as { allocated: number | string }[])[0]?.allocated
-      ),
-      consumed: toNumber(
-        (walletRows as { consumed: number | string }[])[0]?.consumed
-      )
-    },
-    ledger: (
-      ledgerRows as {
-        id: string
-        entry_type: PartnerTradeCreditLedgerEntry["entryType"]
-        amount: number | string
-        enterprise_member_id: string | null
-        enterprise_name: string | null
-        note: string | null
-        created_at: string | Date
-      }[]
-    ).map((row) => ({
-      id: row.id,
-      entryType: row.entry_type,
-      amount: toNumber(row.amount),
-      enterpriseMemberId: row.enterprise_member_id,
-      enterpriseName: row.enterprise_name,
-      note: row.note,
       createdAt: toIso(row.created_at)
     }))
   }
@@ -2870,16 +3582,6 @@ export async function getPartnerEnterpriseWorkspace(
       where partner_org_id = ${organization.id}
       group by enterprise_member_id
     ),
-    credit_totals as (
-      select
-        enterprise_member_id,
-        coalesce(sum(amount) filter (where entry_type = 'allocate'), 0)::numeric as trade_credits_allocated,
-        coalesce(sum(amount) filter (where entry_type = 'consume'), 0)::numeric as trade_credits_consumed
-      from partner_trade_credit_ledger
-      where partner_org_id = ${organization.id}
-        and enterprise_member_id is not null
-      group by enterprise_member_id
-    ),
     deal_totals as (
       select
         pdc.enterprise_member_id,
@@ -2892,54 +3594,81 @@ export async function getPartnerEnterpriseWorkspace(
     )
     select
       pem.id,
+      pem.enterprise_id,
       pem.enterprise_name,
       pem.contact_email,
+      c.logo_url,
       pem.activation_status,
+      pem.source,
+      pem.relationship_type,
+      pem.public_profile,
+      pem.last_action,
+      pem.accepted_at,
+      pem.removed_at,
+      pem.removed_reason,
+      pem.created_at,
+      pem.updated_at,
       pem.expo_participation_count,
       pem.rfq_generated_count,
       pem.trade_signal_count,
       coalesce(qt.quota_allocated_quantity, 0)::int as quota_allocated_quantity,
       coalesce(qt.quota_consumed_quantity, 0)::int as quota_consumed_quantity,
-      coalesce(ct.trade_credits_allocated, 0)::numeric as trade_credits_allocated,
-      coalesce(ct.trade_credits_consumed, 0)::numeric as trade_credits_consumed,
       dt.deal_context_stage,
       coalesce(dt.deal_context_events, 0)::int as deal_context_events
     from partner_enterprise_members pem
+    left join companies c on c.id = pem.enterprise_id
     left join quota_totals qt on qt.enterprise_member_id = pem.id
-    left join credit_totals ct on ct.enterprise_member_id = pem.id
     left join deal_totals dt on dt.enterprise_member_id = pem.id
     where pem.partner_org_id = ${organization.id}
     order by pem.created_at desc
   `) as {
     id: string
+    enterprise_id: string | null
     enterprise_name: string
     contact_email: string | null
+    logo_url: string | null
     activation_status: PartnerEnterpriseMember["activationStatus"]
     expo_participation_count: number | string
     rfq_generated_count: number | string
     trade_signal_count: number | string
     quota_allocated_quantity: number | string
     quota_consumed_quantity: number | string
-    trade_credits_allocated: number | string
-    trade_credits_consumed: number | string
     deal_context_stage: PartnerDealContextStage | null
     deal_context_events: number | string
+    source: string
+    relationship_type: string
+    public_profile: boolean
+    last_action: string | null
+    accepted_at: string | Date | null
+    removed_at: string | Date | null
+    removed_reason: string | null
+    created_at: string | Date
+    updated_at: string | Date
   }[]
 
   const members = rows.map((row) => ({
     id: row.id,
+    enterpriseId: row.enterprise_id,
     enterpriseName: row.enterprise_name,
     contactEmail: row.contact_email ?? "",
+    logoUrl: row.logo_url,
     activationStatus: row.activation_status,
+    source: row.source,
+    relationshipType: row.relationship_type,
+    publicProfile: row.public_profile,
+    lastAction: row.last_action,
+    acceptedAt: row.accepted_at ? toIso(row.accepted_at) : null,
+    removedAt: row.removed_at ? toIso(row.removed_at) : null,
+    removedReason: row.removed_reason,
+    createdAt: toIso(row.created_at),
+    updatedAt: toIso(row.updated_at),
     expoParticipationCount: toNumber(row.expo_participation_count),
     rfqGeneratedCount: toNumber(row.rfq_generated_count),
     tradeSignalCount: toNumber(row.trade_signal_count),
     dealContextStage: row.deal_context_stage,
     dealContextEvents: toNumber(row.deal_context_events),
     quotaAllocatedQuantity: toNumber(row.quota_allocated_quantity),
-    quotaConsumedQuantity: toNumber(row.quota_consumed_quantity),
-    tradeCreditsAllocated: toNumber(row.trade_credits_allocated),
-    tradeCreditsConsumed: toNumber(row.trade_credits_consumed)
+    quotaConsumedQuantity: toNumber(row.quota_consumed_quantity)
   }))
 
   return {
@@ -2949,18 +3678,107 @@ export async function getPartnerEnterpriseWorkspace(
       invited: members.filter((member) => member.activationStatus === "invited")
         .length,
       registered: members.filter(
-        (member) => member.activationStatus === "registered"
+        (member) => member.activationStatus === "active"
       ).length,
       profileCompleted: members.filter(
-        (member) => member.activationStatus === "profile_completed"
+        (member) => member.activationStatus === "active"
       ).length,
       expoActivated: members.filter(
-        (member) => member.activationStatus === "expo_activated"
+        (member) => member.activationStatus === "active"
       ).length,
       rfqGenerated: members.filter(
-        (member) => member.activationStatus === "rfq_generated"
+        (member) => member.activationStatus === "removed"
       ).length
     }
+  }
+}
+
+export async function getPartnerEnterpriseMemberDetail(
+  userId: string,
+  memberId: string
+): Promise<PartnerEnterpriseMemberDetail | null> {
+  const workspace = await getPartnerEnterpriseWorkspace(userId)
+  if (!workspace.organization) return null
+  const member = workspace.members.find((item) => item.id === memberId)
+  if (!member) return null
+
+  const [auditRows, dealRows] = await Promise.all([
+    sql`
+      select
+        id,
+        action,
+        old_status,
+        new_status,
+        actor_label,
+        reason,
+        created_at
+      from partner_enterprise_member_audit_events
+      where partner_org_id = ${workspace.organization.id}
+        and association_id = ${memberId}
+      order by created_at desc
+      limit 30
+    `,
+    sql`
+      select
+        pdce.id,
+        pdce.from_stage,
+        pdce.to_stage,
+        pdce.note,
+        u.name as actor_label,
+        pdce.created_at
+      from partner_deal_context_events pdce
+      left join users u on u.id = pdce.actor_user_id
+      where pdce.partner_org_id = ${workspace.organization.id}
+        and pdce.enterprise_member_id = ${memberId}
+      order by pdce.created_at desc
+      limit 30
+    `
+  ])
+
+  const activities: PartnerEnterpriseActivity[] = [
+    ...(
+      auditRows as {
+        id: string
+        action: string
+        old_status: string | null
+        new_status: string | null
+        actor_label: string | null
+        reason: string | null
+        created_at: string | Date
+      }[]
+    ).map((row) => ({
+      id: row.id,
+      type: "association" as const,
+      title: row.new_status
+        ? `${row.action}: ${row.old_status ?? "none"} → ${row.new_status}`
+        : row.action,
+      description: row.reason,
+      actorLabel: row.actor_label,
+      createdAt: toIso(row.created_at)
+    })),
+    ...(
+      dealRows as {
+        id: string
+        from_stage: PartnerDealContextStage | null
+        to_stage: PartnerDealContextStage
+        note: string | null
+        actor_label: string | null
+        created_at: string | Date
+      }[]
+    ).map((row) => ({
+      id: row.id,
+      type: "deal_context" as const,
+      title: `Deal context: ${row.from_stage ?? "none"} → ${row.to_stage}`,
+      description: row.note,
+      actorLabel: row.actor_label,
+      createdAt: toIso(row.created_at)
+    }))
+  ].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+
+  return {
+    organization: workspace.organization,
+    member,
+    activities
   }
 }
 
@@ -2982,17 +3800,12 @@ export async function getPartnerGovernmentProgramWorkspace(
     (sum, quota) => sum + quota.consumedQuantity,
     0
   )
-  const creditTotal = Math.max(quotaWorkspace.wallet.balance, 0)
 
   return {
     organization: quotaWorkspace.organization,
     quotaWorkspace,
     supportedSmes,
     activeCampaigns,
-    creditUtilization:
-      creditTotal > 0
-        ? Math.round((quotaWorkspace.wallet.consumed / creditTotal) * 100)
-        : 0,
     quotaUtilization:
       quotaTotal > 0 ? Math.round((quotaConsumed / quotaTotal) * 100) : 0
   }
@@ -3134,6 +3947,7 @@ export async function updatePartnerEnterpriseMember(
     memberId: string
     enterpriseName: string
     contactEmail?: string | null
+    relationshipType?: string | null
   }
 ) {
   const { organization } = await requirePartnerEnterpriseMember(
@@ -3148,10 +3962,106 @@ export async function updatePartnerEnterpriseMember(
     set
       enterprise_name = ${enterpriseName},
       contact_email = ${input.contactEmail?.trim() || null},
+      relationship_type = ${input.relationshipType?.trim() || "member"},
+      last_action = 'update',
       updated_at = now()
     where id = ${input.memberId}
       and partner_org_id = ${organization.id}
   `
+}
+
+export async function acceptPartnerEnterpriseAssociation(
+  userId: string,
+  memberId: string
+) {
+  const { organization, member } = await requirePartnerEnterpriseMember(
+    userId,
+    memberId
+  )
+  if (member.activationStatus === "blocked") {
+    throw new Error("Blocked association cannot be accepted.")
+  }
+  if (member.activationStatus === "removed") {
+    throw new Error("Removed association cannot be accepted.")
+  }
+
+  await sql`
+    update partner_enterprise_members
+    set
+      activation_status = 'active',
+      accepted_by_user_id = ${userId},
+      accepted_at = now(),
+      last_action = 'accept',
+      updated_at = now()
+    where id = ${memberId}
+      and partner_org_id = ${organization.id}
+  `
+  await recordPartnerEnterpriseAssociationAudit({
+    associationId: memberId,
+    partnerOrgId: organization.id,
+    partnerOrgName: organization.name,
+    enterpriseId: member.enterpriseId,
+    enterpriseName: member.enterpriseName,
+    action: "accept",
+    oldStatus: member.activationStatus,
+    newStatus: "active",
+    source: member.source,
+    actorType: "company_user",
+    actorId: userId
+  })
+  await notifyPartnerCompanyAccepted({
+    partnerOrgId: organization.id,
+    associationId: memberId,
+    enterpriseId: member.enterpriseId,
+    enterpriseName: member.enterpriseName,
+    acceptedByUserId: userId
+  })
+}
+
+export async function removePartnerEnterpriseAssociation(
+  userId: string,
+  input: { memberId: string; reason: string }
+) {
+  const { organization, member } = await requirePartnerEnterpriseMember(
+    userId,
+    input.memberId
+  )
+  const reason = input.reason.trim()
+  if (!reason) throw new Error("Removal reason is required.")
+  if (member.activationStatus === "blocked") {
+    throw new Error("Blocked association cannot be removed by Tenant users.")
+  }
+  if (member.activationStatus === "removed") {
+    throw new Error("Association is already removed.")
+  }
+
+  await sql`
+    update partner_enterprise_members
+    set
+      activation_status = 'removed',
+      removed_at = now(),
+      removed_reason = ${reason},
+      invite_token = null,
+      invite_expires_at = null,
+      last_action = 'remove',
+      updated_at = now()
+    where id = ${input.memberId}
+      and partner_org_id = ${organization.id}
+  `
+  await recordPartnerEnterpriseAssociationAudit({
+    associationId: input.memberId,
+    partnerOrgId: organization.id,
+    partnerOrgName: organization.name,
+    enterpriseId: member.enterpriseId,
+    enterpriseName: member.enterpriseName,
+    action: "remove",
+    oldStatus: member.activationStatus,
+    newStatus: "removed",
+    source: member.source,
+    actorType: "partner_user",
+    actorId: userId,
+    reason
+  })
 }
 
 export async function advancePartnerEnterpriseActivation(
@@ -3162,51 +4072,28 @@ export async function advancePartnerEnterpriseActivation(
     userId,
     memberId
   )
-  const nextStatus: Record<
-    PartnerEnterpriseMember["activationStatus"],
-    PartnerEnterpriseMember["activationStatus"]
-  > = {
-    invited: "registered",
-    registered: "profile_completed",
-    profile_completed: "expo_activated",
-    expo_activated: "rfq_generated",
-    rfq_generated: "rfq_generated"
+  if (member.activationStatus !== "active") {
+    throw new Error("Only active associations can record RFQ activity.")
   }
-  const next = nextStatus[member.activationStatus]
 
   await sql`
     update partner_enterprise_members
     set
-      activation_status = ${next},
-      expo_participation_count = case
-        when ${next} = 'expo_activated' and activation_status <> 'expo_activated'
-        then expo_participation_count + 1
-        else expo_participation_count
-      end,
-      rfq_generated_count = case
-        when ${next} = 'rfq_generated' and activation_status <> 'rfq_generated'
-        then rfq_generated_count + 1
-        else rfq_generated_count
-      end,
-      trade_signal_count = case
-        when ${next} = 'rfq_generated' and activation_status <> 'rfq_generated'
-        then trade_signal_count + 1
-        else trade_signal_count
-      end,
+      rfq_generated_count = rfq_generated_count + 1,
+      trade_signal_count = trade_signal_count + 1,
+      last_action = 'rfq_generated',
       updated_at = now()
     where id = ${memberId}
       and partner_org_id = ${organization.id}
   `
 
-  if (next === "rfq_generated") {
-    await ensurePartnerDealContext({
-      organizationId: organization.id,
-      enterpriseMemberId: memberId,
-      actorUserId: userId,
-      toStage: "rfq_generated",
-      note: "Enterprise activation reached RFQ stage."
-    })
-  }
+  await ensurePartnerDealContext({
+    organizationId: organization.id,
+    enterpriseMemberId: memberId,
+    actorUserId: userId,
+    toStage: "rfq_generated",
+    note: "Active company association generated RFQ activity."
+  })
 }
 
 export async function createPartnerQuota(
@@ -3248,32 +4135,251 @@ export async function createPartnerQuota(
   return { id }
 }
 
+export async function searchPartnerCompanies(
+  userId: string,
+  query: string
+): Promise<PartnerCompanySearchResult[]> {
+  await requirePrimaryPartnerOrganization(userId)
+  const q = query.trim()
+  if (q.length < 2) return []
+
+  const rows = (await sql`
+    select id, name, tax_id, website, address, is_active
+    from companies
+    where is_active = true
+      and (
+        name ilike ${`%${q}%`}
+        or coalesce(tax_id, '') ilike ${`%${q}%`}
+        or coalesce(website, '') ilike ${`%${q}%`}
+      )
+    order by name asc
+    limit 10
+  `) as {
+    id: string
+    name: string
+    tax_id: string | null
+    website: string | null
+    address: string | null
+    is_active: boolean
+  }[]
+
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    taxId: row.tax_id,
+    website: row.website,
+    address: row.address,
+    isActive: row.is_active
+  }))
+}
+
+export async function listPartnerEnterpriseAssociationAuditEvents(
+  filters: PartnerEnterpriseAssociationAuditFilters = {}
+): Promise<PartnerEnterpriseAssociationAuditEvent[]> {
+  const limit = Math.min(Math.max(filters.limit ?? 20, 1), 100)
+  const rows = (await sql`
+    select
+      id,
+      association_id,
+      partner_org_id,
+      partner_org_name,
+      enterprise_id,
+      enterprise_name,
+      action,
+      old_status,
+      new_status,
+      source,
+      actor_type,
+      actor_id,
+      actor_label,
+      reason,
+      created_at
+    from partner_enterprise_member_audit_events
+    where (${filters.partnerOrgId ?? null}::text is null or partner_org_id = ${filters.partnerOrgId ?? null})
+      and (${filters.enterpriseId ?? null}::text is null or enterprise_id = ${filters.enterpriseId ?? null})
+      and (${filters.action ?? null}::text is null or action = ${filters.action ?? null})
+      and (${filters.source ?? null}::text is null or source = ${filters.source ?? null})
+      and (${filters.actorType ?? null}::text is null or actor_type = ${filters.actorType ?? null})
+      and (
+        ${filters.q?.trim() || null}::text is null
+        or partner_org_name ilike ${`%${filters.q?.trim() || ""}%`}
+        or enterprise_name ilike ${`%${filters.q?.trim() || ""}%`}
+        or association_id ilike ${`%${filters.q?.trim() || ""}%`}
+        or coalesce(enterprise_id, '') ilike ${`%${filters.q?.trim() || ""}%`}
+      )
+    order by created_at desc, id desc
+    limit ${limit}
+  `) as {
+    id: string
+    association_id: string
+    partner_org_id: string
+    partner_org_name: string
+    enterprise_id: string | null
+    enterprise_name: string
+    action: PartnerEnterpriseAssociationAuditAction
+    old_status: PartnerEnterpriseMember["activationStatus"] | null
+    new_status: PartnerEnterpriseMember["activationStatus"]
+    source: string
+    actor_type: PartnerEnterpriseAssociationAuditActor
+    actor_id: string | null
+    actor_label: string | null
+    reason: string | null
+    created_at: string | Date
+  }[]
+
+  return rows.map((row) => ({
+    id: row.id,
+    associationId: row.association_id,
+    partnerOrgId: row.partner_org_id,
+    partnerOrgName: row.partner_org_name,
+    enterpriseId: row.enterprise_id,
+    enterpriseName: row.enterprise_name,
+    action: row.action,
+    oldStatus: row.old_status,
+    newStatus: row.new_status,
+    source: row.source,
+    actorType: row.actor_type,
+    actorId: row.actor_id,
+    actorLabel: row.actor_label,
+    reason: row.reason,
+    createdAt: toIso(row.created_at)
+  }))
+}
+
 export async function createPartnerEnterpriseMember(
   userId: string,
-  input: { enterpriseName: string; contactEmail?: string | null }
+  input: {
+    companyIds?: string[]
+    relationshipType?: string | null
+  }
 ) {
   const organization = await requirePrimaryPartnerOrganization(userId)
-  const enterpriseName = input.enterpriseName.trim()
-  if (!enterpriseName) throw new Error("Enterprise name is required.")
-  const id = `partner-member-${randomUUID()}`
+  const relationshipType = input.relationshipType?.trim() || "member"
+  const companyIds = Array.from(new Set(input.companyIds ?? [])).filter(Boolean)
+  if (companyIds.length === 0) {
+    return {
+      created: [],
+      skipped: [],
+      shareUrl: `/register/company?tenant=${organization.id}`
+    }
+  }
 
-  await sql`
-    insert into partner_enterprise_members (
-      id,
-      partner_org_id,
-      enterprise_name,
-      contact_email,
-      activation_status
-    )
-    values (
-      ${id},
-      ${organization.id},
-      ${enterpriseName},
-      ${input.contactEmail?.trim() || null},
-      'invited'
-    )
-  `
-  return { id }
+  const companyRows = (await sql`
+    select id, name
+    from companies
+    where id = any(${companyIds}::text[])
+      and is_active = true
+  `) as { id: string; name: string }[]
+  const companiesById = new Map(
+    companyRows.map((company) => [company.id, company])
+  )
+  const created: { id: string; companyId: string; inviteToken: string }[] = []
+  const skipped: { companyId: string; reason: string }[] = []
+
+  for (const companyId of companyIds) {
+    const company = companiesById.get(companyId)
+    if (!company) {
+      skipped.push({ companyId, reason: "Arobid company not found." })
+      continue
+    }
+
+    const duplicateRows = (await sql`
+      select id, activation_status
+      from partner_enterprise_members
+      where partner_org_id = ${organization.id}
+        and enterprise_id = ${company.id}
+        and activation_status in ('invited', 'pending_acceptance', 'active', 'blocked')
+      limit 1
+    `) as { id: string; activation_status: string }[]
+    const duplicate = duplicateRows[0]
+    if (duplicate?.activation_status === "blocked") {
+      skipped.push({ companyId, reason: "Blocked association." })
+      continue
+    }
+    if (duplicate?.activation_status === "active") {
+      skipped.push({ companyId, reason: "Already active." })
+      continue
+    }
+
+    const inviteToken = randomUUID()
+    if (duplicate) {
+      await sql`
+        update partner_enterprise_members
+        set
+          activation_status = 'pending_acceptance',
+          invite_token = ${inviteToken},
+          invite_expires_at = now() + interval '30 days',
+          last_action = 'resend_invite',
+          updated_at = now()
+        where id = ${duplicate.id}
+      `
+      await recordPartnerEnterpriseAssociationAudit({
+        associationId: duplicate.id,
+        partnerOrgId: organization.id,
+        partnerOrgName: organization.name,
+        enterpriseId: company.id,
+        enterpriseName: company.name,
+        action: "resend_invite",
+        oldStatus:
+          duplicate.activation_status as PartnerEnterpriseMember["activationStatus"],
+        newStatus: "pending_acceptance",
+        source: "tenant_invite",
+        actorType: "partner_user",
+        actorId: userId
+      })
+      created.push({ id: duplicate.id, companyId, inviteToken })
+      continue
+    }
+
+    const id = `partner-member-${randomUUID()}`
+    await sql`
+      insert into partner_enterprise_members (
+        id,
+        partner_org_id,
+        enterprise_id,
+        enterprise_name,
+        contact_email,
+        activation_status,
+        source,
+        relationship_type,
+        invite_token,
+        invite_expires_at,
+        last_action
+      )
+      values (
+        ${id},
+        ${organization.id},
+        ${company.id},
+        ${company.name},
+        null,
+        'pending_acceptance',
+        'tenant_invite',
+        ${relationshipType},
+        ${inviteToken},
+        now() + interval '30 days',
+        'invite'
+      )
+    `
+    await recordPartnerEnterpriseAssociationAudit({
+      associationId: id,
+      partnerOrgId: organization.id,
+      partnerOrgName: organization.name,
+      enterpriseId: company.id,
+      enterpriseName: company.name,
+      action: "invite",
+      newStatus: "pending_acceptance",
+      source: "tenant_invite",
+      actorType: "partner_user",
+      actorId: userId
+    })
+    created.push({ id, companyId, inviteToken })
+  }
+
+  return {
+    created,
+    skipped,
+    shareUrl: `/register/company?tenant=${organization.id}`
+  }
 }
 
 export async function createPartnerInviteCampaign(
@@ -3486,117 +4592,13 @@ export async function claimPartnerInviteCampaign(
     await sql`
       update partner_enterprise_members
       set
-        activation_status = 'expo_activated',
+        activation_status = 'active',
         expo_participation_count = expo_participation_count + 1,
         updated_at = now()
       where id = ${input.enterpriseMemberId}
         and partner_org_id = ${organization.id}
     `
   }
-}
-
-export async function recordPartnerTradeCreditEntry(
-  userId: string,
-  input: {
-    entryType: PartnerTradeCreditLedgerEntry["entryType"]
-    amount: number
-    enterpriseMemberId?: string | null
-    note?: string | null
-  }
-) {
-  const organization = await requirePrimaryPartnerOrganization(userId)
-  if (!Number.isFinite(input.amount) || input.amount <= 0) {
-    throw new Error("Amount must be greater than 0.")
-  }
-  if (input.enterpriseMemberId) {
-    await requirePartnerEnterpriseMember(userId, input.enterpriseMemberId)
-  }
-
-  const walletRows = (await sql`
-    insert into partner_trade_credit_wallets (
-      partner_org_id,
-      balance,
-      allocated,
-      consumed,
-      updated_at
-    )
-    values (${organization.id}, 0, 0, 0, now())
-    on conflict (partner_org_id) do update
-    set updated_at = now()
-    returning balance, allocated, consumed
-  `) as {
-    balance: number | string
-    allocated: number | string
-    consumed: number | string
-  }[]
-
-  const wallet = walletRows[0]
-  const balance = toNumber(wallet?.balance)
-  const allocated = toNumber(wallet?.allocated)
-  const amount = input.amount
-
-  if (input.entryType === "allocate" && amount > balance) {
-    throw new Error("Not enough TradeCredit balance.")
-  }
-  if (input.entryType === "consume" && amount > allocated) {
-    throw new Error("Not enough allocated TradeCredits.")
-  }
-
-  if (input.entryType === "purchase") {
-    await sql`
-      update partner_trade_credit_wallets
-      set balance = balance + ${amount}, updated_at = now()
-      where partner_org_id = ${organization.id}
-    `
-  } else if (input.entryType === "allocate") {
-    await sql`
-      update partner_trade_credit_wallets
-      set
-        balance = balance - ${amount},
-        allocated = allocated + ${amount},
-        updated_at = now()
-      where partner_org_id = ${organization.id}
-    `
-  } else if (input.entryType === "consume") {
-    await sql`
-      update partner_trade_credit_wallets
-      set
-        allocated = allocated - ${amount},
-        consumed = consumed + ${amount},
-        updated_at = now()
-      where partner_org_id = ${organization.id}
-    `
-  } else {
-    await sql`
-      update partner_trade_credit_wallets
-      set
-        balance = balance + ${amount},
-        allocated = greatest(allocated - ${amount}, 0),
-        updated_at = now()
-      where partner_org_id = ${organization.id}
-    `
-  }
-
-  const id = `partner-credit-${randomUUID()}`
-  await sql`
-    insert into partner_trade_credit_ledger (
-      id,
-      partner_org_id,
-      entry_type,
-      amount,
-      enterprise_member_id,
-      note
-    )
-    values (
-      ${id},
-      ${organization.id},
-      ${input.entryType},
-      ${amount},
-      ${input.enterpriseMemberId || null},
-      ${input.note?.trim() || null}
-    )
-  `
-  return { id }
 }
 
 function toNumber(value: unknown): number {

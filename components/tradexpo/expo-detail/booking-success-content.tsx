@@ -8,6 +8,12 @@ import { Button } from "@/components/ui/button"
 import { BoothTierBadge } from "./booth-tier-badge"
 import { BOOTH_TIERS } from "./data"
 
+const vndFormat = new Intl.NumberFormat("vi-VN", {
+  style: "currency",
+  currency: "VND",
+  maximumFractionDigits: 0
+})
+
 export function BookingSuccessContent({
   expoName,
   expoSlug
@@ -19,9 +25,19 @@ export function BookingSuccessContent({
   const tierId = searchParams.get("tier") || "premium"
   const hall = searchParams.get("hall") || "A"
   const booth = searchParams.get("booth") || "--"
+  const orderId = searchParams.get("orderId") || "BOOTH02112004"
+  const creditsUsed = Number(searchParams.get("credits") || 0)
+  const tradeCreditDiscountVnd = Number(
+    searchParams.get("tradeCreditDiscountVnd") || 0
+  )
+  const finalPayableVnd = Number(searchParams.get("finalPayableVnd") || 0)
 
   const activeTier = BOOTH_TIERS.find((t) => t.id === tierId) || BOOTH_TIERS[2]
   const totalPaid = activeTier.price * 1.1
+  const totalPaidLabel =
+    finalPayableVnd > 0
+      ? vndFormat.format(finalPayableVnd)
+      : `$${totalPaid.toLocaleString()}`
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center px-4">
@@ -53,7 +69,7 @@ export function BookingSuccessContent({
                   Booking ID
                 </span>
                 <span className="font-bold text-[#1F2937] text-lg">
-                  #BOOTH02112004
+                  #{orderId}
                 </span>
               </div>
               <div className="flex flex-col items-end gap-1">
@@ -151,11 +167,20 @@ export function BookingSuccessContent({
                 Total Amount
               </span>
               <span className="font-black text-3xl text-white">
-                ${totalPaid.toLocaleString()}
+                {totalPaidLabel}
               </span>
             </div>
 
             <div className="space-y-4 border-white/20 border-t pt-6">
+              {creditsUsed > 0 ? (
+                <div className="flex items-center justify-between font-bold text-[10px] text-white/80 uppercase">
+                  <span>TradeCredit</span>
+                  <span>
+                    {creditsUsed.toLocaleString()} /{" "}
+                    {vndFormat.format(tradeCreditDiscountVnd)}
+                  </span>
+                </div>
+              ) : null}
               <div className="flex items-center justify-between font-bold text-[10px] text-white/80 uppercase">
                 <span>Status</span>
                 <span className="rounded bg-white/20 px-2 py-0.5">PAID</span>

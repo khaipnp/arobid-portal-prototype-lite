@@ -5,7 +5,14 @@ import Image from "next/image"
 import Link from "next/link"
 import { useMemo, useState } from "react"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card"
 import {
   Select,
   SelectContent,
@@ -87,169 +94,146 @@ export function PartnerExpoExhibitorsTable({
 
   return (
     <div className="space-y-4">
-      <Card size="sm">
-        <CardContent className="grid gap-4 sm:grid-cols-3 xl:grid-cols-6">
-          <MetricCard
-            title="Exhibitors"
-            value={workspace.summary.exhibitorCount}
+      <div className="grid gap-4 sm:grid-cols-3">
+        <MetricCard
+          title="Total Exhibitors"
+          value={workspace.summary.exhibitorCount}
+        />
+
+        <MetricCard
+          title="Booths Purchased"
+          value={workspace.summary.boothCount}
+        />
+
+        <MetricCard
+          title="Paid revenue"
+          value={currencyFormat.format(workspace.summary.paidAmount)}
+        />
+      </div>
+
+      <h2 className="text-lg font-medium">Exhibitors List</h2>
+      <div className="flex gap-2">
+        {/* Search */}
+        <InputGroup className="max-w-xs rounded-full">
+          <InputGroupAddon align="inline-start">
+            <SearchIcon />
+          </InputGroupAddon>
+          <InputGroupInput
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search company or contact"
           />
-
-          <MetricCard
-            title="Booths purchased"
-            value={workspace.summary.boothCount}
-          />
-
-          <MetricCard
-            title="Published booths"
-            value={workspace.summary.publishedBoothCount}
-          />
-
-          <MetricCard
-            title="Paid revenue"
-            value={currencyFormat.format(workspace.summary.paidAmount)}
-          />
-
-          <MetricCard
-            title="Paid revenue"
-            value={currencyFormat.format(workspace.summary.paidAmount)}
-          />
-
-          <MetricCard
-            title="Paid revenue"
-            value={currencyFormat.format(workspace.summary.paidAmount)}
-          />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Exhibitors List</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-2">
-            {/* Search */}
-            <InputGroup className="max-w-xs rounded-full">
-              <InputGroupAddon align="inline-start">
-                <SearchIcon />
-              </InputGroupAddon>
-              <InputGroupInput
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search company or contact"
-              />
-              {query && (
-                <InputGroupAddon align="inline-end">
-                  <InputGroupButton
-                    variant="secondary"
-                    size="icon-xs"
-                    className="rounded-full"
-                    onClick={() => setQuery("")}
-                  >
-                    <XIcon className="size-3.5" />
-                  </InputGroupButton>
-                </InputGroupAddon>
-              )}
-            </InputGroup>
-
-            {/* Filter Tier */}
-            <Select value={tier} onValueChange={setTier}>
-              <SelectTrigger className="rounded-full">
-                <SelectValue placeholder="Tier" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All tiers</SelectItem>
-                <SelectItem value="Basic">Basic</SelectItem>
-                <SelectItem value="Professional">Professional</SelectItem>
-                <SelectItem value="Premium">Premium</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Filter Payment Status */}
-            <Select value={paymentStatus} onValueChange={setPaymentStatus}>
-              <SelectTrigger className="rounded-full">
-                <SelectValue placeholder="Payment" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All payments</SelectItem>
-                <SelectItem value="Paid">Paid</SelectItem>
-                <SelectItem value="Pending">Pending</SelectItem>
-                <SelectItem value="No order">No order</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {workspace.exhibitors.length === 0 ? (
-            <div className="flex min-h-40 items-center justify-center rounded-lg border border-dashed text-muted-foreground text-sm">
-              No booth registrations for this expo yet.
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Company</TableHead>
-                  <TableHead>Contact</TableHead>
-                  <TableHead>Booths</TableHead>
-                  <TableHead>Slot</TableHead>
-                  <TableHead>Publish</TableHead>
-                  <TableHead>Payment</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filtered.map((exhibitor) => (
-                  <TableRow key={exhibitor.id}>
-                    <TableCell className="font-medium">
-                      <Link
-                        href={`/partner/expos/${expoId}/exhibitors/${exhibitor.id}`}
-                        className="flex items-center gap-2 hover:underline"
-                      >
-                        {exhibitor.logoUrl ? (
-                          <Image
-                            src={exhibitor.logoUrl}
-                            alt={exhibitor.displayName}
-                            width={256}
-                            height={256}
-                            className="size-10 rounded-lg border bg-white object-contain p-0.5"
-                          />
-                        ) : null}
-                        {exhibitor.displayName}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm">{exhibitor.contactName}</div>
-                      <div className="text-muted-foreground text-xs">
-                        {exhibitor.contactEmail}
-                      </div>
-                    </TableCell>
-                    <TableCell className="tabular-nums">
-                      {numberFormat.format(exhibitor.boothCount)}
-                    </TableCell>
-                    <TableCell className="max-w-44 truncate">
-                      {exhibitor.boothRefs.join(", ")}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">
-                        {numberFormat.format(exhibitor.publishedBoothCount)} /{" "}
-                        {numberFormat.format(exhibitor.boothCount)}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          exhibitor.paymentStatus === "Paid"
-                            ? "default"
-                            : "secondary"
-                        }
-                      >
-                        {exhibitor.paymentStatus}
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+          {query && (
+            <InputGroupAddon align="inline-end">
+              <InputGroupButton
+                variant="secondary"
+                size="icon-xs"
+                className="rounded-full"
+                onClick={() => setQuery("")}
+              >
+                <XIcon className="size-3.5" />
+              </InputGroupButton>
+            </InputGroupAddon>
           )}
-        </CardContent>
-      </Card>
+        </InputGroup>
+
+        {/* Filter Tier */}
+        <Select value={tier} onValueChange={setTier}>
+          <SelectTrigger className="rounded-full">
+            <SelectValue placeholder="Tier" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All tiers</SelectItem>
+            <SelectItem value="Basic">Basic</SelectItem>
+            <SelectItem value="Professional">Professional</SelectItem>
+            <SelectItem value="Premium">Premium</SelectItem>
+          </SelectContent>
+        </Select>
+
+        {/* Filter Payment Status */}
+        <Select value={paymentStatus} onValueChange={setPaymentStatus}>
+          <SelectTrigger className="rounded-full">
+            <SelectValue placeholder="Payment" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All payments</SelectItem>
+            <SelectItem value="Paid">Paid</SelectItem>
+            <SelectItem value="Pending">Pending</SelectItem>
+            <SelectItem value="No order">No order</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {workspace.exhibitors.length === 0 ? (
+        <div className="flex min-h-40 items-center justify-center rounded-lg border border-dashed text-muted-foreground text-sm">
+          No booth registrations for this expo yet.
+        </div>
+      ) : (
+        <Table className="border">
+          <TableHeader>
+            <TableRow>
+              <TableHead>Company</TableHead>
+              <TableHead>Contact</TableHead>
+              <TableHead>Booths</TableHead>
+              <TableHead>Slot</TableHead>
+              <TableHead>Publish</TableHead>
+              <TableHead>Payment</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filtered.map((exhibitor) => (
+              <TableRow key={exhibitor.id}>
+                <TableCell className="font-medium">
+                  <Link
+                    href={`/partner/expos/${expoId}/exhibitors/${exhibitor.id}`}
+                    className="flex items-center gap-2 hover:underline"
+                  >
+                    {exhibitor.logoUrl ? (
+                      <Image
+                        src={exhibitor.logoUrl}
+                        alt={exhibitor.displayName}
+                        width={256}
+                        height={256}
+                        className="size-10 rounded-lg border bg-white object-contain p-0.5"
+                      />
+                    ) : null}
+                    {exhibitor.displayName}
+                  </Link>
+                </TableCell>
+                <TableCell>
+                  <div className="text-sm">{exhibitor.contactName}</div>
+                  <div className="text-muted-foreground text-xs">
+                    {exhibitor.contactEmail}
+                  </div>
+                </TableCell>
+                <TableCell className="tabular-nums">
+                  {numberFormat.format(exhibitor.boothCount)}
+                </TableCell>
+                <TableCell className="max-w-44 truncate">
+                  {exhibitor.boothRefs.join(", ")}
+                </TableCell>
+                <TableCell>
+                  <Badge variant="secondary">
+                    {numberFormat.format(exhibitor.publishedBoothCount)} /{" "}
+                    {numberFormat.format(exhibitor.boothCount)}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge
+                    variant={
+                      exhibitor.paymentStatus === "Paid"
+                        ? "default"
+                        : "secondary"
+                    }
+                  >
+                    {exhibitor.paymentStatus}
+                  </Badge>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
     </div>
   )
 }
@@ -262,11 +246,13 @@ function MetricCard({
   value: number | string
 }) {
   return (
-    <div className="space-y-1.5 border-r">
-      <Label className="font-normal text-muted-foreground">{title}</Label>
-      <p className="font-semibold text-2xl tabular-nums">
-        {typeof value === "number" ? numberFormat.format(value) : value}
-      </p>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardDescription>{title}</CardDescription>
+        <CardTitle>
+          {typeof value === "number" ? numberFormat.format(value) : value}
+        </CardTitle>
+      </CardHeader>
+    </Card>
   )
 }

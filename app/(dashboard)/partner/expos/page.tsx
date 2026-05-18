@@ -16,7 +16,6 @@ export default async function PartnerExposPage() {
   return (
     <DashboardShell
       title="Expo Programs"
-      description="Manage assigned co-host, turnkey, and bulk booking expo programs."
       breadcrumbs={[
         { label: "Overview", href: "/partner" },
         { label: "Expo Programs" }

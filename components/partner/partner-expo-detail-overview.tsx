@@ -1,12 +1,10 @@
 import {
   ActivityIcon,
-  Building2Icon,
-  CalendarDaysIcon,
   Edit3Icon,
   ExternalLinkIcon,
+  LockIcon,
   RadioIcon,
   StoreIcon,
-  UsersIcon,
   WalletCardsIcon
 } from "lucide-react"
 import Image from "next/image"
@@ -22,7 +20,6 @@ import {
   CardTitle
 } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { Separator } from "@/components/ui/separator"
 import type {
   PartnerAssignedExpo,
   PartnerExpoExhibitorsWorkspace,
@@ -99,15 +96,11 @@ function publicExpoHref(slug?: string) {
 function MetricCard({
   title,
   value,
-  note,
-  icon,
-  accent = "bg-muted"
+  icon
 }: {
   title: string
   value: string
-  note: string
   icon: React.ReactNode
-  accent?: string
 }) {
   return (
     <Card size="sm">
@@ -117,14 +110,11 @@ function MetricCard({
           {value}
         </CardTitle>
         <CardAction
-          className={cn("rounded-md p-2 text-muted-foreground", accent)}
+          className={"rounded-full p-2 bg-muted text-muted-foreground"}
         >
           {icon}
         </CardAction>
       </CardHeader>
-      <CardContent className="text-muted-foreground text-xs">
-        {note}
-      </CardContent>
     </Card>
   )
 }
@@ -148,14 +138,14 @@ function TierRow({
         <div>
           <p className="font-medium text-sm">{tier}</p>
           <p className="text-muted-foreground text-xs">
-            {numberFormat.format(published)} purchased
+            {numberFormat.format(published)} Purchased
           </p>
         </div>
         <div className="text-right">
           <p className="text-sm tabular-nums">
             {numberFormat.format(sold)} / {numberFormat.format(capacity)}
           </p>
-          <p className="text-muted-foreground text-xs">{utilization}% sold</p>
+          <p className="text-muted-foreground text-xs">{utilization}% Sold</p>
         </div>
       </div>
       <Progress value={utilization} />
@@ -176,7 +166,9 @@ export function PartnerExpoDetailOverview({
 }) {
   const { expo, assignment, goLiveCount } = assignedExpo
   const publicHref = publicExpoHref(expo.slug)
+  const isTurnkey = assignment.partnershipModel === "turnkey"
   const canEditDraft =
+    !isTurnkey &&
     expo.status === "Draft" &&
     assignment.capabilities.includes("edit_expo_content")
   const timelineLabel = getTimelineLabel(expo.startDate, expo.endDate)
@@ -188,173 +180,135 @@ export function PartnerExpoDetailOverview({
 
   return (
     <div className="space-y-4">
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1.25fr)_380px]">
-        <div className="overflow-hidden rounded-3xl border bg-card">
-          <div className="grid min-h-75 lg:grid-cols-[minmax(0,0.95fr)_minmax(420px,1.05fr)]">
-            <div className="relative min-h-65 overflow-hidden bg-muted">
-              <Image
-                src={expo.thumbnailUrl}
-                alt={expo.name}
-                fill
-                className="object-cover"
-                sizes="(min-width: 1280px) 48vw, 100vw"
-                priority
-              />
-              <div className="absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-black/45 to-transparent" />
-              <div className="absolute top-3 left-3 flex flex-wrap gap-2">
-                <ExpoStatusBadge status={expo.status} />
-                <Badge
-                  variant="outline"
-                  className="border-white/30 bg-black/35 text-white"
-                >
-                  {timelineLabel}
-                </Badge>
+      <div className="overflow-hidden rounded-3xl border bg-card">
+        <div className="grid min-h-75 lg:grid-cols-[minmax(0,0.95fr)_minmax(420px,1.05fr)]">
+          <div className="relative min-h-65 overflow-hidden bg-muted">
+            <Image
+              src={expo.thumbnailUrl}
+              alt={expo.name}
+              fill
+              className="object-cover"
+              sizes="(min-width: 1280px) 48vw, 100vw"
+              priority
+            />
+            <div className="absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-black/45 to-transparent" />
+            <div className="absolute top-3 left-3 flex flex-wrap gap-2">
+              <ExpoStatusBadge status={expo.status} />
+              <Badge
+                variant="outline"
+                className="border-white/30 bg-black/35 text-white"
+              >
+                {timelineLabel}
+              </Badge>
+            </div>
+          </div>
+
+          <div className="flex flex-col justify-between gap-6 p-5">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex flex-wrap items-center gap-2 text-muted-foreground text-xs">
+                  <span>{expo.timezone ?? "Asia/Bangkok"}</span>
+                </div>
+                <h2 className="font-semibold text-2xl leading-tight">
+                  {expo.name}
+                </h2>
+                {expo.description ? (
+                  <p className="line-clamp-3 text-muted-foreground text-sm">
+                    {expo.description}
+                  </p>
+                ) : null}
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-3">
+                <div>
+                  <p className="text-muted-foreground text-xs">Start</p>
+                  <p className="font-medium text-sm">
+                    {formatDate(expo.startDate)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs">End</p>
+                  <p className="font-medium text-sm">
+                    {formatDate(expo.endDate)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground text-xs">Window</p>
+                  <p className="font-medium text-sm">{daysLabel}</p>
+                </div>
               </div>
             </div>
-
-            <div className="flex flex-col justify-between gap-6 p-5">
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex flex-wrap items-center gap-2 text-muted-foreground text-xs">
-                    <span>{expo.timezone ?? "Asia/Bangkok"}</span>
-                  </div>
-                  <h2 className="font-semibold text-2xl leading-tight">
-                    {expo.name}
-                  </h2>
-                  {expo.description ? (
-                    <p className="line-clamp-3 text-muted-foreground text-sm">
-                      {expo.description}
-                    </p>
-                  ) : null}
-                </div>
-
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <div>
-                    <p className="text-muted-foreground text-xs">Start</p>
-                    <p className="font-medium text-sm">
-                      {formatDate(expo.startDate)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs">End</p>
-                    <p className="font-medium text-sm">
-                      {formatDate(expo.endDate)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground text-xs">Window</p>
-                    <p className="font-medium text-sm">{daysLabel}</p>
-                  </div>
+            <div>
+              <p className="text-muted-foreground text-xs">GoLIVE</p>
+              <p className="font-medium">
+                {numberFormat.format(goLiveCount)} sessions
+              </p>
+            </div>
+            {isTurnkey ? (
+              <div className="flex items-start gap-2 rounded-2xl border border-blue-200 bg-blue-50 p-3 text-blue-900 text-sm">
+                <LockIcon className="mt-0.5 h-4 w-4 shrink-0" />
+                <div>
+                  <p className="font-medium">Configured by Arobid</p>
+                  <p className="text-blue-800/80 text-xs">
+                    This Turnkey Expo is visible for operations only. Create,
+                    configuration, pricing, and publish actions are hidden.
+                  </p>
                 </div>
               </div>
+            ) : null}
 
-              <div className="flex flex-wrap gap-2">
-                {publicHref ? (
-                  <Button asChild size="sm">
-                    <Link
-                      href={publicHref}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="rounded-full"
-                    >
-                      <ExternalLinkIcon />
-                      View Expo
-                    </Link>
-                  </Button>
-                ) : null}
-                {canEditDraft ? (
-                  <Button asChild size="sm" variant="outline">
-                    <Link href={`/partner/expos/${expo.id}/edit`}>
-                      <Edit3Icon />
-                      Edit draft
-                    </Link>
-                  </Button>
-                ) : null}
-              </div>
+            <div className="flex flex-wrap gap-2">
+              {publicHref ? (
+                <Button asChild size="sm">
+                  <Link
+                    href={publicHref}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-full"
+                  >
+                    <ExternalLinkIcon />
+                    View Expo
+                  </Link>
+                </Button>
+              ) : null}
+              {canEditDraft ? (
+                <Button asChild size="sm" variant="outline">
+                  <Link href={`/partner/expos/${expo.id}/edit`}>
+                    <Edit3Icon />
+                    Edit draft
+                  </Link>
+                </Button>
+              ) : null}
             </div>
           </div>
         </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Partner Assignment</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <p className="text-muted-foreground text-xs">Model</p>
-                <p className="font-medium">
-                  {partnerModelLabel[assignment.partnershipModel] ??
-                    assignment.partnershipModel}
-                </p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-xs">Role</p>
-                <p className="font-medium">
-                  {assignment.membershipRole.replaceAll("_", " ")}
-                </p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-xs">Owner</p>
-                <p className="truncate font-medium">{expo.ownerEmail}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-xs">GoLIVE</p>
-                <p className="font-medium">
-                  {numberFormat.format(goLiveCount)} sessions
-                </p>
-              </div>
-            </div>
-
-            <Separator />
-
-            <div className="space-y-2">
-              <p className="font-medium text-sm">Capabilities</p>
-              <div className="flex flex-wrap gap-1.5">
-                {primaryCapability.map((capability) => (
-                  <Badge key={capability} variant="secondary">
-                    {capability}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
+      </div>
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
-          title="Booth Utilization"
-          value={`${summary.boothUtilization}%`}
-          note={`${numberFormat.format(summary.soldBooths)} / ${numberFormat.format(summary.totalBooths)} booths sold`}
-          icon={<ActivityIcon className="h-4 w-4" />}
-          accent="bg-emerald-500/10 text-emerald-700"
-        />
-        <MetricCard
           title="Published Booths"
           value={numberFormat.format(summary.publishedBooths)}
-          note={`${numberFormat.format(summary.products)} products listed`}
-          icon={<StoreIcon className="h-4 w-4" />}
-          accent="bg-blue-500/10 text-blue-700"
+          icon={<StoreIcon />}
+        />
+        <MetricCard
+          title="Product Display"
+          value={`${summary.products}`}
+          icon={<ActivityIcon />}
         />
         <MetricCard
           title="GoLIVE Reach"
           value={numberFormat.format(summary.peakViewers)}
-          note={`${numberFormat.format(summary.goLiveEvents)} events / ${numberFormat.format(summary.comments)} comments`}
-          icon={<RadioIcon className="h-4 w-4" />}
-          accent="bg-violet-500/10 text-violet-700"
+          icon={<RadioIcon />}
         />
         <MetricCard
           title="Paid Revenue"
           value={currencyFormat.format(summary.revenue)}
-          note={`${numberFormat.format(summary.visitors)} paying visitors`}
-          icon={<WalletCardsIcon className="h-4 w-4" />}
-          accent="bg-amber-500/10 text-amber-700"
+          icon={<WalletCardsIcon />}
         />
       </section>
 
-      <section>
-        <Card>
+      <section className="flex gap-4">
+        <Card className="w-1/2">
           <CardHeader>
             <CardTitle>Booth Tier</CardTitle>
             <CardDescription>
@@ -367,92 +321,11 @@ export function PartnerExpoDetailOverview({
             ))}
           </CardContent>
         </Card>
-      </section>
-
-      <section className="grid gap-4 xl:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle>Operational Snapshot</CardTitle>
-            <CardDescription>
-              Readiness signals across inventory, content, and live operations.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-3">
-            <SnapshotBlock
-              icon={<Building2Icon className="h-4 w-4" />}
-              label="Unsold booths"
-              value={numberFormat.format(summary.unsoldBooths)}
-              note="Available inventory"
-            />
-            <SnapshotBlock
-              icon={<UsersIcon className="h-4 w-4" />}
-              label="Active sessions"
-              value={numberFormat.format(summary.liveSessions)}
-              note="Live now"
-            />
-            <SnapshotBlock
-              icon={<CalendarDaysIcon className="h-4 w-4" />}
-              label="Schedule"
-              value={timelineLabel}
-              note={`${formatDateTime(expo.startAt)} start`}
-            />
-          </CardContent>
-        </Card>
-
         <PartnerExpoExhibitorsOverviewCard
           workspace={exhibitorsWorkspace}
           onViewAll={onViewAllExhibitors}
         />
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Booth Status</CardTitle>
-            <CardDescription>Registration states in this expo.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {operations.registrationStatusBreakdown.length > 0 ? (
-              operations.registrationStatusBreakdown.map((item) => (
-                <div
-                  key={item.status}
-                  className="flex items-center justify-between gap-3 rounded-lg border bg-background/50 px-3 py-2"
-                >
-                  <span className="text-sm">{item.status}</span>
-                  <span className="font-mono text-muted-foreground text-xs tabular-nums">
-                    {numberFormat.format(item.value)}
-                  </span>
-                </div>
-              ))
-            ) : (
-              <div className="rounded-lg border border-dashed p-4 text-muted-foreground text-sm">
-                No booth registrations yet.
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </section>
-    </div>
-  )
-}
-
-function SnapshotBlock({
-  icon,
-  label,
-  value,
-  note
-}: {
-  icon: React.ReactNode
-  label: string
-  value: string
-  note: string
-}) {
-  return (
-    <div className="rounded-lg border bg-background/50 p-3">
-      <div className="flex items-center gap-2 text-muted-foreground text-xs">
-        {icon}
-        {label}
-      </div>
-      <p className="mt-2 font-semibold text-xl">{value}</p>
-      <p className="mt-1 text-muted-foreground text-xs">{note}</p>
     </div>
   )
 }

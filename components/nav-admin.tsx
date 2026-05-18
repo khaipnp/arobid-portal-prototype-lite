@@ -3,6 +3,7 @@
 import {
   BrickWallShieldIcon,
   Grid3x2Icon,
+  HistoryIcon,
   LayoutDashboardIcon,
   LayoutTemplateIcon,
   MonitorPlayIcon,
@@ -64,6 +65,11 @@ const servicesLinks = [
     icon: <TicketIcon />
   },
   {
+    name: "TradeCredit",
+    url: "/admin/tradecredit",
+    icon: <WalletCardsIcon />
+  },
+  {
     name: "Plan Packages",
     url: "/admin/plan-subscriptions/packages",
     icon: <PackageCheckIcon />
@@ -76,6 +82,11 @@ const servicesLinks = [
 ]
 
 const administrationLinks = [
+  {
+    name: "Partner Audit",
+    url: "/admin/partners/association-audit",
+    icon: <HistoryIcon />
+  },
   {
     name: "Modules",
     url: "/admin/administration/modules",

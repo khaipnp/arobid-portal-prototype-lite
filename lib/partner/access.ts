@@ -1,12 +1,5 @@
 import { userHasRole } from "@/lib/auth/rbac"
 import {
-  getPartnerCapabilities,
-  getPartnerScopes,
-  getPrimaryPartnerOrganization,
-  type PartnerMembershipRole,
-  type PartnerPortalOrganization
-} from "@/lib/partner/db"
-import {
   getPartnerModuleVisibility,
   isPartnerRoleReadOnly,
   normalizePartnerRole,
@@ -15,6 +8,13 @@ import {
   type PartnerMvpRole,
   type PartnerScopeSummary
 } from "@/lib/partner/core"
+import {
+  getPartnerCapabilities,
+  getPartnerScopes,
+  getPrimaryPartnerOrganization,
+  type PartnerMembershipRole,
+  type PartnerPortalOrganization
+} from "@/lib/partner/db"
 
 export type PartnerPortalTab =
   | PartnerModule
@@ -36,7 +36,6 @@ export type PartnerPortalAction =
   | "enterprise.advance"
   | "quota.manage"
   | "invite.manage"
-  | "tradeCredits.manage"
   | "bundle.manage"
   | "bundle.purchase"
   | "communications.manage"
@@ -75,7 +74,6 @@ const actionKeys: PartnerPortalAction[] = [
   "enterprise.advance",
   "quota.manage",
   "invite.manage",
-  "tradeCredits.manage",
   "bundle.manage",
   "bundle.purchase",
   "communications.manage",
@@ -104,10 +102,9 @@ function makeTabs(modules: Record<PartnerModule, boolean>) {
 }
 
 function makeEmptyActions() {
-  return Object.fromEntries(actionKeys.map((action) => [action, false])) as Record<
-    PartnerPortalAction,
-    boolean
-  >
+  return Object.fromEntries(
+    actionKeys.map((action) => [action, false])
+  ) as Record<PartnerPortalAction, boolean>
 }
 
 export function buildPartnerAccess(input: {
@@ -124,8 +121,9 @@ export function buildPartnerAccess(input: {
   })
   const canWriteMiniSite = modules.mini_site && !readOnly
   const canWriteEnterprise = modules.enterprises && !readOnly
-  const canWriteExpo = modules.expo_programs && !readOnly
-  const canWriteTradeCredit = modules.tradecredit_reports && !readOnly
+  const canWriteExpo =
+    modules.expo_programs && input.organization.model !== "turnkey" && !readOnly
+  const canManageQuota = modules.tradecredit_reports && !readOnly
 
   return {
     organization: input.organization,
@@ -145,9 +143,8 @@ export function buildPartnerAccess(input: {
       "turnkey.create": canWriteExpo,
       "enterprise.manage": canWriteEnterprise,
       "enterprise.advance": canWriteEnterprise,
-      "quota.manage": canWriteTradeCredit,
+      "quota.manage": canManageQuota,
       "invite.manage": canWriteEnterprise,
-      "tradeCredits.manage": canWriteTradeCredit,
       "bundle.manage": false,
       "bundle.purchase": false,
       "communications.manage": false,

@@ -8,12 +8,12 @@ export async function POST(request: Request) {
   try {
     const userId = await requirePartnerApiAction("enterprise.manage")
     const body = (await request.json()) as {
-      enterpriseName?: string
-      contactEmail?: string
+      companyIds?: string[]
+      relationshipType?: string
     }
     const result = await createPartnerEnterpriseMember(userId, {
-      enterpriseName: body.enterpriseName ?? "",
-      contactEmail: body.contactEmail ?? null
+      companyIds: body.companyIds ?? [],
+      relationshipType: body.relationshipType ?? null
     })
     return NextResponse.json(result, { status: 201 })
   } catch (error) {

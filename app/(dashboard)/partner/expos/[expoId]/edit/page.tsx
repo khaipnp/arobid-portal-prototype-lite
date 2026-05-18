@@ -28,6 +28,7 @@ export default async function PartnerEditExpoPage({
 
   const { expo, assignment } = assignedExpo
   const canEditDraft =
+    assignment.partnershipModel !== "turnkey" &&
     expo.status === "Draft" &&
     assignment.capabilities.includes("edit_expo_content")
   if (!canEditDraft) notFound()

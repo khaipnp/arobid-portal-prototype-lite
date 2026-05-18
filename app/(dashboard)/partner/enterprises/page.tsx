@@ -15,11 +15,10 @@ export default async function PartnerEnterprisesPage() {
 
   return (
     <DashboardShell
-      title="Enterprises & Members"
-      description="Track partner community activation against the shared Arobid SSOT."
+      title="Members"
       breadcrumbs={[
         { label: "Overview", href: "/partner" },
-        { label: "Enterprises & Members" }
+        { label: "Members" }
       ]}
     >
       <PartnerEnterpriseManager access={access} workspace={workspace} />

@@ -90,7 +90,11 @@ export function PartnerSiteManagementManager({
   const [versionStatus, setVersionStatus] = useState<string | null>(null)
   const [isSavingDraft, setIsSavingDraft] = useState(false)
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
+  const [submitDialogOpen, setSubmitDialogOpen] = useState(false)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const [submitNote, setSubmitNote] = useState("")
 
+  const previewLabel = getPreviewLabel(versionStatus)
   const isSubmitted = versionStatus === "submitted"
   const isReadOnly = access.readOnly || isSubmitted
   const canSubmitRelation = form.name.trim().length > 0
@@ -242,13 +246,18 @@ export function PartnerSiteManagementManager({
       const response = await fetch("/api/partner/mini-site", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ miniSiteId: draftId })
+        body: JSON.stringify({ miniSiteId: draftId, submitNote })
       })
       if (response.ok) {
         setVersionStatus("submitted")
+        setSubmitDialogOpen(false)
+        setSubmitNote("")
         setStatusMessage("Draft submitted for Admin review.")
       } else {
-        setStatusMessage("Could not submit mini-site draft.")
+        const payload = (await response.json().catch(() => null)) as {
+          error?: string
+        } | null
+        setStatusMessage(payload?.error ?? "Could not submit mini-site draft.")
       }
     } finally {
       setIsSavingDraft(false)
@@ -268,8 +277,10 @@ export function PartnerSiteManagementManager({
           <div className="space-y-1">
             <div className="flex flex-wrap items-center gap-2">
               <Badge variant="secondary">Demo local</Badge>
-              {versionStatus ? <Badge>{versionStatus}</Badge> : null}
-              {access.readOnly ? <Badge variant="outline">Read-only role</Badge> : null}
+              <Badge>{previewLabel}</Badge>
+              {access.readOnly ? (
+                <Badge variant="outline">Read-only role</Badge>
+              ) : null}
               {isSubmitted ? <Badge variant="outline">Submitted</Badge> : null}
             </div>
             <p className="text-muted-foreground text-sm">
@@ -281,6 +292,10 @@ export function PartnerSiteManagementManager({
             ) : null}
           </div>
           <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => setIsPreviewOpen(true)}>
+              <EyeIcon className="size-4" />
+              Live preview
+            </Button>
             <Button
               disabled={isReadOnly || isSavingDraft}
               variant="outline"
@@ -290,7 +305,7 @@ export function PartnerSiteManagementManager({
             </Button>
             <Button
               disabled={isReadOnly || isSavingDraft || !draftId}
-              onClick={submitDraft}
+              onClick={() => setSubmitDialogOpen(true)}
             >
               Submit for review
             </Button>
@@ -302,46 +317,74 @@ export function PartnerSiteManagementManager({
         </CardContent>
       </Card>
 
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_420px]">
-        <div className="space-y-4">
-          <SitePreviewControls
-            branding={branding}
-            isReadOnly={isReadOnly}
-            isUploadingLogo={isUploading}
-            sections={sections}
-            onBrandingChange={updateBranding}
-            onRemoveLogo={removeLogo}
-            onSectionToggle={toggleSection}
-            onUploadLogo={uploadLogo}
-          />
-          <RelationsCard
-            relations={relations}
-            isReadOnly={isReadOnly}
-            onCreate={openCreateDialog}
-            onEdit={openEditDialog}
-            onDelete={setDeleteTarget}
-          />
-        </div>
+      <section className="space-y-4">
+        <SitePreviewControls
+          branding={branding}
+          isReadOnly={isReadOnly}
+          isUploadingLogo={isUploading}
+          sections={sections}
+          onBrandingChange={updateBranding}
+          onRemoveLogo={removeLogo}
+          onSectionToggle={toggleSection}
+          onUploadLogo={uploadLogo}
+        />
+        <RelationsCard
+          relations={relations}
+          isReadOnly={isReadOnly}
+          onCreate={openCreateDialog}
+          onEdit={openEditDialog}
+          onDelete={setDeleteTarget}
+        />
+      </section>
 
-        <Card className="sticky top-4 h-fit overflow-hidden">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <EyeIcon className="size-5" />
-              Live preview
-            </CardTitle>
-            <CardDescription>
-              Figma-derived homepage preview using local configuration.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+      <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
+        <DialogContent className="h-screen max-h-none w-screen sm:max-w-screen overflow-hidden rounded-none">
+          <DialogHeader>
+            <DialogTitle>Live preview</DialogTitle>
+            <DialogDescription>
+              {previewLabel} in Partner Portal preview mode.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="h-full overflow-y-auto">
             <SiteLivePreview
               branding={branding}
               relations={relations}
               sections={sections}
             />
-          </CardContent>
-        </Card>
-      </section>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={submitDialogOpen} onOpenChange={setSubmitDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Submit mini-site for review?</DialogTitle>
+            <DialogDescription>
+              Arobid Admin reviews this saved version before publishing. Current
+              live mini-site remains unchanged.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-2">
+            <Label>Submit note</Label>
+            <Input
+              value={submitNote}
+              onChange={(event) => setSubmitNote(event.target.value)}
+              placeholder="Optional note for Arobid Admin"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setSubmitDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button disabled={isSavingDraft} onClick={submitDraft}>
+              {isSavingDraft ? "Submitting..." : "Confirm submit"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <RelationDialog
         form={form}
@@ -383,6 +426,15 @@ export function PartnerSiteManagementManager({
   )
 }
 
+function getPreviewLabel(status: string | null) {
+  if (status === "draft") return "Draft Preview"
+  if (status === "submitted") return "Submitted Preview"
+  if (status === "rejected") return "Rejected Preview"
+  if (status === "draft_update") return "Draft Update Preview"
+  if (status === "published") return "Published Preview"
+  return "New Draft Preview"
+}
+
 function RelationsCard({
   isReadOnly,
   relations,
@@ -401,16 +453,18 @@ function RelationsCard({
       <CardHeader>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <CardTitle className="flex items-center gap-2">
-              <GlobeIcon className="size-5" />
-              Partners & sponsors
-            </CardTitle>
+            <CardTitle>Partners & sponsors</CardTitle>
             <CardDescription>
               Manage tenant homepage partner and sponsor entries locally.
             </CardDescription>
           </div>
-          <Button disabled={isReadOnly} onClick={onCreate}>
-            <PlusIcon className="size-4" />
+          <Button
+            size="sm"
+            className="rounded-full"
+            disabled={isReadOnly}
+            onClick={onCreate}
+          >
+            <PlusIcon />
             Add entry
           </Button>
         </div>

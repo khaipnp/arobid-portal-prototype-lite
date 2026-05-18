@@ -1,13 +1,25 @@
+export type CtaOption =
+  | "contact_tenant"
+  | "view_member_companies"
+  | "view_assigned_expos"
+  | "contact_arobid"
+
 export type SiteBranding = {
   tenantName: string
   tagline: string
   logoUrl: string
+  bannerUrl: string
   primaryColor: string
   accentColor: string
+  ctaOption: CtaOption
+  publicEmail: string
+  publicPhone: string
+  publicAddress: string
+  publicWebsite: string
+  serviceBundleText: string
 }
 
 export type AlwaysVisibleSiteSectionKey = "header" | "banner" | "bfm" | "footer"
-
 export type SiteSectionKey =
   | "community"
   | "categories"

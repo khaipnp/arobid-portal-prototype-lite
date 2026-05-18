@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   ArrowRight,
@@ -6,28 +6,28 @@ import {
   Grid2X2,
   Heart,
   RadioIcon,
-  Sparkles
-} from "lucide-react"
-import Image from "next/image"
-import Link from "next/link"
-import { useState } from "react"
-import { toast } from "sonner"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { cn } from "@/lib/utils"
-import { asset, type HomeExpoCard } from "./data"
+  Sparkles,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+import { asset, type HomeExpoCard } from "./data";
 
 type ExhibitionsProps = {
-  categories: string[]
-  expos: HomeExpoCard[]
-  isAuthenticated?: boolean
-}
+  categories: string[];
+  expos: HomeExpoCard[];
+  isAuthenticated?: boolean;
+};
 
 export function Exhibitions({
   categories,
   expos,
-  isAuthenticated = false
+  isAuthenticated = false,
 }: ExhibitionsProps) {
   return (
     <section id="shows" className="container mx-auto bg-white py-16">
@@ -43,7 +43,7 @@ export function Exhibitions({
               "inline-flex h-10 shrink-0 items-center gap-1 rounded-full px-3 text-sm",
               index === 0
                 ? "border border-legend bg-[#ffeae1] text-legend"
-                : "bg-[#f9fafb] text-foreground"
+                : "bg-[#f9fafb] text-foreground",
             )}
           >
             <Grid2X2 className="size-4" />
@@ -70,35 +70,35 @@ export function Exhibitions({
         </button>
       </div>
     </section>
-  )
+  );
 }
 
 function ExpoCard({
   expo,
-  isAuthenticated
+  isAuthenticated,
 }: {
-  expo: HomeExpoCard
-  isAuthenticated: boolean
+  expo: HomeExpoCard;
+  isAuthenticated: boolean;
 }) {
-  const [isWishlisted, setIsWishlisted] = useState(!!expo.isWishlisted)
-  const [isWishlistPending, setIsWishlistPending] = useState(false)
+  const [isWishlisted, setIsWishlisted] = useState(!!expo.isWishlisted);
+  const [isWishlistPending, setIsWishlistPending] = useState(false);
   const statusTone =
     expo.status === "Live"
       ? "bg-[#16a34a]"
       : expo.status === "Upcoming"
         ? "bg-[#f59e0b]"
-        : "bg-[#9ca3af]"
-  const countdownLabel = expo.status === "Upcoming" ? "Starts in" : "Ends in"
+        : "bg-[#9ca3af]";
+  const countdownLabel = expo.status === "Upcoming" ? "Starts in" : "Ends in";
 
   const toggleWishlist = async () => {
     if (!isAuthenticated) {
-      toast.error("Please login to save expos to your wishlist")
-      return
+      toast.error("Please login to save expos to your wishlist");
+      return;
     }
 
-    const nextValue = !isWishlisted
-    setIsWishlisted(nextValue)
-    setIsWishlistPending(true)
+    const nextValue = !isWishlisted;
+    setIsWishlisted(nextValue);
+    setIsWishlistPending(true);
     try {
       const res = await fetch(
         nextValue
@@ -109,32 +109,32 @@ function ExpoCard({
           headers: nextValue ? { "Content-Type": "application/json" } : {},
           body: nextValue
             ? JSON.stringify({ targetType: "expo", targetId: expo.id })
-            : undefined
-        }
-      )
+            : undefined,
+        },
+      );
 
       if (!res.ok) {
-        setIsWishlisted(!nextValue)
-        const payload = await res.json().catch(() => null)
-        toast.error(payload?.error ?? "Could not update wishlist")
-        return
+        setIsWishlisted(!nextValue);
+        const payload = await res.json().catch(() => null);
+        toast.error(payload?.error ?? "Could not update wishlist");
+        return;
       }
 
       toast.success(
         nextValue
           ? "Expo saved to your wishlist"
-          : "Expo removed from your wishlist"
-      )
+          : "Expo removed from your wishlist",
+      );
     } catch (_err) {
-      setIsWishlisted(!nextValue)
-      toast.error("Could not update wishlist")
+      setIsWishlisted(!nextValue);
+      toast.error("Could not update wishlist");
     } finally {
-      setIsWishlistPending(false)
+      setIsWishlistPending(false);
     }
-  }
+  };
 
   return (
-    <Card className="overflow-hidden rounded-3xl bg-white p-2 shadow-[0_0_12px_rgba(0,0,0,0.08)]">
+    <Card className="overflow-hidden rounded-3xl shadow-[0_0_12px_rgba(0,0,0,0.08)]">
       <div className="relative h-56 overflow-hidden rounded-xl">
         <Link href={expo.detailHref}>
           <Image
@@ -178,7 +178,7 @@ function ExpoCard({
           <Heart
             className={cn(
               "size-5",
-              isWishlisted && "fill-rose-500 text-rose-600"
+              isWishlisted && "fill-rose-500 text-rose-600",
             )}
           />
         </button>
@@ -215,7 +215,7 @@ function ExpoCard({
                 </p>
                 <p className="text-[#6b7280] text-xs">{label}</p>
               </div>
-            )
+            ),
           )}
         </div>
         {expo.disabled ? (
@@ -232,5 +232,5 @@ function ExpoCard({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }

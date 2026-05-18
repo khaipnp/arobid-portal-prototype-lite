@@ -1,4 +1,6 @@
-import { ArrowRightIcon, Building2Icon } from "lucide-react"
+import { Building2Icon } from "lucide-react"
+import Image from "next/image"
+import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -8,6 +10,13 @@ import {
   CardHeader,
   CardTitle
 } from "@/components/ui/card"
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemMedia,
+  ItemTitle
+} from "@/components/ui/item"
 import type { PartnerExpoExhibitorsWorkspace } from "@/lib/partner/db"
 
 const numberFormat = new Intl.NumberFormat("en")
@@ -26,21 +35,16 @@ export function PartnerExpoExhibitorsOverviewCard({
   onViewAll?: () => void
 }) {
   return (
-    <Card>
+    <Card className="w-1/2">
       <CardHeader>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <CardTitle>Top Exhibitors</CardTitle>
-            <CardDescription>
-              {numberFormat.format(workspace.summary.exhibitorCount)} exhibitors
-              · {numberFormat.format(workspace.summary.boothCount)} booths ·{" "}
-              {currencyFormat.format(workspace.summary.paidAmount)} paid
-            </CardDescription>
+            <CardDescription>Base on view</CardDescription>
           </div>
           {onViewAll ? (
-            <Button size="sm" variant="outline" onClick={onViewAll}>
+            <Button size="xs" variant="outline" onClick={onViewAll}>
               View all
-              <ArrowRightIcon />
             </Button>
           ) : null}
         </div>
@@ -52,30 +56,32 @@ export function PartnerExpoExhibitorsOverviewCard({
           </div>
         ) : (
           workspace.topExhibitors.map((exhibitor) => (
-            <div
-              key={exhibitor.id}
-              className="flex items-center justify-between gap-3 rounded-lg border bg-background/50 px-3 py-2"
-            >
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
+            <Item key={exhibitor.id} variant="muted" size="default">
+              <ItemMedia
+                variant="image"
+                className="rounded-md border bg-muted/50 rounded-full"
+              >
+                {exhibitor.logoUrl ? (
+                  <Image
+                    src={exhibitor.logoUrl}
+                    alt=""
+                    width={256}
+                    height={256}
+                  />
+                ) : (
                   <Building2Icon className="h-4 w-4 text-muted-foreground" />
-                  <p className="truncate font-medium text-sm">
-                    {exhibitor.displayName}
-                  </p>
-                </div>
-                <p className="truncate text-muted-foreground text-xs">
-                  {exhibitor.contactEmail ?? "No contact email"}
-                </p>
-              </div>
-              <div className="flex shrink-0 items-center gap-2">
-                <Badge variant="secondary">
-                  {numberFormat.format(exhibitor.boothCount)} booths
-                </Badge>
-                <span className="font-mono text-muted-foreground text-xs tabular-nums">
-                  {currencyFormat.format(exhibitor.paidAmount)}
-                </span>
-              </div>
-            </div>
+                )}
+              </ItemMedia>
+
+              <ItemContent className="min-w-0">
+                <ItemTitle className="truncate font-sans">
+                  {exhibitor.displayName}
+                </ItemTitle>
+              </ItemContent>
+              <ItemActions className="shrink-0">
+                <span>{exhibitor.boothCount} views</span>
+              </ItemActions>
+            </Item>
           ))
         )}
       </CardContent>

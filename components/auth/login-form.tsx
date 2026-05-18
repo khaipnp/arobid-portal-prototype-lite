@@ -22,6 +22,21 @@ const DEMO_ACCOUNTS: {
     password: "Admin@Arobid123"
   },
   {
+    label: "Tenant Owner",
+    email: "partner.tenant.owner@arobid.com",
+    password: "Partner@Arobid123"
+  },
+  {
+    label: "Tenant Admin",
+    email: "partner.tenant.admin@arobid.com",
+    password: "Partner@Arobid123"
+  },
+  {
+    label: "Tenant Viewer",
+    email: "partner.tenant.viewer@arobid.com",
+    password: "Partner@Arobid123"
+  },
+  {
     label: "Expo Partner Owner",
     email: "partner.demo@arobid.com",
     password: "Partner@Arobid123"
@@ -211,7 +226,10 @@ function LoginPanel() {
   }
 
   return (
-    <section className="w-full max-w-lg rounded-[20px] bg-white px-6 py-8 shadow-[0_0_10px_rgba(0,55,67,0.1)] backdrop-blur md:px-10 md:py-14">
+    <section className="relative w-full max-w-lg overflow-hidden rounded-[20px] bg-white px-6 py-8 shadow-[0_0_10px_rgba(0,55,67,0.1)] backdrop-blur md:px-10 md:py-14">
+      <p className="absolute top-0 right-0 select-none rounded-bl-xl bg-legend px-3 py-1 font-medium text-white">
+        Demo
+      </p>
       <div className="space-y-2">
         <h1 className="font-semibold text-4xl text-foreground leading-10">
           Welcome to <span className="text-legend">Arobid</span>

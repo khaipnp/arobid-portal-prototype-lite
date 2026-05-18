@@ -1,8 +1,9 @@
 import { sql } from "@/lib/db/neon"
+import { ensureTradeCreditSchema } from "@/lib/tradecredit/db"
 import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
 let platformSchemaReady = false
-const LATEST_PLATFORM_MIGRATION = "partner_portal_rewrite_v1"
+const LATEST_PLATFORM_MIGRATION = "tradecredit_core_v1"
 
 type SqlClient = typeof sql
 
@@ -43,6 +44,7 @@ export async function ensurePlatformSchema() {
     // If the latest migration is applied, we can assume everything before it is also applied.
     if (appliedNames.has(LATEST_PLATFORM_MIGRATION)) {
       await ensurePlatformPaymentConfig()
+      await ensureTradeCreditSchema()
       platformSchemaReady = true
       return
     }
@@ -1035,6 +1037,8 @@ export async function ensurePlatformSchema() {
     where reference_id is not null and reference_type is not null
   `
 
+  await ensureTradeCreditSchema()
+
   await sql`
     create table if not exists user_wishlist_exhibitors (
       user_id text not null references users(id) on delete cascade,
@@ -1332,16 +1336,79 @@ async function migratePartnerOrganizationSchema() {
   await sql`
     do $$
     begin
+      alter table partner_memberships drop constraint if exists partner_memberships_status_ck;
       alter table partner_memberships
       add constraint partner_memberships_status_ck
-      check (status in ('active', 'inactive'));
-    exception
-      when duplicate_object then null;
+      check (status in ('active', 'inactive', 'disabled', 'removed'));
     end $$;
   `
   await sql`
     create index if not exists idx_partner_memberships_user
     on partner_memberships (user_id)
+  `
+
+  await sql`
+    create table if not exists partner_user_invitations (
+      id text primary key,
+      partner_org_id text not null references partner_organizations(id) on delete cascade,
+      email text not null,
+      display_name text,
+      message text,
+      role text not null,
+      status text not null default 'pending',
+      invited_by_user_id text not null references users(id) on delete cascade,
+      accepted_by_user_id text references users(id) on delete set null,
+      expires_at timestamptz not null,
+      accepted_at timestamptz,
+      cancelled_at timestamptz,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    do $$
+    begin
+      alter table partner_user_invitations
+      add constraint partner_user_invitations_role_ck
+      check (role in ('partner_owner', 'partner_admin', 'viewer'));
+    exception
+      when duplicate_object then null;
+    end $$;
+  `
+  await sql`
+    do $$
+    begin
+      alter table partner_user_invitations
+      add constraint partner_user_invitations_status_ck
+      check (status in ('pending', 'accepted', 'cancelled', 'expired'));
+    exception
+      when duplicate_object then null;
+    end $$;
+  `
+  await sql`
+    create unique index if not exists idx_partner_user_invitations_pending_email
+    on partner_user_invitations (partner_org_id, lower(email))
+    where status = 'pending'
+  `
+  await sql`
+    create table if not exists partner_membership_audit_events (
+      id text primary key,
+      partner_org_id text not null references partner_organizations(id) on delete cascade,
+      actor_user_id text references users(id) on delete set null,
+      target_user_id text references users(id) on delete set null,
+      invitation_id text references partner_user_invitations(id) on delete set null,
+      action text not null,
+      old_role text,
+      new_role text,
+      old_status text,
+      new_status text,
+      reason text,
+      created_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    create index if not exists idx_partner_membership_audit_events_org
+    on partner_membership_audit_events (partner_org_id, created_at desc)
   `
 
   await sql`
@@ -1391,8 +1458,17 @@ async function migratePartnerOrganizationSchema() {
       reject_reason text,
       created_at timestamptz not null default now(),
       updated_at timestamptz not null default now(),
-      check (status in ('draft', 'submitted', 'rejected', 'published', 'draft_update'))
+      check (status in ('draft', 'submitted', 'rejected', 'published', 'superseded', 'draft_update'))
     )
+  `
+  await sql`
+    alter table partner_mini_sites
+    drop constraint if exists partner_mini_sites_status_check
+  `
+  await sql`
+    alter table partner_mini_sites
+    add constraint partner_mini_sites_status_check
+    check (status in ('draft', 'submitted', 'rejected', 'published', 'superseded', 'draft_update'))
   `
   await sql`
     create unique index if not exists idx_partner_mini_sites_one_published
@@ -1446,6 +1522,16 @@ async function migratePartnerOrganizationSchema() {
       enterprise_name text not null,
       contact_email text,
       activation_status text not null default 'invited',
+      source text not null default 'tenant_invite',
+      relationship_type text not null default 'member',
+      public_profile boolean not null default true,
+      last_action text,
+      accepted_by_user_id text references users(id) on delete set null,
+      accepted_at timestamptz,
+      removed_at timestamptz,
+      removed_reason text,
+      invite_token text,
+      invite_expires_at timestamptz,
       expo_participation_count int not null default 0,
       rfq_generated_count int not null default 0,
       trade_signal_count int not null default 0,
@@ -1454,18 +1540,121 @@ async function migratePartnerOrganizationSchema() {
     )
   `
   await sql`
+    alter table partner_enterprise_members
+    add column if not exists source text not null default 'tenant_invite'
+  `
+  await sql`
+    alter table partner_enterprise_members
+    add column if not exists relationship_type text not null default 'member'
+  `
+  await sql`
+    alter table partner_enterprise_members
+    add column if not exists public_profile boolean not null default true
+  `
+  await sql`
+    alter table partner_enterprise_members
+    add column if not exists last_action text
+  `
+  await sql`
+    alter table partner_enterprise_members
+    add column if not exists accepted_by_user_id text references users(id) on delete set null
+  `
+  await sql`
+    alter table partner_enterprise_members
+    add column if not exists accepted_at timestamptz
+  `
+  await sql`
+    alter table partner_enterprise_members
+    add column if not exists removed_at timestamptz
+  `
+  await sql`
+    alter table partner_enterprise_members
+    add column if not exists removed_reason text
+  `
+  await sql`
+    alter table partner_enterprise_members
+    add column if not exists invite_token text
+  `
+  await sql`
+    alter table partner_enterprise_members
+    add column if not exists invite_expires_at timestamptz
+  `
+  await sql`
+    update partner_enterprise_members
+    set activation_status = 'active'
+    where activation_status in (
+      'registered',
+      'profile_completed',
+      'expo_activated',
+      'rfq_generated'
+    )
+  `
+  await sql`
+    alter table partner_enterprise_members
+    drop constraint if exists partner_enterprise_members_activation_status_ck
+  `
+  await sql`
+    alter table partner_enterprise_members
+    add constraint partner_enterprise_members_activation_status_ck
+    check (activation_status in ('invited', 'pending_acceptance', 'active', 'inactive', 'removed', 'blocked'))
+  `
+  await sql`
+    create index if not exists idx_partner_enterprise_members_org
+    on partner_enterprise_members (partner_org_id, created_at desc)
+  `
+
+  await sql`
+    create table if not exists partner_enterprise_member_audit_events (
+      id text primary key,
+      association_id text not null,
+      partner_org_id text not null references partner_organizations(id) on delete restrict,
+      partner_org_name text not null,
+      enterprise_id text,
+      enterprise_name text not null,
+      action text not null,
+      old_status text,
+      new_status text not null,
+      source text not null,
+      actor_type text not null,
+      actor_id text,
+      actor_label text,
+      reason text,
+      metadata jsonb not null default '{}'::jsonb,
+      created_at timestamptz not null default now()
+    )
+  `
+  await sql`
     do $$
     begin
-      alter table partner_enterprise_members
-      add constraint partner_enterprise_members_activation_status_ck
-      check (activation_status in ('invited', 'registered', 'profile_completed', 'expo_activated', 'rfq_generated'));
+      alter table partner_enterprise_member_audit_events
+      add constraint partner_enterprise_member_audit_action_ck
+      check (action in ('invite', 'resend_invite', 'accept', 'activate', 'deactivate', 'remove', 'block', 'unblock', 'reactivate'));
     exception
       when duplicate_object then null;
     end $$;
   `
   await sql`
-    create index if not exists idx_partner_enterprise_members_org
-    on partner_enterprise_members (partner_org_id, created_at desc)
+    do $$
+    begin
+      alter table partner_enterprise_member_audit_events
+      add constraint partner_enterprise_member_audit_actor_ck
+      check (actor_type in ('partner_user', 'company_user', 'arobid_admin', 'system'));
+    exception
+      when duplicate_object then null;
+    end $$;
+  `
+  await sql`
+    create index if not exists idx_partner_enterprise_audit_created
+    on partner_enterprise_member_audit_events (created_at desc, id desc)
+  `
+  await sql`
+    create index if not exists idx_partner_enterprise_audit_org
+    on partner_enterprise_member_audit_events (partner_org_id, created_at desc)
+  `
+  await sql`
+    create index if not exists idx_partner_enterprise_audit_enterprise
+    on partner_enterprise_member_audit_events (enterprise_id, created_at desc)
+    where enterprise_id is not null
   `
 
   await sql`
@@ -1569,33 +1758,6 @@ async function migratePartnerOrganizationSchema() {
   await sql`
     create index if not exists idx_partner_quota_allocations_member
     on partner_quota_allocations (enterprise_member_id)
-  `
-
-  await sql`
-    create table if not exists partner_trade_credit_wallets (
-      partner_org_id text primary key references partner_organizations(id) on delete cascade,
-      balance numeric(15, 2) not null default 0,
-      allocated numeric(15, 2) not null default 0,
-      consumed numeric(15, 2) not null default 0,
-      updated_at timestamptz not null default now()
-    )
-  `
-  await sql`
-    create table if not exists partner_trade_credit_ledger (
-      id text primary key,
-      partner_org_id text not null references partner_organizations(id) on delete cascade,
-      entry_type text not null,
-      amount numeric(15, 2) not null,
-      enterprise_member_id text references partner_enterprise_members(id) on delete set null,
-      reference_type text,
-      reference_id text,
-      note text,
-      created_at timestamptz not null default now()
-    )
-  `
-  await sql`
-    create index if not exists idx_partner_trade_credit_ledger_org
-    on partner_trade_credit_ledger (partner_org_id, created_at desc)
   `
 
   await sql`

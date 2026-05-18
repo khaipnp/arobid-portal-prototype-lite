@@ -13,11 +13,11 @@ export default async function PartnerSiteManagementPage() {
 
   return (
     <DashboardShell
-      title="Site Management"
+      title="Mini-Site Management"
       description="Configure the tenant homepage branding, sections, partners, and sponsors in a local preview workspace."
       breadcrumbs={[
         { label: "Overview", href: "/partner" },
-        { label: "Site Management" }
+        { label: "Mini-Site Management" }
       ]}
     >
       <PartnerSiteManagementManager access={access} />

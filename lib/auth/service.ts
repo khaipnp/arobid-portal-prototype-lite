@@ -15,6 +15,7 @@ export type DemoLoginRole = (typeof DEMO_LOGIN_ROLES)[number]
 type DemoPartnerProfile = {
   organizationId: string
   organizationName: string
+  model?: "co_host" | "turnkey" | "tenant"
   partnerType: PartnerType
   membershipRole: PartnerMembershipRole
 }
@@ -37,6 +38,51 @@ export const DEMO_ACCOUNTS: DemoAccount[] = [
     name: "Khai Pham",
     email: "khaipham@arobid.com",
     password: "Admin@Arobid123"
+  },
+  {
+    role: "partner",
+    appRoles: ["partner"],
+    userId: "88888888-8888-4888-8888-888888888891",
+    name: "Tenant Partner Owner",
+    email: "partner.tenant.owner@arobid.com",
+    password: "Partner@Arobid123",
+    partner: {
+      organizationId: "partner-org-demo-tenant",
+      organizationName: "Arobid Tenant Partner Demo",
+      model: "tenant",
+      partnerType: "expo_partner",
+      membershipRole: "partner_owner"
+    }
+  },
+  {
+    role: "partner",
+    appRoles: ["partner"],
+    userId: "88888888-8888-4888-8888-888888888892",
+    name: "Tenant Partner Admin",
+    email: "partner.tenant.admin@arobid.com",
+    password: "Partner@Arobid123",
+    partner: {
+      organizationId: "partner-org-demo-tenant",
+      organizationName: "Arobid Tenant Partner Demo",
+      model: "tenant",
+      partnerType: "expo_partner",
+      membershipRole: "partner_admin"
+    }
+  },
+  {
+    role: "partner",
+    appRoles: ["partner"],
+    userId: "88888888-8888-4888-8888-888888888893",
+    name: "Tenant Partner Viewer",
+    email: "partner.tenant.viewer@arobid.com",
+    password: "Partner@Arobid123",
+    partner: {
+      organizationId: "partner-org-demo-tenant",
+      organizationName: "Arobid Tenant Partner Demo",
+      model: "tenant",
+      partnerType: "expo_partner",
+      membershipRole: "viewer"
+    }
   },
   {
     role: "partner",
@@ -284,7 +330,7 @@ export async function ensureDemoAccounts() {
         values (
           ${account.partner.organizationId},
           ${account.partner.organizationName},
-          'co_host',
+          ${account.partner.model ?? "co_host"},
           ${account.partner.partnerType},
           'active',
           ${account.userId},
@@ -294,6 +340,7 @@ export async function ensureDemoAccounts() {
         on conflict (id) do update
         set
           name = excluded.name,
+          model = excluded.model,
           partner_type = excluded.partner_type,
           status = excluded.status,
           updated_at = now()

@@ -1,17 +1,20 @@
 import { describe, expect, test } from "bun:test"
 import {
+  canAssignPartnerRole,
+  canChangePartnerMembershipStatus,
+  canInvitePartnerRole,
   canTransitionMiniSiteStatus,
+  getPartnerMemberActionVisibility,
   getPartnerModuleVisibility,
   isPartnerRoleReadOnly,
   normalizePartnerRole,
+  type PartnerMembershipStatusAction,
   partnerMvpCapabilities
 } from "@/lib/partner/core"
 
 describe("normalizePartnerRole", () => {
   test("maps primary_representative to partner_owner", () => {
-    expect(normalizePartnerRole("primary_representative")).toBe(
-      "partner_owner"
-    )
+    expect(normalizePartnerRole("primary_representative")).toBe("partner_owner")
   })
 
   test("maps admin to partner_admin", () => {
@@ -99,6 +102,173 @@ describe("getPartnerModuleVisibility", () => {
     })
 
     expect(visibility.expo_programs).toBe(true)
+  })
+})
+
+describe("partner membership rule helpers", () => {
+  test("partner owner can invite all MVP roles", () => {
+    expect(canInvitePartnerRole("partner_owner", "partner_owner")).toBe(true)
+    expect(canInvitePartnerRole("partner_owner", "partner_admin")).toBe(true)
+    expect(canInvitePartnerRole("partner_owner", "viewer")).toBe(true)
+  })
+
+  test("partner admin cannot invite or assign partner owner", () => {
+    expect(canInvitePartnerRole("partner_admin", "partner_owner")).toBe(false)
+    expect(canInvitePartnerRole("partner_admin", "partner_admin")).toBe(true)
+    expect(
+      canAssignPartnerRole({
+        actorRole: "partner_admin",
+        targetCurrentRole: "viewer",
+        targetNextRole: "partner_owner",
+        isSelf: false
+      })
+    ).toBe(false)
+  })
+
+  test("partner admin cannot change self or partner owner", () => {
+    expect(
+      canAssignPartnerRole({
+        actorRole: "partner_admin",
+        targetCurrentRole: "viewer",
+        targetNextRole: "partner_admin",
+        isSelf: true
+      })
+    ).toBe(false)
+    expect(
+      canAssignPartnerRole({
+        actorRole: "partner_admin",
+        targetCurrentRole: "partner_owner",
+        targetNextRole: "viewer",
+        isSelf: false
+      })
+    ).toBe(false)
+  })
+
+  test("partner owner can change any role before last-owner guard", () => {
+    expect(
+      canAssignPartnerRole({
+        actorRole: "partner_owner",
+        targetCurrentRole: "partner_admin",
+        targetNextRole: "viewer",
+        isSelf: false
+      })
+    ).toBe(true)
+  })
+
+  test("membership status changes follow S2 role matrix", () => {
+    const actions: PartnerMembershipStatusAction[] = [
+      "disable",
+      "remove",
+      "reactivate"
+    ]
+
+    for (const action of actions) {
+      expect(
+        canChangePartnerMembershipStatus({
+          actorRole: "partner_owner",
+          targetRole: "partner_admin",
+          action,
+          isSelf: false
+        })
+      ).toBe(true)
+      expect(
+        canChangePartnerMembershipStatus({
+          actorRole: "partner_admin",
+          targetRole: "partner_owner",
+          action,
+          isSelf: false
+        })
+      ).toBe(false)
+      expect(
+        canChangePartnerMembershipStatus({
+          actorRole: "partner_admin",
+          targetRole: "viewer",
+          action,
+          isSelf: true
+        })
+      ).toBe(false)
+    }
+  })
+})
+
+describe("getPartnerMemberActionVisibility", () => {
+  test("viewer can see members but cannot mutate them", () => {
+    expect(
+      getPartnerMemberActionVisibility({
+        actorRole: "viewer",
+        targetRole: "partner_admin",
+        targetStatus: "active",
+        isSelf: false
+      })
+    ).toEqual({
+      canInvite: false,
+      canChangeRole: false,
+      canDisable: false,
+      canRemove: false,
+      canReactivate: false
+    })
+  })
+
+  test("partner admin can manage viewer but not owner or self", () => {
+    expect(
+      getPartnerMemberActionVisibility({
+        actorRole: "partner_admin",
+        targetRole: "viewer",
+        targetStatus: "active",
+        isSelf: false
+      })
+    ).toEqual({
+      canInvite: true,
+      canChangeRole: true,
+      canDisable: true,
+      canRemove: true,
+      canReactivate: false
+    })
+    expect(
+      getPartnerMemberActionVisibility({
+        actorRole: "partner_admin",
+        targetRole: "partner_owner",
+        targetStatus: "active",
+        isSelf: false
+      })
+    ).toEqual({
+      canInvite: true,
+      canChangeRole: false,
+      canDisable: false,
+      canRemove: false,
+      canReactivate: false
+    })
+    expect(
+      getPartnerMemberActionVisibility({
+        actorRole: "partner_admin",
+        targetRole: "partner_admin",
+        targetStatus: "active",
+        isSelf: true
+      })
+    ).toEqual({
+      canInvite: true,
+      canChangeRole: false,
+      canDisable: false,
+      canRemove: false,
+      canReactivate: false
+    })
+  })
+
+  test("disabled members can be reactivated by allowed actors", () => {
+    expect(
+      getPartnerMemberActionVisibility({
+        actorRole: "partner_owner",
+        targetRole: "viewer",
+        targetStatus: "disabled",
+        isSelf: false
+      })
+    ).toEqual({
+      canInvite: true,
+      canChangeRole: false,
+      canDisable: false,
+      canRemove: true,
+      canReactivate: true
+    })
   })
 })
 
