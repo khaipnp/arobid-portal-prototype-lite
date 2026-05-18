@@ -44,8 +44,8 @@ export function SitePreviewControls({
         <CardHeader>
           <CardTitle>Branding</CardTitle>
           <CardDescription>
-            Configure logo and brand colors for branded buttons, headings, and
-            accents.
+            Configure logo and primary brand color for branded buttons and
+            headings.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 lg:grid-cols-2">
@@ -81,12 +81,6 @@ export function SitePreviewControls({
             disabled={isReadOnly}
             value={branding.primaryColor}
             onChange={(value) => onBrandingChange("primaryColor", value)}
-          />
-          <ColorField
-            label="Accent brand color"
-            disabled={isReadOnly}
-            value={branding.accentColor}
-            onChange={(value) => onBrandingChange("accentColor", value)}
           />
           <div className="grid gap-2 lg:col-span-2">
             <Label>Banner image URL</Label>

@@ -259,6 +259,8 @@ export type PartnerEnterpriseMember = {
   lastAction: string | null
   acceptedAt: string | null
   removedAt: string | null
+  createdAt: string
+  updatedAt: string
   removedReason: string | null
   expoParticipationCount: number
   rfqGeneratedCount: number
@@ -269,6 +271,21 @@ export type PartnerEnterpriseMember = {
   quotaConsumedQuantity?: number
   tradeCreditsAllocated?: number
   tradeCreditsConsumed?: number
+}
+
+export type PartnerEnterpriseActivity = {
+  id: string
+  type: "association" | "deal_context"
+  title: string
+  description: string | null
+  actorLabel: string | null
+  createdAt: string
+}
+
+export type PartnerEnterpriseMemberDetail = {
+  organization: PartnerPortalOrganization
+  member: Required<PartnerEnterpriseMember>
+  activities: PartnerEnterpriseActivity[]
 }
 
 export type PartnerEnterpriseWorkspace = {
@@ -1956,6 +1973,8 @@ async function requirePartnerEnterpriseMember(
       acceptedAt: row.accepted_at ? toIso(row.accepted_at) : null,
       removedAt: row.removed_at ? toIso(row.removed_at) : null,
       removedReason: row.removed_reason,
+      createdAt: "",
+      updatedAt: "",
       expoParticipationCount: toNumber(row.expo_participation_count),
       rfqGeneratedCount: toNumber(row.rfq_generated_count),
       tradeSignalCount: toNumber(row.trade_signal_count),
@@ -2320,6 +2339,8 @@ export async function getPartnerQuotaWorkspace(
           pem.accepted_at,
           pem.removed_at,
           pem.removed_reason,
+          pem.created_at,
+          pem.updated_at,
           pem.expo_participation_count,
           pem.rfq_generated_count,
           pem.trade_signal_count
@@ -2410,6 +2431,8 @@ export async function getPartnerQuotaWorkspace(
         accepted_at: string | Date | null
         removed_at: string | Date | null
         removed_reason: string | null
+        created_at: string | Date
+        updated_at: string | Date
         expo_participation_count: number | string
         rfq_generated_count: number | string
         trade_signal_count: number | string
@@ -2427,6 +2450,8 @@ export async function getPartnerQuotaWorkspace(
       acceptedAt: row.accepted_at ? toIso(row.accepted_at) : null,
       removedAt: row.removed_at ? toIso(row.removed_at) : null,
       removedReason: row.removed_reason,
+      createdAt: toIso(row.created_at),
+      updatedAt: toIso(row.updated_at),
       expoParticipationCount: toNumber(row.expo_participation_count),
       rfqGeneratedCount: toNumber(row.rfq_generated_count),
       tradeSignalCount: toNumber(row.trade_signal_count)
@@ -3692,6 +3717,8 @@ export async function getPartnerEnterpriseWorkspace(
       pem.accepted_at,
       pem.removed_at,
       pem.removed_reason,
+      pem.created_at,
+      pem.updated_at,
       pem.expo_participation_count,
       pem.rfq_generated_count,
       pem.trade_signal_count,
@@ -3731,6 +3758,8 @@ export async function getPartnerEnterpriseWorkspace(
     accepted_at: string | Date | null
     removed_at: string | Date | null
     removed_reason: string | null
+    created_at: string | Date
+    updated_at: string | Date
   }[]
 
   const members = rows.map((row) => ({
@@ -3747,6 +3776,8 @@ export async function getPartnerEnterpriseWorkspace(
     acceptedAt: row.accepted_at ? toIso(row.accepted_at) : null,
     removedAt: row.removed_at ? toIso(row.removed_at) : null,
     removedReason: row.removed_reason,
+    createdAt: toIso(row.created_at),
+    updatedAt: toIso(row.updated_at),
     expoParticipationCount: toNumber(row.expo_participation_count),
     rfqGeneratedCount: toNumber(row.rfq_generated_count),
     tradeSignalCount: toNumber(row.trade_signal_count),
@@ -3777,6 +3808,91 @@ export async function getPartnerEnterpriseWorkspace(
         (member) => member.activationStatus === "removed"
       ).length
     }
+  }
+}
+
+export async function getPartnerEnterpriseMemberDetail(
+  userId: string,
+  memberId: string
+): Promise<PartnerEnterpriseMemberDetail | null> {
+  const workspace = await getPartnerEnterpriseWorkspace(userId)
+  if (!workspace.organization) return null
+  const member = workspace.members.find((item) => item.id === memberId)
+  if (!member) return null
+
+  const [auditRows, dealRows] = await Promise.all([
+    sql`
+      select
+        id,
+        action,
+        old_status,
+        new_status,
+        actor_label,
+        reason,
+        created_at
+      from partner_enterprise_member_audit_events
+      where partner_org_id = ${workspace.organization.id}
+        and association_id = ${memberId}
+      order by created_at desc
+      limit 30
+    `,
+    sql`
+      select
+        pdce.id,
+        pdce.from_stage,
+        pdce.to_stage,
+        pdce.note,
+        u.name as actor_label,
+        pdce.created_at
+      from partner_deal_context_events pdce
+      left join users u on u.id = pdce.actor_user_id
+      where pdce.partner_org_id = ${workspace.organization.id}
+        and pdce.enterprise_member_id = ${memberId}
+      order by pdce.created_at desc
+      limit 30
+    `
+  ])
+
+  const activities: PartnerEnterpriseActivity[] = [
+    ...(auditRows as {
+      id: string
+      action: string
+      old_status: string | null
+      new_status: string | null
+      actor_label: string | null
+      reason: string | null
+      created_at: string | Date
+    }[]).map((row) => ({
+      id: row.id,
+      type: "association" as const,
+      title: row.new_status
+        ? `${row.action}: ${row.old_status ?? "none"} → ${row.new_status}`
+        : row.action,
+      description: row.reason,
+      actorLabel: row.actor_label,
+      createdAt: toIso(row.created_at)
+    })),
+    ...(dealRows as {
+      id: string
+      from_stage: PartnerDealContextStage | null
+      to_stage: PartnerDealContextStage
+      note: string | null
+      actor_label: string | null
+      created_at: string | Date
+    }[]).map((row) => ({
+      id: row.id,
+      type: "deal_context" as const,
+      title: `Deal context: ${row.from_stage ?? "none"} → ${row.to_stage}`,
+      description: row.note,
+      actorLabel: row.actor_label,
+      createdAt: toIso(row.created_at)
+    }))
+  ].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+
+  return {
+    organization: workspace.organization,
+    member,
+    activities
   }
 }
 
