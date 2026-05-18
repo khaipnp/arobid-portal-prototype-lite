@@ -245,6 +245,7 @@ export type PartnerEnterpriseMember = {
   enterpriseId?: string | null
   enterpriseName: string
   contactEmail: string | null
+  logoUrl: string | null
   activationStatus:
     | "invited"
     | "pending_acceptance"
@@ -1922,6 +1923,7 @@ async function requirePartnerEnterpriseMember(
     enterprise_id: string | null
     enterprise_name: string
     contact_email: string | null
+    logo_url: string | null
     activation_status: PartnerEnterpriseMember["activationStatus"]
     source: string
     relationship_type: string
@@ -1945,6 +1947,7 @@ async function requirePartnerEnterpriseMember(
       enterpriseId: row.enterprise_id,
       enterpriseName: row.enterprise_name,
       contactEmail: row.contact_email,
+      logoUrl: null,
       activationStatus: row.activation_status,
       source: row.source,
       relationshipType: row.relationship_type,
@@ -2305,23 +2308,25 @@ export async function getPartnerQuotaWorkspace(
       `,
       sql`
         select
-          id,
-          enterprise_name,
-          contact_email,
-          activation_status,
-          source,
-          relationship_type,
-          public_profile,
-          last_action,
-          accepted_at,
-          removed_at,
-          removed_reason,
-          expo_participation_count,
-          rfq_generated_count,
-          trade_signal_count
-        from partner_enterprise_members
-        where partner_org_id = ${orgId}
-        order by created_at desc
+          pem.id,
+          pem.enterprise_name,
+          pem.contact_email,
+          c.logo_url,
+          pem.activation_status,
+          pem.source,
+          pem.relationship_type,
+          pem.public_profile,
+          pem.last_action,
+          pem.accepted_at,
+          pem.removed_at,
+          pem.removed_reason,
+          pem.expo_participation_count,
+          pem.rfq_generated_count,
+          pem.trade_signal_count
+        from partner_enterprise_members pem
+        left join companies c on c.id = pem.enterprise_id
+        where pem.partner_org_id = ${orgId}
+        order by pem.created_at desc
       `,
       sql`
         select
@@ -2396,6 +2401,7 @@ export async function getPartnerQuotaWorkspace(
         id: string
         enterprise_name: string
         contact_email: string | null
+        logo_url: string | null
         activation_status: PartnerEnterpriseMember["activationStatus"]
         source: string
         relationship_type: string
@@ -2412,6 +2418,7 @@ export async function getPartnerQuotaWorkspace(
       id: row.id,
       enterpriseName: row.enterprise_name,
       contactEmail: row.contact_email,
+      logoUrl: row.logo_url,
       activationStatus: row.activation_status,
       source: row.source,
       relationshipType: row.relationship_type,
@@ -3676,6 +3683,7 @@ export async function getPartnerEnterpriseWorkspace(
       pem.enterprise_id,
       pem.enterprise_name,
       pem.contact_email,
+      c.logo_url,
       pem.activation_status,
       pem.source,
       pem.relationship_type,
@@ -3694,6 +3702,7 @@ export async function getPartnerEnterpriseWorkspace(
       dt.deal_context_stage,
       coalesce(dt.deal_context_events, 0)::int as deal_context_events
     from partner_enterprise_members pem
+    left join companies c on c.id = pem.enterprise_id
     left join quota_totals qt on qt.enterprise_member_id = pem.id
     left join credit_totals ct on ct.enterprise_member_id = pem.id
     left join deal_totals dt on dt.enterprise_member_id = pem.id
@@ -3704,6 +3713,7 @@ export async function getPartnerEnterpriseWorkspace(
     enterprise_id: string | null
     enterprise_name: string
     contact_email: string | null
+    logo_url: string | null
     activation_status: PartnerEnterpriseMember["activationStatus"]
     expo_participation_count: number | string
     rfq_generated_count: number | string
@@ -3728,6 +3738,7 @@ export async function getPartnerEnterpriseWorkspace(
     enterpriseId: row.enterprise_id,
     enterpriseName: row.enterprise_name,
     contactEmail: row.contact_email ?? "",
+    logoUrl: row.logo_url,
     activationStatus: row.activation_status,
     source: row.source,
     relationshipType: row.relationship_type,
