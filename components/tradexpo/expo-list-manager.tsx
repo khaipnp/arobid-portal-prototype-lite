@@ -300,7 +300,7 @@ export function ExpoListManager({
   }, [confirmAction]);
 
   return (
-    <div className="grid gap-4 px-4 lg:px-10">
+    <div className="grid gap-4">
       <section>
         <div className="flex items-center justify-between gap-3">
           <div className="flex w-full flex-col gap-3 md:flex-row md:items-center">

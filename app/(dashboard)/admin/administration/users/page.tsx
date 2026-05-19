@@ -15,7 +15,6 @@ export default async function AdminUsersPage() {
   return (
     <DashboardShell
       title="Users"
-      description="View platform user accounts across Arobid."
       breadcrumbs={[
         { label: "Dashboard", href: "/admin" },
         { label: "Administration" },

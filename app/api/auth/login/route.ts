@@ -1,4 +1,8 @@
 import { NextResponse } from "next/server"
+import {
+  getRequestAuditContext,
+  recordUserAuditEvent
+} from "@/lib/administration/user-detail"
 import { authenticateByEmailPassword } from "@/lib/auth/service"
 import { createAuthSession } from "@/lib/auth/session"
 
@@ -24,6 +28,7 @@ export async function POST(request: Request) {
     }
 
     const user = await authenticateByEmailPassword({ email, password })
+    const auditContext = await getRequestAuditContext()
     if (!user) {
       return NextResponse.json(
         { error: "Invalid email or password." },
@@ -32,6 +37,17 @@ export async function POST(request: Request) {
     }
 
     await createAuthSession(user.id)
+    await recordUserAuditEvent({
+      targetUserId: user.id,
+      actorUserId: user.id,
+      actorType: "user",
+      action: "auth.login.success",
+      resourceType: "auth_session",
+      resourceId: user.id,
+      summary: "User signed in.",
+      metadata: { roles: user.roles },
+      ...auditContext
+    })
     return NextResponse.json({
       ok: true,
       redirectPath: getRedirectPath(user.roles),

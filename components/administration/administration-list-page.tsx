@@ -1,6 +1,7 @@
 "use client"
 
 import { AlertCircleIcon, RefreshCwIcon, SearchIcon } from "lucide-react"
+import Link from "next/link"
 import { useEffect, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -19,6 +20,7 @@ import {
   TableRow
 } from "@/components/ui/table"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { UserAvatar } from "@/components/user-avatar"
 import type {
   AdminFeature,
   AdminModule,
@@ -66,7 +68,7 @@ const TABLE_HEADERS: Record<EntityType, string[]> = {
   roles: ["Role", "Module", "Description"],
   features: ["Feature", "Module", "Description"],
   permissions: ["Permission", "Permission Code", "Description"],
-  users: ["Name", "Email", "Company", "Roles", "Status"]
+  users: ["Name", "Company", "Roles", "Status"]
 }
 
 function isPermissionRecord(value: EntityRecord): value is AdminPermission {
@@ -95,13 +97,11 @@ function renderRows(entity: EntityType, data: EntityRecord[]) {
       const moduleRecord = record as AdminModule
       return (
         <TableRow key={moduleRecord.id}>
-          <TableCell className="font-medium">{moduleRecord.name}</TableCell>
+          <TableCell>{moduleRecord.name}</TableCell>
           <TableCell className="font-mono text-xs">
             {moduleRecord.code}
           </TableCell>
-          <TableCell className="text-muted-foreground">
-            {moduleRecord.description}
-          </TableCell>
+          <TableCell>{moduleRecord.description}</TableCell>
         </TableRow>
       )
     })
@@ -110,11 +110,22 @@ function renderRows(entity: EntityType, data: EntityRecord[]) {
   if (entity === "users") {
     return data.filter(isUserRecord).map((user) => (
       <TableRow key={user.id}>
-        <TableCell className="font-medium">{user.name}</TableCell>
-        <TableCell className="font-mono text-xs">{user.email}</TableCell>
-        <TableCell className="text-muted-foreground">
-          {user.companyName ?? "—"}
+        <TableCell>
+          <Link
+            aria-label={`View details for ${user.name}`}
+            className="flex w-fit items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            href={`/admin/administration/users/${user.id}`}
+          >
+            <UserAvatar name={user.name} />
+            <div className="flex flex-col">
+              <span className="font-medium hover:underline">{user.name}</span>
+              <span className="text-muted-foreground text-xs">
+                {user.email}
+              </span>
+            </div>
+          </Link>
         </TableCell>
+        <TableCell>{user.companyName ?? "—"}</TableCell>
         <TableCell>{user.roleCount}</TableCell>
         <TableCell>
           <Badge variant={user.isActive ? "default" : "secondary"}>
@@ -129,9 +140,9 @@ function renderRows(entity: EntityType, data: EntityRecord[]) {
     const permissionRecords = data.filter(isPermissionRecord)
     return permissionRecords.map((permission) => (
       <TableRow key={permission.id}>
-        <TableCell className="font-medium">{permission.name}</TableCell>
+        <TableCell>{permission.name}</TableCell>
         <TableCell className="font-mono text-xs">{permission.id}</TableCell>
-        <TableCell className="text-muted-foreground">
+        <TableCell>
           {`${permission.roleName} can ${permission.action} ${permission.featureName} in ${permission.moduleName}.`}
         </TableCell>
       </TableRow>
@@ -143,11 +154,9 @@ function renderRows(entity: EntityType, data: EntityRecord[]) {
     .filter(isRecordWithDescription)
   return records.map((record) => (
     <TableRow key={record.id}>
-      <TableCell className="font-medium">{record.name}</TableCell>
+      <TableCell>{record.name}</TableCell>
       <TableCell>{record.moduleName}</TableCell>
-      <TableCell className="text-muted-foreground">
-        {record.description}
-      </TableCell>
+      <TableCell>{record.description}</TableCell>
     </TableRow>
   ))
 }
@@ -259,7 +268,7 @@ export function AdministrationListPage({
   ]
 
   return (
-    <div className="space-y-4 px-4">
+    <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         {showTabs ? (
           <Tabs value={moduleFilter} onValueChange={handleModuleFilterChange}>
@@ -275,7 +284,7 @@ export function AdministrationListPage({
         ) : (
           <div />
         )}
-        <InputGroup className="w-full md:w-xs">
+        <InputGroup className="w-full rounded-full md:w-xs">
           <InputGroupInput
             value={searchInput}
             placeholder={`Search ${TITLES[entity].toLowerCase()}...`}
