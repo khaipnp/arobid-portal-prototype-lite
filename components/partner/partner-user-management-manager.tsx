@@ -277,7 +277,7 @@ export function PartnerUserManagementManager({
             />
           </InputGroup>
           <NativeSelect
-            className="w-44"
+            className="w-44 rounded-full!"
             value={filters.memberStatus}
             onChange={(event) =>
               updateFilter("memberStatus", event.target.value)
@@ -292,178 +292,186 @@ export function PartnerUserManagementManager({
           </NativeSelect>
         </div>
         {canInvite ? (
-          <Button size="sm" onClick={() => setInviteOpen(true)}>
+          <Button className="rounded-full" onClick={() => setInviteOpen(true)}>
             <UserPlusIcon />
             Invite user
           </Button>
         ) : null}
       </div>
 
-      <Table className="border">
-        <TableHeader>
-          <TableRow>
-            <TableHead>User</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Joined</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {filteredUsers.length === 0 ? (
+      <div className="overflow-hidden rounded-2xl border">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell
-                colSpan={5}
-                className="h-24 text-center text-muted-foreground"
-              >
-                No users match current filters.
-              </TableCell>
+              <TableHead>User</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Joined</TableHead>
+              <TableHead></TableHead>
             </TableRow>
-          ) : null}
-          {filteredUsers.map((row) => {
-            if (row.kind === "invitation") {
-              const { invitation } = row
+          </TableHeader>
+          <TableBody>
+            {filteredUsers.length === 0 ? (
+              <TableRow>
+                <TableCell
+                  colSpan={5}
+                  className="h-24 text-center text-muted-foreground"
+                >
+                  No users match current filters.
+                </TableCell>
+              </TableRow>
+            ) : null}
+            {filteredUsers.map((row) => {
+              if (row.kind === "invitation") {
+                const { invitation } = row
+                return (
+                  <TableRow key={invitation.id}>
+                    <TableCell>
+                      <p className="font-medium">
+                        {invitation.displayName || invitation.email}
+                      </p>
+                      <p className="text-muted-foreground text-xs">
+                        {invitation.email}
+                      </p>
+                    </TableCell>
+                    <TableCell>{roleLabels[invitation.role]}</TableCell>
+                    <TableCell>
+                      <Badge>Pending</Badge>
+                    </TableCell>
+                    <TableCell>
+                      {new Date(invitation.expiresAt).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {canInvite ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => cancelInvitation(invitation.id)}
+                        >
+                          Cancel
+                        </Button>
+                      ) : null}
+                    </TableCell>
+                  </TableRow>
+                )
+              }
+
+              const { member } = row
+              const actionVisibility = getPartnerMemberActionVisibility({
+                actorRole,
+                targetRole: member.role,
+                targetStatus: member.status,
+                isSelf: member.userId === currentUserId
+              })
+              const hasActions =
+                actionVisibility.canChangeRole ||
+                actionVisibility.canDisable ||
+                actionVisibility.canRemove ||
+                actionVisibility.canReactivate
+
               return (
-                <TableRow key={invitation.id}>
+                <TableRow key={member.userId}>
                   <TableCell>
-                    <p className="font-medium">
-                      {invitation.displayName || invitation.email}
-                    </p>
+                    <p className="font-medium">{member.name ?? member.email}</p>
                     <p className="text-muted-foreground text-xs">
-                      {invitation.email}
+                      {member.email}
                     </p>
                   </TableCell>
-                  <TableCell>{roleLabels[invitation.role]}</TableCell>
+                  <TableCell>{roleLabels[member.role]}</TableCell>
                   <TableCell>
-                    <Badge>Pending</Badge>
+                    <Badge
+                      variant={
+                        member.status === "active" ? "default" : "outline"
+                      }
+                    >
+                      {statusLabels[member.status]}
+                    </Badge>
                   </TableCell>
                   <TableCell>
-                    {new Date(invitation.expiresAt).toLocaleDateString()}
+                    {new Date(member.createdAt).toLocaleDateString()}
                   </TableCell>
                   <TableCell className="text-right">
-                    {canInvite ? (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => cancelInvitation(invitation.id)}
-                      >
-                        Cancel
-                      </Button>
+                    {hasActions ? (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            size="icon-sm"
+                            variant="ghost"
+                            className="rounded-full"
+                          >
+                            <MoreHorizontalIcon className="h-4 w-4" />
+                            <span className="sr-only">Open member actions</span>
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {actionVisibility.canChangeRole
+                            ? roleOptions
+                                .filter((role) => role !== member.role)
+                                .map((role) => (
+                                  <DropdownMenuItem
+                                    key={role}
+                                    onClick={() =>
+                                      setDialog({
+                                        kind: "role",
+                                        member,
+                                        role
+                                      })
+                                    }
+                                  >
+                                    Change to {roleLabels[role]}
+                                  </DropdownMenuItem>
+                                ))
+                            : null}
+                          {actionVisibility.canDisable ? (
+                            <DropdownMenuItem
+                              onClick={() =>
+                                setDialog({
+                                  kind: "status",
+                                  member,
+                                  action: "disable"
+                                })
+                              }
+                            >
+                              Disable user
+                            </DropdownMenuItem>
+                          ) : null}
+                          {actionVisibility.canReactivate ? (
+                            <DropdownMenuItem
+                              onClick={() =>
+                                setDialog({
+                                  kind: "status",
+                                  member,
+                                  action: "reactivate"
+                                })
+                              }
+                            >
+                              Reactivate user
+                            </DropdownMenuItem>
+                          ) : null}
+                          {actionVisibility.canRemove ? (
+                            <DropdownMenuItem
+                              variant="destructive"
+                              onClick={() =>
+                                setDialog({
+                                  kind: "status",
+                                  member,
+                                  action: "remove"
+                                })
+                              }
+                            >
+                              Remove user
+                            </DropdownMenuItem>
+                          ) : null}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     ) : null}
                   </TableCell>
                 </TableRow>
               )
-            }
-
-            const { member } = row
-            const actionVisibility = getPartnerMemberActionVisibility({
-              actorRole,
-              targetRole: member.role,
-              targetStatus: member.status,
-              isSelf: member.userId === currentUserId
-            })
-            const hasActions =
-              actionVisibility.canChangeRole ||
-              actionVisibility.canDisable ||
-              actionVisibility.canRemove ||
-              actionVisibility.canReactivate
-
-            return (
-              <TableRow key={member.userId}>
-                <TableCell>
-                  <p className="font-medium">{member.name ?? member.email}</p>
-                  <p className="text-muted-foreground text-xs">
-                    {member.email}
-                  </p>
-                </TableCell>
-                <TableCell>{roleLabels[member.role]}</TableCell>
-                <TableCell>
-                  <Badge
-                    variant={member.status === "active" ? "default" : "outline"}
-                  >
-                    {statusLabels[member.status]}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  {new Date(member.createdAt).toLocaleDateString()}
-                </TableCell>
-                <TableCell className="text-right">
-                  {hasActions ? (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button size="icon" variant="ghost">
-                          <MoreHorizontalIcon className="h-4 w-4" />
-                          <span className="sr-only">Open member actions</span>
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {actionVisibility.canChangeRole
-                          ? roleOptions
-                              .filter((role) => role !== member.role)
-                              .map((role) => (
-                                <DropdownMenuItem
-                                  key={role}
-                                  onClick={() =>
-                                    setDialog({
-                                      kind: "role",
-                                      member,
-                                      role
-                                    })
-                                  }
-                                >
-                                  Change to {roleLabels[role]}
-                                </DropdownMenuItem>
-                              ))
-                          : null}
-                        {actionVisibility.canDisable ? (
-                          <DropdownMenuItem
-                            onClick={() =>
-                              setDialog({
-                                kind: "status",
-                                member,
-                                action: "disable"
-                              })
-                            }
-                          >
-                            Disable user
-                          </DropdownMenuItem>
-                        ) : null}
-                        {actionVisibility.canReactivate ? (
-                          <DropdownMenuItem
-                            onClick={() =>
-                              setDialog({
-                                kind: "status",
-                                member,
-                                action: "reactivate"
-                              })
-                            }
-                          >
-                            Reactivate user
-                          </DropdownMenuItem>
-                        ) : null}
-                        {actionVisibility.canRemove ? (
-                          <DropdownMenuItem
-                            variant="destructive"
-                            onClick={() =>
-                              setDialog({
-                                kind: "status",
-                                member,
-                                action: "remove"
-                              })
-                            }
-                          >
-                            Remove user
-                          </DropdownMenuItem>
-                        ) : null}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  ) : null}
-                </TableCell>
-              </TableRow>
-            )
-          })}
-        </TableBody>
-      </Table>
+            })}
+          </TableBody>
+        </Table>
+      </div>
 
       <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
         <DialogContent>

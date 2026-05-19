@@ -43,10 +43,6 @@ export function SitePreviewControls({
       <Card>
         <CardHeader>
           <CardTitle>Branding</CardTitle>
-          <CardDescription>
-            Configure logo and primary brand color for branded buttons and
-            headings.
-          </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4 lg:grid-cols-2">
           <div className="grid gap-2 lg:col-span-2">
@@ -98,10 +94,7 @@ export function SitePreviewControls({
 
       <Card>
         <CardHeader>
-          <CardTitle>CTA and public contact</CardTitle>
-          <CardDescription>
-            CTA uses allowed MVP destinations only. Contact fields are public.
-          </CardDescription>
+          <CardTitle>Call to Action</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 lg:grid-cols-2">
           <div className="grid gap-2">
@@ -180,9 +173,6 @@ export function SitePreviewControls({
       <Card>
         <CardHeader>
           <CardTitle>Homepage sections</CardTitle>
-          <CardDescription>
-            Header, banner, Buyer Find & Match, and footer always stay visible.
-          </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-2">
           {sectionOptions.map((section) => {
@@ -245,7 +235,6 @@ function LogoUploadField({
           )}
         </div>
         <div className="min-w-0 flex-1 space-y-1">
-          <p className="font-medium text-sm">Tenant logo</p>
           <p className="truncate text-muted-foreground text-xs">
             {branding.logoUrl || "Upload PNG, JPG, SVG, or WebP"}
           </p>

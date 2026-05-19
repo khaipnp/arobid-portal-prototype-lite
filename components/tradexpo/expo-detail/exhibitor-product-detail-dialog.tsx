@@ -13,6 +13,7 @@ type ProductItem = {
   id: string
   image: string
   label: string
+  description?: string
   isWishlisted?: boolean
 }
 
@@ -25,6 +26,7 @@ type ExhibitorProductDetailDialogProps = {
   onSelectedProductChange: (product: ProductItem | null) => void
   onChatNow?: (product: ProductItem) => void
   onRfqSubmitted?: (product: ProductItem) => void
+  onAuthRequired?: () => void
   isAuthenticated?: boolean
 }
 
@@ -35,6 +37,7 @@ export function ExhibitorProductDetailDialog({
   onSelectedProductChange,
   onChatNow,
   onRfqSubmitted,
+  onAuthRequired,
   isAuthenticated = false
 }: ExhibitorProductDetailDialogProps) {
   const [isRfqDialogOpen, setIsRfqDialogOpen] = useState(false)
@@ -70,7 +73,7 @@ export function ExhibitorProductDetailDialog({
 
   const toggleProductWishlist = async () => {
     if (!isAuthenticated) {
-      toast.error("Please login to save products to your wishlist")
+      onAuthRequired?.()
       return
     }
 
@@ -256,9 +259,8 @@ export function ExhibitorProductDetailDialog({
                     Product Overview
                   </h4>
                   <p className="text-foreground text-sm leading-5">
-                    The Galaxy Z Fold 6 features a sophisticated folding design
-                    with Snapdragon 8 Gen 3 performance and professional-grade
-                    camera capabilities.
+                    {selectedProduct.description ||
+                      "This product is listed by a verified exhibitor in this Expo."}
                   </p>
                   <ul className="list-disc space-y-1 pl-4 text-foreground text-sm leading-5">
                     <li>Galaxy AI is here for smarter multitasking.</li>
@@ -389,6 +391,10 @@ export function ExhibitorProductDetailDialog({
                 variant="outline"
                 className="rounded-full"
                 onClick={() => {
+                  if (!isAuthenticated) {
+                    onAuthRequired?.()
+                    return
+                  }
                   if (selectedProduct) {
                     onChatNow?.(selectedProduct)
                   }
@@ -400,7 +406,13 @@ export function ExhibitorProductDetailDialog({
               <Button
                 type="button"
                 className="rounded-full bg-legend text-white hover:bg-legend-600"
-                onClick={() => setIsRfqDialogOpen(true)}
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    onAuthRequired?.()
+                    return
+                  }
+                  setIsRfqDialogOpen(true)
+                }}
               >
                 Send RFQ
               </Button>

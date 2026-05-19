@@ -14,6 +14,7 @@ import {
   TicketIcon,
   ToyBrickIcon,
   UserRoundKeyIcon,
+  UsersIcon,
   WalletCardsIcon
 } from "lucide-react"
 import Link from "next/link"
@@ -86,6 +87,11 @@ const administrationLinks = [
     name: "Partner Audit",
     url: "/admin/partners/association-audit",
     icon: <HistoryIcon />
+  },
+  {
+    name: "Users",
+    url: "/admin/administration/users",
+    icon: <UsersIcon />
   },
   {
     name: "Modules",

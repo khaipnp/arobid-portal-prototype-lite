@@ -23,7 +23,10 @@ export default async function AdminTradeCreditPage() {
     <DashboardShell
       title="TradeCredit Policy"
       description="Configure system-defined earn/burn rules and active credit valuation."
-      breadcrumbs={[{ label: "Admin", href: "/admin" }, { label: "TradeCredit" }]}
+      breadcrumbs={[
+        { label: "Admin", href: "/admin" },
+        { label: "TradeCredit" }
+      ]}
     >
       <TradeCreditPolicyManager
         initialRules={rules}

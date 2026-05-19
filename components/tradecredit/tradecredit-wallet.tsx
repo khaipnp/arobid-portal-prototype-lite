@@ -14,7 +14,10 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
-import type { CreditLedgerEntry, TradeCreditWallet } from "@/lib/tradecredit/types"
+import type {
+  CreditLedgerEntry,
+  TradeCreditWallet
+} from "@/lib/tradecredit/types"
 import { Badge } from "../ui/badge"
 
 const numberFormat = new Intl.NumberFormat("en")
@@ -65,7 +68,10 @@ export function TradeCreditWalletView({
 }) {
   const capProgress =
     wallet.monthlyCap > 0
-      ? Math.min(100, Math.round((wallet.monthlyEarned / wallet.monthlyCap) * 100))
+      ? Math.min(
+          100,
+          Math.round((wallet.monthlyEarned / wallet.monthlyCap) * 100)
+        )
       : 0
 
   return (
@@ -178,7 +184,9 @@ function MetricCard({
           {value}
         </CardTitle>
       </CardHeader>
-      <CardContent className="text-muted-foreground text-xs">{note}</CardContent>
+      <CardContent className="text-muted-foreground text-xs">
+        {note}
+      </CardContent>
     </Card>
   )
 }

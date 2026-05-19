@@ -233,7 +233,7 @@ export function PartnerExpoDetailOverview({
                   </p>
                 </div>
                 <div>
-                  <p className="text-muted-foreground text-xs">Window</p>
+                  <p className="text-muted-foreground text-xs">Remain</p>
                   <p className="font-medium text-sm">{daysLabel}</p>
                 </div>
               </div>

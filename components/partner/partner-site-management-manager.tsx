@@ -454,9 +454,6 @@ function RelationsCard({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <CardTitle>Partners & sponsors</CardTitle>
-            <CardDescription>
-              Manage tenant homepage partner and sponsor entries locally.
-            </CardDescription>
           </div>
           <Button
             size="sm"
