@@ -1,15 +1,15 @@
-"use client"
+"use client";
 
 import {
   CheckIcon,
   ChevronDownIcon,
   MoreHorizontalIcon,
   SearchIcon,
-  XIcon
-} from "lucide-react"
-import Image from "next/image"
-import Link from "next/link"
-import * as React from "react"
+  XIcon,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import * as React from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,262 +18,268 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle
-} from "@/components/ui/alert-dialog"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   type DateRange,
-  DateRangePicker
-} from "@/components/ui/date-range-picker"
+  DateRangePicker,
+} from "@/components/ui/date-range-picker";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu"
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
-} from "@/components/ui/select"
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
-} from "@/components/ui/table"
-import { getAssetUrl } from "@/lib/image-utils"
-import type { Expo, ExpoCategory, ExpoStatus } from "@/lib/tradexpo/types"
-import { cn } from "@/lib/utils"
+  TableRow,
+} from "@/components/ui/table";
+import { getAssetUrl } from "@/lib/image-utils";
+import type { Expo, ExpoCategory, ExpoStatus } from "@/lib/tradexpo/types";
+import { cn } from "@/lib/utils";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
-  InputGroupInput
-} from "../ui/input-group"
+  InputGroupInput,
+} from "../ui/input-group";
 
 const ALL_STATUSES: ExpoStatus[] = [
   "Draft",
   "Pending Review",
   "Live",
   "Archived",
-  "Canceled"
-]
+  "Canceled",
+];
 
 const statusStyles: Record<ExpoStatus, string> = {
   Draft: "border-slate-300 bg-slate-100 text-slate-700",
   "Pending Review": "border-amber-300 bg-amber-100 text-amber-700",
   Live: "border-emerald-300 bg-emerald-100 text-emerald-700",
   Archived: "border-purple-300 bg-purple-100 text-purple-700",
-  Canceled: "border-rose-300 bg-rose-100 text-rose-700"
-}
+  Canceled: "border-rose-300 bg-rose-100 text-rose-700",
+};
 
 function formatDate(iso: string) {
   return new Intl.DateTimeFormat("en-GB", { dateStyle: "short" }).format(
-    new Date(iso)
-  )
+    new Date(iso),
+  );
 }
 
 function toLocalIsoDate(date: Date) {
-  const year = date.getFullYear()
-  const month = `${date.getMonth() + 1}`.padStart(2, "0")
-  const day = `${date.getDate()}`.padStart(2, "0")
-  return `${year}-${month}-${day}`
+  const year = date.getFullYear();
+  const month = `${date.getMonth() + 1}`.padStart(2, "0");
+  const day = `${date.getDate()}`.padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 type ConfirmAction =
   | { type: "archive"; expo: Expo }
   | { type: "delete"; expo: Expo }
-  | { type: "approve"; expo: Expo }
+  | { type: "approve"; expo: Expo };
 
 export function ExpoListManager({
   initialExpos,
-  initialCategories
+  initialCategories,
 }: {
-  initialExpos: Expo[]
-  initialCategories: ExpoCategory[]
+  initialExpos: Expo[];
+  initialCategories: ExpoCategory[];
 }) {
   const [expos, setExpos] = React.useState<Expo[]>(() =>
     initialExpos
       .map((expo) => ({ ...expo }))
       .sort(
         (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )
-  )
-  const [searchInput, setSearchInput] = React.useState("")
-  const [debouncedSearch, setDebouncedSearch] = React.useState("")
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      ),
+  );
+  const [searchInput, setSearchInput] = React.useState("");
+  const [debouncedSearch, setDebouncedSearch] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<ExpoStatus | "All">(
-    "All"
-  )
-  const [categoryFilter, setCategoryFilter] = React.useState<string[]>([])
+    "All",
+  );
+  const [categoryFilter, setCategoryFilter] = React.useState<string[]>([]);
   const [dateRangeFilter, setDateRangeFilter] = React.useState<
     DateRange | undefined
-  >(undefined)
-  const [page, setPage] = React.useState(1)
+  >(undefined);
+  const [page, setPage] = React.useState(1);
   const [confirmAction, setConfirmAction] =
-    React.useState<ConfirmAction | null>(null)
+    React.useState<ConfirmAction | null>(null);
   const [notice, setNotice] = React.useState<{
-    type: "success" | "error" | "info"
-    text: string
-  } | null>(null)
+    type: "success" | "error" | "info";
+    text: string;
+  } | null>(null);
 
-  const categories: ExpoCategory[] = initialCategories
+  const categories: ExpoCategory[] = initialCategories;
 
   React.useEffect(() => {
     const timer = window.setTimeout(() => {
-      setDebouncedSearch(searchInput)
-      setPage(1)
-    }, 500)
+      setDebouncedSearch(searchInput);
+      setPage(1);
+    }, 500);
 
-    return () => window.clearTimeout(timer)
-  }, [searchInput])
+    return () => window.clearTimeout(timer);
+  }, [searchInput]);
 
   const filteredExpos = React.useMemo(() => {
-    let result = expos
+    let result = expos;
 
     if (debouncedSearch.trim()) {
-      const keyword = debouncedSearch.trim().toLowerCase()
+      const keyword = debouncedSearch.trim().toLowerCase();
       result = result.filter(
         (expo) =>
           expo.name.toLowerCase().includes(keyword) ||
-          expo.ownerEmail.toLowerCase().includes(keyword)
-      )
+          expo.ownerEmail.toLowerCase().includes(keyword),
+      );
     }
 
     if (statusFilter !== "All") {
-      result = result.filter((expo) => expo.status === statusFilter)
+      result = result.filter((expo) => expo.status === statusFilter);
     }
 
     if (categoryFilter.length > 0) {
       result = result.filter((expo) =>
-        categoryFilter.every((catId) => expo.categoryIds.includes(catId))
-      )
+        categoryFilter.every((catId) => expo.categoryIds.includes(catId)),
+      );
     }
 
     const startDateFilter = dateRangeFilter?.from
       ? toLocalIsoDate(dateRangeFilter.from)
-      : ""
+      : "";
     const endDateFilter = dateRangeFilter?.to
       ? toLocalIsoDate(dateRangeFilter.to)
-      : ""
+      : "";
 
     if (startDateFilter) {
-      result = result.filter((expo) => expo.startDate >= startDateFilter)
+      result = result.filter((expo) => expo.startDate >= startDateFilter);
     }
 
     if (endDateFilter) {
-      result = result.filter((expo) => expo.endDate <= endDateFilter)
+      result = result.filter((expo) => expo.endDate <= endDateFilter);
     }
 
-    return result
-  }, [expos, debouncedSearch, statusFilter, categoryFilter, dateRangeFilter])
+    return result;
+  }, [expos, debouncedSearch, statusFilter, categoryFilter, dateRangeFilter]);
 
-  const pageSize = 20
-  const totalPages = Math.max(1, Math.ceil(filteredExpos.length / pageSize))
+  const pageSize = 20;
+  const totalPages = Math.max(1, Math.ceil(filteredExpos.length / pageSize));
 
   React.useEffect(() => {
-    if (page > totalPages) setPage(totalPages)
-  }, [page, totalPages])
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
 
   const pagedExpos = React.useMemo(() => {
-    const start = (page - 1) * pageSize
-    return filteredExpos.slice(start, start + pageSize)
-  }, [filteredExpos, page])
+    const start = (page - 1) * pageSize;
+    return filteredExpos.slice(start, start + pageSize);
+  }, [filteredExpos, page]);
 
   function toggleCategory(catId: string) {
     setCategoryFilter((prev) =>
       prev.includes(catId)
         ? prev.filter((id) => id !== catId)
-        : [...prev, catId]
-    )
-    setPage(1)
+        : [...prev, catId],
+    );
+    setPage(1);
   }
 
   async function handleConfirm() {
-    if (!confirmAction) return
+    if (!confirmAction) return;
 
-    const { type, expo } = confirmAction
+    const { type, expo } = confirmAction;
     try {
       if (type === "archive") {
         const response = await fetch(`/api/tradexpo/expos/${expo.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: "Archived" satisfies ExpoStatus })
-        })
+          body: JSON.stringify({ status: "Archived" satisfies ExpoStatus }),
+        });
         if (!response.ok) {
           setNotice({
             type: "error",
-            text: `Failed to archive "${expo.name}".`
-          })
-          return
+            text: `Failed to archive "${expo.name}".`,
+          });
+          return;
         }
         setExpos((prev) =>
           prev.map((e) =>
-            e.id === expo.id ? { ...e, status: "Archived" as ExpoStatus } : e
-          )
-        )
+            e.id === expo.id ? { ...e, status: "Archived" as ExpoStatus } : e,
+          ),
+        );
         setNotice({
           type: "success",
-          text: `"${expo.name}" has been archived.`
-        })
+          text: `"${expo.name}" has been archived.`,
+        });
       } else if (type === "delete") {
         const response = await fetch(`/api/tradexpo/expos/${expo.id}`, {
-          method: "DELETE"
-        })
+          method: "DELETE",
+        });
         if (!response.ok) {
-          setNotice({ type: "error", text: `Failed to delete "${expo.name}".` })
-          return
+          setNotice({
+            type: "error",
+            text: `Failed to delete "${expo.name}".`,
+          });
+          return;
         }
-        setExpos((prev) => prev.filter((e) => e.id !== expo.id))
-        setNotice({ type: "success", text: `"${expo.name}" has been deleted.` })
+        setExpos((prev) => prev.filter((e) => e.id !== expo.id));
+        setNotice({
+          type: "success",
+          text: `"${expo.name}" has been deleted.`,
+        });
       } else if (type === "approve") {
         const response = await fetch(`/api/tradexpo/expos/${expo.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: "Live" satisfies ExpoStatus })
-        })
+          body: JSON.stringify({ status: "Live" satisfies ExpoStatus }),
+        });
         if (!response.ok) {
           setNotice({
             type: "error",
-            text: `Failed to approve "${expo.name}".`
-          })
-          return
+            text: `Failed to approve "${expo.name}".`,
+          });
+          return;
         }
         setExpos((prev) =>
           prev.map((e) =>
-            e.id === expo.id ? { ...e, status: "Live" as ExpoStatus } : e
-          )
-        )
+            e.id === expo.id ? { ...e, status: "Live" as ExpoStatus } : e,
+          ),
+        );
         setNotice({
           type: "success",
-          text: `"${expo.name}" is now Live. Approval notification sent to ${expo.ownerEmail}.`
-        })
+          text: `"${expo.name}" is now Live. Approval notification sent to ${expo.ownerEmail}.`,
+        });
       }
     } catch {
-      setNotice({ type: "error", text: "Network error. Please try again." })
-      return
+      setNotice({ type: "error", text: "Network error. Please try again." });
+      return;
     }
 
-    setConfirmAction(null)
+    setConfirmAction(null);
   }
 
   const confirmMeta = React.useMemo(() => {
-    if (!confirmAction) return null
+    if (!confirmAction) return null;
 
     if (confirmAction.type === "approve") {
       return {
         title: "Approve Expo?",
         description: `This will set "${confirmAction.expo.name}" to Live and notify the owner at ${confirmAction.expo.ownerEmail}.`,
         actionLabel: "Approve",
-        variant: "default" as const
-      }
+        variant: "default" as const,
+      };
     }
 
     if (confirmAction.type === "archive") {
@@ -281,20 +287,20 @@ export function ExpoListManager({
         title: "Archive Expo?",
         description: `"${confirmAction.expo.name}" will be archived and removed from the public listing.`,
         actionLabel: "Archive",
-        variant: "default" as const
-      }
+        variant: "default" as const,
+      };
     }
 
     return {
       title: "Delete Expo?",
       description: `This will permanently delete "${confirmAction.expo.name}". This action cannot be undone.`,
       actionLabel: "Delete",
-      variant: "destructive" as const
-    }
-  }, [confirmAction])
+      variant: "destructive" as const,
+    };
+  }, [confirmAction]);
 
   return (
-    <div className="grid gap-4 px-4">
+    <div className="grid gap-4 px-4 lg:px-10">
       <section>
         <div className="flex items-center justify-between gap-3">
           <div className="flex w-full flex-col gap-3 md:flex-row md:items-center">
@@ -325,8 +331,8 @@ export function ExpoListManager({
             <Select
               value={statusFilter}
               onValueChange={(value) => {
-                setStatusFilter(value as ExpoStatus | "All")
-                setPage(1)
+                setStatusFilter(value as ExpoStatus | "All");
+                setPage(1);
               }}
             >
               <SelectTrigger className="w-44 rounded-full">
@@ -359,8 +365,8 @@ export function ExpoListManager({
                   <DropdownMenuItem
                     key={cat.id}
                     onSelect={(e) => {
-                      e.preventDefault()
-                      toggleCategory(cat.id)
+                      e.preventDefault();
+                      toggleCategory(cat.id);
                     }}
                   >
                     <span className="mr-2 flex h-4 w-4 items-center justify-center rounded border border-muted-foreground/30">
@@ -376,9 +382,9 @@ export function ExpoListManager({
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onSelect={(e) => {
-                        e.preventDefault()
-                        setCategoryFilter([])
-                        setPage(1)
+                        e.preventDefault();
+                        setCategoryFilter([]);
+                        setPage(1);
                       }}
                       className="text-muted-foreground"
                     >
@@ -393,8 +399,8 @@ export function ExpoListManager({
               <DateRangePicker
                 value={dateRangeFilter}
                 onChange={(range) => {
-                  setDateRangeFilter(range)
-                  setPage(1)
+                  setDateRangeFilter(range);
+                  setPage(1);
                 }}
                 className="w-76 rounded-full"
               />
@@ -403,8 +409,8 @@ export function ExpoListManager({
                   variant="ghost"
                   size="xs"
                   onClick={() => {
-                    setDateRangeFilter(undefined)
-                    setPage(1)
+                    setDateRangeFilter(undefined);
+                    setPage(1);
                   }}
                 >
                   Clear
@@ -425,18 +431,18 @@ export function ExpoListManager({
                 ? "border-rose-300 bg-rose-50 text-rose-700"
                 : notice.type === "info"
                   ? "border-amber-300 bg-amber-50 text-amber-700"
-                  : "border-emerald-300 bg-emerald-50 text-emerald-700"
+                  : "border-emerald-300 bg-emerald-50 text-emerald-700",
             )}
           >
             {notice.text}
           </p>
         )}
 
-        <div className="mt-4 rounded-lg border">
+        <div className="mt-4 overflow-hidden rounded-2xl border">
           <Table>
-            <TableHeader className="bg-muted/40">
+            <TableHeader>
               <TableRow>
-                <TableHead className="w-16">Thumbnail</TableHead>
+                <TableHead className="w-20">Thumbnail</TableHead>
                 <TableHead>Expo Name</TableHead>
                 <TableHead>Owner</TableHead>
                 <TableHead className="whitespace-nowrap">Duration</TableHead>
@@ -458,13 +464,15 @@ export function ExpoListManager({
                 pagedExpos.map((expo) => (
                   <TableRow key={expo.id}>
                     <TableCell>
-                      <Image
-                        src={getAssetUrl(expo.thumbnailUrl, expo.id, 64, 48)}
-                        alt={expo.name}
-                        width={64}
-                        height={48}
-                        className="rounded-md border object-cover"
-                      />
+                      <Link href={`/admin/tradexpo/expos/${expo.id}`}>
+                        <Image
+                          src={getAssetUrl(expo.thumbnailUrl, expo.id, 64, 48)}
+                          alt={expo.name}
+                          width={256}
+                          height={256}
+                          className="aspect-2/1 w-28 rounded-md border object-cover"
+                        />
+                      </Link>
                     </TableCell>
                     <TableCell>
                       <Link
@@ -573,7 +581,7 @@ export function ExpoListManager({
       <AlertDialog
         open={Boolean(confirmAction)}
         onOpenChange={(open) => {
-          if (!open) setConfirmAction(null)
+          if (!open) setConfirmAction(null);
         }}
       >
         <AlertDialogContent size="sm">
@@ -595,5 +603,5 @@ export function ExpoListManager({
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  )
+  );
 }

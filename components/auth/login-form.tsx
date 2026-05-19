@@ -1,77 +1,77 @@
-"use client"
+"use client";
 
-import { EyeIcon, LockKeyholeIcon, MailIcon } from "lucide-react"
-import Link from "next/link"
-import { useRouter, useSearchParams } from "next/navigation"
-import { Suspense, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { cn } from "@/lib/utils"
+import { EyeIcon, LockKeyholeIcon, MailIcon } from "lucide-react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
-const FIGMA_EXPO_BACKGROUND = "/auth/login-bg.jpg"
+const FIGMA_EXPO_BACKGROUND = "/auth/login-bg.jpg";
 
 const DEMO_ACCOUNTS: {
-  label: string
-  email: string
-  password: string
+  label: string;
+  email: string;
+  password: string;
 }[] = [
   {
     label: "Admin",
     email: "khaipham@arobid.com",
-    password: "Admin@Arobid123"
+    password: "Admin@Arobid123",
   },
   {
     label: "Tenant Owner",
     email: "partner.tenant.owner@arobid.com",
-    password: "Partner@Arobid123"
+    password: "Partner@Arobid123",
   },
   {
     label: "Tenant Admin",
     email: "partner.tenant.admin@arobid.com",
-    password: "Partner@Arobid123"
+    password: "Partner@Arobid123",
   },
   {
     label: "Tenant Viewer",
     email: "partner.tenant.viewer@arobid.com",
-    password: "Partner@Arobid123"
+    password: "Partner@Arobid123",
   },
   {
     label: "Expo Partner Owner",
     email: "partner.demo@arobid.com",
-    password: "Partner@Arobid123"
+    password: "Partner@Arobid123",
   },
   {
     label: "Alliance Manager",
     email: "partner.alliance.business@arobid.com",
-    password: "Partner@Arobid123"
+    password: "Partner@Arobid123",
   },
   {
     label: "Government Program",
     email: "partner.gov.program@arobid.com",
-    password: "Partner@Arobid123"
+    password: "Partner@Arobid123",
   },
   {
     label: "Partner Finance",
     email: "partner.alliance.finance@arobid.com",
-    password: "Partner@Arobid123"
+    password: "Partner@Arobid123",
   },
   {
     label: "Seller",
     email: "seller.demo@arobid.com",
-    password: "Seller@Arobid123"
+    password: "Seller@Arobid123",
   },
   {
     label: "Buyer",
     email: "buyer.demo@arobid.com",
-    password: "Buyer@Arobid123"
-  }
-]
+    password: "Buyer@Arobid123",
+  },
+];
 
 type LoginResponse = {
-  error?: string
-  redirectPath?: string
-}
+  error?: string;
+  redirectPath?: string;
+};
 
 function LoginTextField({
   id,
@@ -83,18 +83,18 @@ function LoginTextField({
   icon,
   action,
   trailing,
-  onChange
+  onChange,
 }: {
-  id: string
-  label: string
-  type: string
-  value: string
-  placeholder: string
-  autoComplete: string
-  icon: React.ReactNode
-  action?: React.ReactNode
-  trailing?: React.ReactNode
-  onChange: (value: string) => void
+  id: string;
+  label: string;
+  type: string;
+  value: string;
+  placeholder: string;
+  autoComplete: string;
+  icon: React.ReactNode;
+  action?: React.ReactNode;
+  trailing?: React.ReactNode;
+  onChange: (value: string) => void;
 }) {
   return (
     <div className="space-y-2">
@@ -124,7 +124,7 @@ function LoginTextField({
         {trailing}
       </div>
     </div>
-  )
+  );
 }
 
 function TermsRow() {
@@ -138,91 +138,87 @@ function TermsRow() {
         </span>
       </span>
     </label>
-  )
+  );
 }
 
 function DemoAccountPicker({
   disabled,
-  onSelect
+  onSelect,
 }: {
-  disabled: boolean
-  onSelect: (account: (typeof DEMO_ACCOUNTS)[number]) => void
+  disabled: boolean;
+  onSelect: (account: (typeof DEMO_ACCOUNTS)[number]) => void;
 }) {
   return (
     <div className="space-y-2">
       <p className="select-none font-medium text-foreground">Demo accounts</p>
       <div className="grid grid-cols-2 gap-2">
         {DEMO_ACCOUNTS.map((account) => (
-          <button
+          <Button
             key={account.email}
-            type="button"
             disabled={disabled}
             onClick={() => onSelect(account)}
-            className="cursor-pointer rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-left transition hover:border-legend hover:bg-legend-50 disabled:pointer-events-none disabled:opacity-60"
+            variant="outline"
+            size="sm"
+            className="rounded-full"
           >
-            <span className="block font-medium text-foreground text-sm">
-              {account.label}
-            </span>
-            <span className="block truncate text-muted-foreground text-xs">
-              {account.email}
-            </span>
-          </button>
+            {account.label}
+          </Button>
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 function LoginPanel() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get("callbackUrl")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function navigateFromResponse(response: Response): Promise<boolean> {
     const payload = (await response
       .json()
-      .catch(() => null)) as LoginResponse | null
+      .catch(() => null)) as LoginResponse | null;
 
     if (!response.ok) {
-      setError(payload?.error ?? "Sign-in failed.")
-      return false
+      setError(payload?.error ?? "Sign-in failed.");
+      return false;
     }
 
-    const redirectPath = callbackUrl ?? payload?.redirectPath ?? "/seller"
-    router.replace(redirectPath)
-    router.refresh()
-    return true
+    const redirectPath = callbackUrl ?? payload?.redirectPath ?? "/seller";
+    router.replace(redirectPath);
+    router.refresh();
+    return true;
   }
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setError("")
-    setIsSubmitting(true)
+    event.preventDefault();
+    setError("");
+    setIsSubmitting(true);
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email, password })
-      })
-      const success = await navigateFromResponse(response)
+        body: JSON.stringify({ email, password }),
+      });
+      const success = await navigateFromResponse(response);
       if (!success) {
-        setIsSubmitting(false)
+        setIsSubmitting(false);
       }
     } catch {
-      setError("An unexpected error occurred.")
-      setIsSubmitting(false)
+      setError("An unexpected error occurred.");
+      setIsSubmitting(false);
     }
   }
 
   function useDemoAccount(account: (typeof DEMO_ACCOUNTS)[number]) {
-    setError("")
-    setEmail(account.email)
-    setPassword(account.password)
+    setError("");
+    setEmail(account.email);
+    setPassword(account.password);
   }
 
   return (
@@ -239,7 +235,7 @@ function LoginPanel() {
         </p>
       </div>
 
-      <form className="mt-10 space-y-6" onSubmit={onSubmit}>
+      <form className="mt-10 space-y-3" onSubmit={onSubmit}>
         <LoginTextField
           id="email"
           label="Email Address"
@@ -281,13 +277,13 @@ function LoginPanel() {
 
         <TermsRow />
 
-        {error ? <p className="text-red-600 text-sm">{error}</p> : null}
+        {error ? <p className="text-destructive text-sm">{error}</p> : null}
 
         <Button
           type="submit"
           size="lg"
           disabled={isSubmitting}
-          className="w-full bg-legend hover:bg-legend-600"
+          className="w-full"
         >
           {isSubmitting ? "Signing in..." : "Sign In"}
         </Button>
@@ -306,7 +302,7 @@ function LoginPanel() {
         <DemoAccountPicker disabled={isSubmitting} onSelect={useDemoAccount} />
       </div>
     </section>
-  )
+  );
 }
 
 export function LoginForm({ className }: { className?: string }) {
@@ -314,7 +310,7 @@ export function LoginForm({ className }: { className?: string }) {
     <main
       className={cn(
         "relative min-h-screen overflow-hidden bg-white [font-family:var(--font-tight)]",
-        className
+        className,
       )}
     >
       <div
@@ -342,5 +338,5 @@ export function LoginForm({ className }: { className?: string }) {
         </Suspense>
       </div>
     </main>
-  )
+  );
 }

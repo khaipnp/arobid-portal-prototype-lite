@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   AlertCircleIcon,
@@ -15,13 +15,13 @@ import {
   SparkleIcon,
   ToyBrickIcon,
   XIcon,
-  ZapIcon
-} from "lucide-react"
-import Link from "next/link"
-import * as React from "react"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+  ZapIcon,
+} from "lucide-react";
+import Link from "next/link";
+import * as React from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type {
   AdminNotification,
   BoothTemplate,
@@ -29,39 +29,43 @@ import type {
   ExpoStatus,
   HallTemplate,
   ModelAsset,
-  NotificationKind
-} from "@/lib/tradexpo/types"
+  NotificationKind,
+} from "@/lib/tradexpo/types";
 import {
   getAssetMap,
   getBoothTemplateStatus,
-  getHallTemplateStatus
-} from "@/lib/tradexpo/utils"
-import { cn } from "@/lib/utils"
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "../ui/hover-card"
+  getHallTemplateStatus,
+} from "@/lib/tradexpo/utils";
+import { cn } from "@/lib/utils";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "../ui/hover-card";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
 function daysUntil(dateStr: string) {
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const target = new Date(dateStr)
-  target.setHours(0, 0, 0, 0)
-  return Math.round((target.getTime() - today.getTime()) / 86_400_000)
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(dateStr);
+  target.setHours(0, 0, 0, 0);
+  return Math.round((target.getTime() - today.getTime()) / 86_400_000);
 }
 
 function formatShortDate(iso: string) {
   return new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" }).format(
-    new Date(iso)
-  )
+    new Date(iso),
+  );
 }
 
 function timeAgo(iso: string) {
-  const diff = Date.now() - new Date(iso).getTime()
-  const mins = Math.floor(diff / 60_000)
-  if (mins < 60) return `${mins}m ago`
-  const hrs = Math.floor(mins / 60)
-  if (hrs < 24) return `${hrs}h ago`
-  return `${Math.floor(hrs / 24)}d ago`
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
 }
 
 // ─── stat cards ──────────────────────────────────────────────────────────────
@@ -71,36 +75,36 @@ const EXPO_STATUS_ORDER: ExpoStatus[] = [
   "Pending Review",
   "Draft",
   "Archived",
-  "Canceled"
-]
+  "Canceled",
+];
 
 const STATUS_COLOR: Record<ExpoStatus, string> = {
   Live: "bg-emerald-500",
   "Pending Review": "bg-amber-400",
   Draft: "bg-slate-400",
   Archived: "bg-purple-400",
-  Canceled: "bg-rose-400"
-}
+  Canceled: "bg-rose-400",
+};
 
 const STATUS_TEXT: Record<ExpoStatus, string> = {
   Live: "text-emerald-700",
   "Pending Review": "text-amber-700",
   Draft: "text-slate-600",
   Archived: "text-purple-700",
-  Canceled: "text-rose-700"
-}
+  Canceled: "text-rose-700",
+};
 
 function ExpoStatsCard({ expos }: { expos: Expo[] }) {
   const counts = React.useMemo(() => {
-    const map: Partial<Record<ExpoStatus, number>> = {}
+    const map: Partial<Record<ExpoStatus, number>> = {};
     for (const expo of expos) {
-      map[expo.status] = (map[expo.status] ?? 0) + 1
+      map[expo.status] = (map[expo.status] ?? 0) + 1;
     }
-    return map
-  }, [expos])
+    return map;
+  }, [expos]);
 
-  const liveCount = counts.Live ?? 0
-  const pendingCount = counts["Pending Review"] ?? 0
+  const liveCount = counts.Live ?? 0;
+  const pendingCount = counts["Pending Review"] ?? 0;
 
   return (
     <HoverCard>
@@ -140,9 +144,9 @@ function ExpoStatsCard({ expos }: { expos: Expo[] }) {
 
             <div className="flex h-2 w-full overflow-hidden rounded-full bg-muted">
               {EXPO_STATUS_ORDER.map((status) => {
-                const count = counts[status] ?? 0
-                if (count === 0) return null
-                const pct = (count / expos.length) * 100
+                const count = counts[status] ?? 0;
+                if (count === 0) return null;
+                const pct = (count / expos.length) * 100;
                 return (
                   <div
                     key={status}
@@ -150,14 +154,14 @@ function ExpoStatsCard({ expos }: { expos: Expo[] }) {
                     className={cn("h-full", STATUS_COLOR[status])}
                     style={{ width: `${pct}%` }}
                   />
-                )
+                );
               })}
             </div>
 
             <div className="flex flex-wrap gap-x-3 gap-y-1">
               {EXPO_STATUS_ORDER.map((status) => {
-                const count = counts[status] ?? 0
-                if (count === 0) return null
+                const count = counts[status] ?? 0;
+                if (count === 0) return null;
                 return (
                   <span
                     key={status}
@@ -165,7 +169,7 @@ function ExpoStatsCard({ expos }: { expos: Expo[] }) {
                   >
                     {status} {count}
                   </span>
-                )
+                );
               })}
             </div>
           </CardContent>
@@ -182,11 +186,11 @@ function ExpoStatsCard({ expos }: { expos: Expo[] }) {
         </p>
       </HoverCardContent>
     </HoverCard>
-  )
+  );
 }
 
 function LiveNowCard({ expos }: { expos: Expo[] }) {
-  const live = expos.filter((e) => e.status === "Live")
+  const live = expos.filter((e) => e.status === "Live");
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -227,11 +231,11 @@ function LiveNowCard({ expos }: { expos: Expo[] }) {
         )}
       </CardContent>
     </Card>
-  )
+  );
 }
 
 function PendingReviewCard({ expos }: { expos: Expo[] }) {
-  const pending = expos.filter((e) => e.status === "Pending Review")
+  const pending = expos.filter((e) => e.status === "Pending Review");
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -245,7 +249,7 @@ function PendingReviewCard({ expos }: { expos: Expo[] }) {
           <span
             className={cn(
               "font-bold text-4xl leading-none",
-              pending.length > 0 ? "text-amber-600" : "text-foreground"
+              pending.length > 0 ? "text-amber-600" : "text-foreground",
             )}
           >
             {pending.length}
@@ -267,37 +271,37 @@ function PendingReviewCard({ expos }: { expos: Expo[] }) {
         )}
       </CardContent>
     </Card>
-  )
+  );
 }
 
 function TemplatesCard({
   assets,
   hallTemplates,
-  boothTemplates
+  boothTemplates,
 }: {
-  assets: ModelAsset[]
-  hallTemplates: HallTemplate[]
-  boothTemplates: BoothTemplate[]
+  assets: ModelAsset[];
+  hallTemplates: HallTemplate[];
+  boothTemplates: BoothTemplate[];
 }) {
-  const assetMap = React.useMemo(() => getAssetMap(assets), [assets])
+  const assetMap = React.useMemo(() => getAssetMap(assets), [assets]);
 
   const hallReady = hallTemplates.filter(
-    (t) => getHallTemplateStatus(t, assetMap) === "Published"
-  ).length
+    (t) => getHallTemplateStatus(t, assetMap) === "Published",
+  ).length;
 
   const boothReady = boothTemplates.filter(
-    (t) => getBoothTemplateStatus(t, assetMap) === "Published"
-  ).length
+    (t) => getBoothTemplateStatus(t, assetMap) === "Published",
+  ).length;
 
   const hallFailed = hallTemplates.filter(
-    (t) => getHallTemplateStatus(t, assetMap) === "Failed"
-  ).length
+    (t) => getHallTemplateStatus(t, assetMap) === "Failed",
+  ).length;
 
   const boothFailed = boothTemplates.filter(
-    (t) => getBoothTemplateStatus(t, assetMap) === "Failed"
-  ).length
+    (t) => getBoothTemplateStatus(t, assetMap) === "Failed",
+  ).length;
 
-  const hasIssues = hallFailed > 0 || boothFailed > 0
+  const hasIssues = hallFailed > 0 || boothFailed > 0;
 
   return (
     <Card>
@@ -340,7 +344,7 @@ function TemplatesCard({
         )}
       </CardContent>
     </Card>
-  )
+  );
 }
 
 // ─── reminders ───────────────────────────────────────────────────────────────
@@ -349,34 +353,34 @@ function RemindersPanel({
   expos,
   assets,
   hallTemplates,
-  boothTemplates
+  boothTemplates,
 }: {
-  expos: Expo[]
-  assets: ModelAsset[]
-  hallTemplates: HallTemplate[]
-  boothTemplates: BoothTemplate[]
+  expos: Expo[];
+  assets: ModelAsset[];
+  hallTemplates: HallTemplate[];
+  boothTemplates: BoothTemplate[];
 }) {
-  const assetMap = React.useMemo(() => getAssetMap(assets), [assets])
+  const assetMap = React.useMemo(() => getAssetMap(assets), [assets]);
 
-  const pendingApproval = expos.filter((e) => e.status === "Pending Review")
+  const pendingApproval = expos.filter((e) => e.status === "Pending Review");
 
   const startingSoon = expos
     .filter((e) => {
-      const d = daysUntil(e.startDate)
+      const d = daysUntil(e.startDate);
       return (
         d >= 0 &&
         d <= 14 &&
         (e.status === "Draft" || e.status === "Pending Review")
-      )
+      );
     })
-    .sort((a, b) => daysUntil(a.startDate) - daysUntil(b.startDate))
+    .sort((a, b) => daysUntil(a.startDate) - daysUntil(b.startDate));
 
   const archivableFinished = expos.filter(
     (e) =>
       e.status !== "Archived" &&
       e.status !== "Canceled" &&
-      daysUntil(e.endDate) < -7
-  )
+      daysUntil(e.endDate) < -7,
+  );
 
   const failedTemplates = [
     ...hallTemplates
@@ -384,14 +388,14 @@ function RemindersPanel({
       .map((t) => ({ name: t.name, kind: "Hall Template" as const })),
     ...boothTemplates
       .filter((t) => getBoothTemplateStatus(t, assetMap) === "Failed")
-      .map((t) => ({ name: t.name, kind: "Booth Template" as const }))
-  ]
+      .map((t) => ({ name: t.name, kind: "Booth Template" as const })),
+  ];
 
   const hasAny =
     pendingApproval.length > 0 ||
     startingSoon.length > 0 ||
     archivableFinished.length > 0 ||
-    failedTemplates.length > 0
+    failedTemplates.length > 0;
 
   return (
     <section className="rounded-xl border bg-card p-4">
@@ -446,7 +450,7 @@ function RemindersPanel({
               </p>
               <ul className="mt-2 space-y-1.5">
                 {startingSoon.map((expo) => {
-                  const days = daysUntil(expo.startDate)
+                  const days = daysUntil(expo.startDate);
                   return (
                     <li
                       key={expo.id}
@@ -459,7 +463,7 @@ function RemindersPanel({
                         {days === 0 ? "today" : `in ${days}d`}
                       </span>
                     </li>
-                  )
+                  );
                 })}
               </ul>
             </div>
@@ -507,7 +511,7 @@ function RemindersPanel({
         </div>
       )}
     </section>
-  )
+  );
 }
 
 // ─── notification feed ────────────────────────────────────────────────────────
@@ -518,53 +522,53 @@ const KIND_META: Record<
 > = {
   approval_needed: {
     icon: <FileClockIcon className="h-4 w-4" />,
-    color: "text-amber-500"
+    color: "text-amber-500",
   },
   expo_live: {
     icon: <RadioIcon className="h-4 w-4" />,
-    color: "text-emerald-500"
+    color: "text-emerald-500",
   },
   expo_ended: {
     icon: <ClockIcon className="h-4 w-4" />,
-    color: "text-zinc-400"
+    color: "text-zinc-400",
   },
   asset_failed: {
     icon: <AlertCircleIcon className="h-4 w-4" />,
-    color: "text-rose-500"
+    color: "text-rose-500",
   },
   expo_starting_soon: {
     icon: <CalendarCheckIcon className="h-4 w-4" />,
-    color: "text-blue-500"
+    color: "text-blue-500",
   },
   expo_canceled: {
     icon: <XIcon className="h-4 w-4" />,
-    color: "text-rose-400"
-  }
-}
+    color: "text-rose-400",
+  },
+};
 
 function NotificationFeed({
-  initialNotifications
+  initialNotifications,
 }: {
-  initialNotifications: AdminNotification[]
+  initialNotifications: AdminNotification[];
 }) {
   const [notifications, setNotifications] = React.useState<AdminNotification[]>(
     () =>
       [...initialNotifications].sort(
         (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      )
-  )
-  const [showAll, setShowAll] = React.useState(false)
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+      ),
+  );
+  const [showAll, setShowAll] = React.useState(false);
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   async function markAllRead() {
     try {
       const response = await fetch("/api/tradexpo/notifications", {
-        method: "PATCH"
-      })
-      if (!response.ok) return
-      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
+        method: "PATCH",
+      });
+      if (!response.ok) return;
+      setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
     } catch {
       // no-op
     }
@@ -573,10 +577,10 @@ function NotificationFeed({
   async function dismiss(id: string) {
     try {
       const response = await fetch(`/api/tradexpo/notifications/${id}`, {
-        method: "DELETE"
-      })
-      if (!response.ok) return
-      setNotifications((prev) => prev.filter((n) => n.id !== id))
+        method: "DELETE",
+      });
+      if (!response.ok) return;
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
     } catch {
       // no-op
     }
@@ -585,18 +589,18 @@ function NotificationFeed({
   async function markRead(id: string) {
     try {
       const response = await fetch(`/api/tradexpo/notifications/${id}`, {
-        method: "PATCH"
-      })
-      if (!response.ok) return
+        method: "PATCH",
+      });
+      if (!response.ok) return;
       setNotifications((prev) =>
-        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n))
-      )
+        prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
+      );
     } catch {
       // no-op
     }
   }
 
-  const visible = showAll ? notifications : notifications.slice(0, 5)
+  const visible = showAll ? notifications : notifications.slice(0, 5);
 
   return (
     <section className="rounded-xl border bg-card p-4">
@@ -626,13 +630,13 @@ function NotificationFeed({
         <>
           <ul className="mt-3 divide-y">
             {visible.map((notif) => {
-              const meta = KIND_META[notif.kind]
+              const meta = KIND_META[notif.kind];
               return (
                 <li
                   key={notif.id}
                   className={cn(
                     "flex gap-3 py-3",
-                    !notif.isRead && "-mx-4 bg-muted/30 px-4"
+                    !notif.isRead && "-mx-4 bg-muted/30 px-4",
                   )}
                 >
                   <span className={cn("mt-0.5 shrink-0", meta.color)}>
@@ -645,7 +649,7 @@ function NotificationFeed({
                           "text-sm leading-snug",
                           !notif.isRead
                             ? "font-medium"
-                            : "text-muted-foreground"
+                            : "text-muted-foreground",
                         )}
                       >
                         {notif.title}
@@ -689,7 +693,7 @@ function NotificationFeed({
                     </div>
                   </div>
                 </li>
-              )
+              );
             })}
           </ul>
 
@@ -706,7 +710,7 @@ function NotificationFeed({
         </>
       )}
     </section>
-  )
+  );
 }
 
 // ─── root ─────────────────────────────────────────────────────────────────────
@@ -716,21 +720,21 @@ export function TradeXpoOverview({
   initialHallTemplates,
   initialBoothTemplates,
   initialExpos,
-  initialNotifications
+  initialNotifications,
 }: {
-  initialAssets: ModelAsset[]
-  initialHallTemplates: HallTemplate[]
-  initialBoothTemplates: BoothTemplate[]
-  initialExpos: Expo[]
-  initialNotifications: AdminNotification[]
+  initialAssets: ModelAsset[];
+  initialHallTemplates: HallTemplate[];
+  initialBoothTemplates: BoothTemplate[];
+  initialExpos: Expo[];
+  initialNotifications: AdminNotification[];
 }) {
   const expos = React.useMemo(
     () => initialExpos.map((e) => ({ ...e })),
-    [initialExpos]
-  )
+    [initialExpos],
+  );
 
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-4 px-4 lg:px-10">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <ExpoStatsCard expos={expos} />
         <LiveNowCard expos={expos} />
@@ -751,5 +755,5 @@ export function TradeXpoOverview({
 
       <NotificationFeed initialNotifications={initialNotifications} />
     </div>
-  )
+  );
 }
