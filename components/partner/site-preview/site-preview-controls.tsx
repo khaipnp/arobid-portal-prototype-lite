@@ -1,13 +1,7 @@
-import { ImageIcon, LayoutTemplateIcon, Loader2Icon } from "lucide-react"
+import { ImageIcon, Loader2Icon } from "lucide-react"
 import Image from "next/image"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { NativeSelect } from "@/components/ui/native-select"

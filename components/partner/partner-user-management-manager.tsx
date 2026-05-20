@@ -170,7 +170,7 @@ export function PartnerUserManagementManager({
     setFilters((prev) => ({ ...prev, [key]: value }))
   }
 
-  function clearFilters() {
+  function _clearFilters() {
     setFilters({
       search: "",
       role: "all",
@@ -264,7 +264,7 @@ export function PartnerUserManagementManager({
       ) : null}
       {error ? <p className="text-destructive text-sm">{error}</p> : null}
 
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div className="flex gap-2">
           <InputGroup className="rounded-full">
             <InputGroupAddon align="inline-start">

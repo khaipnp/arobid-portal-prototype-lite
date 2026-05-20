@@ -724,7 +724,7 @@ export async function reserveTradeCreditForOrder(input: {
     sourceModule: input.sourceModule,
     eventType: input.sourceEventType
   })
-  if (!rule || !rule.isEnabled) {
+  if (!rule?.isEnabled) {
     throw new Error("TradeCredit burn is not enabled for this checkout.")
   }
 

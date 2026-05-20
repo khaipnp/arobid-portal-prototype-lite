@@ -1,10 +1,5 @@
 <script lang="ts">
 import { AlertCircle, RefreshCw, Search } from "lucide-svelte"
-import Badge from "$lib/components/ui/badge/badge.svelte"
-import { Button } from "$lib/components/ui/button"
-import Input from "$lib/components/ui/input/input.svelte"
-import { Skeleton } from "$lib/components/ui/skeleton"
-import * as Table from "$lib/components/ui/table"
 import type {
   AdminFeature,
   AdminModule,
@@ -14,6 +9,11 @@ import type {
   ListResponse,
   PaginationMeta
 } from "$lib/administration/types"
+import Badge from "$lib/components/ui/badge/badge.svelte"
+import { Button } from "$lib/components/ui/button"
+import Input from "$lib/components/ui/input/input.svelte"
+import { Skeleton } from "$lib/components/ui/skeleton"
+import * as Table from "$lib/components/ui/table"
 
 type EntityType = "modules" | "roles" | "features" | "permissions" | "users"
 type EntityRecord =

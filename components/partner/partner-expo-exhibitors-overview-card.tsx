@@ -1,7 +1,5 @@
 import { Building2Icon } from "lucide-react"
 import Image from "next/image"
-import Link from "next/link"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -19,14 +17,7 @@ import {
 } from "@/components/ui/item"
 import type { PartnerExpoExhibitorsWorkspace } from "@/lib/partner/db"
 
-const numberFormat = new Intl.NumberFormat("en")
-const currencyFormat = new Intl.NumberFormat("vi-VN", {
-  style: "currency",
-  currency: "VND",
-  notation: "compact",
-  maximumFractionDigits: 1
-})
-
+const _numberFormat = new Intl.NumberFormat("en")
 export function PartnerExpoExhibitorsOverviewCard({
   workspace,
   onViewAll
@@ -59,7 +50,7 @@ export function PartnerExpoExhibitorsOverviewCard({
             <Item key={exhibitor.id} variant="muted" size="default">
               <ItemMedia
                 variant="image"
-                className="rounded-md border bg-muted/50 rounded-full"
+                className="rounded-full border bg-muted/50"
               >
                 {exhibitor.logoUrl ? (
                   <Image

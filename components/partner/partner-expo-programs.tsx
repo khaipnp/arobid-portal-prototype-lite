@@ -2,13 +2,7 @@
 
 import { BadgeCheckIcon, Building2Icon } from "lucide-react"
 import { useMemo } from "react"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import type { PartnerAccess } from "@/lib/partner/access"
 import type { PartnerExpoProgramsWorkspace } from "@/lib/partner/db"
 import { PartnerExpoList } from "./partner-expo-list"

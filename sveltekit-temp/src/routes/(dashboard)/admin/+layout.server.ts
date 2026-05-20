@@ -3,7 +3,7 @@ import { getAuthenticatedUserById } from "$lib/auth/service"
 import type { LayoutServerLoad } from "./$types"
 
 export const load: LayoutServerLoad = async (event) => {
-  const userId = await requireRole(event, "admin")
+  const userId = await requireRole(event, "sys_admin")
   const user = await getAuthenticatedUserById(userId)
 
   return {

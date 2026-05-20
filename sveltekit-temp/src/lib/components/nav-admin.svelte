@@ -107,6 +107,10 @@ const administrationLinks = [
     icon: BrickWallShield
   }
 ]
+
+function isActivePath(pathname: string, url: string) {
+  return pathname === url || pathname.startsWith(`${url}/`)
+}
 </script>
 
 <Sidebar.Group class="group-data-[collapsible=icon]:hidden">
@@ -114,7 +118,7 @@ const administrationLinks = [
   <Sidebar.Menu>
     {#each tradexpoLinks as item}
       {@const Icon = item.icon}
-      {@const isActive = $page.url.pathname === item.url}
+      {@const isActive = isActivePath($page.url.pathname, item.url)}
       <Sidebar.MenuItem>
         <Sidebar.MenuButton isActive={isActive}>
           <a href={item.url} class="flex w-full items-center gap-2">
@@ -132,7 +136,7 @@ const administrationLinks = [
   <Sidebar.Menu>
     {#each servicesLinks as item}
       {@const Icon = item.icon}
-      {@const isActive = $page.url.pathname === item.url}
+      {@const isActive = isActivePath($page.url.pathname, item.url)}
       <Sidebar.MenuItem>
         <Sidebar.MenuButton isActive={isActive}>
           <a href={item.url} class="flex w-full items-center gap-2">
@@ -150,7 +154,7 @@ const administrationLinks = [
   <Sidebar.Menu>
     {#each administrationLinks as item}
       {@const Icon = item.icon}
-      {@const isActive = $page.url.pathname === item.url}
+      {@const isActive = isActivePath($page.url.pathname, item.url)}
       <Sidebar.MenuItem>
         <Sidebar.MenuButton isActive={isActive}>
           <a href={item.url} class="flex w-full items-center gap-2">

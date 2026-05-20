@@ -243,7 +243,7 @@ export function PartnerEnterpriseManager({
       ) : null}
 
       <section className="space-y-4">
-        <div className="flex flex-col gap-3 sm:flex-row justify-between">
+        <div className="flex flex-col justify-between gap-3 sm:flex-row">
           <div className="flex gap-2">
             <InputGroup className="max-w-sm rounded-full">
               <InputGroupAddon>

@@ -1,7 +1,6 @@
 import {
   ActivityIcon,
   Edit3Icon,
-  ExternalLinkIcon,
   LockIcon,
   RadioIcon,
   StoreIcon,
@@ -25,7 +24,6 @@ import type {
   PartnerExpoExhibitorsWorkspace,
   PartnerExpoOperationsDetail
 } from "@/lib/partner/db"
-import { cn } from "@/lib/utils"
 import { ExpoStatusBadge } from "../tradexpo/status-badge"
 import { PartnerExpoExhibitorsOverviewCard } from "./partner-expo-exhibitors-overview-card"
 
@@ -38,7 +36,7 @@ const currencyFormat = new Intl.NumberFormat("vi-VN", {
   maximumFractionDigits: 1
 })
 
-const partnerModelLabel: Record<string, string> = {
+const _partnerModelLabel: Record<string, string> = {
   co_host: "Co-host",
   turnkey: "Turnkey",
   tenant: "Tenant"
@@ -49,17 +47,6 @@ function formatDate(iso: string) {
     day: "2-digit",
     month: "short",
     year: "numeric"
-  })
-}
-
-function formatDateTime(iso?: string) {
-  if (!iso) return "Not scheduled"
-  return new Date(iso).toLocaleString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit"
   })
 }
 
@@ -110,7 +97,7 @@ function MetricCard({
           {value}
         </CardTitle>
         <CardAction
-          className={"rounded-full p-2 bg-muted text-muted-foreground"}
+          className={"rounded-full bg-muted p-2 text-muted-foreground"}
         >
           {icon}
         </CardAction>
@@ -173,9 +160,6 @@ export function PartnerExpoDetailOverview({
     assignment.capabilities.includes("edit_expo_content")
   const timelineLabel = getTimelineLabel(expo.startDate, expo.endDate)
   const daysLabel = getDaysLabel(expo.startDate, expo.endDate)
-  const primaryCapability = assignment.capabilities
-    .slice(0, 4)
-    .map((capability) => capability.replaceAll("_", " "))
   const summary = operations.summary
 
   return (

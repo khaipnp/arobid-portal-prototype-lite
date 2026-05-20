@@ -7,8 +7,6 @@ import { useMemo, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import {
   Card,
-  CardAction,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle
@@ -35,7 +33,6 @@ import {
   InputGroupButton,
   InputGroupInput
 } from "../ui/input-group"
-import { Label } from "../ui/label"
 
 const numberFormat = new Intl.NumberFormat("en")
 const currencyFormat = new Intl.NumberFormat("vi-VN", {
@@ -111,7 +108,7 @@ export function PartnerExpoExhibitorsTable({
         />
       </div>
 
-      <h2 className="text-lg font-medium">Exhibitors List</h2>
+      <h2 className="font-medium text-lg">Exhibitors List</h2>
       <div className="flex gap-2">
         {/* Search */}
         <InputGroup className="max-w-xs rounded-full">

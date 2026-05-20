@@ -3,7 +3,6 @@
 import {
   EditIcon,
   EyeIcon,
-  GlobeIcon,
   PlusIcon,
   RefreshCwIcon,
   Trash2Icon
@@ -37,13 +36,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -338,7 +331,7 @@ export function PartnerSiteManagementManager({
       </section>
 
       <Dialog open={isPreviewOpen} onOpenChange={setIsPreviewOpen}>
-        <DialogContent className="h-screen max-h-none w-screen sm:max-w-screen overflow-hidden rounded-none">
+        <DialogContent className="h-screen max-h-none w-screen overflow-hidden rounded-none sm:max-w-screen">
           <DialogHeader>
             <DialogTitle>Live preview</DialogTitle>
             <DialogDescription>
