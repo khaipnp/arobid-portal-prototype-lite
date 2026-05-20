@@ -1,59 +1,59 @@
-import { notFound } from "next/navigation";
-import { DashboardShell } from "@/components/tradexpo/dashboard-shell";
-import { Badge } from "@/components/ui/badge";
+import { notFound } from "next/navigation"
+import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
+import { Badge } from "@/components/ui/badge"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  CardTitle
+} from "@/components/ui/card"
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { UserAvatar } from "@/components/user-avatar";
+  TableRow
+} from "@/components/ui/table"
+import { UserAvatar } from "@/components/user-avatar"
 import {
   getAdministrationUserDetail,
   getRequestAuditContext,
-  recordUserAuditEvent,
-} from "@/lib/administration/user-detail";
-import { requireRole } from "@/lib/auth/rbac";
-import { ensurePlatformSchema } from "@/lib/platform/ensure-schema";
+  recordUserAuditEvent
+} from "@/lib/administration/user-detail"
+import { requireRole } from "@/lib/auth/rbac"
+import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"
 
 function formatDateTime(value: string | null) {
-  if (!value) return "—";
-  return new Date(value).toLocaleString();
+  if (!value) return "—"
+  return new Date(value).toLocaleString()
 }
 
 function formatAction(value: string) {
-  return value.replaceAll(".", " · ").replaceAll("_", " ");
+  return value.replaceAll(".", " · ").replaceAll("_", " ")
 }
 
 function formatMetadata(metadata: Record<string, unknown>) {
-  const entries = Object.entries(metadata);
-  if (entries.length === 0) return "—";
+  const entries = Object.entries(metadata)
+  if (entries.length === 0) return "—"
   return entries
     .slice(0, 3)
     .map(([key, value]) => `${key}: ${String(value)}`)
-    .join(" · ");
+    .join(" · ")
 }
 
 export default async function AdminUserDetailPage({
-  params,
+  params
 }: {
-  params: Promise<{ userId: string }>;
+  params: Promise<{ userId: string }>
 }) {
-  const actorUserId = await requireRole("sys_admin");
-  await ensurePlatformSchema();
-  const { userId } = await params;
-  const auditContext = await getRequestAuditContext();
+  const actorUserId = await requireRole("sys_admin")
+  await ensurePlatformSchema()
+  const { userId } = await params
+  const auditContext = await getRequestAuditContext()
 
   await recordUserAuditEvent({
     targetUserId: userId,
@@ -64,13 +64,13 @@ export default async function AdminUserDetailPage({
     resourceId: userId,
     summary: "Admin viewed user detail.",
     metadata: { surface: "admin.administration.users.detail" },
-    ...auditContext,
-  });
+    ...auditContext
+  })
 
-  const user = await getAdministrationUserDetail(userId);
-  if (!user) notFound();
+  const user = await getAdministrationUserDetail(userId)
+  if (!user) notFound()
 
-  const statusLabel = user.isActive ? "Active" : "Inactive";
+  const statusLabel = user.isActive ? "Active" : "Inactive"
 
   return (
     <DashboardShell
@@ -79,7 +79,7 @@ export default async function AdminUserDetailPage({
         { label: "Dashboard", href: "/admin" },
         { label: "Administration" },
         { label: "Users", href: "/admin/administration/users" },
-        { label: user.name },
+        { label: user.name }
       ]}
       showBackButton
     >
@@ -239,7 +239,7 @@ export default async function AdminUserDetailPage({
         </Card>
       </div>
     </DashboardShell>
-  );
+  )
 }
 
 function Metric({ label, value }: { label: string; value: string | number }) {
@@ -250,17 +250,17 @@ function Metric({ label, value }: { label: string; value: string | number }) {
       </p>
       <p className="font-semibold text-2xl tabular-nums">{value}</p>
     </div>
-  );
+  )
 }
 
 function DetailItem({
   label,
   value,
-  mono = false,
+  mono = false
 }: {
-  label: string;
-  value: string;
-  mono?: boolean;
+  label: string
+  value: string
+  mono?: boolean
 }) {
   return (
     <div className="space-y-1">
@@ -271,5 +271,5 @@ function DetailItem({
         {value}
       </dd>
     </div>
-  );
+  )
 }
