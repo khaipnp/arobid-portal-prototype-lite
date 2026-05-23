@@ -1,6 +1,7 @@
 import {
   ActivityIcon,
   Edit3Icon,
+  ExternalLinkIcon,
   LockIcon,
   RadioIcon,
   StoreIcon,
