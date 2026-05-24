@@ -73,6 +73,11 @@ export interface UpdateAdministrationUserInput {
   isActive: boolean
 }
 
+export interface UpdateAdministrationUserStatusInput {
+  userId: string
+  isActive: boolean
+}
+
 type UserRow = Omit<
   AdministrationUserDetail,
   "roles" | "auditEvents" | "roleCount" | "auditEventCount" | "latestActivityAt"
@@ -305,6 +310,54 @@ export async function getAdministrationUserDetail(
     roles,
     auditEvents
   }
+}
+
+export async function updateAdministrationUserStatus(
+  input: UpdateAdministrationUserStatusInput
+): Promise<{ id: string; isActive: boolean }> {
+  const userId = input.userId.trim()
+  assertValidUserId(userId)
+
+  const userRows = (await sql`
+    update users
+    set is_active = ${input.isActive}
+    where id = ${userId}
+    returning id, is_active as "isActive"
+  `) as Array<{ id: string; isActive: boolean }>
+
+  if (userRows.length === 0) {
+    throw new Error("User not found.")
+  }
+
+  await sql`
+    update chat_users
+    set is_active = ${input.isActive}
+    where id = ${userId}
+  `
+
+  return userRows[0]
+}
+
+export async function deleteAdministrationUser(
+  userIdInput: string
+): Promise<{ id: string }> {
+  const userId = userIdInput.trim()
+  assertValidUserId(userId)
+
+  const existingRows = (await sql`
+    select id from users where id = ${userId} limit 1
+  `) as Array<{ id: string }>
+
+  if (existingRows.length === 0) {
+    throw new Error("User not found.")
+  }
+
+  await sql.transaction([
+    sql`delete from chat_users where id = ${userId}`,
+    sql`delete from users where id = ${userId}`
+  ])
+
+  return { id: userId }
 }
 
 export async function updateAdministrationUser(

@@ -23,6 +23,7 @@ export type AdministrationRecord =
   | AdminUser
 
 type CountRow = { count: number }
+type UserStatusFilter = "all" | "active" | "inactive"
 
 let administrationSchemaReady = false
 
@@ -30,6 +31,10 @@ function parsePositiveInt(value: string | null, fallback: number) {
   if (!value) return fallback
   const parsed = Number.parseInt(value, 10)
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
+}
+
+function parseUserStatusFilter(value: string | null): UserStatusFilter {
+  return value === "active" || value === "inactive" ? value : "all"
 }
 
 async function ensureAdministrationSchema() {
@@ -162,6 +167,7 @@ export async function getAdministrationList(input: {
   pageSize?: number | string | null
   search?: string | null
   moduleId?: string | null
+  status?: string | null
 }): Promise<ListResponse<AdministrationRecord>> {
   await ensureAdministrationSchema()
 
@@ -175,6 +181,7 @@ export async function getAdministrationList(input: {
       : parsePositiveInt(input.pageSize ?? null, 20)
   const search = (input.search ?? "").trim().toLowerCase()
   const moduleId = input.moduleId ?? "all"
+  const status = parseUserStatusFilter(input.status ?? null)
   const searchPattern = `%${search}%`
   let totalItems = 0
   let records: AdministrationRecord[] = []
@@ -214,9 +221,14 @@ export async function getAdministrationList(input: {
       select count(*)::int as count
       from users app_user
       left join companies company on company.id = app_user.company_id
-      where lower(app_user.name) like ${searchPattern}
+      where (
+        lower(app_user.name) like ${searchPattern}
         or lower(app_user.email) like ${searchPattern}
         or lower(coalesce(company.name, '')) like ${searchPattern}
+      )
+        and (${status} = 'all'
+          or (${status} = 'active' and app_user.is_active)
+          or (${status} = 'inactive' and not app_user.is_active))
     `) as CountRow[]
     totalItems = Number(countRows[0]?.count ?? 0)
     const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
@@ -228,7 +240,9 @@ export async function getAdministrationList(input: {
         app_user.id,
         app_user.name,
         app_user.email,
+        app_user.avatar_url as "avatarUrl",
         company.name as "companyName",
+        company.logo_url as "companyLogoUrl",
         coalesce(role_counts.role_count, 0)::int as "roleCount",
         app_user.is_active as "isActive"
       from users app_user
@@ -238,9 +252,14 @@ export async function getAdministrationList(input: {
         from user_roles
         group by user_id
       ) role_counts on role_counts.user_id = app_user.id
-      where lower(app_user.name) like ${searchPattern}
+      where (
+        lower(app_user.name) like ${searchPattern}
         or lower(app_user.email) like ${searchPattern}
         or lower(coalesce(company.name, '')) like ${searchPattern}
+      )
+        and (${status} = 'all'
+          or (${status} = 'active' and app_user.is_active)
+          or (${status} = 'inactive' and not app_user.is_active))
       order by app_user.name asc, app_user.email asc
       limit ${pageSize} offset ${start}
     `) as AdminUser[]

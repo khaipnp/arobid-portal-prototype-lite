@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import {
+  deleteAdministrationUser,
   getRequestAuditContext,
   recordUserAuditEvent,
   updateAdministrationUser
@@ -80,6 +81,28 @@ export async function PATCH(request: Request, { params }: Props) {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to update user."
+    return NextResponse.json({ error: message }, { status: 400 })
+  }
+}
+
+export async function DELETE(_request: Request, { params }: Props) {
+  const actorUserId = await requireRole("sys_admin")
+  await ensurePlatformSchema()
+  const { userId } = await params
+
+  if (actorUserId === userId) {
+    return NextResponse.json(
+      { error: "You cannot delete your own account." },
+      { status: 400 }
+    )
+  }
+
+  try {
+    const deleted = await deleteAdministrationUser(userId)
+    return NextResponse.json({ ok: true, user: deleted })
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to delete user."
     return NextResponse.json({ error: message }, { status: 400 })
   }
 }

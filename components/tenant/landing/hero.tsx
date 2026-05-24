@@ -1,6 +1,6 @@
-import Image from "next/image";
-import { tenantAssets } from "@/lib/tenant/landing-data";
-import { SearchBar } from "./shared";
+import Image from "next/image"
+import { tenantAssets } from "@/lib/tenant/landing-data"
+import { SearchBar } from "./shared"
 
 export function TenantHero() {
   return (
@@ -39,5 +39,5 @@ export function TenantHero() {
         </div>
       </div>
     </section>
-  );
+  )
 }

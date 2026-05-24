@@ -1,11 +1,11 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 export interface UserAvatarProps {
-  name: string;
-  imageUrl?: string | null;
-  size?: "default" | "sm" | "lg";
-  className?: string;
-  fallbackClassName?: string;
+  name: string
+  imageUrl?: string | null
+  size?: "default" | "sm" | "lg"
+  className?: string
+  fallbackClassName?: string
 }
 
 export function getUserInitials(name: string) {
@@ -15,16 +15,16 @@ export function getUserInitials(name: string) {
     .slice(0, 2)
     .map((part) => part[0])
     .join("")
-    .toUpperCase();
+    .toUpperCase()
 
-  return initials || "?";
+  return initials || "?"
 }
 
 export function UserAvatar({
   name,
   imageUrl,
   size = "default",
-  className,
+  className
 }: UserAvatarProps) {
   return (
     <Avatar className={className} size={size}>
@@ -33,5 +33,5 @@ export function UserAvatar({
         Logo
       </AvatarFallback>
     </Avatar>
-  );
+  )
 }

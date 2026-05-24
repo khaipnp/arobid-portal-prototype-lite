@@ -1,11 +1,11 @@
-import { Flame } from "lucide-react";
-import Image from "next/image";
-import { voucherCards } from "@/lib/tenant/landing-data";
-import { OrangeButton, SectionShell } from "./shared";
-import { Button } from "@/components/ui/button";
+import { Flame } from "lucide-react"
+import Image from "next/image"
+import { Button } from "@/components/ui/button"
+import { voucherCards } from "@/lib/tenant/landing-data"
+import { OrangeButton, SectionShell } from "./shared"
 
 export function VoucherSection() {
-  const [featured, ...cards] = voucherCards;
+  const [featured, ...cards] = voucherCards
 
   return (
     <SectionShell className="bg-white">
@@ -51,5 +51,5 @@ export function VoucherSection() {
         </div>
       </div>
     </SectionShell>
-  );
+  )
 }

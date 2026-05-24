@@ -8,12 +8,24 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { useEffect, useState } from "react"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
 import {
@@ -21,6 +33,13 @@ import {
   InputGroupAddon,
   InputGroupInput
 } from "@/components/ui/input-group"
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious
+} from "@/components/ui/pagination"
 import {
   Select,
   SelectContent,
@@ -86,7 +105,13 @@ const TABLE_HEADERS: Record<EntityType, string[]> = {
   roles: ["Role", "Module", "Description"],
   features: ["Feature", "Module", "Description"],
   permissions: ["Permission", "Permission Code", "Description"],
-  users: ["Name", "Company", "Roles", "Status"]
+  users: ["Name", "Company", "Roles", "Status", "Actions"]
+}
+
+type RenderRowsOptions = {
+  pendingUserId: string | null
+  onUserDelete: (user: AdminUser) => void
+  onUserStatusToggle: (user: AdminUser) => void
 }
 
 function isPermissionRecord(value: EntityRecord): value is AdminPermission {
@@ -109,7 +134,23 @@ function isRecordWithDescription(
   return "description" in value
 }
 
-function renderRows(entity: EntityType, data: EntityRecord[]) {
+function getCompanyInitials(name: string | null) {
+  const initials = (name ?? "")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase()
+
+  return initials || "—"
+}
+
+function renderRows(
+  entity: EntityType,
+  data: EntityRecord[],
+  options: RenderRowsOptions
+) {
   if (entity === "modules") {
     return data.map((record) => {
       const moduleRecord = record as AdminModule
@@ -126,32 +167,81 @@ function renderRows(entity: EntityType, data: EntityRecord[]) {
   }
 
   if (entity === "users") {
-    return data.filter(isUserRecord).map((user) => (
-      <TableRow key={user.id}>
-        <TableCell>
-          <Link
-            aria-label={`View details for ${user.name}`}
-            className="flex w-fit items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-            href={`/admin/administration/users/${user.id}`}
-          >
-            <UserAvatar name={user.name} />
-            <div className="flex flex-col">
-              <span className="font-medium hover:underline">{user.name}</span>
-              <span className="text-muted-foreground text-xs">
-                {user.email}
-              </span>
+    return data.filter(isUserRecord).map((user) => {
+      const detailHref = `/admin/administration/users/${user.id}`
+      const statusActionLabel = user.isActive ? "Inactive" : "Active"
+      const statusPending = options.pendingUserId === user.id
+
+      return (
+        <TableRow key={user.id}>
+          <TableCell>
+            <Link
+              aria-label={`View details for ${user.name}`}
+              className="flex w-fit items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              href={detailHref}
+            >
+              <UserAvatar name={user.name} imageUrl={user.avatarUrl} />
+              <div className="flex flex-col">
+                <span className="font-medium hover:underline">{user.name}</span>
+                <span className="text-muted-foreground text-xs">
+                  {user.email}
+                </span>
+              </div>
+            </Link>
+          </TableCell>
+          <TableCell>
+            <div className="flex items-center gap-2">
+              <Avatar size="sm">
+                {user.companyLogoUrl ? (
+                  <AvatarImage
+                    src={user.companyLogoUrl}
+                    alt={`${user.companyName ?? "Company"} logo`}
+                  />
+                ) : null}
+                <AvatarFallback>
+                  {getCompanyInitials(user.companyName)}
+                </AvatarFallback>
+              </Avatar>
+              <span>{user.companyName ?? "—"}</span>
             </div>
-          </Link>
-        </TableCell>
-        <TableCell>{user.companyName ?? "—"}</TableCell>
-        <TableCell>{user.roleCount}</TableCell>
-        <TableCell>
-          <Badge variant={user.isActive ? "default" : "secondary"}>
-            {user.isActive ? "Active" : "Inactive"}
-          </Badge>
-        </TableCell>
-      </TableRow>
-    ))
+          </TableCell>
+          <TableCell>{user.roleCount}</TableCell>
+          <TableCell>
+            <Badge variant={user.isActive ? "default" : "secondary"}>
+              {user.isActive ? "Active" : "Inactive"}
+            </Badge>
+          </TableCell>
+          <TableCell className="text-right">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="icon-sm" variant="ghost" disabled={statusPending}>
+                  <MoreHorizontalIcon />
+                  <span className="sr-only">Open actions for {user.name}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuItem asChild>
+                  <Link href={detailHref}>View detail</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  disabled={statusPending}
+                  onSelect={() => options.onUserStatusToggle(user)}
+                >
+                  {statusPending ? "Updating..." : statusActionLabel}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  variant="destructive"
+                  onSelect={() => options.onUserDelete(user)}
+                >
+                  Delete user
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </TableCell>
+        </TableRow>
+      )
+    })
   }
 
   if (entity === "permissions") {
@@ -194,6 +284,10 @@ export function AdministrationListPage({
   const [searchInput, setSearchInput] = useState("")
   const [search, setSearch] = useState("")
   const [moduleFilter, setModuleFilter] = useState("all")
+  const [statusFilter, setStatusFilter] = useState("all")
+  const [pendingUserId, setPendingUserId] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null)
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null)
   const [loading, setLoading] = useState(!initialData)
   const [error, setError] = useState<string | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
@@ -220,6 +314,7 @@ export function AdministrationListPage({
           pageSize: String(PAGE_SIZE),
           search,
           moduleId: moduleFilter,
+          status: entity === "users" ? statusFilter : "all",
           refresh: String(refreshKey)
         })
         const response = await fetch(
@@ -258,7 +353,15 @@ export function AdministrationListPage({
       cancelled = true
       controller.abort()
     }
-  }, [entity, meta.page, moduleFilter, refreshKey, search, rows.length])
+  }, [
+    entity,
+    meta.page,
+    moduleFilter,
+    refreshKey,
+    search,
+    rows.length,
+    statusFilter
+  ])
 
   function handleSearchChange(value: string) {
     setSearchInput(value)
@@ -269,11 +372,86 @@ export function AdministrationListPage({
     setMeta((current) => ({ ...current, page: 1 }))
   }
 
+  function handleStatusFilterChange(value: string) {
+    setStatusFilter(value)
+    setMeta((current) => ({ ...current, page: 1 }))
+  }
+
+  async function handleUserStatusToggle(user: AdminUser) {
+    setPendingUserId(user.id)
+    setError(null)
+
+    try {
+      const response = await fetch(
+        `/api/admin/administration/users/${encodeURIComponent(user.id)}/status`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ isActive: !user.isActive })
+        }
+      )
+      if (!response.ok) {
+        throw new Error("Unable to update user status")
+      }
+      setRows((currentRows) =>
+        currentRows.map((row) =>
+          isUserRecord(row) && row.id === user.id
+            ? { ...row, isActive: !user.isActive }
+            : row
+        )
+      )
+      if (statusFilter !== "all") {
+        setRefreshKey((current) => current + 1)
+      }
+    } catch {
+      setError("Failed to update user status. Please try again.")
+    } finally {
+      setPendingUserId(null)
+    }
+  }
+
+  async function handleUserDelete() {
+    if (!deleteTarget) return
+    setDeletingUserId(deleteTarget.id)
+    setError(null)
+
+    try {
+      const response = await fetch(
+        `/api/admin/administration/users/${encodeURIComponent(deleteTarget.id)}`,
+        { method: "DELETE" }
+      )
+      if (!response.ok) {
+        const payload = (await response.json()) as { error?: string }
+        throw new Error(payload.error ?? "Unable to delete user")
+      }
+      setRows((currentRows) =>
+        currentRows.filter(
+          (row) => !isUserRecord(row) || row.id !== deleteTarget.id
+        )
+      )
+      setMeta((current) => ({
+        ...current,
+        totalItems: Math.max(0, current.totalItems - 1)
+      }))
+      setDeleteTarget(null)
+      setRefreshKey((current) => current + 1)
+    } catch (deleteError) {
+      setError(
+        deleteError instanceof Error
+          ? deleteError.message
+          : "Failed to delete user. Please try again."
+      )
+    } finally {
+      setDeletingUserId(null)
+    }
+  }
+
   function retry() {
     setRefreshKey((current) => current + 1)
   }
 
   const showTabs = entity !== "modules" && entity !== "users"
+  const showStatusFilter = entity === "users"
   const headers = TABLE_HEADERS[entity]
   const columnCount = headers.length
   const skeletonRowKeys = [
@@ -302,16 +480,33 @@ export function AdministrationListPage({
         ) : (
           <div />
         )}
-        <InputGroup className="w-full rounded-full md:w-xs">
-          <InputGroupInput
-            value={searchInput}
-            placeholder={`Search ${TITLES[entity].toLowerCase()}...`}
-            onChange={(event) => handleSearchChange(event.target.value)}
-          />
-          <InputGroupAddon>
-            <SearchIcon />
-          </InputGroupAddon>
-        </InputGroup>
+        <div className="flex w-full flex-wrap items-center gap-2 md:w-auto">
+          <InputGroup className="w-full rounded-full md:w-xs">
+            <InputGroupInput
+              value={searchInput}
+              placeholder={`Search ${TITLES[entity].toLowerCase()}...`}
+              onChange={(event) => handleSearchChange(event.target.value)}
+            />
+            <InputGroupAddon>
+              <SearchIcon />
+            </InputGroupAddon>
+          </InputGroup>
+          {showStatusFilter && (
+            <Select
+              value={statusFilter}
+              onValueChange={handleStatusFilterChange}
+            >
+              <SelectTrigger className="w-full rounded-full md:w-36">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All status</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+        </div>
       </div>
 
       {error ? (
@@ -354,42 +549,102 @@ export function AdministrationListPage({
                   </TableCell>
                 </TableRow>
               ) : (
-                renderRows(entity, rows)
+                renderRows(entity, rows, {
+                  pendingUserId,
+                  onUserDelete: setDeleteTarget,
+                  onUserStatusToggle: handleUserStatusToggle
+                })
               )}
             </TableBody>
           </Table>
         </div>
       )}
 
-      <div className="flex items-center justify-between text-muted-foreground text-sm">
+      <AlertDialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => {
+          if (!open && !deletingUserId) setDeleteTarget(null)
+        }}
+      >
+        <AlertDialogContent size="sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete user?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete {deleteTarget?.name ?? "this user"}{" "}
+              and related access records. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={Boolean(deletingUserId)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              disabled={Boolean(deletingUserId)}
+              onClick={(event) => {
+                event.preventDefault()
+                void handleUserDelete()
+              }}
+            >
+              {deletingUserId ? "Deleting..." : "Delete user"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <div className="flex flex-wrap items-center justify-between gap-3 text-muted-foreground text-sm">
         <span>
           {meta.totalItems} item{meta.totalItems === 1 ? "" : "s"} total
         </span>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={meta.page <= 1 || loading}
-            onClick={() =>
-              setMeta((current) => ({ ...current, page: current.page - 1 }))
-            }
-          >
-            Previous
-          </Button>
-          <span>
-            {meta.page} / {meta.totalPages}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={meta.page >= meta.totalPages || loading}
-            onClick={() =>
-              setMeta((current) => ({ ...current, page: current.page + 1 }))
-            }
-          >
-            Next
-          </Button>
-        </div>
+        <Pagination className="mx-0 w-auto">
+          <PaginationContent>
+            <PaginationItem>
+              <PaginationPrevious
+                href="#"
+                text="Previous"
+                onClick={(event) => {
+                  event.preventDefault()
+                  if (meta.page > 1 && !loading) {
+                    setMeta((current) => ({
+                      ...current,
+                      page: current.page - 1
+                    }))
+                  }
+                }}
+                className={
+                  meta.page <= 1 || loading
+                    ? "pointer-events-none opacity-50"
+                    : ""
+                }
+              />
+            </PaginationItem>
+            <PaginationItem>
+              <span className="flex h-9 items-center px-2">
+                {meta.page} / {meta.totalPages}
+              </span>
+            </PaginationItem>
+            <PaginationItem>
+              <PaginationNext
+                href="#"
+                text="Next"
+                onClick={(event) => {
+                  event.preventDefault()
+                  if (meta.page < meta.totalPages && !loading) {
+                    setMeta((current) => ({
+                      ...current,
+                      page: current.page + 1
+                    }))
+                  }
+                }}
+                className={
+                  meta.page >= meta.totalPages || loading
+                    ? "pointer-events-none opacity-50"
+                    : ""
+                }
+              />
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
       </div>
     </div>
   )

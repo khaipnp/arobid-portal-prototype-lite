@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"
 
 export function Partners() {
   const strategic = [
@@ -11,8 +11,8 @@ export function Partners() {
     "HMEA",
     "VIFSA",
     "WISA",
-    "KORETOVIET",
-  ];
+    "KORETOVIET"
+  ]
   const alliance = [
     "ACCG",
     "OCEAN USA",
@@ -23,8 +23,8 @@ export function Partners() {
     "Kocham",
     "High West",
     "Jardin",
-    "Bamboo",
-  ];
+    "Bamboo"
+  ]
 
   return (
     <section className="bg-white px-5 py-16 text-center">
@@ -41,13 +41,13 @@ export function Partners() {
       <div className="mt-6 flex gap-10 overflow-hidden">
         {[
           ...alliance.map((name) => `first-${name}`),
-          ...alliance.map((name) => `second-${name}`),
+          ...alliance.map((name) => `second-${name}`)
         ].map((id) => (
           <LogoTile key={id} name={id.replace(/^(first|second)-/, "")} small />
         ))}
       </div>
     </section>
-  );
+  )
 }
 
 function LogoTile({ name, small = false }: { name: string; small?: boolean }) {
@@ -55,10 +55,10 @@ function LogoTile({ name, small = false }: { name: string; small?: boolean }) {
     <div
       className={cn(
         "grid place-items-center rounded-lg bg-white font-bold shadow-sm",
-        small ? "size-16 text-[11px]" : "size-20 text-sm",
+        small ? "size-16 text-[11px]" : "size-20 text-sm"
       )}
     >
       <span className="text-legend">{name}</span>
     </div>
-  );
+  )
 }

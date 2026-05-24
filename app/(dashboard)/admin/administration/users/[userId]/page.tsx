@@ -88,7 +88,11 @@ export default async function AdminUserDetailPage({
         <Card>
           <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-4">
-              <UserAvatar name={user.name} className="h-16 w-16 text-lg" />
+              <UserAvatar
+                name={user.name}
+                imageUrl={user.avatarUrl}
+                className="h-16 w-16 text-lg"
+              />
               <div className="space-y-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h1 className="font-semibold text-2xl tracking-tight">
@@ -115,9 +119,6 @@ export default async function AdminUserDetailPage({
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle>Profile</CardTitle>
-              <CardDescription>
-                Core account and organization data.
-              </CardDescription>
             </CardHeader>
             <CardContent>
               <UserDetailForm user={user} />

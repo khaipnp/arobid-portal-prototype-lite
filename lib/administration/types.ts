@@ -37,7 +37,9 @@ export interface AdminUser {
   id: string
   name: string
   email: string
+  avatarUrl: string | null
   companyName: string | null
+  companyLogoUrl: string | null
   roleCount: number
   isActive: boolean
 }

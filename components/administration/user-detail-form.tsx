@@ -1,16 +1,33 @@
-"use client"
+"use client";
 
-import { ImagePlusIcon, RefreshCwIcon, Trash2Icon } from "lucide-react"
-import Image from "next/image"
-import { useRouter } from "next/navigation"
-import * as React from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Spinner } from "@/components/ui/spinner"
-import { Switch } from "@/components/ui/switch"
-import { useUpload } from "@/hooks/use-upload"
-import type { AdministrationUserDetail } from "@/lib/administration/user-detail"
+import { ImagePlusIcon, RefreshCwIcon, Trash2Icon } from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import * as React from "react";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Spinner } from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
+import { useUpload } from "@/hooks/use-upload";
+import type { AdministrationUserDetail } from "@/lib/administration/user-detail";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "../ui/input-group";
 
 type EditableUserFields = Pick<
   AdministrationUserDetail,
@@ -25,46 +42,47 @@ type EditableUserFields = Pick<
   | "location"
   | "avatarUrl"
   | "isActive"
->
+>;
 
 export function UserDetailForm({ user }: { user: EditableUserFields }) {
-  const router = useRouter()
-  const [userId, setUserId] = React.useState(user.id)
-  const [name, setName] = React.useState(user.name)
-  const [email, setEmail] = React.useState(user.email)
-  const [companyId, setCompanyId] = React.useState(user.companyId ?? "")
-  const [companyName, setCompanyName] = React.useState(user.companyName ?? "")
-  const [jobTitle, setJobTitle] = React.useState(user.jobTitle ?? "")
-  const [phone, setPhone] = React.useState(user.phone ?? "")
-  const [website, setWebsite] = React.useState(user.website ?? "")
-  const [location, setLocation] = React.useState(user.location ?? "")
-  const [avatarUrl, setAvatarUrl] = React.useState(user.avatarUrl ?? "")
-  const [isActive, setIsActive] = React.useState(user.isActive)
-  const { uploadFile, isUploading } = useUpload()
-  const avatarInputRef = React.useRef<HTMLInputElement>(null)
-  const [submitting, setSubmitting] = React.useState(false)
+  const router = useRouter();
+  const [userId, setUserId] = React.useState(user.id);
+  const [name, setName] = React.useState(user.name);
+  const [email, setEmail] = React.useState(user.email);
+  const [companyId, setCompanyId] = React.useState(user.companyId ?? "");
+  const [companyName, setCompanyName] = React.useState(user.companyName ?? "");
+  const [jobTitle, setJobTitle] = React.useState(user.jobTitle ?? "");
+  const [phone, setPhone] = React.useState(user.phone ?? "");
+  const [website, setWebsite] = React.useState(user.website ?? "");
+  const [location, setLocation] = React.useState(user.location ?? "");
+  const [avatarUrl, setAvatarUrl] = React.useState(user.avatarUrl ?? "");
+  const [isActive, setIsActive] = React.useState(user.isActive);
+  const { uploadFile, isUploading } = useUpload();
+  const avatarInputRef = React.useRef<HTMLInputElement>(null);
+  const [submitting, setSubmitting] = React.useState(false);
+  const [deleting, setDeleting] = React.useState(false);
   const [notice, setNotice] = React.useState<{
-    type: "success" | "error"
-    text: string
-  } | null>(null)
+    type: "success" | "error";
+    text: string;
+  } | null>(null);
 
   async function handleAvatarFileChange(
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) {
-    const file = event.target.files?.[0]
-    if (!file) return
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-    const result = await uploadFile(file, "avatar")
+    const result = await uploadFile(file, "avatar");
     if (result) {
-      setAvatarUrl(result.fileUrl)
+      setAvatarUrl(result.fileUrl);
     }
-    event.target.value = ""
+    event.target.value = "";
   }
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setSubmitting(true)
-    setNotice(null)
+    event.preventDefault();
+    setSubmitting(true);
+    setNotice(null);
 
     try {
       const response = await fetch(
@@ -83,33 +101,54 @@ export function UserDetailForm({ user }: { user: EditableUserFields }) {
             website,
             location,
             avatarUrl,
-            isActive
-          })
-        }
-      )
+            isActive,
+          }),
+        },
+      );
       const payload = (await response.json()) as {
-        ok?: boolean
-        user?: { id: string }
-        error?: string
-      }
+        ok?: boolean;
+        user?: { id: string };
+        error?: string;
+      };
       if (!response.ok) {
-        setNotice({
-          type: "error",
-          text: payload.error ?? "Could not save user."
-        })
-        return
+        toast.error(payload.error ?? "Could not save user.");
+        return;
       }
 
-      const nextUserId = payload.user?.id ?? userId
-      setNotice({ type: "success", text: "User detail saved." })
+      const nextUserId = payload.user?.id ?? userId;
+      toast.success("User detail saved.");
       if (nextUserId !== user.id) {
-        router.replace(`/admin/administration/users/${nextUserId}`)
+        router.replace(`/admin/administration/users/${nextUserId}`);
       }
-      router.refresh()
+      router.refresh();
     } catch {
-      setNotice({ type: "error", text: "Network error. Please try again." })
+      toast.error("Network error. Please try again.");
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
+    }
+  }
+
+  async function handleDelete() {
+    setDeleting(true);
+
+    try {
+      const response = await fetch(
+        `/api/admin/administration/users/${encodeURIComponent(user.id)}`,
+        { method: "DELETE" },
+      );
+      const payload = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        toast.error(payload.error ?? "Could not delete user.");
+        return;
+      }
+
+      toast.success("User deleted.");
+      router.replace("/admin/administration/users");
+      router.refresh();
+    } catch {
+      toast.error("Network error. Please try again.");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -117,25 +156,25 @@ export function UserDetailForm({ user }: { user: EditableUserFields }) {
     <form className="space-y-5" onSubmit={onSubmit}>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2 sm:col-span-2">
-          <div className="flex items-center justify-between gap-2">
-            <Label htmlFor="admin-user-id">User ID</Label>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setUserId(crypto.randomUUID())}
-            >
-              <RefreshCwIcon className="mr-1 size-3.5" />
-              Generate
-            </Button>
-          </div>
-          <Input
-            id="admin-user-id"
-            value={userId}
-            onChange={(event) => setUserId(event.target.value)}
-            className="font-mono text-xs"
-            required
-          />
+          <Label htmlFor="admin-user-id">User ID</Label>
+          <InputGroup>
+            <InputGroupInput
+              id="admin-user-id"
+              value={userId}
+              onChange={(event) => setUserId(event.target.value)}
+              className="font-mono text-xs"
+              required
+            />
+            <InputGroupAddon align="inline-end">
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => setUserId(crypto.randomUUID())}
+              >
+                <RefreshCwIcon />
+              </Button>
+            </InputGroupAddon>
+          </InputGroup>
         </div>
 
         <TextField
@@ -228,7 +267,7 @@ export function UserDetailForm({ user }: { user: EditableUserFields }) {
                   onClick={() => setAvatarUrl("")}
                   disabled={isUploading}
                 >
-                  <Trash2Icon className="mr-1 size-4" />
+                  <Trash2Icon className="size-4" />
                   Remove
                 </Button>
               ) : null}
@@ -240,9 +279,6 @@ export function UserDetailForm({ user }: { user: EditableUserFields }) {
                 onChange={handleAvatarFileChange}
                 disabled={isUploading}
               />
-              <p className="basis-full text-muted-foreground text-xs">
-                Images upload to R2 and save as this user's avatar URL.
-              </p>
             </div>
           </div>
         </div>
@@ -274,13 +310,42 @@ export function UserDetailForm({ user }: { user: EditableUserFields }) {
         </p>
       ) : null}
 
-      <div className="flex justify-end">
+      <div className="flex flex-wrap justify-between gap-2">
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button type="button" variant="destructive" disabled={deleting}>
+              Delete user
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent size="sm">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete user?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete {user.name} and related access
+                records. This action cannot be undone.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                variant="destructive"
+                disabled={deleting}
+                onClick={(event) => {
+                  event.preventDefault();
+                  void handleDelete();
+                }}
+              >
+                {deleting ? "Deleting..." : "Delete user"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
         <Button type="submit" disabled={submitting}>
           {submitting ? "Saving..." : "Save changes"}
         </Button>
       </div>
     </form>
-  )
+  );
 }
 
 function TextField({
@@ -289,14 +354,14 @@ function TextField({
   value,
   onChange,
   type = "text",
-  required = false
+  required = false,
 }: {
-  id: string
-  label: string
-  value: string
-  onChange: (value: string) => void
-  type?: string
-  required?: boolean
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+  required?: boolean;
 }) {
   return (
     <div className="space-y-2">
@@ -309,5 +374,5 @@ function TextField({
         required={required}
       />
     </div>
-  )
+  );
 }
