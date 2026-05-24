@@ -33,6 +33,15 @@ export interface AdminPermission {
   action: string
 }
 
+export interface AdminUser {
+  id: string
+  name: string
+  email: string
+  companyName: string | null
+  roleCount: number
+  isActive: boolean
+}
+
 export interface PaginationMeta {
   page: number
   pageSize: number

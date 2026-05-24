@@ -30,7 +30,7 @@ export const plans: Plan[] = [
   {
     name: "Basic",
     image: "booth-basic.jpg",
-    price: "VND 8.000.000",
+    price: "VND 12.000.000",
     description:
       "Ideal for businesses establishing a professional digital presence to connect with global partners.",
     features: [
@@ -47,7 +47,6 @@ export const plans: Plan[] = [
     name: "Professional",
     image: "booth-pro.jpg",
     price: "VND 20.000.000",
-    featured: true,
     description:
       "Designed for businesses transforming their virtual booth into a powerful marketing engine to attract high-value partners.",
     features: [

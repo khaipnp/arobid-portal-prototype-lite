@@ -13,7 +13,8 @@ export async function GET(
     entity !== "modules" &&
     entity !== "roles" &&
     entity !== "features" &&
-    entity !== "permissions"
+    entity !== "permissions" &&
+    entity !== "users"
   ) {
     return NextResponse.json({ error: "Entity not found." }, { status: 404 })
   }

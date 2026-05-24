@@ -13,13 +13,11 @@ export default async function ExpoListPage() {
   return (
     <DashboardShell
       title="Expo Management"
-      description="View, filter, and manage all Expos on the platform."
       breadcrumbs={[
         { label: "Admin", href: "/admin" },
         { label: "TradeXpo", href: "/admin/tradexpo" },
         { label: "Expo List" }
       ]}
-      showBackButton
     >
       <ExpoListManager
         initialExpos={initialExpos}

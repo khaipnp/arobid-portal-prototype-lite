@@ -11,7 +11,6 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -21,6 +20,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
+import { UserAvatar } from "@/components/user-avatar"
 
 interface UserMenuProps {
   user: {
@@ -55,12 +55,7 @@ export function UserMenu({ user }: UserMenuProps) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
-          <Avatar className="h-10 w-10">
-            <AvatarImage src="/avatar.webp" alt={user.name} />
-            <AvatarFallback>
-              {user.name.slice(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <UserAvatar name={user.name} className="h-10 w-10" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent

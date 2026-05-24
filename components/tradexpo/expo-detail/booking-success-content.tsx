@@ -203,7 +203,7 @@ export function BookingSuccessContent({
 
         {/* Action Buttons */}
         <div className="flex w-full max-w-lg flex-col gap-4 sm:flex-row">
-          <Link href={`/expos/${expoSlug}`} className="flex-1">
+          <Link href={`/tradexpo/expos/${expoSlug}`} className="flex-1">
             <Button variant="outline" size="lg" className="w-full">
               Back to Expo
             </Button>

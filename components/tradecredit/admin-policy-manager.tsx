@@ -83,14 +83,17 @@ export function TradeCreditPolicyManager({
     setError(null)
     setMessage(null)
     try {
-      const response = await fetch(`/api/tradecredit/policy/rules/${rule.ruleId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          isEnabled: rule.isEnabled,
-          creditQuantity: rule.creditQuantity
-        })
-      })
+      const response = await fetch(
+        `/api/tradecredit/policy/rules/${rule.ruleId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            isEnabled: rule.isEnabled,
+            creditQuantity: rule.creditQuantity
+          })
+        }
+      )
       const payload = (await response.json()) as {
         rule?: CreditRule
         error?: string
@@ -133,9 +136,7 @@ export function TradeCreditPolicyManager({
       setValuationForm((current) => ({ ...current, reasonNote: "" }))
       router.refresh()
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Unable to save valuation."
-      )
+      setError(err instanceof Error ? err.message : "Unable to save valuation.")
     } finally {
       setValuationSaving(false)
     }
@@ -167,7 +168,8 @@ export function TradeCreditPolicyManager({
           <CardHeader>
             <CardTitle>Credit Valuation</CardTitle>
             <CardDescription>
-              Active burn-time value: {vnd.format(activeValuation.creditValueVnd)} per credit.
+              Active burn-time value:{" "}
+              {vnd.format(activeValuation.creditValueVnd)} per credit.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -239,7 +241,8 @@ export function TradeCreditPolicyManager({
           <CardHeader>
             <CardTitle>Valuation History</CardTitle>
             <CardDescription>
-              Changing valuation does not rewrite balances or old earn ledger entries.
+              Changing valuation does not rewrite balances or old earn ledger
+              entries.
             </CardDescription>
           </CardHeader>
           <CardContent>

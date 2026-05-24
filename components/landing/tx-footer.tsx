@@ -54,12 +54,7 @@ export function TxFooter() {
             className="h-8 w-fit cursor-pointer"
           />
           <span className="ml-4 font-semibold text-sm">Payment</span>
-          <Image
-            src="/landing/vnpay.svg"
-            alt="VNPAY logo"
-            width={40}
-            height={40}
-          />
+          <span className="font-bold text-[#005baa] text-sm">VNPAY</span>
         </div>
         <div className="mt-4 space-y-1 text-center text-[#6b7280] text-xs">
           <p>B2B Marketplace | TradeXpo | Goods for Good | AroUni</p>

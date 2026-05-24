@@ -19,6 +19,7 @@ type ExhibitorCardProps = {
   expoId: string
   exhibitor: ExpoDetailExhibitor
   isAuthenticated?: boolean
+  onAuthRequired?: () => void
   onChatClick?: (
     product?: {
       id: string
@@ -76,6 +77,7 @@ export function ExhibitorCard({
   expoId,
   exhibitor,
   isAuthenticated = false,
+  onAuthRequired,
   onChatClick
 }: ExhibitorCardProps) {
   const [selectedProduct, setSelectedProduct] = useState<{
@@ -211,6 +213,7 @@ export function ExhibitorCard({
         selectedProduct={selectedProduct}
         onSelectedProductChange={setSelectedProduct}
         isAuthenticated={isAuthenticated}
+        onAuthRequired={onAuthRequired}
         onChatNow={(product) => {
           trackExpoAnalytics("/api/tradexpo/analytics/product-chat", {
             expoId,

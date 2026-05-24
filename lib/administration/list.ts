@@ -3,6 +3,7 @@ import type {
   AdminModule,
   AdminPermission,
   AdminRole,
+  AdminUser,
   ListResponse
 } from "@/lib/administration/types"
 import { sql } from "@/lib/db/neon"
@@ -12,12 +13,14 @@ export type AdministrationEntity =
   | "roles"
   | "features"
   | "permissions"
+  | "users"
 
 export type AdministrationRecord =
   | AdminModule
   | AdminRole
   | AdminFeature
   | AdminPermission
+  | AdminUser
 
 type CountRow = { count: number }
 
@@ -194,6 +197,53 @@ export async function getAdministrationList(input: {
       order by name asc
       limit ${pageSize} offset ${start}
     `) as AdminModule[]
+
+    return {
+      data: records,
+      meta: {
+        page: safePage,
+        pageSize,
+        totalItems,
+        totalPages
+      }
+    }
+  }
+
+  if (input.entity === "users") {
+    const countRows = (await sql`
+      select count(*)::int as count
+      from users app_user
+      left join companies company on company.id = app_user.company_id
+      where lower(app_user.name) like ${searchPattern}
+        or lower(app_user.email) like ${searchPattern}
+        or lower(coalesce(company.name, '')) like ${searchPattern}
+    `) as CountRow[]
+    totalItems = Number(countRows[0]?.count ?? 0)
+    const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
+    const safePage = Math.min(page, totalPages)
+    const start = (safePage - 1) * pageSize
+
+    records = (await sql`
+      select
+        app_user.id,
+        app_user.name,
+        app_user.email,
+        company.name as "companyName",
+        coalesce(role_counts.role_count, 0)::int as "roleCount",
+        app_user.is_active as "isActive"
+      from users app_user
+      left join companies company on company.id = app_user.company_id
+      left join (
+        select user_id, count(*)::int as role_count
+        from user_roles
+        group by user_id
+      ) role_counts on role_counts.user_id = app_user.id
+      where lower(app_user.name) like ${searchPattern}
+        or lower(app_user.email) like ${searchPattern}
+        or lower(coalesce(company.name, '')) like ${searchPattern}
+      order by app_user.name asc, app_user.email asc
+      limit ${pageSize} offset ${start}
+    `) as AdminUser[]
 
     return {
       data: records,

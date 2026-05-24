@@ -19,6 +19,14 @@ const nextConfig = {
         hostname: r2PublicHostname
       }
     ].filter((pattern) => pattern.hostname !== "")
+  },
+  async rewrites() {
+    return [
+      {
+        source: "/tradexpo/expos/:path*",
+        destination: "/expos/:path*"
+      }
+    ]
   }
 }
 

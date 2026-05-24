@@ -1,7 +1,9 @@
 "use client"
 
 import { AlertCircleIcon, RefreshCwIcon, SearchIcon } from "lucide-react"
+import Link from "next/link"
 import { useEffect, useState } from "react"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   InputGroup,
@@ -18,17 +20,24 @@ import {
   TableRow
 } from "@/components/ui/table"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { UserAvatar } from "@/components/user-avatar"
 import type {
   AdminFeature,
   AdminModule,
   AdminPermission,
   AdminRole,
+  AdminUser,
   ListResponse,
   PaginationMeta
 } from "@/lib/administration/types"
 
-type EntityType = "modules" | "roles" | "features" | "permissions"
-type EntityRecord = AdminModule | AdminRole | AdminFeature | AdminPermission
+type EntityType = "modules" | "roles" | "features" | "permissions" | "users"
+type EntityRecord =
+  | AdminModule
+  | AdminRole
+  | AdminFeature
+  | AdminPermission
+  | AdminUser
 
 const PAGE_SIZE = 20
 
@@ -42,25 +51,32 @@ const TITLES: Record<EntityType, string> = {
   modules: "Modules",
   roles: "Roles",
   features: "Features",
-  permissions: "Permissions"
+  permissions: "Permissions",
+  users: "Users"
 }
 
 const EMPTY_COPY: Record<EntityType, string> = {
   modules: "No modules found.",
   roles: "No roles found.",
   features: "No features found.",
-  permissions: "No permissions found."
+  permissions: "No permissions found.",
+  users: "No users found."
 }
 
 const TABLE_HEADERS: Record<EntityType, string[]> = {
   modules: ["Module", "Code", "Description"],
   roles: ["Role", "Module", "Description"],
   features: ["Feature", "Module", "Description"],
-  permissions: ["Permission", "Permission Code", "Description"]
+  permissions: ["Permission", "Permission Code", "Description"],
+  users: ["Name", "Company", "Roles", "Status"]
 }
 
 function isPermissionRecord(value: EntityRecord): value is AdminPermission {
   return "action" in value
+}
+
+function isUserRecord(value: EntityRecord): value is AdminUser {
+  return "email" in value && "isActive" in value
 }
 
 function isRecordWithModuleName(
@@ -81,25 +97,52 @@ function renderRows(entity: EntityType, data: EntityRecord[]) {
       const moduleRecord = record as AdminModule
       return (
         <TableRow key={moduleRecord.id}>
-          <TableCell className="font-medium">{moduleRecord.name}</TableCell>
+          <TableCell>{moduleRecord.name}</TableCell>
           <TableCell className="font-mono text-xs">
             {moduleRecord.code}
           </TableCell>
-          <TableCell className="text-muted-foreground">
-            {moduleRecord.description}
-          </TableCell>
+          <TableCell>{moduleRecord.description}</TableCell>
         </TableRow>
       )
     })
+  }
+
+  if (entity === "users") {
+    return data.filter(isUserRecord).map((user) => (
+      <TableRow key={user.id}>
+        <TableCell>
+          <Link
+            aria-label={`View details for ${user.name}`}
+            className="flex w-fit items-center gap-2 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            href={`/admin/administration/users/${user.id}`}
+          >
+            <UserAvatar name={user.name} />
+            <div className="flex flex-col">
+              <span className="font-medium hover:underline">{user.name}</span>
+              <span className="text-muted-foreground text-xs">
+                {user.email}
+              </span>
+            </div>
+          </Link>
+        </TableCell>
+        <TableCell>{user.companyName ?? "—"}</TableCell>
+        <TableCell>{user.roleCount}</TableCell>
+        <TableCell>
+          <Badge variant={user.isActive ? "default" : "secondary"}>
+            {user.isActive ? "Active" : "Inactive"}
+          </Badge>
+        </TableCell>
+      </TableRow>
+    ))
   }
 
   if (entity === "permissions") {
     const permissionRecords = data.filter(isPermissionRecord)
     return permissionRecords.map((permission) => (
       <TableRow key={permission.id}>
-        <TableCell className="font-medium">{permission.name}</TableCell>
+        <TableCell>{permission.name}</TableCell>
         <TableCell className="font-mono text-xs">{permission.id}</TableCell>
-        <TableCell className="text-muted-foreground">
+        <TableCell>
           {`${permission.roleName} can ${permission.action} ${permission.featureName} in ${permission.moduleName}.`}
         </TableCell>
       </TableRow>
@@ -111,11 +154,9 @@ function renderRows(entity: EntityType, data: EntityRecord[]) {
     .filter(isRecordWithDescription)
   return records.map((record) => (
     <TableRow key={record.id}>
-      <TableCell className="font-medium">{record.name}</TableCell>
+      <TableCell>{record.name}</TableCell>
       <TableCell>{record.moduleName}</TableCell>
-      <TableCell className="text-muted-foreground">
-        {record.description}
-      </TableCell>
+      <TableCell>{record.description}</TableCell>
     </TableRow>
   ))
 }
@@ -214,7 +255,7 @@ export function AdministrationListPage({
     setRefreshKey((current) => current + 1)
   }
 
-  const showTabs = entity !== "modules"
+  const showTabs = entity !== "modules" && entity !== "users"
   const headers = TABLE_HEADERS[entity]
   const columnCount = headers.length
   const skeletonRowKeys = [
@@ -243,7 +284,7 @@ export function AdministrationListPage({
         ) : (
           <div />
         )}
-        <InputGroup className="w-full md:w-xs">
+        <InputGroup className="w-full rounded-full md:w-xs">
           <InputGroupInput
             value={searchInput}
             placeholder={`Search ${TITLES[entity].toLowerCase()}...`}
@@ -264,7 +305,7 @@ export function AdministrationListPage({
           </Button>
         </div>
       ) : (
-        <div className="rounded-lg border">
+        <div className="overflow-hidden rounded-2xl border">
           <Table>
             <TableHeader>
               <TableRow>

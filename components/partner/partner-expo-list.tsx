@@ -6,20 +6,16 @@ import {
   ChevronRightIcon,
   EyeIcon,
   FileTextIcon,
-  InfoIcon,
   LayoutDashboardIcon,
   LockIcon,
   MessageSquareIcon,
   RadioIcon,
   SearchIcon,
-  ShieldCheckIcon,
-  XIcon,
-  ZapIcon
+  XIcon
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import * as React from "react"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardDescription, CardTitle } from "@/components/ui/card"
 import {
@@ -92,7 +88,7 @@ const MEMBERSHIP_ROLE_LABELS: Record<PartnerMembershipRole, string> = {
   viewer: "Viewer"
 }
 
-const CAPABILITY_LABELS: Record<PartnerCapability, string> = {
+const _CAPABILITY_LABELS: Record<PartnerCapability, string> = {
   view_dashboard: "View Dashboard",
   manage_golive: "Manage GoLIVE",
   manage_exhibitors: "Manage Exhibitors",
@@ -223,7 +219,7 @@ export function PartnerExpoList({
                 <div
                   key={expo.id}
                   className={cn(
-                    "overflow-hidden transition-all duration-200 border rounded-2xl",
+                    "overflow-hidden rounded-2xl border transition-all duration-200",
                     isExpanded ? "ring-1 ring-primary/50" : "hover:shadow-sm"
                   )}
                 >

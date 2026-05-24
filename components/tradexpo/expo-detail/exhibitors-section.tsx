@@ -198,6 +198,10 @@ export function ExhibitorsSection({
               expoId={expoId}
               exhibitor={exhibitor}
               isAuthenticated={isAuthenticated}
+              onAuthRequired={() => {
+                setQuickLoginData({ fullName: "", email: "" })
+                setShowAuthDialog(true)
+              }}
               onChatClick={(product) => handleChatClick(exhibitor, product)}
             />
           ))}

@@ -167,6 +167,7 @@ export function Hero({ expos }: HeroProps) {
                   )}
                   alt=""
                   fill
+                  sizes="224px"
                   className="object-cover"
                 />
               </div>

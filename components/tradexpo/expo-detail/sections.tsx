@@ -415,7 +415,7 @@ export function BoothTier({
       router.push(loginUrl)
       return
     }
-    router.push(`/expos/${slug}/booking?tier=${activeTier.id}`)
+    router.push(`/tradexpo/expos/${slug}/booking?tier=${activeTier.id}`)
   }
 
   return (

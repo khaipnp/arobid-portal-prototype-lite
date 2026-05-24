@@ -228,11 +228,17 @@ export function ExpoListManager({
           method: "DELETE"
         })
         if (!response.ok) {
-          setNotice({ type: "error", text: `Failed to delete "${expo.name}".` })
+          setNotice({
+            type: "error",
+            text: `Failed to delete "${expo.name}".`
+          })
           return
         }
         setExpos((prev) => prev.filter((e) => e.id !== expo.id))
-        setNotice({ type: "success", text: `"${expo.name}" has been deleted.` })
+        setNotice({
+          type: "success",
+          text: `"${expo.name}" has been deleted.`
+        })
       } else if (type === "approve") {
         const response = await fetch(`/api/tradexpo/expos/${expo.id}`, {
           method: "PATCH",
@@ -294,7 +300,7 @@ export function ExpoListManager({
   }, [confirmAction])
 
   return (
-    <div className="grid gap-4 px-4">
+    <div className="grid gap-4">
       <section>
         <div className="flex items-center justify-between gap-3">
           <div className="flex w-full flex-col gap-3 md:flex-row md:items-center">
@@ -432,11 +438,11 @@ export function ExpoListManager({
           </p>
         )}
 
-        <div className="mt-4 rounded-lg border">
+        <div className="mt-4 overflow-hidden rounded-2xl border">
           <Table>
-            <TableHeader className="bg-muted/40">
+            <TableHeader>
               <TableRow>
-                <TableHead className="w-16">Thumbnail</TableHead>
+                <TableHead className="w-20">Thumbnail</TableHead>
                 <TableHead>Expo Name</TableHead>
                 <TableHead>Owner</TableHead>
                 <TableHead className="whitespace-nowrap">Duration</TableHead>
@@ -458,13 +464,15 @@ export function ExpoListManager({
                 pagedExpos.map((expo) => (
                   <TableRow key={expo.id}>
                     <TableCell>
-                      <Image
-                        src={getAssetUrl(expo.thumbnailUrl, expo.id, 64, 48)}
-                        alt={expo.name}
-                        width={64}
-                        height={48}
-                        className="rounded-md border object-cover"
-                      />
+                      <Link href={`/admin/tradexpo/expos/${expo.id}`}>
+                        <Image
+                          src={getAssetUrl(expo.thumbnailUrl, expo.id, 64, 48)}
+                          alt={expo.name}
+                          width={256}
+                          height={256}
+                          className="aspect-2/1 w-28 rounded-md border object-cover"
+                        />
+                      </Link>
                     </TableCell>
                     <TableCell>
                       <Link

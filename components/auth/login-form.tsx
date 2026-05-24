@@ -153,20 +153,16 @@ function DemoAccountPicker({
       <p className="select-none font-medium text-foreground">Demo accounts</p>
       <div className="grid grid-cols-2 gap-2">
         {DEMO_ACCOUNTS.map((account) => (
-          <button
+          <Button
             key={account.email}
-            type="button"
             disabled={disabled}
             onClick={() => onSelect(account)}
-            className="cursor-pointer rounded-lg border border-[#e5e7eb] bg-white px-3 py-2 text-left transition hover:border-legend hover:bg-legend-50 disabled:pointer-events-none disabled:opacity-60"
+            variant="outline"
+            size="sm"
+            className="rounded-full"
           >
-            <span className="block font-medium text-foreground text-sm">
-              {account.label}
-            </span>
-            <span className="block truncate text-muted-foreground text-xs">
-              {account.email}
-            </span>
-          </button>
+            {account.label}
+          </Button>
         ))}
       </div>
     </div>
@@ -239,7 +235,7 @@ function LoginPanel() {
         </p>
       </div>
 
-      <form className="mt-10 space-y-6" onSubmit={onSubmit}>
+      <form className="mt-10 space-y-3" onSubmit={onSubmit}>
         <LoginTextField
           id="email"
           label="Email Address"
@@ -281,13 +277,13 @@ function LoginPanel() {
 
         <TermsRow />
 
-        {error ? <p className="text-red-600 text-sm">{error}</p> : null}
+        {error ? <p className="text-destructive text-sm">{error}</p> : null}
 
         <Button
           type="submit"
           size="lg"
           disabled={isSubmitting}
-          className="w-full bg-legend hover:bg-legend-600"
+          className="w-full"
         >
           {isSubmitting ? "Signing in..." : "Sign In"}
         </Button>

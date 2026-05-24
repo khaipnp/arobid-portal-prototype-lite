@@ -39,6 +39,21 @@ export type ExpoDetailExhibitor = {
   isWishlisted?: boolean
 }
 
+export type ExpoDetailProduct = {
+  id: string
+  name: string
+  description: string
+  imageUrl?: string
+  exhibitorId: string
+  exhibitorName: string
+  exhibitorCompany: string
+  exhibitorLogoUrl?: string
+  exhibitorAvatarUrl?: string
+  boothTier: string
+  country: string
+  isWishlisted?: boolean
+}
+
 function normalizeBoothTier(value: string) {
   const normalized = value.trim().toLowerCase()
   if (normalized === "pro") return "Professional"
@@ -93,6 +108,7 @@ function toDateOnly(value: string | Date) {
 
 const DEFAULT_LIST_LIMIT = 100
 const DEFAULT_ACTIVITY_LIMIT = 500
+const PRODUCT_FEATURE_MAX_LIMIT = 48
 
 function normalizeLimit(
   limit: number | undefined,
@@ -100,6 +116,16 @@ function normalizeLimit(
 ) {
   if (typeof limit !== "number" || !Number.isFinite(limit)) return fallback
   return Math.max(1, Math.min(1000, Math.floor(limit)))
+}
+
+function normalizeProductFeedLimit(limit: number | undefined) {
+  if (typeof limit !== "number" || !Number.isFinite(limit)) return 24
+  return Math.max(1, Math.min(PRODUCT_FEATURE_MAX_LIMIT, Math.floor(limit)))
+}
+
+function normalizeOffset(offset: number | undefined) {
+  if (typeof offset !== "number" || !Number.isFinite(offset)) return 0
+  return Math.max(0, Math.floor(offset))
 }
 
 function slugifyExpoName(name: string) {
@@ -193,6 +219,11 @@ export async function getExpoBySlug(slug: string): Promise<Expo | null> {
     select * from expos where slug = ${slug} limit 1
   `) as ExpoRow[]
   if (bySlug[0]) return rowToExpo(bySlug[0])
+
+  const byId = (await sql`
+    select * from expos where id = ${slug} limit 1
+  `) as ExpoRow[]
+  if (byId[0]) return rowToExpo(byId[0])
 
   // Backward-compatible fallback for rows created before slug rollout.
   const byName = (await sql`
@@ -782,6 +813,100 @@ export async function listBoothCustomizations(): Promise<BoothCustomization[]> {
     videoUrl: r.video_url,
     products: r.products
   }))
+}
+
+export async function countExpoDetailProducts(expoId: string): Promise<number> {
+  const rows = (await sql`
+    select count(*)::int as total
+    from seller_booth_registrations sbr
+    join booth_customizations bc on bc.registration_id = sbr.id
+    cross join lateral jsonb_array_elements(coalesce(bc.products, '[]'::jsonb)) as product_item(value)
+    where sbr.expo_id = ${expoId}
+      and bc.publish_status = 'Published'
+      and product_item.value ? 'id'
+      and product_item.value ? 'name'
+  `) as { total: number }[]
+
+  return rows[0]?.total ?? 0
+}
+
+export async function listExpoDetailProducts(
+  expoId: string,
+  options?: { userId?: string | null; limit?: number; offset?: number }
+): Promise<ExpoDetailProduct[]> {
+  const limit = normalizeProductFeedLimit(options?.limit)
+  const offset = normalizeOffset(options?.offset)
+  const wishlistedProductIds = options?.userId
+    ? await listWishlistedTargetIds(options.userId, "product")
+    : new Set<string>()
+
+  const rows = (await sql`
+    select
+      product_item.value ->> 'id' as product_id,
+      product_item.value ->> 'name' as product_name,
+      coalesce(product_item.value ->> 'description', '') as product_description,
+      nullif(product_item.value ->> 'imageUrl', '') as product_image_url,
+      sbr.id as exhibitor_id,
+      cu.name as exhibitor_name,
+      coalesce(comp.name, cu.name) as exhibitor_company,
+      nullif(comp.logo_url, '') as exhibitor_logo_url,
+      cu.avatar_url as exhibitor_avatar_url,
+      sbr.booth_tier,
+      'Vietnam'::text as country,
+      case lower(trim(sbr.booth_tier))
+        when 'premium' then 1
+        when 'professional' then 2
+        when 'pro' then 2
+        when 'basic' then 3
+        else 4
+      end as tier_sort,
+      sbr.purchased_at,
+      product_item.ordinality as product_index
+    from seller_booth_registrations sbr
+    join users cu on cu.id = sbr.user_id
+    left join companies comp on comp.id = cu.company_id
+    join booth_customizations bc on bc.registration_id = sbr.id
+    cross join lateral jsonb_array_elements(coalesce(bc.products, '[]'::jsonb)) with ordinality as product_item(value, ordinality)
+    where sbr.expo_id = ${expoId}
+      and bc.publish_status = 'Published'
+      and product_item.value ? 'id'
+      and product_item.value ? 'name'
+    order by tier_sort asc, sbr.purchased_at desc, sbr.id asc, product_item.ordinality asc
+    limit ${limit}
+    offset ${offset}
+  `) as {
+    product_id: string | null
+    product_name: string | null
+    product_description: string | null
+    product_image_url: string | null
+    exhibitor_id: string
+    exhibitor_name: string
+    exhibitor_company: string
+    exhibitor_logo_url: string | null
+    exhibitor_avatar_url: string | null
+    booth_tier: string
+    country: string
+  }[]
+
+  return rows.flatMap((row) => {
+    if (!row.product_id || !row.product_name) return []
+    return [
+      {
+        id: row.product_id,
+        name: row.product_name,
+        description: row.product_description ?? "",
+        imageUrl: row.product_image_url ?? undefined,
+        exhibitorId: row.exhibitor_id,
+        exhibitorName: row.exhibitor_name,
+        exhibitorCompany: row.exhibitor_company,
+        exhibitorLogoUrl: row.exhibitor_logo_url ?? undefined,
+        exhibitorAvatarUrl: row.exhibitor_avatar_url ?? undefined,
+        boothTier: normalizeBoothTier(row.booth_tier),
+        country: row.country,
+        isWishlisted: wishlistedProductIds.has(row.product_id)
+      }
+    ]
+  })
 }
 
 export async function listExpoDetailExhibitorsByName(

@@ -14,6 +14,7 @@ import {
   TableRow
 } from "@/components/ui/table"
 import type { PartnerTradeCreditReport } from "@/lib/tradecredit/types"
+import { Empty } from "../ui/empty"
 
 const numberFormat = new Intl.NumberFormat("en")
 const vnd = new Intl.NumberFormat("vi-VN", {
@@ -68,61 +69,49 @@ export function PartnerTradeCreditReportView({
         />
       </section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Assigned Expo Reports</CardTitle>
-          <CardDescription>
-            Report-only aggregate metrics. User wallet balances, rule
-            configuration, issuance, and adjustment actions are not exposed to
-            Partner/Tenant users.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {reports.length === 0 ? (
-            <div className="flex min-h-36 items-center justify-center rounded-md border border-dashed text-muted-foreground text-sm">
-              No assigned TradeCredit report scope.
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Expo / Campaign</TableHead>
-                  <TableHead className="text-right">Credits Burned</TableHead>
-                  <TableHead className="text-right">Burn Events</TableHead>
-                  <TableHead className="text-right">Booth Bookings</TableHead>
-                  <TableHead className="text-right">
-                    Credit-Assisted GMV
-                  </TableHead>
+      <div className="overflow-hidden rounded-2xl border">
+        {reports.length === 0 ? (
+          <Empty className="flex min-h-36 items-center justify-center rounded-md border border-dashed text-muted-foreground text-sm">
+            No assigned TradeCredit report scope.
+          </Empty>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Expo Program</TableHead>
+                <TableHead>Credits Burned</TableHead>
+                <TableHead>Burn Events</TableHead>
+                <TableHead>Booth Bookings</TableHead>
+                <TableHead>Credit-Assisted GMV</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {reports.map((report) => (
+                <TableRow key={report.scopeId}>
+                  <TableCell>
+                    <div className="font-medium">{report.scopeName}</div>
+                    <div className="font-mono text-muted-foreground text-xs">
+                      {report.scopeId}
+                    </div>
+                  </TableCell>
+                  <TableCell className="tabular-nums">
+                    {numberFormat.format(report.totalCreditsBurned)}
+                  </TableCell>
+                  <TableCell className="tabular-nums">
+                    {numberFormat.format(report.burnEvents)}
+                  </TableCell>
+                  <TableCell className="tabular-nums">
+                    {numberFormat.format(report.boothBookingsSupported)}
+                  </TableCell>
+                  <TableCell className="tabular-nums">
+                    {vnd.format(report.creditAssistedGmv)}
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {reports.map((report) => (
-                  <TableRow key={report.scopeId}>
-                    <TableCell>
-                      <div className="font-medium">{report.scopeName}</div>
-                      <div className="font-mono text-muted-foreground text-xs">
-                        {report.scopeId}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {numberFormat.format(report.totalCreditsBurned)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {numberFormat.format(report.burnEvents)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {numberFormat.format(report.boothBookingsSupported)}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {vnd.format(report.creditAssistedGmv)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </div>
     </div>
   )
 }
@@ -144,7 +133,9 @@ function MetricCard({
           {value}
         </CardTitle>
       </CardHeader>
-      <CardContent className="text-muted-foreground text-xs">{note}</CardContent>
+      <CardContent className="text-muted-foreground text-xs">
+        {note}
+      </CardContent>
     </Card>
   )
 }

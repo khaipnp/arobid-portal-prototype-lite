@@ -1,0 +1,50 @@
+{
+  "name": "UserAvatar",
+  "created_at": "2026-05-19T00:00:00.000Z",
+  "purpose": "Reusable user avatar that displays imageUrl when present and falls back to initials.",
+  "complexity": "Simple",
+  "props": [
+    {
+      "name": "name",
+      "type": "string",
+      "required": true,
+      "default": null,
+      "description": "User display name used for alt text and initials fallback."
+    },
+    {
+      "name": "imageUrl",
+      "type": "string | null",
+      "required": false,
+      "default": null,
+      "description": "Optional avatar image URL."
+    },
+    {
+      "name": "size",
+      "type": "\"default\" | \"sm\" | \"lg\"",
+      "required": false,
+      "default": "default",
+      "description": "Avatar size forwarded to the base Avatar primitive."
+    },
+    {
+      "name": "className",
+      "type": "string",
+      "required": false,
+      "default": null,
+      "description": "Additional class name for the Avatar root."
+    },
+    {
+      "name": "fallbackClassName",
+      "type": "string",
+      "required": false,
+      "default": null,
+      "description": "Additional class name for AvatarFallback."
+    }
+  ],
+  "state_pattern": "Stateless",
+  "composition": "No children",
+  "accessibility_level": "Basic",
+  "styling": "Tailwind CSS",
+  "files_created": ["components/user-avatar.tsx"],
+  "status": "complete",
+  "completed_at": "2026-05-19T00:00:00.000Z"
+}

@@ -1,16 +1,16 @@
-import Image from "next/image"
-import Link from "next/link"
-import { getAuthenticatedUserById } from "@/lib/auth/service"
-import { getCurrentSessionUserId } from "@/lib/auth/session"
-import { LoginLink } from "./login-link"
-import { UserMenu } from "./user-menu"
+import Image from "next/image";
+import Link from "next/link";
+import { getAuthenticatedUserById } from "@/lib/auth/service";
+import { getCurrentSessionUserId } from "@/lib/auth/session";
+import { LoginLink } from "./login-link";
+import { UserMenu } from "./user-menu";
 
 export async function TxHeader() {
-  const userId = await getCurrentSessionUserId()
-  const user = userId ? await getAuthenticatedUserById(userId) : null
+  const userId = await getCurrentSessionUserId();
+  const user = userId ? await getAuthenticatedUserById(userId) : null;
 
   return (
-    <header className="sticky top-0 z-50 h-16 border-black/5 border-b bg-white/95 backdrop-blur">
+    <header className="sticky top-0 z-50 h-17 border-black/5 border-b bg-white/95 backdrop-blur">
       <section className="container mx-auto flex h-full items-center gap-8">
         <Link href="/" aria-label="Arobid TradeXpo">
           <Image
@@ -37,5 +37,5 @@ export async function TxHeader() {
         </div>
       </section>
     </header>
-  )
+  );
 }
