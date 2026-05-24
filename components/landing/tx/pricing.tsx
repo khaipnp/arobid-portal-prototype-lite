@@ -1,8 +1,7 @@
-import { Check } from "lucide-react"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-import { asset, plans } from "./data"
+import { Check } from "lucide-react";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { asset, plans } from "./data";
 
 export function Pricing() {
   return (
@@ -10,7 +9,7 @@ export function Pricing() {
       id="pricing"
       className="overflow-hidden bg-[linear-gradient(180deg,#fff_3%,#ffe0d2_54%,#fff_109%)] px-5 py-16 md:px-[78px]"
     >
-      <h2 className="text-center font-semibold text-legend text-[32px] leading-10">
+      <h2 className="text-center font-semibold text-legend text-3xl leading-10">
         Virtual Booth Solutions
       </h2>
       <div className="mx-auto mt-10 grid container gap-10 lg:grid-cols-3">
@@ -68,5 +67,5 @@ export function Pricing() {
         ))}
       </div>
     </section>
-  )
+  );
 }

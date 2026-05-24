@@ -8,7 +8,6 @@ import {
   NetworkIcon,
   PieChartIcon,
   UserCogIcon,
-  UsersIcon,
   WalletCardsIcon,
 } from "lucide-react";
 import Link from "next/link";
