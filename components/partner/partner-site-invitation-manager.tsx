@@ -156,7 +156,7 @@ export function PartnerSiteInvitationManager({
     setError(null)
 
     if (!partnerId) {
-      setError("Partner ID is required before sending invitations.")
+      setError("Partner context is required before sending invitations.")
       return
     }
     if (parsedRecipients.invalid.length > 0) {
@@ -194,7 +194,9 @@ export function PartnerSiteInvitationManager({
       setInviteOpen(false)
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not send invitations.")
+      setError(
+        err instanceof Error ? err.message : "Could not send invitations."
+      )
     } finally {
       setIsSending(false)
     }
