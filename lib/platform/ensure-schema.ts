@@ -30,6 +30,52 @@ export async function ensurePlatformPaymentConfig(db: SqlClient = sql) {
   `
 }
 
+async function ensureCompanyRepresentativeSchema() {
+  await sql`
+    alter table companies
+    add column if not exists representative_user_id text references users(id) on delete set null
+  `
+  await sql`
+    create index if not exists idx_companies_representative_user
+    on companies (representative_user_id)
+    where representative_user_id is not null
+  `
+}
+
+async function backfillCompanyRepresentatives() {
+  await sql`
+    with ranked_company_users as (
+      select
+        app_user.company_id,
+        app_user.id,
+        row_number() over (
+          partition by app_user.company_id
+          order by
+            min(case
+              when user_roles.role_id = 'seller' then 1
+              when user_roles.role_id = 'partner' then 2
+              when user_roles.role_id = 'exhibitor' then 3
+              else 4
+            end),
+            app_user.name asc
+        ) as rank
+      from users app_user
+      left join user_roles
+        on user_roles.user_id = app_user.id
+        and user_roles.expo_id is null
+      where app_user.company_id is not null
+        and app_user.is_active = true
+      group by app_user.company_id, app_user.id, app_user.name
+    )
+    update companies company
+    set representative_user_id = ranked_company_users.id
+    from ranked_company_users
+    where company.id = ranked_company_users.company_id
+      and ranked_company_users.rank = 1
+      and company.representative_user_id is null
+  `
+}
+
 /** Creates platform tables (expos, orders, chat, streaming) for Neon. Idempotent. */
 export async function ensurePlatformSchema() {
   if (platformSchemaReady) return
@@ -44,6 +90,8 @@ export async function ensurePlatformSchema() {
     // If the latest migration is applied, we can assume everything before it is also applied.
     if (appliedNames.has(LATEST_PLATFORM_MIGRATION)) {
       await ensurePlatformPaymentConfig()
+      await ensureCompanyRepresentativeSchema()
+      await backfillCompanyRepresentatives()
       await ensureTradeCreditSchema()
       platformSchemaReady = true
       return
@@ -505,6 +553,7 @@ export async function ensurePlatformSchema() {
     create index if not exists idx_auth_sessions_expires_at
     on auth_sessions (expires_at)
   `
+  await ensureCompanyRepresentativeSchema()
   await sql`
     create table if not exists platform_schema_migrations (
       name text primary key,
@@ -867,6 +916,7 @@ export async function ensurePlatformSchema() {
       (${CURRENT_USER_ID}, 'buyer', null)
     on conflict do nothing
   `
+  await backfillCompanyRepresentatives()
 
   await sql`
     insert into chat_users (

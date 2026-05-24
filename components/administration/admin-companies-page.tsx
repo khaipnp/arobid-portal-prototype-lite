@@ -1,6 +1,7 @@
 "use client"
 
 import { AlertCircleIcon, RefreshCwIcon, SearchIcon } from "lucide-react"
+import Link from "next/link"
 import { useEffect, useState } from "react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -70,7 +71,11 @@ function renderCompanyRows(companies: AdminCompany[]) {
   return companies.map((company) => (
     <TableRow key={company.id}>
       <TableCell>
-        <div className="flex items-center gap-3">
+        <Link
+          aria-label={`View details for ${company.name}`}
+          className="flex w-fit items-center gap-3 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          href={`/admin/administration/companies/${company.id}`}
+        >
           <Avatar size="lg">
             {company.logoUrl ? (
               <AvatarImage src={company.logoUrl} alt={`${company.name} logo`} />
@@ -78,8 +83,8 @@ function renderCompanyRows(companies: AdminCompany[]) {
             <AvatarFallback>{getCompanyInitials(company.name)}</AvatarFallback>
           </Avatar>
 
-          <span className="font-medium">{company.name}</span>
-        </div>
+          <span className="font-medium hover:underline">{company.name}</span>
+        </Link>
       </TableCell>
       <TableCell className="font-mono text-xs">
         {company.taxId ?? "—"}
