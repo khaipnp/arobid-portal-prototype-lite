@@ -158,6 +158,26 @@ async function uniqueExpoSlug(base: string, excludeExpoId?: string) {
   return `${normalized}-${i}`
 }
 
+async function validateManualExpoSlug(slug: string, expoId: string) {
+  const normalized = slug.trim()
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(normalized)) {
+    throw new Error(
+      "Slug must use lowercase letters, numbers, and single hyphens."
+    )
+  }
+
+  const dup = (await sql`
+    select id from expos
+    where slug = ${normalized} and id <> ${expoId}
+    limit 1
+  `) as { id: string }[]
+  if (dup.length > 0) {
+    throw new Error("An expo with this slug already exists.")
+  }
+
+  return normalized
+}
+
 export async function listExpoCategories(): Promise<ExpoCategory[]> {
   const rows = (await sql`
     select id, name, level from expo_categories order by name asc
@@ -403,6 +423,7 @@ export async function searchExpoOwnersByEmail(
 
 export type CreateExpoWithHallsInput = {
   name: string
+  slug?: string
   description: string
   thumbnailUrl: string
   expoTemplateId: string
@@ -570,9 +591,16 @@ export async function updateExpoWithHalls(
     throw new Error("An expo with this name already exists.")
   }
 
+  const currentRows = (await sql`
+    select slug from expos where id = ${expoId} limit 1
+  `) as { slug: string | null }[]
+  const currentSlug = currentRows[0]?.slug ?? null
   const startDateStr = start.toISOString().slice(0, 10)
   const endDateStr = end.toISOString().slice(0, 10)
-  const slug = await uniqueExpoSlug(slugifyExpoName(input.name), expoId)
+  const slug = input.slug
+    ? await validateManualExpoSlug(input.slug, expoId)
+    : (currentSlug ??
+      (await uniqueExpoSlug(slugifyExpoName(input.name), expoId)))
   const thumb = getAssetUrl(input.thumbnailUrl, expoId)
 
   await sql`begin`
