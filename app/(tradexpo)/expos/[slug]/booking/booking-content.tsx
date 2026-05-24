@@ -232,7 +232,7 @@ export function BookingContent({
     params.set("finalPayableVnd", String(preparedBooking.finalPayableVnd))
 
     router.push(
-      `/expos/${expo.slug || expo.id}/booking/success?${params.toString()}`
+      `/tradexpo/expos/${expo.slug || expo.id}/booking/success?${params.toString()}`
     )
   }, [
     expo.id,
@@ -259,7 +259,7 @@ export function BookingContent({
     }
   }
 
-  const expoDetailPath = `/expos/${expo.slug || expo.id}`
+  const expoDetailPath = `/tradexpo/expos/${expo.slug || expo.id}`
 
   return (
     <div className="flex flex-col gap-8">

@@ -53,7 +53,7 @@ function toCardStatus(expo: Expo): HomeExpoCard["status"] {
 }
 
 function getDetailHref(expo: Expo) {
-  return `/expos/${expo.slug ?? expo.id}`
+  return `/tradexpo/expos/${expo.slug ?? expo.id}`
 }
 
 export default async function TradeXpoPage() {

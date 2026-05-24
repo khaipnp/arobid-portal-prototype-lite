@@ -212,7 +212,7 @@ export function BookingSuccessDialog({
               <Button
                 variant="outline"
                 className="h-12 flex-1 rounded-full border-gray-200 font-bold text-[#1F2937]"
-                onClick={() => router.push(`/expos/${data.expoSlug}`)}
+                onClick={() => router.push(`/tradexpo/expos/${data.expoSlug}`)}
               >
                 Back to Expo
               </Button>

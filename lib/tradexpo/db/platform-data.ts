@@ -220,6 +220,11 @@ export async function getExpoBySlug(slug: string): Promise<Expo | null> {
   `) as ExpoRow[]
   if (bySlug[0]) return rowToExpo(bySlug[0])
 
+  const byId = (await sql`
+    select * from expos where id = ${slug} limit 1
+  `) as ExpoRow[]
+  if (byId[0]) return rowToExpo(byId[0])
+
   // Backward-compatible fallback for rows created before slug rollout.
   const byName = (await sql`
     select * from expos
