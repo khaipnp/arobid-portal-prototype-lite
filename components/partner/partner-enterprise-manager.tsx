@@ -1,50 +1,50 @@
-"use client"
+"use client";
 
-import { PlusIcon, SearchIcon, Trash2Icon } from "lucide-react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { useMemo, useState } from "react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { PlusIcon, SearchIcon, Trash2Icon } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import {
   InputGroup,
   InputGroupAddon,
-  InputGroupInput
-} from "@/components/ui/input-group"
-import { Label } from "@/components/ui/label"
-import { NativeSelect } from "@/components/ui/native-select"
+  InputGroupInput,
+} from "@/components/ui/input-group";
+import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
-} from "@/components/ui/table"
-import type { PartnerAccess } from "@/lib/partner/access"
+  TableRow,
+} from "@/components/ui/table";
+import type { PartnerAccess } from "@/lib/partner/access";
 import type {
   PartnerEnterpriseMember,
-  PartnerEnterpriseWorkspace
-} from "@/lib/partner/db"
+  PartnerEnterpriseWorkspace,
+} from "@/lib/partner/db";
 
 const dateFormat = new Intl.DateTimeFormat("en", {
   day: "2-digit",
   month: "short",
-  year: "numeric"
-})
+  year: "numeric",
+});
 
 function getEnterpriseInitial(name: string) {
-  return name.trim().charAt(0).toUpperCase() || "?"
+  return name.trim().charAt(0).toUpperCase() || "?";
 }
 
 const statusLabels: Record<
@@ -56,8 +56,8 @@ const statusLabels: Record<
   active: "Active",
   inactive: "Inactive",
   removed: "Removed",
-  blocked: "Blocked"
-}
+  blocked: "Blocked",
+};
 
 const statusOrder: PartnerEnterpriseMember["activationStatus"][] = [
   "invited",
@@ -65,177 +65,177 @@ const statusOrder: PartnerEnterpriseMember["activationStatus"][] = [
   "active",
   "inactive",
   "removed",
-  "blocked"
-]
+  "blocked",
+];
 
-type FormMode = "add" | null
-type RemoveTarget = Required<PartnerEnterpriseMember> | null
+type FormMode = "add" | null;
+type RemoveTarget = Required<PartnerEnterpriseMember> | null;
 type CompanySearchResult = {
-  id: string
-  name: string
-  taxId: string | null
-  website: string | null
-  address: string | null
-  isActive: boolean
-}
+  id: string;
+  name: string;
+  taxId: string | null;
+  website: string | null;
+  address: string | null;
+  isActive: boolean;
+};
 
 export function PartnerEnterpriseManager({
   access,
-  workspace
+  workspace,
 }: {
-  access: PartnerAccess
-  workspace: PartnerEnterpriseWorkspace
+  access: PartnerAccess;
+  workspace: PartnerEnterpriseWorkspace;
 }) {
-  const router = useRouter()
-  const canManageEnterprises = access.actions["enterprise.manage"]
-  const [query, setQuery] = useState("")
+  const router = useRouter();
+  const canManageEnterprises = access.actions["enterprise.manage"];
+  const [query, setQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<
     PartnerEnterpriseMember["activationStatus"] | "all"
-  >("all")
-  const [formMode, setFormMode] = useState<FormMode>(null)
+  >("all");
+  const [formMode, setFormMode] = useState<FormMode>(null);
   const [form, setForm] = useState({
-    relationshipType: "member"
-  })
-  const [companySearch, setCompanySearch] = useState("")
+    relationshipType: "member",
+  });
+  const [companySearch, setCompanySearch] = useState("");
   const [companyResults, setCompanyResults] = useState<CompanySearchResult[]>(
-    []
-  )
-  const [selectedCompanyIds, setSelectedCompanyIds] = useState<string[]>([])
-  const [inviteUrl, setInviteUrl] = useState<string | null>(null)
-  const [removeTarget, setRemoveTarget] = useState<RemoveTarget>(null)
-  const [removeReason, setRemoveReason] = useState("")
-  const [error, setError] = useState<string | null>(null)
-  const [message, setMessage] = useState<string | null>(null)
-  const [isSaving, setIsSaving] = useState(false)
+    [],
+  );
+  const [selectedCompanyIds, setSelectedCompanyIds] = useState<string[]>([]);
+  const [inviteUrl, setInviteUrl] = useState<string | null>(null);
+  const [removeTarget, setRemoveTarget] = useState<RemoveTarget>(null);
+  const [removeReason, setRemoveReason] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const filteredMembers = useMemo(() => {
-    const q = query.trim().toLowerCase()
+    const q = query.trim().toLowerCase();
     return workspace.members.filter((member) => {
       if (statusFilter !== "all" && member.activationStatus !== statusFilter) {
-        return false
+        return false;
       }
-      if (!q) return true
+      if (!q) return true;
       return (
         member.enterpriseName.toLowerCase().includes(q) ||
         (member.contactEmail ?? "").toLowerCase().includes(q)
-      )
-    })
-  }, [workspace.members, query, statusFilter])
+      );
+    });
+  }, [workspace.members, query, statusFilter]);
 
   function openAdd() {
-    setError(null)
-    setForm({ relationshipType: "member" })
-    setCompanySearch("")
-    setCompanyResults([])
-    setSelectedCompanyIds([])
-    setInviteUrl(null)
-    setFormMode("add")
+    setError(null);
+    setForm({ relationshipType: "member" });
+    setCompanySearch("");
+    setCompanyResults([]);
+    setSelectedCompanyIds([]);
+    setInviteUrl(null);
+    setFormMode("add");
   }
 
   async function submitJson(
     url: string,
     method: "POST" | "PATCH" | "DELETE",
-    body?: unknown
+    body?: unknown,
   ) {
-    setIsSaving(true)
-    setError(null)
+    setIsSaving(true);
+    setError(null);
     try {
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: body ? JSON.stringify(body) : undefined
-      })
+        body: body ? JSON.stringify(body) : undefined,
+      });
       if (!response.ok) {
         const payload = (await response.json().catch(() => null)) as {
-          error?: string
-        } | null
-        throw new Error(payload?.error ?? "Request failed.")
+          error?: string;
+        } | null;
+        throw new Error(payload?.error ?? "Request failed.");
       }
-      setMessage("Saved.")
-      setFormMode(null)
-      router.refresh()
+      setMessage("Saved.");
+      setFormMode(null);
+      router.refresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Request failed.")
+      setError(err instanceof Error ? err.message : "Request failed.");
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
   }
 
   async function searchCompanies() {
-    const q = companySearch.trim()
+    const q = companySearch.trim();
     if (q.length < 2) {
-      setCompanyResults([])
-      return
+      setCompanyResults([]);
+      return;
     }
 
-    setError(null)
+    setError(null);
     const response = await fetch(
-      `/api/partner/companies/search?q=${encodeURIComponent(q)}`
-    )
+      `/api/partner/companies/search?q=${encodeURIComponent(q)}`,
+    );
     if (!response.ok) {
-      setError("Could not search Arobid companies.")
-      return
+      setError("Could not search Arobid companies.");
+      return;
     }
     const payload = (await response.json()) as {
-      companies: CompanySearchResult[]
-    }
-    setCompanyResults(payload.companies)
+      companies: CompanySearchResult[];
+    };
+    setCompanyResults(payload.companies);
   }
 
   async function saveMember() {
     if (formMode === "add") {
-      setIsSaving(true)
-      setError(null)
+      setIsSaving(true);
+      setError(null);
       try {
         const response = await fetch("/api/partner/enterprise-members", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             companyIds: selectedCompanyIds,
-            relationshipType: form.relationshipType
-          })
-        })
+            relationshipType: form.relationshipType,
+          }),
+        });
         if (!response.ok) {
           const payload = (await response.json().catch(() => null)) as {
-            error?: string
-          } | null
-          throw new Error(payload?.error ?? "Request failed.")
+            error?: string;
+          } | null;
+          throw new Error(payload?.error ?? "Request failed.");
         }
         const result = (await response.json()) as {
-          created?: unknown[]
-          skipped?: unknown[]
-          shareUrl?: string
-        }
+          created?: unknown[];
+          skipped?: unknown[];
+          shareUrl?: string;
+        };
         if (result.shareUrl) {
-          setInviteUrl(result.shareUrl)
+          setInviteUrl(result.shareUrl);
         }
         setMessage(
           `${result.created?.length ?? 0} invite(s) created, ${
             result.skipped?.length ?? 0
-          } skipped.`
-        )
-        router.refresh()
+          } skipped.`,
+        );
+        router.refresh();
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Request failed.")
+        setError(err instanceof Error ? err.message : "Request failed.");
       } finally {
-        setIsSaving(false)
+        setIsSaving(false);
       }
     }
   }
 
   async function removeAssociation() {
-    if (!removeTarget) return
+    if (!removeTarget) return;
     await submitJson(
       `/api/partner/enterprise-members/${removeTarget.id}`,
       "DELETE",
-      { reason: removeReason }
-    )
-    setRemoveTarget(null)
-    setRemoveReason("")
+      { reason: removeReason },
+    );
+    setRemoveTarget(null);
+    setRemoveReason("");
   }
 
   return (
-    <div className="space-y-4 px-4">
+    <div className="mt-5 space-y-4">
       {message ? (
         <div className="rounded-md border bg-muted px-3 py-2 text-sm">
           {message}
@@ -261,7 +261,7 @@ export function PartnerEnterpriseManager({
                 setStatusFilter(
                   event.target.value as
                     | PartnerEnterpriseMember["activationStatus"]
-                    | "all"
+                    | "all",
                 )
               }
             >
@@ -287,7 +287,7 @@ export function PartnerEnterpriseManager({
             No companies found.
           </div>
         ) : (
-          <div className="rounded-2xl border">
+          <div className="overflow-hidden rounded-2xl border">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -351,8 +351,8 @@ export function PartnerEnterpriseManager({
                               member.activationStatus === "blocked"
                             }
                             onClick={() => {
-                              setRemoveTarget(member)
-                              setRemoveReason("")
+                              setRemoveTarget(member);
+                              setRemoveReason("");
                             }}
                           >
                             <Trash2Icon />
@@ -411,7 +411,7 @@ export function PartnerEnterpriseManager({
                           setSelectedCompanyIds((current) =>
                             current.includes(company.id)
                               ? current.filter((id) => id !== company.id)
-                              : [...current, company.id]
+                              : [...current, company.id],
                           )
                         }
                       >
@@ -450,7 +450,7 @@ export function PartnerEnterpriseManager({
                 onChange={(event) =>
                   setForm((prev) => ({
                     ...prev,
-                    relationshipType: event.target.value
+                    relationshipType: event.target.value,
                   }))
                 }
               >
@@ -482,7 +482,7 @@ export function PartnerEnterpriseManager({
       <Dialog
         open={Boolean(removeTarget)}
         onOpenChange={(open) => {
-          if (!open) setRemoveTarget(null)
+          if (!open) setRemoveTarget(null);
         }}
       >
         <DialogContent>
@@ -516,5 +516,5 @@ export function PartnerEnterpriseManager({
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

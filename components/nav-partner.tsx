@@ -3,8 +3,9 @@
 import {
   ApertureIcon,
   ChevronRightIcon,
+  FileChartPieIcon,
   LayoutDashboardIcon,
-  PaletteIcon,
+  NetworkIcon,
   PieChartIcon,
   UserCogIcon,
   UsersIcon,
@@ -42,14 +43,14 @@ type PartnerNavItem = {
 const siteManagementLinks = {
   navMain: [
     {
-      name: "Site Settings",
+      name: "Partner Site Management",
       module: "site_settings",
-      icon: ApertureIcon,
+      icon: NetworkIcon,
       isActive: true,
       items: [
         {
           name: "Site Setting",
-          url: "/partner/partner-site/site-settings",
+          url: "/partner/partner-site/site-management",
         },
         {
           name: "Enterprises Management",
@@ -78,7 +79,7 @@ const siteManagementLinks = {
     {
       name: "Package Management",
       module: "package_management",
-      icon: ApertureIcon,
+      icon: WalletCardsIcon,
       isActive: true,
       items: [
         {
@@ -91,16 +92,38 @@ const siteManagementLinks = {
         },
       ],
     },
+    {
+      name: "Data Center",
+      module: "package_management",
+      icon: FileChartPieIcon,
+      isActive: true,
+      items: [
+        {
+          name: "Enterprise Reports",
+          url: "/partner/package-management/bundle-creation",
+        },
+        {
+          name: "Expo Reports",
+          url: "/partner/package-management/bundle-pricing",
+        },
+        {
+          name: "Trade Reports",
+          url: "/partner/package-management/bundle-pricing",
+        },
+        {
+          name: "Credit & Revenue Reports",
+          url: "/partner/package-management/bundle-pricing",
+        },
+        {
+          name: "Buyer Lead Reports",
+          url: "/partner/package-management/bundle-pricing",
+        },
+      ],
+    },
   ],
 };
 
 const activityLinks = [
-  {
-    name: "Expo Programs",
-    url: "/partner/expos",
-    module: "expo_programs",
-    icon: <ApertureIcon />,
-  },
   {
     name: "TradeCredit Reports",
     url: "/partner/tradecredit",
@@ -121,18 +144,6 @@ const configurationLinks = [
     url: "/partner/users",
     module: "overview",
     icon: <UserCogIcon />,
-  },
-  {
-    name: "Mini-site",
-    url: "/partner/site-management",
-    module: "mini_site",
-    icon: <PaletteIcon />,
-  },
-  {
-    name: "Members",
-    url: "/partner/enterprises",
-    module: "enterprises",
-    icon: <UsersIcon />,
   },
 ] satisfies PartnerNavItem[];
 
