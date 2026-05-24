@@ -44,6 +44,22 @@ export interface AdminUser {
   isActive: boolean
 }
 
+export interface AdminCompany {
+  id: string
+  name: string
+  taxId: string | null
+  logoUrl: string | null
+  website: string | null
+  address: string | null
+  categoryNames: string[]
+  isActive: boolean
+}
+
+export interface CompanyCategoryOption {
+  id: string
+  name: string
+}
+
 export interface PaginationMeta {
   page: number
   pageSize: number
