@@ -22,17 +22,27 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog"
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput
 } from "@/components/ui/input-group"
+import { Label } from "@/components/ui/label"
 import {
   Pagination,
   PaginationContent,
@@ -111,6 +121,7 @@ const TABLE_HEADERS: Record<EntityType, string[]> = {
 type RenderRowsOptions = {
   pendingUserId: string | null
   onUserDelete: (user: AdminUser) => void
+  onUserPasswordReset: (user: AdminUser) => void
   onUserStatusToggle: (user: AdminUser) => void
 }
 
@@ -229,6 +240,11 @@ function renderRows(
                 >
                   {statusPending ? "Updating..." : statusActionLabel}
                 </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={() => options.onUserPasswordReset(user)}
+                >
+                  Reset password
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   variant="destructive"
@@ -288,6 +304,11 @@ export function AdministrationListPage({
   const [pendingUserId, setPendingUserId] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<AdminUser | null>(null)
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null)
+  const [passwordTarget, setPasswordTarget] = useState<AdminUser | null>(null)
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [resettingPassword, setResettingPassword] = useState(false)
+  const [passwordError, setPasswordError] = useState<string | null>(null)
   const [loading, setLoading] = useState(!initialData)
   const [error, setError] = useState<string | null>(null)
   const [refreshKey, setRefreshKey] = useState(0)
@@ -407,6 +428,56 @@ export function AdministrationListPage({
       setError("Failed to update user status. Please try again.")
     } finally {
       setPendingUserId(null)
+    }
+  }
+
+  function openPasswordDialog(user: AdminUser) {
+    setPasswordTarget(user)
+    setNewPassword("")
+    setConfirmPassword("")
+    setPasswordError(null)
+  }
+
+  async function handlePasswordReset(event: { preventDefault: () => void }) {
+    event.preventDefault()
+    if (!passwordTarget) return
+
+    if (newPassword.length < 8) {
+      setPasswordError("Password must be at least 8 characters.")
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError("Password confirmation does not match.")
+      return
+    }
+
+    setResettingPassword(true)
+    setPasswordError(null)
+
+    try {
+      const response = await fetch(
+        `/api/admin/administration/users/${encodeURIComponent(passwordTarget.id)}/password`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: newPassword })
+        }
+      )
+      const payload = (await response.json()) as { error?: string }
+      if (!response.ok) {
+        throw new Error(payload.error ?? "Unable to reset password")
+      }
+      setPasswordTarget(null)
+      setNewPassword("")
+      setConfirmPassword("")
+    } catch (resetError) {
+      setPasswordError(
+        resetError instanceof Error
+          ? resetError.message
+          : "Failed to reset password. Please try again."
+      )
+    } finally {
+      setResettingPassword(false)
     }
   }
 
@@ -552,6 +623,7 @@ export function AdministrationListPage({
                 renderRows(entity, rows, {
                   pendingUserId,
                   onUserDelete: setDeleteTarget,
+                  onUserPasswordReset: openPasswordDialog,
                   onUserStatusToggle: handleUserStatusToggle
                 })
               )}
@@ -559,6 +631,78 @@ export function AdministrationListPage({
           </Table>
         </div>
       )}
+
+      <Dialog
+        open={Boolean(passwordTarget)}
+        onOpenChange={(open) => {
+          if (!open && !resettingPassword) {
+            setPasswordTarget(null)
+            setNewPassword("")
+            setConfirmPassword("")
+            setPasswordError(null)
+          }
+        }}
+      >
+        <DialogContent>
+          <form className="space-y-4" onSubmit={handlePasswordReset}>
+            <DialogHeader>
+              <DialogTitle>Reset password</DialogTitle>
+              <DialogDescription>
+                Set a new password for {passwordTarget?.name ?? "this user"}.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-2">
+              <Label htmlFor="admin-reset-password">New password</Label>
+              <Input
+                id="admin-reset-password"
+                type="password"
+                autoComplete="new-password"
+                value={newPassword}
+                disabled={resettingPassword}
+                minLength={8}
+                onChange={(event) => setNewPassword(event.target.value)}
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="admin-reset-password-confirm">
+                Confirm new password
+              </Label>
+              <Input
+                id="admin-reset-password-confirm"
+                type="password"
+                autoComplete="new-password"
+                value={confirmPassword}
+                disabled={resettingPassword}
+                minLength={8}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                required
+              />
+            </div>
+            {passwordError ? (
+              <p className="text-destructive text-sm">{passwordError}</p>
+            ) : null}
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                disabled={resettingPassword}
+                onClick={() => {
+                  setPasswordTarget(null)
+                  setNewPassword("")
+                  setConfirmPassword("")
+                  setPasswordError(null)
+                }}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={resettingPassword}>
+                {resettingPassword ? "Resetting..." : "Reset password"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog
         open={Boolean(deleteTarget)}

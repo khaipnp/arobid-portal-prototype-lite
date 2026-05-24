@@ -1,4 +1,5 @@
 import { headers } from "next/headers"
+import { hashPassword } from "@/lib/auth/password"
 import { sql } from "@/lib/db/neon"
 
 export interface AdministrationUserRole {
@@ -76,6 +77,11 @@ export interface UpdateAdministrationUserInput {
 export interface UpdateAdministrationUserStatusInput {
   userId: string
   isActive: boolean
+}
+
+export interface ResetAdministrationUserPasswordInput {
+  userId: string
+  password: string
 }
 
 type UserRow = Omit<
@@ -336,6 +342,32 @@ export async function updateAdministrationUserStatus(
   `
 
   return userRows[0]
+}
+
+export async function resetAdministrationUserPassword(
+  input: ResetAdministrationUserPasswordInput
+): Promise<{ id: string }> {
+  const userId = input.userId.trim()
+  const password = input.password
+  assertValidUserId(userId)
+  if (password.length < 8) {
+    throw new Error("Password must be at least 8 characters.")
+  }
+
+  const identityRows = (await sql`
+    update auth_identities
+    set
+      password_hash = ${hashPassword(password)},
+      updated_at = now()
+    where user_id = ${userId}
+    returning user_id as id
+  `) as Array<{ id: string }>
+
+  if (identityRows.length === 0) {
+    throw new Error("Login identity not found.")
+  }
+
+  return { id: identityRows[0].id }
 }
 
 export async function deleteAdministrationUser(
