@@ -1,15 +1,16 @@
-import { Flame } from "lucide-react"
-import Image from "next/image"
-import { voucherCards } from "@/lib/tenant/landing-data"
-import { OrangeButton, SectionShell } from "./shared"
+import { Flame } from "lucide-react";
+import Image from "next/image";
+import { voucherCards } from "@/lib/tenant/landing-data";
+import { OrangeButton, SectionShell } from "./shared";
+import { Button } from "@/components/ui/button";
 
 export function VoucherSection() {
-  const [featured, ...cards] = voucherCards
+  const [featured, ...cards] = voucherCards;
 
   return (
     <SectionShell className="bg-white">
-      <div className="mb-6 flex items-center gap-2 font-bold text-[#ed6203] text-xl">
-        <Flame className="size-7 fill-[#ed6203]" />
+      <div className="mb-6 flex items-center gap-2 font-bold text-legend text-xl">
+        <Flame className="size-7 fill-legend" />
         <span>HOT DEAL</span>
         <span>•</span>
         <span>BRAND EVOUCHER</span>
@@ -42,16 +43,13 @@ export function VoucherSection() {
                 className="object-cover"
               />
               <div className="absolute inset-0 bg-linear-to-b from-transparent to-[#000e33]/70" />
-              <button
-                type="button"
-                className="absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full bg-white px-6 py-2 font-medium text-[#1f2937] text-sm"
-              >
+              <Button className="absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full bg-white px-6 py-2 font-medium text-[#1f2937] text-sm">
                 Claim eVoucher
-              </button>
+              </Button>
             </div>
           ))}
         </div>
       </div>
     </SectionShell>
-  )
+  );
 }

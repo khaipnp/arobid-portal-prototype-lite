@@ -55,11 +55,7 @@ export function UserMenu({ user }: UserMenuProps) {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
-          <UserAvatar
-            name={user.name}
-            imageUrl="/avatar.webp"
-            className="h-10 w-10"
-          />
+          <UserAvatar name={user.name} className="h-10 w-10" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent

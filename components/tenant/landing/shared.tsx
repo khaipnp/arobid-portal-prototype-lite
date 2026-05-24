@@ -4,13 +4,19 @@ import {
   Heart,
   MessageCircle,
   Rocket,
-  Search,
+  SearchIcon,
+  SparkleIcon,
   Star
 } from "lucide-react"
 import Image from "next/image"
 import type { ComponentProps, ReactNode } from "react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import {
+  InputGroup,
+  InputGroupButton,
+  InputGroupInput
+} from "@/components/ui/input-group"
 
 export function SectionShell({
   children,
@@ -23,12 +29,7 @@ export function SectionShell({
 }) {
   return (
     <section className={cn("w-full py-10 lg:py-12", className)}>
-      <div
-        className={cn(
-          "mx-auto w-full max-w-[1284px] px-5 md:px-8 xl:px-0",
-          innerClassName
-        )}
-      >
+      <div className={cn("mx-auto w-full container", innerClassName)}>
         {children}
       </div>
     </section>
@@ -69,7 +70,7 @@ export function PillTabs({ items }: { items: string[] }) {
           className={cn(
             "inline-flex h-10 shrink-0 items-center justify-center rounded-full border px-5 font-normal text-sm",
             index === 0
-              ? "border-[#ed6203] bg-[#ffeae1] text-[#ed6203]"
+              ? "border-legend bg-[#ffeae1] text-legend"
               : "border-[#e5e7eb] bg-white text-[#1f2937]"
           )}
         >
@@ -100,7 +101,7 @@ export function OrangeButton({
   return (
     <Button
       className={cn(
-        "h-10 gap-2 rounded-full bg-[#ed6203] px-5 text-white hover:bg-[#c14e02]",
+        "h-10 gap-2 rounded-full bg-legend px-5 text-white hover:bg-legend-600",
         className
       )}
       {...props}
@@ -137,7 +138,7 @@ export function LogoBadge({ size = "md" }: { size?: "sm" | "md" }) {
   return (
     <div
       className={cn(
-        "grid shrink-0 place-items-center rounded-full border border-[#f79365] bg-white font-semibold text-[#ed6203]",
+        "grid shrink-0 place-items-center rounded-full border border-[#f79365] bg-white font-semibold text-legend",
         size === "sm" ? "size-4 text-[5px]" : "size-[50px] text-[11px]"
       )}
     >
@@ -193,7 +194,7 @@ export function SupplierCard({
       <div className="mt-auto space-y-3">
         <div className="flex items-center justify-between text-sm">
           <span className="text-[#6b7280]">Featured products</span>
-          <span className="inline-flex items-center gap-1 text-[#ed6203] text-xs">
+          <span className="inline-flex items-center gap-1 text-legend text-xs">
             View More <ArrowRight className="size-3" />
           </span>
         </div>
@@ -217,7 +218,7 @@ export function SupplierCard({
           >
             <MessageCircle className="size-4" /> Chat Now
           </Button>
-          <Button className="h-8 rounded-full bg-[#ed6203] text-white hover:bg-[#c14e02]">
+          <Button className="h-8 rounded-full bg-legend text-white hover:bg-legend-600">
             Send RFQ
           </Button>
         </div>
@@ -251,7 +252,7 @@ export function ProductCard({
         <h3 className="line-clamp-2 font-normal text-[#121212] text-sm leading-5">
           {title}
         </h3>
-        <p className="mt-2 truncate font-semibold text-[#ed6203] text-sm">
+        <p className="mt-2 truncate font-semibold text-legend text-sm">
           {price}
         </p>
         <p className="mt-1 text-[#6b7280] text-[10px]">
@@ -274,7 +275,7 @@ export function ProductCard({
             >
               <MessageCircle className="size-4" />
             </Button>
-            <Button className="h-8 flex-1 rounded-full bg-[#ed6203] text-white hover:bg-[#c14e02]">
+            <Button className="h-8 flex-1 rounded-full bg-legend text-white hover:bg-legend-600">
               Send RFQ
             </Button>
           </div>
@@ -284,45 +285,33 @@ export function ProductCard({
   )
 }
 
-export function SearchBar({
-  inverted = false,
-  className
-}: {
-  inverted?: boolean
-  className?: string
-}) {
+export function SearchBar({ inverted = false }: { inverted?: boolean }) {
   return (
-    <div
+    <InputGroup
       className={cn(
-        "flex h-10 items-center rounded-full border border-[#ed6203] bg-white px-3",
-        inverted &&
-          "h-14 border-white bg-black/20 pl-5 text-white shadow-[0_0_0_2px_rgba(255,255,255,0.25)] backdrop-blur",
-        className
+        "hidden max-w-md flex-1 lg:flex rounded-full border-legend",
+        inverted && "bg-white bg-transparent"
       )}
     >
-      <span
+      <InputGroupInput placeholder="Watch for men, Industrial parts, Solar systems..." />
+      <InputGroupButton
+        variant="default"
+        size="sm"
         className={cn(
-          "flex-1 truncate text-[#6b7280] text-sm",
-          inverted && "text-white/60"
-        )}
-      >
-        Watch for men, Industrial parts, Solar systems...
-      </span>
-      <Button
-        className={cn(
-          "h-8 rounded-full bg-[#ed6203] px-5 text-white hover:bg-[#c14e02]",
-          inverted && "h-12"
+          "rounded-full bg-legend px-5 h-9 mr-0.5",
+          inverted && "px-3"
         )}
         aria-label="Search"
       >
         {inverted ? (
           <>
-            AI Deep Search <Search className="size-4" />
+            AI Deep Search
+            <SparkleIcon className="size-4 text-white" />
           </>
         ) : (
-          <Search className="size-4" />
+          <SearchIcon className="size-4" strokeWidth={2.5} />
         )}
-      </Button>
-    </div>
+      </InputGroupButton>
+    </InputGroup>
   )
 }

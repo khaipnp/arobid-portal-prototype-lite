@@ -24,14 +24,13 @@ export function UserAvatar({
   name,
   imageUrl,
   size = "default",
-  className,
-  fallbackClassName
+  className
 }: UserAvatarProps) {
   return (
     <Avatar className={className} size={size}>
       {imageUrl ? <AvatarImage src={imageUrl} alt={name} /> : null}
-      <AvatarFallback className={fallbackClassName}>
-        {getUserInitials(name)}
+      <AvatarFallback className="bg-white border border-legend text-legend">
+        Logo
       </AvatarFallback>
     </Avatar>
   )
