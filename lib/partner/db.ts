@@ -4382,6 +4382,56 @@ export async function createPartnerEnterpriseMember(
   }
 }
 
+export async function resendPartnerEnterpriseInvitation(
+  userId: string,
+  memberId: string
+) {
+  const { organization, member } = await requirePartnerEnterpriseMember(
+    userId,
+    memberId
+  )
+  if (member.source !== "tenant_invite") {
+    throw new Error("Only Partner Site invitations can be resent.")
+  }
+  if (member.acceptedAt) {
+    throw new Error("Only pending invitations can be resent.")
+  }
+  if (
+    member.activationStatus !== "invited" &&
+    member.activationStatus !== "pending_acceptance"
+  ) {
+    throw new Error("Only pending invitations can be resent.")
+  }
+
+  const inviteToken = randomUUID()
+  await sql`
+    update partner_enterprise_members
+    set
+      activation_status = 'pending_acceptance',
+      invite_token = ${inviteToken},
+      invite_expires_at = now() + interval '30 days',
+      last_action = 'resend_invite',
+      updated_at = now()
+    where id = ${memberId}
+      and partner_org_id = ${organization.id}
+  `
+  await recordPartnerEnterpriseAssociationAudit({
+    associationId: memberId,
+    partnerOrgId: organization.id,
+    partnerOrgName: organization.name,
+    enterpriseId: member.enterpriseId,
+    enterpriseName: member.enterpriseName,
+    action: "resend_invite",
+    oldStatus: member.activationStatus,
+    newStatus: "pending_acceptance",
+    source: member.source,
+    actorType: "partner_user",
+    actorId: userId
+  })
+
+  return { id: memberId }
+}
+
 export async function createPartnerInviteCampaign(
   userId: string,
   input: {
