@@ -14,6 +14,9 @@ export default async function PartnerSiteInvitationsPage() {
     requirePartnerTab(userId, "enterprises"),
     getPartnerEnterpriseWorkspace(userId)
   ])
+  const inviteBaseUrl =
+    process.env.NEXT_PUBLIC_PARTNER_INVITE_BASE_URL ??
+    "https://arobid.site/invite"
 
   return (
     <DashboardShell
@@ -28,7 +31,11 @@ export default async function PartnerSiteInvitationsPage() {
         { label: "Invitations" }
       ]}
     >
-      <PartnerSiteInvitationManager access={access} workspace={workspace} />
+      <PartnerSiteInvitationManager
+        access={access}
+        workspace={workspace}
+        inviteBaseUrl={inviteBaseUrl}
+      />
     </DashboardShell>
   )
 }
