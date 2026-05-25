@@ -1,4 +1,5 @@
 import { headers } from "next/headers"
+import { hashPassword } from "@/lib/auth/password"
 import { sql } from "@/lib/db/neon"
 
 export interface AdministrationUserRole {
@@ -58,6 +59,31 @@ export interface RecordUserAuditEventInput {
   userAgent?: string | null
 }
 
+export interface UpdateAdministrationUserInput {
+  currentUserId: string
+  nextUserId: string
+  name: string
+  email: string
+  companyId: string | null
+  companyName: string | null
+  jobTitle: string | null
+  phone: string | null
+  website: string | null
+  location: string | null
+  avatarUrl: string | null
+  isActive: boolean
+}
+
+export interface UpdateAdministrationUserStatusInput {
+  userId: string
+  isActive: boolean
+}
+
+export interface ResetAdministrationUserPasswordInput {
+  userId: string
+  password: string
+}
+
 type UserRow = Omit<
   AdministrationUserDetail,
   "roles" | "auditEvents" | "roleCount" | "auditEventCount" | "latestActivityAt"
@@ -65,6 +91,16 @@ type UserRow = Omit<
 
 type CountRow = { count: number }
 type LatestActivityRow = { latestActivityAt: string | null }
+type ForeignKeyReferenceRow = {
+  schemaName: string
+  tableName: string
+  columnName: string
+}
+
+type ColumnRow = { columnName: string }
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 
 let userAuditSchemaReady = false
 
@@ -147,6 +183,56 @@ export async function recordUserAuditEvent(input: RecordUserAuditEventInput) {
   }
 }
 
+function normalizeNullableText(value: string | null) {
+  const normalized = value?.trim() ?? ""
+  return normalized || null
+}
+
+function assertValidUserId(userId: string) {
+  if (!UUID_RE.test(userId)) {
+    throw new Error("User ID must be a valid UUID.")
+  }
+}
+
+async function getTableColumns(tableName: string): Promise<string[]> {
+  const rows = (await sql`
+    select column_name as "columnName"
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = ${tableName}
+    order by ordinal_position asc
+  `) as ColumnRow[]
+
+  return rows.map((row) => row.columnName)
+}
+
+async function getUserForeignKeyReferences(): Promise<
+  ForeignKeyReferenceRow[]
+> {
+  return (await sql`
+    select
+      table_schema as "schemaName",
+      table_name as "tableName",
+      column_name as "columnName"
+    from information_schema.key_column_usage kcu
+    join information_schema.referential_constraints rc
+      on rc.constraint_schema = kcu.constraint_schema
+      and rc.constraint_name = kcu.constraint_name
+    join information_schema.constraint_column_usage ccu
+      on ccu.constraint_schema = rc.unique_constraint_schema
+      and ccu.constraint_name = rc.unique_constraint_name
+    where ccu.table_schema = 'public'
+      and ccu.table_name = 'users'
+      and ccu.column_name = 'id'
+      and kcu.table_schema = 'public'
+    order by kcu.table_name asc, kcu.column_name asc
+  `) as ForeignKeyReferenceRow[]
+}
+
+function quoteIdent(identifier: string) {
+  return `"${identifier.replaceAll('"', '""')}"`
+}
+
 export async function getAdministrationUserDetail(
   userId: string
 ): Promise<AdministrationUserDetail | null> {
@@ -160,11 +246,11 @@ export async function getAdministrationUserDetail(
       app_user.company_id as "companyId",
       company.name as "companyName",
       null::text as industry,
-      null::text as "jobTitle",
-      null::text as phone,
-      null::text as website,
-      null::text as location,
-      null::text as "avatarUrl",
+      app_user.job_title as "jobTitle",
+      app_user.phone,
+      app_user.website,
+      app_user.location,
+      app_user.avatar_url as "avatarUrl",
       app_user.is_active as "isActive"
     from users app_user
     left join companies company on company.id = app_user.company_id
@@ -230,4 +316,281 @@ export async function getAdministrationUserDetail(
     roles,
     auditEvents
   }
+}
+
+export async function updateAdministrationUserStatus(
+  input: UpdateAdministrationUserStatusInput
+): Promise<{ id: string; isActive: boolean }> {
+  const userId = input.userId.trim()
+  assertValidUserId(userId)
+
+  const userRows = (await sql`
+    update users
+    set is_active = ${input.isActive}
+    where id = ${userId}
+    returning id, is_active as "isActive"
+  `) as Array<{ id: string; isActive: boolean }>
+
+  if (userRows.length === 0) {
+    throw new Error("User not found.")
+  }
+
+  await sql`
+    update chat_users
+    set is_active = ${input.isActive}
+    where id = ${userId}
+  `
+
+  return userRows[0]
+}
+
+export async function resetAdministrationUserPassword(
+  input: ResetAdministrationUserPasswordInput
+): Promise<{ id: string }> {
+  const userId = input.userId.trim()
+  const password = input.password
+  assertValidUserId(userId)
+  if (password.length < 8) {
+    throw new Error("Password must be at least 8 characters.")
+  }
+
+  const identityRows = (await sql`
+    update auth_identities
+    set
+      password_hash = ${hashPassword(password)},
+      updated_at = now()
+    where user_id = ${userId}
+    returning user_id as id
+  `) as Array<{ id: string }>
+
+  if (identityRows.length === 0) {
+    throw new Error("Login identity not found.")
+  }
+
+  return { id: identityRows[0].id }
+}
+
+export async function deleteAdministrationUser(
+  userIdInput: string
+): Promise<{ id: string }> {
+  const userId = userIdInput.trim()
+  assertValidUserId(userId)
+
+  const existingRows = (await sql`
+    select id from users where id = ${userId} limit 1
+  `) as Array<{ id: string }>
+
+  if (existingRows.length === 0) {
+    throw new Error("User not found.")
+  }
+
+  await sql.transaction([
+    sql`delete from chat_users where id = ${userId}`,
+    sql`delete from users where id = ${userId}`
+  ])
+
+  return { id: userId }
+}
+
+export async function updateAdministrationUser(
+  input: UpdateAdministrationUserInput
+): Promise<{ id: string }> {
+  const currentUserId = input.currentUserId.trim()
+  const nextUserId = input.nextUserId.trim().toLowerCase()
+  const name = input.name.trim()
+  const email = input.email.trim().toLowerCase()
+  const companyId = normalizeNullableText(input.companyId)
+  const companyName = normalizeNullableText(input.companyName)
+  const jobTitle = normalizeNullableText(input.jobTitle)
+  const phone = normalizeNullableText(input.phone)
+  const website = normalizeNullableText(input.website)
+  const location = normalizeNullableText(input.location)
+  const avatarUrl = normalizeNullableText(input.avatarUrl)
+
+  assertValidUserId(currentUserId)
+  assertValidUserId(nextUserId)
+  if (!name || name.length > 255) {
+    throw new Error("Name is required (max 255 characters).")
+  }
+  if (!email || email.length > 320 || !email.includes("@")) {
+    throw new Error("Valid email is required.")
+  }
+
+  const idChanged = currentUserId !== nextUserId
+  const existingRows = (await sql`
+    select id from users where id = ${currentUserId} limit 1
+  `) as { id: string }[]
+  if (existingRows.length === 0) {
+    throw new Error("User not found.")
+  }
+
+  if (idChanged) {
+    const duplicateIdRows = (await sql`
+      select id from users where id = ${nextUserId} limit 1
+    `) as { id: string }[]
+    if (duplicateIdRows.length > 0) {
+      throw new Error("User ID already exists.")
+    }
+
+    const duplicateIdentityIdRows = (await sql`
+      select user_id from auth_identities where user_id = ${nextUserId} limit 1
+    `) as { user_id: string }[]
+    if (duplicateIdentityIdRows.length > 0) {
+      throw new Error("User ID already has a login identity.")
+    }
+  }
+
+  const duplicateEmailRows = (await sql`
+    select id from users
+    where lower(email) = lower(${email}) and id <> ${currentUserId}
+    limit 1
+  `) as { id: string }[]
+  if (duplicateEmailRows.length > 0) {
+    throw new Error("Email already belongs to another user.")
+  }
+
+  const duplicateIdentityRows = (await sql`
+    select user_id from auth_identities
+    where lower(email) = lower(${email}) and user_id <> ${currentUserId}
+    limit 1
+  `) as { user_id: string }[]
+  if (duplicateIdentityRows.length > 0) {
+    throw new Error("Login email already belongs to another user.")
+  }
+
+  const references = idChanged
+    ? (await getUserForeignKeyReferences()).filter(
+        (reference) => reference.tableName !== "auth_identities"
+      )
+    : []
+  const userColumns = idChanged ? await getTableColumns("users") : []
+  const copiedUserColumns = userColumns.filter((column) => column !== "id")
+  const transactionQueries = [] as Array<ReturnType<typeof sql>>
+
+  transactionQueries.push(sql`
+    select pg_advisory_xact_lock(hashtextextended(${currentUserId}, 0))
+  `)
+  if (idChanged) {
+    transactionQueries.push(sql`
+      select pg_advisory_xact_lock(hashtextextended(${nextUserId}, 0))
+    `)
+  }
+
+  if (companyId) {
+    transactionQueries.push(sql`
+      insert into companies (id, name)
+      values (${companyId}, ${companyName ?? companyId})
+      on conflict (id) do update
+      set name = excluded.name
+    `)
+  }
+
+  if (idChanged) {
+    transactionQueries.push(
+      sql.query(
+        `insert into users (${["id", ...copiedUserColumns.map(quoteIdent)].join(
+          ", "
+        )}) select $1, ${copiedUserColumns
+          .map(quoteIdent)
+          .join(", ")} from users where id = $2`,
+        [nextUserId, currentUserId]
+      )
+    )
+    transactionQueries.push(sql`
+      update users
+      set
+        name = ${name},
+        email = ${email},
+        company_id = ${companyId},
+        job_title = ${jobTitle},
+        phone = ${phone},
+        website = ${website},
+        location = ${location},
+        avatar_url = ${avatarUrl},
+        is_active = ${input.isActive}
+      where id = ${nextUserId}
+    `)
+
+    for (const reference of references) {
+      transactionQueries.push(
+        sql.query(
+          `update ${quoteIdent(reference.schemaName)}.${quoteIdent(reference.tableName)} set ${quoteIdent(reference.columnName)} = $1 where ${quoteIdent(reference.columnName)} = $2`,
+          [nextUserId, currentUserId]
+        )
+      )
+    }
+
+    transactionQueries.push(sql`
+      update chat_users
+      set
+        id = ${nextUserId},
+        name = ${name},
+        email = ${email},
+        company_id = ${companyId},
+        job_title = ${jobTitle},
+        phone = ${phone},
+        website = ${website},
+        location = ${location},
+        avatar_url = ${avatarUrl},
+        is_active = ${input.isActive}
+      where id = ${currentUserId}
+    `)
+    transactionQueries.push(sql`
+      update chat_messages
+      set sender_id = ${nextUserId}
+      where sender_id = ${currentUserId}
+    `)
+    transactionQueries.push(sql`
+      update auth_identities
+      set
+        user_id = ${nextUserId},
+        email = ${email},
+        updated_at = now()
+      where user_id = ${currentUserId}
+    `)
+    transactionQueries.push(sql`delete from users where id = ${currentUserId}`)
+  } else {
+    transactionQueries.push(sql`
+      update users
+      set
+        name = ${name},
+        email = ${email},
+        company_id = ${companyId},
+        job_title = ${jobTitle},
+        phone = ${phone},
+        website = ${website},
+        location = ${location},
+        avatar_url = ${avatarUrl},
+        is_active = ${input.isActive}
+      where id = ${currentUserId}
+    `)
+    transactionQueries.push(sql`
+      update chat_users
+      set
+        name = ${name},
+        email = ${email},
+        company_id = ${companyId},
+        job_title = ${jobTitle},
+        phone = ${phone},
+        website = ${website},
+        location = ${location},
+        avatar_url = ${avatarUrl},
+        is_active = ${input.isActive}
+      where id = ${currentUserId}
+    `)
+  }
+
+  if (!idChanged) {
+    transactionQueries.push(sql`
+      update auth_identities
+      set
+        email = ${email},
+        updated_at = now()
+      where user_id = ${currentUserId}
+    `)
+  }
+
+  await sql.transaction(transactionQueries)
+
+  return { id: nextUserId }
 }

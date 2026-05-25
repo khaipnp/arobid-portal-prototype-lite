@@ -1,40 +1,45 @@
-import { notFound } from "next/navigation";
-import { DashboardShell } from "@/components/tradexpo/dashboard-shell";
-import { ExpoForm } from "@/components/tradexpo/expo-form";
-import { ensurePlatformSchema } from "@/lib/platform/ensure-schema";
-import { listHallTemplates } from "@/lib/tradexpo/db/hall-templates";
+import { notFound } from "next/navigation"
+import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
+import { ExpoForm } from "@/components/tradexpo/expo-form"
+import { requireRole } from "@/lib/auth/rbac"
+import { getAuthenticatedUserById } from "@/lib/auth/service"
+import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
+import { listHallTemplates } from "@/lib/tradexpo/db/hall-templates"
 import {
   getExpoById,
   getUserById,
   listExpoCategories,
   listExpoHalls,
-  listExpoLayoutTemplates,
-} from "@/lib/tradexpo/db/platform-data";
+  listExpoLayoutTemplates
+} from "@/lib/tradexpo/db/platform-data"
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"
 
 export default async function EditExpoPage({
-  params,
+  params
 }: {
-  params: Promise<{ expoId: string }>;
+  params: Promise<{ expoId: string }>
 }) {
-  await ensurePlatformSchema();
-  const { expoId } = await params;
+  await ensurePlatformSchema()
+  const { expoId } = await params
+  const userId = await requireRole("admin")
+  const user = await getAuthenticatedUserById(userId)
+  const isSuper = user?.roles.includes("sys_admin") ?? false
 
-  const expo = await getExpoById(expoId);
-  if (!expo) notFound();
+  const expo = await getExpoById(expoId)
+  if (!expo) notFound()
 
   const [categories, layoutTemplates, hallTemplates, halls] = await Promise.all(
     [
       listExpoCategories(),
       listExpoLayoutTemplates(),
       listHallTemplates(),
-      listExpoHalls(expoId),
-    ],
-  );
+      listExpoHalls(expoId)
+    ]
+  )
 
   const initialOwner =
-    expo.ownerUserId != null ? await getUserById(expo.ownerUserId) : null;
+    expo.ownerUserId != null ? await getUserById(expo.ownerUserId) : null
 
   return (
     <DashboardShell
@@ -44,7 +49,7 @@ export default async function EditExpoPage({
         { label: "TradeXpo", href: "/admin/tradexpo" },
         { label: "Expo List", href: "/admin/tradexpo/expos" },
         { label: expo.name, href: `/admin/tradexpo/expos/${expoId}` },
-        { label: "Edit" },
+        { label: "Edit" }
       ]}
       showBackButton
     >
@@ -52,6 +57,7 @@ export default async function EditExpoPage({
         mode="edit"
         expoId={expoId}
         initialExpo={expo}
+        isSuper={isSuper}
         initialHalls={halls}
         initialOwner={initialOwner}
         categories={categories}
@@ -59,5 +65,5 @@ export default async function EditExpoPage({
         hallTemplates={hallTemplates}
       />
     </DashboardShell>
-  );
+  )
 }

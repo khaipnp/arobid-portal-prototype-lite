@@ -237,6 +237,15 @@ export type PartnerEnterpriseAssociationAuditFilters = {
   limit?: number
 }
 
+export type PartnerSiteInvitationType = "site_visit" | "join_partner_site"
+
+export type PartnerSiteInvitationSendResult = {
+  sentCount: number
+  createdCount: number
+  resentCount: number
+  skipped: { email: string; reason: string }[]
+}
+
 export type PartnerEnterpriseMember = {
   id: string
   enterpriseId?: string | null
@@ -4380,6 +4389,194 @@ export async function createPartnerEnterpriseMember(
     skipped,
     shareUrl: `/register/company?tenant=${organization.id}`
   }
+}
+
+export async function createPartnerSiteInvitations(
+  userId: string,
+  input: {
+    invitationType: PartnerSiteInvitationType
+    recipients: string[]
+  }
+): Promise<PartnerSiteInvitationSendResult> {
+  const organization = await requirePrimaryPartnerOrganization(userId)
+  if (
+    input.invitationType !== "site_visit" &&
+    input.invitationType !== "join_partner_site"
+  ) {
+    throw new Error("Invalid invitation type.")
+  }
+
+  const recipients = Array.from(
+    new Set(input.recipients.map((email) => email.trim().toLowerCase()))
+  ).filter(Boolean)
+  if (recipients.length === 0) {
+    throw new Error("At least one recipient email is required.")
+  }
+
+  const skipped: { email: string; reason: string }[] = []
+  let createdCount = 0
+  let resentCount = 0
+
+  for (const email of recipients) {
+    await sql`select pg_advisory_xact_lock(hashtext(${`${organization.id}|tenant_invite|${email}`}))`
+    const duplicateRows = (await sql`
+      select id, activation_status, accepted_at
+      from partner_enterprise_members
+      where partner_org_id = ${organization.id}
+        and lower(contact_email) = ${email}
+        and source = 'tenant_invite'
+        and activation_status in ('invited', 'pending_acceptance', 'active', 'blocked')
+      limit 1
+    `) as {
+      id: string
+      activation_status: PartnerEnterpriseMember["activationStatus"]
+      accepted_at: string | Date | null
+    }[]
+    const duplicate = duplicateRows[0]
+    if (duplicate?.activation_status === "blocked") {
+      skipped.push({ email, reason: "Blocked association." })
+      continue
+    }
+    if (duplicate?.activation_status === "active" || duplicate?.accepted_at) {
+      skipped.push({ email, reason: "Already accepted." })
+      continue
+    }
+
+    const inviteToken = randomUUID()
+    if (duplicate) {
+      await sql`
+        update partner_enterprise_members
+        set
+          activation_status = 'pending_acceptance',
+          relationship_type = ${getRelationshipTypeForInvitation(input.invitationType)},
+          invite_token = ${inviteToken},
+          invite_expires_at = now() + interval '30 days',
+          last_action = 'resend_invite',
+          updated_at = now()
+        where id = ${duplicate.id}
+          and partner_org_id = ${organization.id}
+      `
+      await recordPartnerEnterpriseAssociationAudit({
+        associationId: duplicate.id,
+        partnerOrgId: organization.id,
+        partnerOrgName: organization.name,
+        enterpriseId: null,
+        enterpriseName: email,
+        action: "resend_invite",
+        oldStatus: duplicate.activation_status,
+        newStatus: "pending_acceptance",
+        source: "tenant_invite",
+        actorType: "partner_user",
+        actorId: userId
+      })
+      resentCount += 1
+      continue
+    }
+
+    const id = `partner-member-${randomUUID()}`
+    await sql`
+      insert into partner_enterprise_members (
+        id,
+        partner_org_id,
+        enterprise_id,
+        enterprise_name,
+        contact_email,
+        activation_status,
+        source,
+        relationship_type,
+        invite_token,
+        invite_expires_at,
+        last_action
+      )
+      values (
+        ${id},
+        ${organization.id},
+        null,
+        ${email},
+        ${email},
+        'pending_acceptance',
+        'tenant_invite',
+        ${getRelationshipTypeForInvitation(input.invitationType)},
+        ${inviteToken},
+        now() + interval '30 days',
+        'invite'
+      )
+    `
+    await recordPartnerEnterpriseAssociationAudit({
+      associationId: id,
+      partnerOrgId: organization.id,
+      partnerOrgName: organization.name,
+      enterpriseId: null,
+      enterpriseName: email,
+      action: "invite",
+      newStatus: "pending_acceptance",
+      source: "tenant_invite",
+      actorType: "partner_user",
+      actorId: userId
+    })
+    createdCount += 1
+  }
+
+  return {
+    sentCount: createdCount + resentCount,
+    createdCount,
+    resentCount,
+    skipped
+  }
+}
+
+export async function resendPartnerEnterpriseInvitation(
+  userId: string,
+  memberId: string
+) {
+  const { organization, member } = await requirePartnerEnterpriseMember(
+    userId,
+    memberId
+  )
+  if (member.source !== "tenant_invite") {
+    throw new Error("Only Partner Site invitations can be resent.")
+  }
+  if (member.acceptedAt) {
+    throw new Error("Only pending invitations can be resent.")
+  }
+  if (
+    member.activationStatus !== "invited" &&
+    member.activationStatus !== "pending_acceptance"
+  ) {
+    throw new Error("Only pending invitations can be resent.")
+  }
+
+  const inviteToken = randomUUID()
+  await sql`
+    update partner_enterprise_members
+    set
+      activation_status = 'pending_acceptance',
+      invite_token = ${inviteToken},
+      invite_expires_at = now() + interval '30 days',
+      last_action = 'resend_invite',
+      updated_at = now()
+    where id = ${memberId}
+      and partner_org_id = ${organization.id}
+  `
+  await recordPartnerEnterpriseAssociationAudit({
+    associationId: memberId,
+    partnerOrgId: organization.id,
+    partnerOrgName: organization.name,
+    enterpriseId: member.enterpriseId,
+    enterpriseName: member.enterpriseName,
+    action: "resend_invite",
+    oldStatus: member.activationStatus,
+    newStatus: "pending_acceptance",
+    source: member.source,
+    actorType: "partner_user",
+    actorId: userId
+  })
+
+  return { id: memberId }
+}
+
+function getRelationshipTypeForInvitation(type: PartnerSiteInvitationType) {
+  return type === "site_visit" ? "site_visit" : "member"
 }
 
 export async function createPartnerInviteCampaign(

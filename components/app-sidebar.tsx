@@ -1,53 +1,31 @@
-"use client"
+"use client";
 
-import { Building2Icon, HandshakeIcon, ShieldUserIcon } from "lucide-react"
-import type * as React from "react"
-import { NavAdmin } from "@/components/nav-admin"
-import { NavPartner } from "@/components/nav-partner"
-import { NavSeller } from "@/components/nav-seller"
-import { NavUser } from "@/components/nav-user"
-import { PortalSwitcher } from "@/components/portal-switcher"
+import Image from "next/image";
+import type * as React from "react";
+import { NavAdmin } from "@/components/nav-admin";
+import { NavPartner } from "@/components/nav-partner";
+import { NavSeller } from "@/components/nav-seller";
+import { NavUser } from "@/components/nav-user";
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
-  SidebarRail
-} from "@/components/ui/sidebar"
-import type { PartnerAccess } from "@/lib/partner/access"
+  SidebarRail,
+} from "@/components/ui/sidebar";
+import type { PartnerAccess } from "@/lib/partner/access";
 
-export type PortalType = "admin" | "partner" | "seller"
-
-const portals = [
-  {
-    name: "Admin Portal",
-    logo: <ShieldUserIcon />,
-    plan: "Admin View",
-    url: "/admin"
-  },
-  {
-    name: "Partner Portal",
-    logo: <HandshakeIcon />,
-    plan: "Partner Workspace",
-    url: "/partner"
-  },
-  {
-    name: "Eg. Thaco Company",
-    logo: <Building2Icon />,
-    plan: "User's Workspace",
-    url: "/seller"
-  }
-]
+export type PortalType = "admin" | "partner" | "seller";
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
-  portal?: PortalType
-  partnerAccess?: PartnerAccess
+  portal?: PortalType;
+  partnerAccess?: PartnerAccess;
   user: {
-    name: string
-    email: string
-    avatar: string
-    roles?: string[]
-  }
+    name: string;
+    email: string;
+    avatar: string;
+    roles?: string[];
+  };
 }
 
 export function AppSidebar({
@@ -56,20 +34,27 @@ export function AppSidebar({
   user,
   ...props
 }: AppSidebarProps) {
-  const activePortalName = portals.find((p) => p.url === `/${portal}`)?.name
-  const canSwitchPortals = (user.roles ?? []).includes("sys_admin")
-  const canManageSeller = (user.roles ?? []).includes("seller")
+  const canManageSeller = (user.roles ?? []).includes("seller");
   const canUseDealRoom =
     (user.roles ?? []).includes("seller") ||
-    (user.roles ?? []).includes("buyer")
+    (user.roles ?? []).includes("buyer");
 
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader>
-        <PortalSwitcher
-          portals={portals}
-          activePortalName={activePortalName}
-          canSwitchPortals={canSwitchPortals}
+      <SidebarHeader className="items-center py-2">
+        <Image
+          src="/assets/images/arobid-logo-light-mode.svg"
+          alt="Arobid Logo"
+          width={180}
+          height={192}
+          className="group-data-[collapsible=icon]:hidden"
+        />
+        <Image
+          src="/assets/images/arobid-logo-icon.png"
+          alt="Arobid Logo"
+          width={44}
+          height={44}
+          className="hidden group-data-[collapsible=icon]:block"
         />
       </SidebarHeader>
       <SidebarContent>
@@ -87,5 +72,5 @@ export function AppSidebar({
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
-  )
+  );
 }

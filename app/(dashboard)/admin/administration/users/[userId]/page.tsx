@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation"
+import { UserDetailForm } from "@/components/administration/user-detail-form"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -87,7 +88,11 @@ export default async function AdminUserDetailPage({
         <Card>
           <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-center gap-4">
-              <UserAvatar name={user.name} className="h-16 w-16 text-lg" />
+              <UserAvatar
+                name={user.name}
+                imageUrl={user.avatarUrl}
+                className="h-16 w-16 text-lg"
+              />
               <div className="space-y-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <h1 className="font-semibold text-2xl tracking-tight">
@@ -114,30 +119,9 @@ export default async function AdminUserDetailPage({
           <Card className="lg:col-span-2">
             <CardHeader>
               <CardTitle>Profile</CardTitle>
-              <CardDescription>
-                Core account and organization data.
-              </CardDescription>
             </CardHeader>
             <CardContent>
-              <dl className="grid gap-4 sm:grid-cols-2">
-                <DetailItem label="User ID" value={user.id} mono />
-                <DetailItem label="Email" value={user.email} />
-                <DetailItem label="Company" value={user.companyName ?? "—"} />
-                <DetailItem
-                  label="Company ID"
-                  value={user.companyId ?? "—"}
-                  mono
-                />
-                <DetailItem label="Job title" value={user.jobTitle ?? "—"} />
-                <DetailItem label="Industry" value={user.industry ?? "—"} />
-                <DetailItem label="Phone" value={user.phone ?? "—"} />
-                <DetailItem label="Location" value={user.location ?? "—"} />
-                <DetailItem label="Website" value={user.website ?? "—"} />
-                <DetailItem
-                  label="Latest audit activity"
-                  value={formatDateTime(user.latestActivityAt)}
-                />
-              </dl>
+              <UserDetailForm user={user} />
             </CardContent>
           </Card>
 
@@ -249,27 +233,6 @@ function Metric({ label, value }: { label: string; value: string | number }) {
         {label}
       </p>
       <p className="font-semibold text-2xl tabular-nums">{value}</p>
-    </div>
-  )
-}
-
-function DetailItem({
-  label,
-  value,
-  mono = false
-}: {
-  label: string
-  value: string
-  mono?: boolean
-}) {
-  return (
-    <div className="space-y-1">
-      <dt className="text-muted-foreground text-xs uppercase tracking-wide">
-        {label}
-      </dt>
-      <dd className={mono ? "break-all font-mono text-xs" : "text-sm"}>
-        {value}
-      </dd>
     </div>
   )
 }

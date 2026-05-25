@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { getCurrentUserIdFromRequest, userHasRole } from "@/lib/auth/rbac"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 import {
   deleteExpo,
@@ -33,8 +34,9 @@ export async function PUT(request: Request, { params }: Props) {
     return NextResponse.json({ error: "Expo not found." }, { status: 404 })
   }
 
-  const body = (await request.json()) as {
+  let body: {
     name?: string
+    slug?: string
     description?: string
     thumbnailUrl?: string
     expoTemplateId?: string
@@ -46,6 +48,14 @@ export async function PUT(request: Request, { params }: Props) {
     ownerEmail?: string
     halls?: ExpoHallDraft[]
   }
+  try {
+    body = (await request.json()) as typeof body
+  } catch {
+    return NextResponse.json(
+      { error: "Invalid JSON payload." },
+      { status: 400 }
+    )
+  }
 
   const name = body.name?.trim() ?? ""
   if (!name || name.length > 255) {
@@ -53,6 +63,24 @@ export async function PUT(request: Request, { params }: Props) {
       { error: "Expo name is required (max 255 characters)." },
       { status: 400 }
     )
+  }
+
+  const slug = body.slug?.trim() ?? ""
+  if (slug) {
+    let userId = ""
+    try {
+      userId = await getCurrentUserIdFromRequest()
+    } catch {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+    }
+
+    const isSuper = await userHasRole(userId, "sys_admin")
+    if (!isSuper) {
+      return NextResponse.json(
+        { error: "Only system admins can edit expo slugs." },
+        { status: 403 }
+      )
+    }
   }
 
   const description = body.description?.trim() ?? ""
@@ -115,6 +143,7 @@ export async function PUT(request: Request, { params }: Props) {
   try {
     await updateExpoWithHalls(expoId, {
       name,
+      slug: slug || undefined,
       description,
       thumbnailUrl: body.thumbnailUrl?.trim() ?? "",
       expoTemplateId,

@@ -37,9 +37,27 @@ export interface AdminUser {
   id: string
   name: string
   email: string
+  avatarUrl: string | null
   companyName: string | null
+  companyLogoUrl: string | null
   roleCount: number
   isActive: boolean
+}
+
+export interface AdminCompany {
+  id: string
+  name: string
+  taxId: string | null
+  logoUrl: string | null
+  website: string | null
+  address: string | null
+  categoryNames: string[]
+  isActive: boolean
+}
+
+export interface CompanyCategoryOption {
+  id: string
+  name: string
 }
 
 export interface PaginationMeta {

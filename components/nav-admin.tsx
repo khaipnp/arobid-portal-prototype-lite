@@ -2,6 +2,7 @@
 
 import {
   BrickWallShieldIcon,
+  Building2Icon,
   Grid3x2Icon,
   HistoryIcon,
   LayoutDashboardIcon,
@@ -18,6 +19,7 @@ import {
   WalletCardsIcon
 } from "lucide-react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -89,6 +91,11 @@ const administrationLinks = [
     icon: <HistoryIcon />
   },
   {
+    name: "Companies",
+    url: "/admin/administration/companies",
+    icon: <Building2Icon />
+  },
+  {
     name: "Users",
     url: "/admin/administration/users",
     icon: <UsersIcon />
@@ -115,7 +122,27 @@ const administrationLinks = [
   }
 ]
 
+const adminLinks = [...tradexpoLinks, ...servicesLinks, ...administrationLinks]
+
+function isActiveHref(
+  pathname: string,
+  href: string,
+  activeHref: string | undefined
+) {
+  return (
+    activeHref === href &&
+    (pathname === href || pathname.startsWith(`${href}/`))
+  )
+}
+
 export function NavAdmin() {
+  const pathname = usePathname()
+  const activeHref = adminLinks
+    .filter(
+      (item) => pathname === item.url || pathname.startsWith(`${item.url}/`)
+    )
+    .sort((a, b) => b.url.length - a.url.length)[0]?.url
+
   return (
     <>
       <SidebarGroup className="group-data-[collapsible=icon]:hidden">
@@ -123,8 +150,18 @@ export function NavAdmin() {
         <SidebarMenu>
           {tradexpoLinks.map((item) => (
             <SidebarMenuItem key={item.name}>
-              <SidebarMenuButton asChild>
-                <Link href={item.url}>
+              <SidebarMenuButton
+                asChild
+                isActive={isActiveHref(pathname, item.url, activeHref)}
+              >
+                <Link
+                  href={item.url}
+                  aria-current={
+                    isActiveHref(pathname, item.url, activeHref)
+                      ? "page"
+                      : undefined
+                  }
+                >
                   {item.icon}
                   <span>{item.name}</span>
                 </Link>
@@ -141,8 +178,18 @@ export function NavAdmin() {
         <SidebarMenu>
           {servicesLinks.map((item) => (
             <SidebarMenuItem key={item.name}>
-              <SidebarMenuButton asChild>
-                <Link href={item.url}>
+              <SidebarMenuButton
+                asChild
+                isActive={isActiveHref(pathname, item.url, activeHref)}
+              >
+                <Link
+                  href={item.url}
+                  aria-current={
+                    isActiveHref(pathname, item.url, activeHref)
+                      ? "page"
+                      : undefined
+                  }
+                >
                   {item.icon}
                   <span>{item.name}</span>
                 </Link>
@@ -159,8 +206,18 @@ export function NavAdmin() {
         <SidebarMenu>
           {administrationLinks.map((item) => (
             <SidebarMenuItem key={item.name}>
-              <SidebarMenuButton asChild>
-                <Link href={item.url}>
+              <SidebarMenuButton
+                asChild
+                isActive={isActiveHref(pathname, item.url, activeHref)}
+              >
+                <Link
+                  href={item.url}
+                  aria-current={
+                    isActiveHref(pathname, item.url, activeHref)
+                      ? "page"
+                      : undefined
+                  }
+                >
                   {item.icon}
                   <span>{item.name}</span>
                 </Link>

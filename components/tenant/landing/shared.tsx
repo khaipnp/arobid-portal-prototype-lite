@@ -11,12 +11,12 @@ import {
 import Image from "next/image"
 import type { ComponentProps, ReactNode } from "react"
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
 import {
   InputGroup,
   InputGroupButton,
   InputGroupInput
 } from "@/components/ui/input-group"
+import { cn } from "@/lib/utils"
 
 export function SectionShell({
   children,

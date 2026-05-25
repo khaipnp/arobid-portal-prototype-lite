@@ -1,19 +1,19 @@
-import Link from "next/link"
-import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
-import { requireAnyRole, userHasRole } from "@/lib/auth/rbac"
-import { listSellerBoothRegistrations } from "@/lib/tradexpo/db/platform-data"
+import Link from "next/link";
+import { DashboardShell } from "@/components/tradexpo/dashboard-shell";
+import { requireAnyRole, userHasRole } from "@/lib/auth/rbac";
+import { listSellerBoothRegistrations } from "@/lib/tradexpo/db/platform-data";
 
-export const dynamic = "force-dynamic"
+export const dynamic = "force-dynamic";
 
 export default async function SellerDashboardPage() {
-  const userId = await requireAnyRole(["seller", "buyer"])
-  const isSeller = await userHasRole(userId, "seller")
-  const registrations = await listSellerBoothRegistrations(userId)
-  const myExpoIds = [...new Set(registrations.map((r) => r.expoId))]
-  const liveCount = registrations.filter((r) => r.status === "Live").length
+  const userId = await requireAnyRole(["seller", "buyer"]);
+  const isSeller = await userHasRole(userId, "seller");
+  const registrations = await listSellerBoothRegistrations(userId);
+  const myExpoIds = [...new Set(registrations.map((r) => r.expoId))];
+  const liveCount = registrations.filter((r) => r.status === "Live").length;
   const pendingCount = registrations.filter(
-    (r) => r.status === "Pending Setup"
-  ).length
+    (r) => r.status === "Pending Setup",
+  ).length;
 
   return (
     <DashboardShell
@@ -21,7 +21,7 @@ export default async function SellerDashboardPage() {
       description="Manage your booths and browse expo events."
       breadcrumbs={[{ label: "Dashboard" }]}
     >
-      <div className="grid gap-4 px-4 md:grid-cols-3">
+      <div className="mt-5 grid gap-4 md:grid-cols-3">
         <Link
           href="/seller/orders"
           className="group rounded-xl border bg-card p-4 transition-colors hover:bg-accent/40"
@@ -69,5 +69,5 @@ export default async function SellerDashboardPage() {
         ) : null}
       </div>
     </DashboardShell>
-  )
+  );
 }

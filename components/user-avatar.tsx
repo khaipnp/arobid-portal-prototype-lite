@@ -29,7 +29,7 @@ export function UserAvatar({
   return (
     <Avatar className={className} size={size}>
       {imageUrl ? <AvatarImage src={imageUrl} alt={name} /> : null}
-      <AvatarFallback className="bg-white border border-legend text-legend">
+      <AvatarFallback className="bg-white text-legend border border-legend text-[10px] font-semibold">
         Logo
       </AvatarFallback>
     </Avatar>

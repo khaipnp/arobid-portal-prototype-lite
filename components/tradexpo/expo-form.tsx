@@ -94,6 +94,7 @@ export type ExpoFormProps = {
   successHref?: string
   submitEndpoint?: string
   editableScope?: "admin" | "partner-content"
+  isSuper?: boolean
 } & (
   | { mode: "create" }
   | {
@@ -110,9 +111,13 @@ export function ExpoForm(props: ExpoFormProps) {
   const isEdit = props.mode === "edit"
   const editableScope = props.editableScope ?? "admin"
   const isPartnerContentEdit = isEdit && editableScope === "partner-content"
+  const isSuper = props.isSuper ?? false
 
   const [name, setName] = React.useState(() =>
     isEdit ? props.initialExpo.name : ""
+  )
+  const [slug, setSlug] = React.useState(() =>
+    isEdit ? (props.initialExpo.slug ?? "") : ""
   )
   const [description, setDescription] = React.useState(() =>
     isEdit ? (props.initialExpo.description ?? "") : ""
@@ -255,6 +260,7 @@ export function ExpoForm(props: ExpoFormProps) {
 
     const payload = {
       name,
+      ...(isSuper ? { slug } : {}),
       description,
       thumbnailUrl,
       expoTemplateId,
@@ -356,6 +362,21 @@ export function ExpoForm(props: ExpoFormProps) {
               placeholder="Unique name"
             />
           </div>
+          {isSuper && isEdit ? (
+            <div className="grid gap-2">
+              <Label htmlFor="expo-slug">Slug</Label>
+              <Input
+                id="expo-slug"
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+                pattern="[a-z0-9]+(-[a-z0-9]+)*"
+                placeholder="expo-url-slug"
+              />
+              <p className="text-muted-foreground text-xs">
+                Lowercase letters, numbers, and single hyphens only.
+              </p>
+            </div>
+          ) : null}
           <div className="grid gap-2">
             <Label htmlFor="expo-desc">Description</Label>
             <Textarea
