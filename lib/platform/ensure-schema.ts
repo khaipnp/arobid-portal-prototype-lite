@@ -3,7 +3,7 @@ import { ensureTradeCreditSchema } from "@/lib/tradecredit/db"
 import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
 let platformSchemaReady = false
-const LATEST_PLATFORM_MIGRATION = "tradecredit_core_v1"
+const LATEST_PLATFORM_MIGRATION = "deal_room_partner_org_v1"
 
 type SqlClient = typeof sql
 
@@ -1395,6 +1395,54 @@ async function migratePartnerOrganizationSchema() {
   await sql`
     create index if not exists idx_partner_memberships_user
     on partner_memberships (user_id)
+  `
+
+  await sql`
+    create table if not exists chat_conversation_partner_members (
+      conversation_id text not null references chat_conversations(id) on delete cascade,
+      partner_org_id text not null references partner_organizations(id) on delete cascade,
+      joined_at timestamptz not null default now(),
+      is_archived boolean not null default false,
+      primary key (conversation_id, partner_org_id)
+    )
+  `
+  await sql`
+    create index if not exists idx_chat_conversation_partner_members_org
+    on chat_conversation_partner_members (partner_org_id)
+  `
+  await sql`
+    create index if not exists idx_chat_conversation_partner_members_conv
+    on chat_conversation_partner_members (conversation_id)
+  `
+
+  await sql`
+    create table if not exists chat_partner_unread_counts (
+      partner_org_id text not null references partner_organizations(id) on delete cascade,
+      conversation_id text not null references chat_conversations(id) on delete cascade,
+      unread_count int not null default 0,
+      primary key (partner_org_id, conversation_id)
+    )
+  `
+  await sql`
+    create index if not exists idx_chat_partner_unread_counts_org
+    on chat_partner_unread_counts (partner_org_id)
+  `
+  await sql`
+    insert into chat_conversation_partner_members (
+      conversation_id,
+      partner_org_id,
+      joined_at,
+      is_archived
+    )
+    select
+      ccm.conversation_id,
+      po.id,
+      ccm.joined_at,
+      ccm.is_archived
+    from chat_conversation_members ccm
+    inner join partner_organizations po
+      on po.primary_user_id = ccm.user_id
+    on conflict (conversation_id, partner_org_id) do nothing
   `
 
   await sql`

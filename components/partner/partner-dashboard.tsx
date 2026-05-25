@@ -1,65 +1,65 @@
-"use client"
+"use client";
 
-import { ActivityIcon, EyeIcon, RadioTowerIcon, UsersIcon } from "lucide-react"
-import Link from "next/link"
-import type { ReactNode } from "react"
+import { ActivityIcon, EyeIcon, RadioTowerIcon, UsersIcon } from "lucide-react";
+import Link from "next/link";
+import type { ReactNode } from "react";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
-} from "@/components/ui/card"
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
-} from "@/components/ui/table"
-import type { PartnerDashboardMetrics } from "@/lib/partner/db"
-import { ExpoStatusBadge } from "../tradexpo/status-badge"
+  TableRow,
+} from "@/components/ui/table";
+import type { PartnerDashboardMetrics } from "@/lib/partner/db";
+import { ExpoStatusBadge } from "../tradexpo/status-badge";
 
 const compactNumber = new Intl.NumberFormat("en", {
   notation: "compact",
-  maximumFractionDigits: 1
-})
+  maximumFractionDigits: 1,
+});
 
-const numberFormat = new Intl.NumberFormat("en")
+const numberFormat = new Intl.NumberFormat("en");
 
 const currencyFormat = new Intl.NumberFormat("vi-VN", {
   style: "currency",
   currency: "VND",
   notation: "compact",
-  maximumFractionDigits: 1
-})
+  maximumFractionDigits: 1,
+});
 
 function formatPercent(value: number) {
-  return `${Math.round(value)}%`
+  return `${Math.round(value)}%`;
 }
 
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString("en-GB", {
     day: "2-digit",
-    month: "short"
-  })
+    month: "short",
+  });
 }
 
 function shortName(name: string) {
-  const words = name.split(/\s+/).filter(Boolean)
-  if (words.length <= 2) return name
-  return words.slice(0, 2).join(" ")
+  const words = name.split(/\s+/).filter(Boolean);
+  if (words.length <= 2) return name;
+  return words.slice(0, 2).join(" ");
 }
 
 function HeroStat({
   label,
   value,
-  icon
+  icon,
 }: {
-  label: string
-  value: string
-  icon: ReactNode
+  label: string;
+  value: string;
+  icon: ReactNode;
 }) {
   return (
     <div className="rounded-2xl border border-white/20 bg-white/10 p-4 text-primary-foreground shadow-sm backdrop-blur">
@@ -71,19 +71,19 @@ function HeroStat({
         {value}
       </div>
     </div>
-  )
+  );
 }
 
 function _InsightCard({
   label,
   value,
   description,
-  icon
+  icon,
 }: {
-  label: string
-  value: string
-  description: string
-  icon: ReactNode
+  label: string;
+  value: string;
+  description: string;
+  icon: ReactNode;
 }) {
   return (
     <div className="rounded-xl border bg-muted/30 p-4">
@@ -102,26 +102,26 @@ function _InsightCard({
         {description}
       </p>
     </div>
-  )
+  );
 }
 
 export function PartnerDashboard({
-  metrics
+  metrics,
 }: {
-  metrics: PartnerDashboardMetrics
+  metrics: PartnerDashboardMetrics;
 }) {
   const _expoChartData = metrics.expoMetrics.map((item) => ({
     ...item,
-    label: shortName(item.expoName)
-  }))
-  const _hasExpoMetrics = metrics.expoMetrics.length > 0
-  const hasCountryData = metrics.countryBreakdown.length > 0
-  const hasTierData = metrics.boothTierBreakdown.length > 0
-  const _demoMiniSiteViews = 2480
+    label: shortName(item.expoName),
+  }));
+  const _hasExpoMetrics = metrics.expoMetrics.length > 0;
+  const hasCountryData = metrics.countryBreakdown.length > 0;
+  const hasTierData = metrics.boothTierBreakdown.length > 0;
+  const _demoMiniSiteViews = 2480;
   const _totalRevenue = metrics.expoMetrics.reduce(
     (sum, item) => sum + item.revenue,
-    0
-  )
+    0,
+  );
 
   return (
     <div className="space-y-6 px-4 py-4">
@@ -256,21 +256,33 @@ export function PartnerDashboard({
             />
           </CardContent>
         </Card>
+        <section>
+          <h1>Operations Summary</h1>
+          <p>Partner performance snapshot</p>
+        </section>
+        <section>
+          <h1>Expo and Inventory</h1>
+          <p>Expo usage and booth capacity</p>
+        </section>
+        <section>
+          <h1>Trade Activity</h1>
+          <p>RFQ and deal movement</p>
+        </section>
       </div>
     </div>
-  )
+  );
 }
 
 function BreakdownList({
   title,
   items,
-  empty
+  empty,
 }: {
-  title: string
-  items: { name: string; value: number }[]
-  empty: boolean
+  title: string;
+  items: { name: string; value: number }[];
+  empty: boolean;
 }) {
-  const total = items.reduce((sum, item) => sum + item.value, 0)
+  const total = items.reduce((sum, item) => sum + item.value, 0);
 
   return (
     <section className="space-y-3">
@@ -285,7 +297,7 @@ function BreakdownList({
       ) : (
         <div className="space-y-3">
           {items.map((item) => {
-            const percent = total > 0 ? (item.value / total) * 100 : 0
+            const percent = total > 0 ? (item.value / total) * 100 : 0;
 
             return (
               <div key={item.name} className="space-y-1.5">
@@ -302,10 +314,10 @@ function BreakdownList({
                   />
                 </div>
               </div>
-            )
+            );
           })}
         </div>
       )}
     </section>
-  )
+  );
 }
