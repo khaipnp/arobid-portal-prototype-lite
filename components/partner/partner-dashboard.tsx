@@ -1,65 +1,63 @@
-"use client";
+"use client"
 
-import { ActivityIcon, EyeIcon, RadioTowerIcon, UsersIcon } from "lucide-react";
-import Link from "next/link";
-import type { ReactNode } from "react";
+import { ActivityIcon, EyeIcon, RadioTowerIcon, UsersIcon } from "lucide-react"
+import Link from "next/link"
+import { type ReactNode, useState } from "react"
+import { Button } from "@/components/ui/button"
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  CardTitle
+} from "@/components/ui/card"
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import type { PartnerDashboardMetrics } from "@/lib/partner/db";
-import { ExpoStatusBadge } from "../tradexpo/status-badge";
+  TableRow
+} from "@/components/ui/table"
+import type { PartnerDashboardMetrics } from "@/lib/partner/db"
+import { ExpoStatusBadge } from "../tradexpo/status-badge"
 
 const compactNumber = new Intl.NumberFormat("en", {
   notation: "compact",
-  maximumFractionDigits: 1,
-});
+  maximumFractionDigits: 1
+})
 
-const numberFormat = new Intl.NumberFormat("en");
+const numberFormat = new Intl.NumberFormat("en")
 
 const currencyFormat = new Intl.NumberFormat("vi-VN", {
   style: "currency",
   currency: "VND",
   notation: "compact",
-  maximumFractionDigits: 1,
-});
+  maximumFractionDigits: 1
+})
+
+const dashboardDurations = ["3D", "7D", "15D", "30D"] as const
 
 function formatPercent(value: number) {
-  return `${Math.round(value)}%`;
+  return `${Math.round(value)}%`
 }
 
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString("en-GB", {
     day: "2-digit",
-    month: "short",
-  });
-}
-
-function shortName(name: string) {
-  const words = name.split(/\s+/).filter(Boolean);
-  if (words.length <= 2) return name;
-  return words.slice(0, 2).join(" ");
+    month: "short"
+  })
 }
 
 function HeroStat({
   label,
   value,
-  icon,
+  icon
 }: {
-  label: string;
-  value: string;
-  icon: ReactNode;
+  label: string
+  value: string
+  icon: ReactNode
 }) {
   return (
     <div className="rounded-2xl border border-white/20 bg-white/10 p-4 text-primary-foreground shadow-sm backdrop-blur">
@@ -71,57 +69,52 @@ function HeroStat({
         {value}
       </div>
     </div>
-  );
+  )
 }
 
-function _InsightCard({
+function MetricWidget({
   label,
   value,
   description,
-  icon,
+  icon
 }: {
-  label: string;
-  value: string;
-  description: string;
-  icon: ReactNode;
+  label: string
+  value: number
+  description: string
+  icon: ReactNode
 }) {
   return (
-    <div className="rounded-xl border bg-muted/30 p-4">
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <div className="font-medium text-muted-foreground text-xs uppercase tracking-[0.16em]">
-          {label}
+    <div className="rounded-2xl border bg-muted/20 p-4 shadow-xs">
+      <div className="mb-5 flex items-start justify-between gap-4">
+        <div className="space-y-1">
+          <div className="font-medium text-muted-foreground text-xs uppercase tracking-[0.16em]">
+            {label}
+          </div>
+          <p className="text-muted-foreground text-xs leading-relaxed">
+            {description}
+          </p>
         </div>
-        <div className="rounded-lg bg-background p-2 text-primary shadow-xs">
+        <div className="rounded-xl bg-background p-2 text-primary shadow-xs">
           {icon}
         </div>
       </div>
-      <div className="font-semibold text-2xl tabular-nums tracking-tight">
-        {value}
+      <div className="font-semibold text-3xl tabular-nums tracking-tight">
+        {numberFormat.format(value)}
       </div>
-      <p className="mt-1.5 text-muted-foreground text-xs leading-relaxed">
-        {description}
-      </p>
     </div>
-  );
+  )
 }
 
 export function PartnerDashboard({
-  metrics,
+  metrics
 }: {
-  metrics: PartnerDashboardMetrics;
+  metrics: PartnerDashboardMetrics
 }) {
-  const _expoChartData = metrics.expoMetrics.map((item) => ({
-    ...item,
-    label: shortName(item.expoName),
-  }));
-  const _hasExpoMetrics = metrics.expoMetrics.length > 0;
-  const hasCountryData = metrics.countryBreakdown.length > 0;
-  const hasTierData = metrics.boothTierBreakdown.length > 0;
-  const _demoMiniSiteViews = 2480;
-  const _totalRevenue = metrics.expoMetrics.reduce(
-    (sum, item) => sum + item.revenue,
-    0,
-  );
+  const [selectedDuration, setSelectedDuration] =
+    useState<(typeof dashboardDurations)[number]>("3D")
+  const operationsSummary = metrics.operationsByDuration[selectedDuration]
+  const hasCountryData = metrics.countryBreakdown.length > 0
+  const hasTierData = metrics.boothTierBreakdown.length > 0
 
   return (
     <div className="space-y-6 px-4 py-4">
@@ -143,13 +136,15 @@ export function PartnerDashboard({
           <div className="flex w-full items-start gap-5 self-start xl:gap-3">
             <div className="grid w-1/2 grid-cols-3 gap-3 xl:grid-cols-1">
               <HeroStat
-                label="Viisitor traffic"
-                value={numberFormat.format(metrics.totals.liveExpos)}
+                label="Visitor traffic"
+                value={numberFormat.format(operationsSummary.views)}
                 icon={<EyeIcon className="size-4" />}
               />
               <HeroStat
                 label="Members"
-                value={numberFormat.format(metrics.totals.liveExpos)}
+                value={numberFormat.format(
+                  operationsSummary.activatedEnterprises
+                )}
                 icon={<UsersIcon className="size-4" />}
               />
             </div>
@@ -256,10 +251,59 @@ export function PartnerDashboard({
             />
           </CardContent>
         </Card>
-        <section>
-          <h1>Operations Summary</h1>
-          <p>Partner performance snapshot</p>
-        </section>
+        <Card className="xl:col-span-3">
+          <CardHeader>
+            <div className="space-y-1">
+              <CardDescription>Partner performance snapshot</CardDescription>
+              <CardTitle>Operations Summary</CardTitle>
+            </div>
+            <CardAction>
+              <div className="flex rounded-xl bg-muted p-1">
+                {dashboardDurations.map((duration) => (
+                  <Button
+                    key={duration}
+                    size="sm"
+                    variant={
+                      selectedDuration === duration ? "default" : "ghost"
+                    }
+                    className="rounded-lg"
+                    onClick={() => setSelectedDuration(duration)}
+                  >
+                    {duration}
+                  </Button>
+                ))}
+              </div>
+            </CardAction>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+              <MetricWidget
+                label="Views"
+                value={operationsSummary.views}
+                description="Visitor truy cập trang trong duration đã chọn"
+                icon={<EyeIcon className="size-4" />}
+              />
+              <MetricWidget
+                label="Activated Enterprises"
+                value={operationsSummary.activatedEnterprises}
+                description="Member hoạt động trong duration đã chọn"
+                icon={<UsersIcon className="size-4" />}
+              />
+              <MetricWidget
+                label="Sold Booth"
+                value={operationsSummary.soldBooths}
+                description="Booth đã bán trong duration đã chọn"
+                icon={<ActivityIcon className="size-4" />}
+              />
+              <MetricWidget
+                label="RFQs"
+                value={operationsSummary.rfqs}
+                description="RFQs được tạo trong duration đã chọn"
+                icon={<RadioTowerIcon className="size-4" />}
+              />
+            </div>
+          </CardContent>
+        </Card>
         <section>
           <h1>Expo and Inventory</h1>
           <p>Expo usage and booth capacity</p>
@@ -270,19 +314,19 @@ export function PartnerDashboard({
         </section>
       </div>
     </div>
-  );
+  )
 }
 
 function BreakdownList({
   title,
   items,
-  empty,
+  empty
 }: {
-  title: string;
-  items: { name: string; value: number }[];
-  empty: boolean;
+  title: string
+  items: { name: string; value: number }[]
+  empty: boolean
 }) {
-  const total = items.reduce((sum, item) => sum + item.value, 0);
+  const total = items.reduce((sum, item) => sum + item.value, 0)
 
   return (
     <section className="space-y-3">
@@ -297,7 +341,7 @@ function BreakdownList({
       ) : (
         <div className="space-y-3">
           {items.map((item) => {
-            const percent = total > 0 ? (item.value / total) * 100 : 0;
+            const percent = total > 0 ? (item.value / total) * 100 : 0
 
             return (
               <div key={item.name} className="space-y-1.5">
@@ -314,10 +358,10 @@ function BreakdownList({
                   />
                 </div>
               </div>
-            );
+            )
           })}
         </div>
       )}
     </section>
-  );
+  )
 }
