@@ -60,6 +60,7 @@ import {
 import { useUpload } from "@/hooks/use-upload";
 import type { PartnerAccess } from "@/lib/partner/access";
 import { cn } from "@/lib/utils";
+import { ButtonGroup } from "../ui/button-group";
 
 const logoMaxSizeBytes = 2 * 1024 * 1024;
 const hexColorPattern = /^#[0-9a-fA-F]{6}$/;
@@ -265,50 +266,42 @@ export function PartnerSiteManagementManager({
 
   return (
     <div className="mt-5 space-y-4">
-      <Card className="border-dashed bg-muted/30">
-        <CardContent className="flex flex-col gap-3 py-4 md:flex-row md:items-center md:justify-between">
-          <div className="space-y-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant="secondary">Demo local</Badge>
-              <Badge>{previewLabel}</Badge>
-              {access.readOnly ? (
-                <Badge variant="outline">Read-only role</Badge>
-              ) : null}
-              {isSubmitted ? <Badge variant="outline">Submitted</Badge> : null}
-            </div>
-            <p className="text-muted-foreground text-sm">
-              Preview is Partner Portal-only. Published public mini-site remains
-              controlled by Admin review.
-            </p>
-            {statusMessage ? (
-              <p className="text-muted-foreground text-sm">{statusMessage}</p>
+      <div className="flex flex-col items-center justify-between gap-2 sm:flex-row">
+        <div className="space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge>{previewLabel}</Badge>
+            {access.readOnly ? (
+              <Badge variant="outline">Read-only role</Badge>
             ) : null}
+            {isSubmitted ? <Badge variant="outline">Submitted</Badge> : null}
           </div>
-          <div className="flex flex-wrap gap-2">
+
+          {statusMessage ? (
+            <p className="text-muted-foreground text-sm">{statusMessage}</p>
+          ) : null}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <ButtonGroup>
             <Button variant="outline" onClick={() => setIsPreviewOpen(true)}>
-              <EyeIcon className="size-4" />
-              Live preview
+              Preview
             </Button>
             <Button
               disabled={isReadOnly || isSavingDraft}
               variant="outline"
               onClick={saveDraft}
             >
-              Save draft
+              Save Draft
             </Button>
-            <Button
-              disabled={isReadOnly || isSavingDraft || !draftId}
-              onClick={() => setSubmitDialogOpen(true)}
-            >
-              Submit for review
-            </Button>
-            <Button disabled={isReadOnly} variant="outline" onClick={resetDemo}>
-              <RefreshCwIcon className="size-4" />
-              Reset demo
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </ButtonGroup>
+
+          <Button
+            disabled={isReadOnly || isSavingDraft || !draftId}
+            onClick={() => setSubmitDialogOpen(true)}
+          >
+            Submit for review
+          </Button>
+        </div>
+      </div>
 
       <section className="space-y-4">
         <SitePreviewControls
@@ -334,9 +327,6 @@ export function PartnerSiteManagementManager({
         <DialogContent className="h-screen max-h-none w-screen overflow-hidden rounded-none sm:max-w-screen">
           <DialogHeader>
             <DialogTitle>Live preview</DialogTitle>
-            <DialogDescription>
-              {previewLabel} in Partner Portal preview mode.
-            </DialogDescription>
           </DialogHeader>
           <div className="h-full overflow-y-auto">
             <SiteLivePreview

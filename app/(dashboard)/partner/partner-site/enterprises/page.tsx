@@ -17,7 +17,7 @@ export default async function PartnerEnterprisesPage() {
     <DashboardShell
       title="Enterprise Management"
       breadcrumbs={[
-        { label: "Overview", href: "/partner" },
+        { label: "Partner Site Management" },
         { label: "Enterprises Management" },
       ]}
     >

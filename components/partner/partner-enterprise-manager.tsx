@@ -273,13 +273,6 @@ export function PartnerEnterpriseManager({
               ))}
             </NativeSelect>
           </div>
-
-          {canManageEnterprises ? (
-            <Button onClick={openAdd}>
-              <PlusIcon />
-              Invite company
-            </Button>
-          ) : null}
         </div>
 
         {filteredMembers.length === 0 ? (
@@ -355,7 +348,6 @@ export function PartnerEnterpriseManager({
                               setRemoveReason("");
                             }}
                           >
-                            <Trash2Icon />
                             Remove
                           </Button>
                         </div>
