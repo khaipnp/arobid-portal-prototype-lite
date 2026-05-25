@@ -1,5 +1,4 @@
 import {
-  ArrowLeftIcon,
   CalendarDaysIcon,
   Clock3Icon,
   HistoryIcon,
@@ -7,12 +6,9 @@ import {
   ShieldCheckIcon,
   SparklesIcon,
 } from "lucide-react";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
