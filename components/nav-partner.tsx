@@ -220,12 +220,7 @@ export function NavPartner({ access }: { access?: PartnerAccess }) {
           >
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
-                <SidebarMenuButton
-                  tooltip={item.name}
-                  isActive={item.items?.some((subItem) =>
-                    isActiveHref(pathname, subItem.url, activeHref)
-                  )}
-                >
+                <SidebarMenuButton tooltip={item.name}>
                   {item.icon && <item.icon />}
                   <span>{item.name}</span>
                   <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
