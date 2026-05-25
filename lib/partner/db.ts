@@ -2095,6 +2095,50 @@ export async function listPartnerMiniSiteVersions(
   }))
 }
 
+export async function getLatestPublishedPartnerMiniSite(): Promise<PartnerMiniSiteVersion | null> {
+  const rows = (await sql`
+    select
+      id,
+      partner_org_id,
+      version_label,
+      status,
+      content_json,
+      reject_reason,
+      submitted_at,
+      published_at,
+      updated_at
+    from partner_mini_sites
+    where status = 'published'
+    order by published_at desc nulls last, updated_at desc
+    limit 1
+  `) as {
+    id: string
+    partner_org_id: string
+    version_label: string
+    status: PartnerMiniSiteStatus
+    content_json: Record<string, unknown>
+    reject_reason: string | null
+    submitted_at: string | Date | null
+    published_at: string | Date | null
+    updated_at: string | Date
+  }[]
+
+  const row = rows[0]
+  if (!row) return null
+
+  return {
+    id: row.id,
+    partnerOrgId: row.partner_org_id,
+    versionLabel: row.version_label,
+    status: row.status,
+    content: row.content_json,
+    rejectReason: row.reject_reason,
+    submittedAt: row.submitted_at ? toIso(row.submitted_at) : null,
+    publishedAt: row.published_at ? toIso(row.published_at) : null,
+    updatedAt: toIso(row.updated_at)
+  }
+}
+
 export async function savePartnerMiniSiteDraft(
   userId: string,
   content: Record<string, unknown>
