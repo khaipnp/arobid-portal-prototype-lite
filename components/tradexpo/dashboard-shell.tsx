@@ -1,31 +1,31 @@
-"use client"
+"use client";
 
-import { ChevronLeftIcon } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { Fragment } from "react"
+import { ChevronLeftIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Fragment } from "react";
 import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
-  BreadcrumbSeparator
-} from "@/components/ui/breadcrumb"
-import { Separator } from "@/components/ui/separator"
-import { SidebarTrigger } from "@/components/ui/sidebar"
-import { Button } from "../ui/button"
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Separator } from "@/components/ui/separator";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Button } from "../ui/button";
 
 interface Crumb {
-  label: string
-  href?: string
+  label: string;
+  href?: string;
 }
 
 interface DashboardShellProps {
-  title?: string
-  description?: string
-  breadcrumbs: Crumb[]
-  children: React.ReactNode
-  showBackButton?: boolean
+  title?: string;
+  description?: string;
+  breadcrumbs: Crumb[];
+  children: React.ReactNode;
+  showBackButton?: boolean;
 }
 
 export function DashboardShell({
@@ -33,9 +33,9 @@ export function DashboardShell({
   description,
   breadcrumbs,
   children,
-  showBackButton
+  showBackButton,
 }: DashboardShellProps) {
-  const lastIndex = breadcrumbs.length - 1
+  const lastIndex = breadcrumbs.length - 1;
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden">
@@ -74,7 +74,7 @@ export function DashboardShell({
       <main className="min-h-0 flex-1 overflow-y-auto">
         <div className="flex min-h-full flex-col p-4 lg:px-18 lg:py-6">
           {title && (
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               {showBackButton ? <BackButton /> : null}
               <section>
                 <h1 className="font-semibold text-xl">{title}</h1>
@@ -88,15 +88,15 @@ export function DashboardShell({
         </div>
       </main>
     </div>
-  )
+  );
 }
 
 function BackButton() {
-  const router = useRouter()
+  const router = useRouter();
 
   return (
     <Button
-      type="button"
+      className="rounded-full"
       variant="secondary"
       size="icon"
       aria-label="Go back"
@@ -104,5 +104,5 @@ function BackButton() {
     >
       <ChevronLeftIcon />
     </Button>
-  )
+  );
 }

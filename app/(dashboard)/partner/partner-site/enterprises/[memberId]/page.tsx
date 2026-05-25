@@ -5,94 +5,82 @@ import {
   HistoryIcon,
   MailIcon,
   ShieldCheckIcon,
-  SparklesIcon
-} from "lucide-react"
-import Link from "next/link"
-import { notFound } from "next/navigation"
-import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+  SparklesIcon,
+} from "lucide-react";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { DashboardShell } from "@/components/tradexpo/dashboard-shell";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
-} from "@/components/ui/card"
-import { requireRole } from "@/lib/auth/rbac"
-import { getPartnerEnterpriseMemberDetail } from "@/lib/partner/db"
-import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
+  CardTitle,
+} from "@/components/ui/card";
+import { requireRole } from "@/lib/auth/rbac";
+import { getPartnerEnterpriseMemberDetail } from "@/lib/partner/db";
+import { ensurePlatformSchema } from "@/lib/platform/ensure-schema";
+import { UserAvatar } from "@/components/user-avatar";
 
-const numberFormat = new Intl.NumberFormat("en")
+const numberFormat = new Intl.NumberFormat("en");
 const dateFormat = new Intl.DateTimeFormat("en", {
   day: "2-digit",
   month: "short",
-  year: "numeric"
-})
+  year: "numeric",
+});
 
 function formatDate(value: string | null) {
-  if (!value) return "—"
-  return dateFormat.format(new Date(value))
+  if (!value) return "—";
+  return dateFormat.format(new Date(value));
 }
 
 function getEnterpriseInitial(name: string) {
-  return name.trim().charAt(0).toUpperCase() || "?"
+  return name.trim().charAt(0).toUpperCase() || "?";
 }
 
-export const dynamic = "force-dynamic"
+export const dynamic = "force-dynamic";
 
 export default async function PartnerEnterpriseDetailPage({
-  params
+  params,
 }: {
-  params: Promise<{ memberId: string }>
+  params: Promise<{ memberId: string }>;
 }) {
-  const { memberId } = await params
-  await ensurePlatformSchema()
-  const userId = await requireRole("partner")
-  const detail = await getPartnerEnterpriseMemberDetail(userId, memberId)
-  if (!detail) notFound()
+  const { memberId } = await params;
+  await ensurePlatformSchema();
+  const userId = await requireRole("partner");
+  const detail = await getPartnerEnterpriseMemberDetail(userId, memberId);
+  if (!detail) notFound();
 
-  const { member, activities } = detail
+  const { member, activities } = detail;
 
   return (
     <DashboardShell
-      title={member.enterpriseName}
-      description="Member profile, metrics, and activity history."
+      title="Member Detail"
       breadcrumbs={[
-        { label: "Overview", href: "/partner" },
-        { label: "Members", href: "/partner/enterprises" },
-        { label: member.enterpriseName }
+        { label: "Dashboard", href: "/partner" },
+        { label: "Partner Site Management" },
+        { label: "Members", href: "/partner/partner-site/enterprises" },
+        { label: member.enterpriseName },
       ]}
       showBackButton
     >
-      <div className="space-y-6 px-4 pb-8">
-        <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
-          <div className="border-b bg-gradient-to-br from-primary/10 via-background to-muted/40 p-6 md:p-8">
+      <div className="mt-6 space-y-6 pb-8">
+        <section className="overflow-hidden rounded-2xl border">
+          <div className="border-b bg-linear-to-br from-legend/15 via-background to-muted/40 p-6 md:p-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div className="flex flex-col gap-5 sm:flex-row sm:items-center">
-                <Avatar className="h-20 w-20 rounded-2xl shadow-sm ring-4 ring-background sm:h-24 sm:w-24">
-                  {member.logoUrl ? (
-                    <AvatarImage
-                      alt={member.enterpriseName}
-                      className="rounded-2xl"
-                      src={member.logoUrl}
-                    />
-                  ) : null}
-                  <AvatarFallback className="rounded-2xl font-semibold text-2xl">
-                    {getEnterpriseInitial(member.enterpriseName)}
-                  </AvatarFallback>
-                </Avatar>
+                <UserAvatar
+                  className="h-20 w-20"
+                  name={member.enterpriseName}
+                  imageUrl={member.logoUrl}
+                />
                 <div className="space-y-3">
                   <div className="flex flex-wrap items-center gap-2">
-                    <Badge className="capitalize" variant="outline">
+                    <Badge className="capitalize">
                       {member.activationStatus.replaceAll("_", " ")}
-                    </Badge>
-                    <Badge variant="secondary">{member.relationshipType}</Badge>
-                    <Badge
-                      variant={member.publicProfile ? "default" : "outline"}
-                    >
-                      {member.publicProfile ? "Public" : "Private"}
                     </Badge>
                   </div>
                   <div>
@@ -116,12 +104,6 @@ export default async function PartnerEnterpriseDetailPage({
                   </div>
                 </div>
               </div>
-              <Button asChild variant="outline">
-                <Link href="/partner/enterprises">
-                  <ArrowLeftIcon />
-                  Back to members
-                </Link>
-              </Button>
             </div>
           </div>
 
@@ -146,8 +128,8 @@ export default async function PartnerEnterpriseDetailPage({
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <ShieldCheckIcon className="h-5 w-5 text-primary" />
-                  Member profile
+                  <ShieldCheckIcon className="h-5 w-5 text-legend" />
+                  Member Profile
                 </CardTitle>
                 <CardDescription>
                   Association metadata scoped to current partner organization.
@@ -173,8 +155,8 @@ export default async function PartnerEnterpriseDetailPage({
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <SparklesIcon className="h-5 w-5 text-primary" />
-                  Program metrics
+                  <SparklesIcon className="h-5 w-5 text-legend" />
+                  Program Metrics
                 </CardTitle>
                 <CardDescription>
                   Quota, trade signals, and deal context usage.
@@ -206,8 +188,8 @@ export default async function PartnerEnterpriseDetailPage({
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <HistoryIcon className="h-5 w-5 text-primary" />
-                Activity timeline
+                <HistoryIcon className="h-5 w-5 text-legend" />
+                Activity Timeline
               </CardTitle>
               <CardDescription>
                 Newest association and deal events.
@@ -228,7 +210,7 @@ export default async function PartnerEnterpriseDetailPage({
                 <div className="relative space-y-5 before:absolute before:top-2 before:bottom-2 before:left-2 before:w-px before:bg-border">
                   {activities.map((activity) => (
                     <div key={activity.id} className="relative pl-7">
-                      <span className="absolute top-1.5 left-0 h-4 w-4 rounded-full border-4 border-background bg-primary shadow-sm" />
+                      <span className="absolute top-1.5 left-0 h-4 w-4 rounded-full border-4 border-background bg-legend shadow-sm" />
                       <div className="rounded-xl border bg-muted/20 p-4">
                         <div className="flex flex-wrap items-center gap-2">
                           <Badge variant="secondary">
@@ -259,7 +241,7 @@ export default async function PartnerEnterpriseDetailPage({
         </section>
       </div>
     </DashboardShell>
-  )
+  );
 }
 
 function HeroStat({ label, value }: { label: string; value: string }) {
@@ -270,7 +252,7 @@ function HeroStat({ label, value }: { label: string; value: string }) {
       </p>
       <p className="mt-2 font-semibold text-2xl tabular-nums">{value}</p>
     </div>
-  )
+  );
 }
 
 function DetailItem({ label, value }: { label: string; value: string }) {
@@ -279,19 +261,19 @@ function DetailItem({ label, value }: { label: string; value: string }) {
       <p className="text-muted-foreground text-xs uppercase tracking-wide">
         {label}
       </p>
-      <p className="mt-2 font-medium text-sm">{value}</p>
+      <p className="mt-2 font-medium text-sm capitalize">{value}</p>
     </div>
-  )
+  );
 }
 
 function MetricCard({
   title,
   value,
-  note
+  note,
 }: {
-  title: string
-  value: string
-  note?: string
+  title: string;
+  value: string;
+  note?: string;
 }) {
   return (
     <div className="rounded-xl border bg-background p-4">
@@ -305,5 +287,5 @@ function MetricCard({
         <p className="mt-1 text-muted-foreground text-xs">{note}</p>
       ) : null}
     </div>
-  )
+  );
 }

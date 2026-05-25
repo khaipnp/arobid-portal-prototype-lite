@@ -298,7 +298,7 @@ export function PartnerEnterpriseManager({
                       <div className="flex items-center gap-3">
                         <Link
                           aria-label={`View ${member.enterpriseName}`}
-                          href={`/partner/enterprises/${member.id}`}
+                          href={`/partner/partner-site/enterprises/${member.id}`}
                         >
                           <Avatar size="lg">
                             {member.logoUrl ? (
@@ -315,7 +315,7 @@ export function PartnerEnterpriseManager({
                         <div>
                           <Link
                             className="font-medium hover:underline"
-                            href={`/partner/enterprises/${member.id}`}
+                            href={`/partner/partner-site/enterprises/${member.id}`}
                           >
                             {member.enterpriseName}
                           </Link>
