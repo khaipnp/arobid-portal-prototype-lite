@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   ApertureIcon,
@@ -8,10 +8,11 @@ import {
   NetworkIcon,
   PieChartIcon,
   UserCogIcon,
-  WalletCardsIcon,
-} from "lucide-react";
-import Link from "next/link";
-import { NotificationNavLink } from "@/components/notifications/notification-nav-link";
+  WalletCardsIcon
+} from "lucide-react"
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { NotificationNavLink } from "@/components/notifications/notification-nav-link"
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -20,24 +21,24 @@ import {
   SidebarMenuItem,
   SidebarMenuSub,
   SidebarMenuSubButton,
-  SidebarMenuSubItem,
-} from "@/components/ui/sidebar";
-import type { PartnerAccess } from "@/lib/partner/access";
-import type { PartnerModule } from "@/lib/partner/core";
+  SidebarMenuSubItem
+} from "@/components/ui/sidebar"
+import type { PartnerAccess } from "@/lib/partner/access"
+import type { PartnerModule } from "@/lib/partner/core"
 import {
   Collapsible,
   CollapsibleContent,
-  CollapsibleTrigger,
-} from "./ui/collapsible";
+  CollapsibleTrigger
+} from "./ui/collapsible"
 
 type PartnerNavItem = {
-  name: string;
-  url: string;
-  module: PartnerModule;
-  icon: React.ReactNode;
-  items?: { title: string; url: string }[];
-  isActive?: boolean;
-};
+  name: string
+  url: string
+  module: PartnerModule
+  icon: React.ReactNode
+  items?: { title: string; url: string }[]
+  isActive?: boolean
+}
 
 const siteManagementLinks = {
   navMain: [
@@ -49,14 +50,14 @@ const siteManagementLinks = {
       items: [
         {
           name: "Site Setting",
-          url: "/partner/partner-site/site-management",
+          url: "/partner/partner-site/site-management"
         },
         {
           name: "Enterprises Management",
-          url: "/partner/partner-site/enterprises",
+          url: "/partner/partner-site/enterprises"
         },
-        { name: "Invitations", url: "/partner/partner-site/invitations" },
-      ],
+        { name: "Invitations", url: "/partner/partner-site/invitations" }
+      ]
     },
     {
       name: "Expo Programs",
@@ -66,14 +67,14 @@ const siteManagementLinks = {
       items: [
         {
           name: "Dashboard",
-          url: "/partner/expo-program/dashboard",
+          url: "/partner/expo-program/dashboard"
         },
         {
           name: "Expo Settings",
-          url: "/partner/expo-program/expos",
+          url: "/partner/expo-program/expos"
         },
-        { name: "Invitations", url: "/partner/expo-program/invitations" },
-      ],
+        { name: "Invitations", url: "/partner/expo-program/invitations" }
+      ]
     },
     {
       name: "Package Management",
@@ -83,13 +84,13 @@ const siteManagementLinks = {
       items: [
         {
           name: "Bundle Creation",
-          url: "/partner/package-management/bundle-creation",
+          url: "/partner/package-management/bundle-creation"
         },
         {
           name: "Bundle Pricing",
-          url: "/partner/package-management/bundle-pricing",
-        },
-      ],
+          url: "/partner/package-management/bundle-pricing"
+        }
+      ]
     },
     {
       name: "Data Center",
@@ -99,72 +100,106 @@ const siteManagementLinks = {
       items: [
         {
           name: "Enterprise Reports",
-          url: "/partner/package-management/bundle-creation",
+          url: "/partner/package-management/bundle-creation"
         },
         {
           name: "Expo Reports",
-          url: "/partner/package-management/bundle-pricing",
+          url: "/partner/package-management/bundle-pricing"
         },
         {
           name: "Trade Reports",
-          url: "/partner/package-management/bundle-pricing",
+          url: "/partner/package-management/bundle-pricing"
         },
         {
           name: "Credit & Revenue Reports",
-          url: "/partner/package-management/bundle-pricing",
+          url: "/partner/package-management/bundle-pricing"
         },
         {
           name: "Buyer Lead Reports",
-          url: "/partner/package-management/bundle-pricing",
-        },
-      ],
-    },
-  ],
-};
+          url: "/partner/package-management/bundle-pricing"
+        }
+      ]
+    }
+  ]
+}
 
 const activityLinks = [
   {
     name: "TradeCredit Reports",
     url: "/partner/tradecredit",
     module: "tradecredit_reports",
-    icon: <WalletCardsIcon />,
+    icon: <WalletCardsIcon />
   },
   {
     name: "Analytics",
     url: "/partner/analytics",
     module: "analytics_reports",
-    icon: <PieChartIcon />,
-  },
-] satisfies PartnerNavItem[];
+    icon: <PieChartIcon />
+  }
+] satisfies PartnerNavItem[]
 
 const configurationLinks = [
   {
     name: "User Management",
     url: "/partner/users",
     module: "overview",
-    icon: <UserCogIcon />,
-  },
-] satisfies PartnerNavItem[];
+    icon: <UserCogIcon />
+  }
+] satisfies PartnerNavItem[]
 
 function filterVisibleLinks(links: PartnerNavItem[], access?: PartnerAccess) {
-  return links.filter((item) => access?.modules[item.module] ?? false);
+  return links.filter((item) => access?.modules[item.module] ?? false)
+}
+
+function isActiveHref(
+  pathname: string,
+  href: string,
+  activeHref: string | undefined
+) {
+  return (
+    activeHref === href &&
+    (pathname === href || pathname.startsWith(`${href}/`))
+  )
 }
 
 export function NavPartner({ access }: { access?: PartnerAccess }) {
-  const showDashboard = access?.modules.overview ?? false;
-  const visibleActivityLinks = filterVisibleLinks(activityLinks, access);
+  const pathname = usePathname()
+  const showDashboard = access?.modules.overview ?? false
+  const visibleActivityLinks = filterVisibleLinks(activityLinks, access)
   const visibleConfigurationLinks = filterVisibleLinks(
     configurationLinks,
-    access,
-  );
+    access
+  )
+  const activeLinks = [
+    ...(showDashboard ? [{ url: "/partner" }] : []),
+    { url: "/partner/notifications" },
+    ...siteManagementLinks.navMain.flatMap((item) => item.items ?? []),
+    ...visibleActivityLinks,
+    ...visibleConfigurationLinks
+  ]
+  const activeHref = activeLinks
+    .filter(
+      (item) => pathname === item.url || pathname.startsWith(`${item.url}/`)
+    )
+    .sort((a, b) => b.url.length - a.url.length)[0]?.url
 
   return (
     <SidebarGroup>
       <SidebarMenu>
         {showDashboard ? (
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link href="/partner">
+            <SidebarMenuButton
+              asChild
+              isActive={isActiveHref(pathname, "/partner", activeHref)}
+            >
+              <Link
+                href="/partner"
+                aria-current={
+                  isActiveHref(pathname, "/partner", activeHref)
+                    ? "page"
+                    : undefined
+                }
+              >
                 <LayoutDashboardIcon />
                 <span>Overview</span>
               </Link>
@@ -185,7 +220,12 @@ export function NavPartner({ access }: { access?: PartnerAccess }) {
           >
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
-                <SidebarMenuButton tooltip={item.name}>
+                <SidebarMenuButton
+                  tooltip={item.name}
+                  isActive={item.items?.some((subItem) =>
+                    isActiveHref(pathname, subItem.url, activeHref)
+                  )}
+                >
                   {item.icon && <item.icon />}
                   <span>{item.name}</span>
                   <ChevronRightIcon className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
@@ -195,10 +235,24 @@ export function NavPartner({ access }: { access?: PartnerAccess }) {
                 <SidebarMenuSub>
                   {item.items?.map((subItem) => (
                     <SidebarMenuSubItem key={subItem.name}>
-                      <SidebarMenuSubButton asChild>
-                        <a href={subItem.url}>
+                      <SidebarMenuSubButton
+                        asChild
+                        isActive={isActiveHref(
+                          pathname,
+                          subItem.url,
+                          activeHref
+                        )}
+                      >
+                        <Link
+                          href={subItem.url}
+                          aria-current={
+                            isActiveHref(pathname, subItem.url, activeHref)
+                              ? "page"
+                              : undefined
+                          }
+                        >
                           <span>{subItem.name}</span>
-                        </a>
+                        </Link>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                   ))}
@@ -211,8 +265,18 @@ export function NavPartner({ access }: { access?: PartnerAccess }) {
       <SidebarMenu>
         {visibleActivityLinks.map((item) => (
           <SidebarMenuItem key={item.name}>
-            <SidebarMenuButton asChild>
-              <Link href={item.url}>
+            <SidebarMenuButton
+              asChild
+              isActive={isActiveHref(pathname, item.url, activeHref)}
+            >
+              <Link
+                href={item.url}
+                aria-current={
+                  isActiveHref(pathname, item.url, activeHref)
+                    ? "page"
+                    : undefined
+                }
+              >
                 {item.icon}
                 <span>{item.name}</span>
               </Link>
@@ -229,8 +293,18 @@ export function NavPartner({ access }: { access?: PartnerAccess }) {
           <SidebarMenu>
             {visibleConfigurationLinks.map((item) => (
               <SidebarMenuItem key={item.name}>
-                <SidebarMenuButton asChild>
-                  <Link href={item.url}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActiveHref(pathname, item.url, activeHref)}
+                >
+                  <Link
+                    href={item.url}
+                    aria-current={
+                      isActiveHref(pathname, item.url, activeHref)
+                        ? "page"
+                        : undefined
+                    }
+                  >
                     {item.icon}
                     <span>{item.name}</span>
                   </Link>
@@ -241,5 +315,5 @@ export function NavPartner({ access }: { access?: PartnerAccess }) {
         </>
       ) : null}
     </SidebarGroup>
-  );
+  )
 }

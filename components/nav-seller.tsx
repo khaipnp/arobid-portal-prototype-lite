@@ -11,6 +11,7 @@ import {
   WalletCardsIcon
 } from "lucide-react"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { NotificationNavLink } from "@/components/notifications/notification-nav-link"
 import {
   SidebarGroup,
@@ -57,6 +58,18 @@ const buyer = [
   }
 ]
 
+function isActiveItem(
+  pathname: string,
+  href: string,
+  activeKey: string | undefined,
+  itemKey = href
+) {
+  return (
+    activeKey === itemKey &&
+    (pathname === href || pathname.startsWith(`${href}/`))
+  )
+}
+
 export function NavSeller({
   canManageSeller,
   canUseDealRoom
@@ -64,11 +77,50 @@ export function NavSeller({
   canManageSeller: boolean
   canUseDealRoom: boolean
 }) {
+  const pathname = usePathname()
+  const primaryLinks = [
+    { key: "/seller", url: "/seller" },
+    ...(canUseDealRoom
+      ? [{ key: "/seller/deal-room", url: "/seller/deal-room" }]
+      : []),
+    { key: "/seller/wishlist", url: "/seller/wishlist" },
+    ...(canManageSeller
+      ? [{ key: "/seller/my-expos", url: "/seller/my-expos" }]
+      : []),
+    { key: "/seller/orders", url: "/seller/orders" },
+    { key: "/seller/tradecredit", url: "/seller/tradecredit" }
+  ]
+  const activeLinks = [
+    ...primaryLinks,
+    { key: "/seller/notifications", url: "/seller/notifications" },
+    ...(canManageSeller
+      ? seller.map((item) => ({ key: item.name, url: item.url }))
+      : []),
+    ...buyer.map((item) => ({ key: item.url, url: item.url })),
+    ...(canManageSeller
+      ? [{ key: "/seller/checkout-demo", url: "/seller/checkout-demo" }]
+      : [])
+  ]
+  const activeKey = activeLinks
+    .map((item, index) => ({ ...item, index }))
+    .filter(
+      (item) => pathname === item.url || pathname.startsWith(`${item.url}/`)
+    )
+    .sort((a, b) => b.url.length - a.url.length || b.index - a.index)[0]?.key
+
   return (
     <SidebarGroup>
       <SidebarMenu>
-        <SidebarMenuButton asChild>
-          <Link href="/seller">
+        <SidebarMenuButton
+          asChild
+          isActive={isActiveItem(pathname, "/seller", activeKey)}
+        >
+          <Link
+            href="/seller"
+            aria-current={
+              isActiveItem(pathname, "/seller", activeKey) ? "page" : undefined
+            }
+          >
             <LayoutDashboardIcon />
             <span>Dashboard</span>
           </Link>
@@ -81,8 +133,18 @@ export function NavSeller({
       {canUseDealRoom ? (
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link href="/seller/deal-room">
+            <SidebarMenuButton
+              asChild
+              isActive={isActiveItem(pathname, "/seller/deal-room", activeKey)}
+            >
+              <Link
+                href="/seller/deal-room"
+                aria-current={
+                  isActiveItem(pathname, "/seller/deal-room", activeKey)
+                    ? "page"
+                    : undefined
+                }
+              >
                 <MessageCircleIcon />
                 <span>Deal Room</span>
               </Link>
@@ -93,8 +155,18 @@ export function NavSeller({
 
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton asChild>
-            <Link href="/seller/wishlist">
+          <SidebarMenuButton
+            asChild
+            isActive={isActiveItem(pathname, "/seller/wishlist", activeKey)}
+          >
+            <Link
+              href="/seller/wishlist"
+              aria-current={
+                isActiveItem(pathname, "/seller/wishlist", activeKey)
+                  ? "page"
+                  : undefined
+              }
+            >
               <HeartIcon />
               <span>Wishlist</span>
             </Link>
@@ -105,8 +177,18 @@ export function NavSeller({
       {canManageSeller ? (
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link href="/seller/my-expos">
+            <SidebarMenuButton
+              asChild
+              isActive={isActiveItem(pathname, "/seller/my-expos", activeKey)}
+            >
+              <Link
+                href="/seller/my-expos"
+                aria-current={
+                  isActiveItem(pathname, "/seller/my-expos", activeKey)
+                    ? "page"
+                    : undefined
+                }
+              >
                 <TvMinimalIcon />
                 <span>My Expos</span>
               </Link>
@@ -117,8 +199,18 @@ export function NavSeller({
 
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton asChild>
-            <Link href="/seller/orders">
+          <SidebarMenuButton
+            asChild
+            isActive={isActiveItem(pathname, "/seller/orders", activeKey)}
+          >
+            <Link
+              href="/seller/orders"
+              aria-current={
+                isActiveItem(pathname, "/seller/orders", activeKey)
+                  ? "page"
+                  : undefined
+              }
+            >
               <ReceiptTextIcon />
               <span>Orders</span>
             </Link>
@@ -128,8 +220,18 @@ export function NavSeller({
 
       <SidebarMenu>
         <SidebarMenuItem>
-          <SidebarMenuButton asChild>
-            <Link href="/seller/tradecredit">
+          <SidebarMenuButton
+            asChild
+            isActive={isActiveItem(pathname, "/seller/tradecredit", activeKey)}
+          >
+            <Link
+              href="/seller/tradecredit"
+              aria-current={
+                isActiveItem(pathname, "/seller/tradecredit", activeKey)
+                  ? "page"
+                  : undefined
+              }
+            >
               <WalletCardsIcon />
               <span>TradeCredit</span>
             </Link>
@@ -143,8 +245,23 @@ export function NavSeller({
           <SidebarMenu>
             {seller.map((item) => (
               <SidebarMenuItem key={item.name}>
-                <SidebarMenuButton asChild>
-                  <Link href={item.url}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActiveItem(
+                    pathname,
+                    item.url,
+                    activeKey,
+                    item.name
+                  )}
+                >
+                  <Link
+                    href={item.url}
+                    aria-current={
+                      isActiveItem(pathname, item.url, activeKey, item.name)
+                        ? "page"
+                        : undefined
+                    }
+                  >
                     {item.icon}
                     <span>{item.name}</span>
                   </Link>
@@ -159,8 +276,18 @@ export function NavSeller({
       <SidebarMenu>
         {buyer.map((item) => (
           <SidebarMenuItem key={item.name}>
-            <SidebarMenuButton asChild>
-              <Link href={item.url}>
+            <SidebarMenuButton
+              asChild
+              isActive={isActiveItem(pathname, item.url, activeKey)}
+            >
+              <Link
+                href={item.url}
+                aria-current={
+                  isActiveItem(pathname, item.url, activeKey)
+                    ? "page"
+                    : undefined
+                }
+              >
                 {item.icon}
                 <span>{item.name}</span>
               </Link>
@@ -183,8 +310,22 @@ export function NavSeller({
             </HoverCardContent>
           </HoverCard>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Link href="/seller/checkout-demo">
+            <SidebarMenuButton
+              asChild
+              isActive={isActiveItem(
+                pathname,
+                "/seller/checkout-demo",
+                activeKey
+              )}
+            >
+              <Link
+                href="/seller/checkout-demo"
+                aria-current={
+                  isActiveItem(pathname, "/seller/checkout-demo", activeKey)
+                    ? "page"
+                    : undefined
+                }
+              >
                 <ShoppingCartIcon />
                 <span>Checkout Demo (eVoucher)</span>
               </Link>
