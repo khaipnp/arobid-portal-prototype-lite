@@ -50,8 +50,8 @@ const siteManagementLinks = {
           url: "/partner/communication/notifications",
         },
         {
-          name: "Chat",
-          url: "/partner/communication/chat",
+          name: "Deal Room",
+          url: "/partner/communication/deal-room",
         },
       ],
     },
