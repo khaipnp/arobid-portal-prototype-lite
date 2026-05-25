@@ -11,7 +11,7 @@ import {
 import { requireRole } from "@/lib/auth/rbac";
 import { requirePartnerTab } from "@/lib/partner/access";
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema";
-import { ArrowUpRightIcon, MilestoneIcon } from "lucide-react";
+import { ArrowUpRightIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { BellIcon, CheckCheckIcon, RefreshCcwIcon } from "lucide-react";
+import { BellIcon, CheckCheckIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { NotificationItemRow } from "@/components/notifications/notification-item-row";
@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import type { NotificationRecord } from "@/lib/notifications/types";
 import {
   Empty,
-  EmptyContent,
   EmptyDescription,
   EmptyTitle,
   EmptyHeader,

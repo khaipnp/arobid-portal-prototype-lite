@@ -1,6 +1,6 @@
 "use client";
 
-import { PlusIcon, SearchIcon, Trash2Icon } from "lucide-react";
+import { SearchIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";

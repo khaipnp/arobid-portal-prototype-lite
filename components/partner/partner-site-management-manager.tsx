@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  EditIcon,
-  EyeIcon,
-  PlusIcon,
-  RefreshCwIcon,
-  Trash2Icon,
-} from "lucide-react";
+import { EditIcon, PlusIcon, Trash2Icon } from "lucide-react";
 import Image from "next/image";
 import { type ReactNode, useEffect, useId, useState } from "react";
 import {
