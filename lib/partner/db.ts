@@ -551,6 +551,13 @@ export type PartnerDashboardBreakdownItem = {
   value: number
 }
 
+export type PartnerDashboardBoothTierMonthlyTrendItem = {
+  monthKey: string
+  monthLabel: string
+  tier: string
+  soldBooths: number
+}
+
 export type PartnerDashboardDuration = "3D" | "7D" | "15D" | "30D"
 
 export type PartnerDashboardOperationsSummary = {
@@ -582,6 +589,7 @@ export type PartnerDashboardMetrics = {
   statusBreakdown: PartnerDashboardBreakdownItem[]
   countryBreakdown: PartnerDashboardBreakdownItem[]
   boothTierBreakdown: PartnerDashboardBreakdownItem[]
+  boothTierMonthlyTrend: PartnerDashboardBoothTierMonthlyTrendItem[]
 }
 
 export type PartnerExpoTierBreakdown = {
@@ -5833,6 +5841,51 @@ export async function getPartnerDashboardMetrics(
     order by value desc, name asc
   `) as { name: string; value: number | string }[]
 
+  const boothTierMonthlyRows = (await sql`
+    with
+      assigned as (
+        select distinct e.id
+        from partner_memberships pm
+        inner join partner_organizations po on po.id = pm.partner_org_id
+        inner join partner_expo_assignments pea on pea.partner_org_id = po.id
+        inner join expos e on e.id = pea.expo_id
+        where pm.user_id = ${userId}
+          and pm.status = 'active'
+          and po.status = 'active'
+      ),
+      months as (
+        select generate_series(
+          date_trunc('month', now()) - interval '5 months',
+          date_trunc('month', now()),
+          interval '1 month'
+        )::date as month_start
+      ),
+      tiers as (
+        select distinct sbr.booth_tier as tier
+        from seller_booth_registrations sbr
+        inner join assigned a on a.id = sbr.expo_id
+        where sbr.booth_tier is not null
+          and sbr.purchased_at >= date_trunc('month', now()) - interval '5 months'
+      )
+    select
+      to_char(m.month_start, 'YYYY-MM') as month_key,
+      to_char(m.month_start, 'Mon YYYY') as month_label,
+      t.tier,
+      count(sbr.id)::int as sold_booths
+    from months m
+    cross join tiers t
+    left join seller_booth_registrations sbr on sbr.booth_tier = t.tier
+      and date_trunc('month', sbr.purchased_at)::date = m.month_start
+      and sbr.expo_id in (select id from assigned)
+    group by m.month_start, t.tier
+    order by m.month_start asc, t.tier asc
+  `) as {
+    month_key: string
+    month_label: string
+    tier: string
+    sold_booths: number | string
+  }[]
+
   const operationRows = (await sql`
     with
       durations(label, days) as (
@@ -6009,6 +6062,12 @@ export async function getPartnerDashboardMetrics(
     boothTierBreakdown: boothTierRows.map((row) => ({
       name: row.name,
       value: toNumber(row.value)
+    })),
+    boothTierMonthlyTrend: boothTierMonthlyRows.map((row) => ({
+      monthKey: row.month_key,
+      monthLabel: row.month_label,
+      tier: row.tier,
+      soldBooths: toNumber(row.sold_booths)
     }))
   }
 }
