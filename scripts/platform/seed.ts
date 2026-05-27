@@ -6,7 +6,9 @@ config({ path: resolve(process.cwd(), ".env") })
 
 async function clearPlatformTables() {
   const { sql } = await import("@/lib/db/neon")
+  await sql`truncate table chat_partner_unread_counts cascade`
   await sql`truncate table chat_unread_counts cascade`
+  await sql`truncate table chat_conversation_partner_members cascade`
   await sql`truncate table chat_messages cascade`
   await sql`truncate table chat_conversation_members cascade`
   await sql`truncate table chat_conversations cascade`
@@ -223,6 +225,61 @@ export async function seedPlatform() {
       `
     }
   }
+
+  await sql`
+    insert into chat_conversations (id, type, created_at, is_read_only)
+    values ('conv-partner-demo-001', 'direct', now() - interval '45 minutes', false)
+  `
+  await sql`
+    insert into chat_conversation_members (
+      conversation_id, user_id, joined_at, is_archived
+    ) values (
+      'conv-partner-demo-001',
+      '11111111-1111-4111-8111-111111111111',
+      now() - interval '45 minutes',
+      false
+    )
+  `
+  await sql`
+    insert into chat_conversation_partner_members (
+      conversation_id, partner_org_id, joined_at, is_archived
+    ) values (
+      'conv-partner-demo-001',
+      'partner-org-demo-expo',
+      now() - interval '45 minutes',
+      false
+    )
+  `
+  await sql`
+    insert into chat_messages (
+      id, conversation_id, sender_id, content, attachments, status,
+      sent_at, edited_at, is_deleted, is_system_message
+    ) values
+      (
+        'msg-partner-demo-001',
+        'conv-partner-demo-001',
+        '11111111-1111-4111-8111-111111111111',
+        'Hi Expo Partner team, can you help us confirm the booth upgrade timeline?',
+        '[]'::jsonb,
+        'read',
+        now() - interval '42 minutes',
+        null,
+        false,
+        false
+      ),
+      (
+        'msg-partner-demo-002',
+        'conv-partner-demo-001',
+        '88888888-8888-4888-8888-888888888888',
+        'Yes, our account team will confirm the upgrade slot and follow up today.',
+        '[]'::jsonb,
+        'sent',
+        now() - interval '38 minutes',
+        null,
+        false,
+        false
+      )
+  `
 
   console.log("Master platform seed complete.")
 }

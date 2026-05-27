@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   ArchiveIcon,
@@ -14,37 +14,41 @@ import {
   PhoneIcon,
   SearchIcon,
   SendHorizontalIcon,
-  TrashIcon
-} from "lucide-react"
-import Image from "next/image"
-import { useRouter } from "next/navigation"
-import { useEffect, useRef, useState } from "react"
+  TrashIcon,
+} from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu"
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   HoverCard,
   HoverCardContent,
-  HoverCardTrigger
-} from "@/components/ui/hover-card"
-import { Separator } from "@/components/ui/separator"
-import { Textarea } from "@/components/ui/textarea"
-import type { ChatUser, Conversation, Message } from "@/lib/deal-room/types"
-import { cn } from "@/lib/utils"
-import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group"
-import { Tabs, TabsList, TabsTrigger } from "../ui/tabs"
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
+import type { ChatUser, Conversation, Message } from "@/lib/deal-room/types";
+import { cn } from "@/lib/utils";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "../ui/input-group";
+import { Tabs, TabsList, TabsTrigger } from "../ui/tabs";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-const MAX_ATTACHMENTS_PER_MESSAGE = 5
-const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024
-const MAX_INLINE_IMAGE_SIZE_BYTES = 5 * 1024 * 1024
+const MAX_ATTACHMENTS_PER_MESSAGE = 5;
+const MAX_FILE_SIZE_BYTES = 20 * 1024 * 1024;
+const MAX_INLINE_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_FILE_TYPES = new Set([
   "jpg",
   "jpeg",
@@ -56,69 +60,73 @@ const ALLOWED_FILE_TYPES = new Set([
   "doc",
   "docx",
   "csv",
-  "xlsx"
-])
-const IMAGE_FILE_TYPES = new Set(["jpg", "jpeg", "png", "webp"])
+  "xlsx",
+]);
+const IMAGE_FILE_TYPES = new Set(["jpg", "jpeg", "png", "webp"]);
 
 type PendingAttachment = {
-  id: string
-  fileName: string
-  fileUrl: string
-  fileSize: number
-  fileType: string
-}
+  id: string;
+  fileName: string;
+  fileUrl: string;
+  fileSize: number;
+  fileType: string;
+};
 
 function isImageAttachment(att: {
-  fileType: string
-  fileUrl: string
+  fileType: string;
+  fileUrl: string;
 }): boolean {
-  return IMAGE_FILE_TYPES.has(att.fileType.toLowerCase()) && att.fileUrl !== "#"
+  return (
+    IMAGE_FILE_TYPES.has(att.fileType.toLowerCase()) && att.fileUrl !== "#"
+  );
 }
 
 function formatRelativeTime(isoStr: string): string {
-  const diffMs = Date.now() - new Date(isoStr).getTime()
-  const diffMin = Math.floor(diffMs / 60_000)
-  const diffHr = Math.floor(diffMin / 60)
-  const diffDay = Math.floor(diffHr / 24)
+  const diffMs = Date.now() - new Date(isoStr).getTime();
+  const diffMin = Math.floor(diffMs / 60_000);
+  const diffHr = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHr / 24);
 
-  if (diffMin < 1) return "just now"
-  if (diffMin < 60) return `${diffMin}m ago`
-  if (diffHr < 24) return `${diffHr}h ago`
-  if (diffDay < 7) return `${diffDay}d ago`
-  return new Date(isoStr).toLocaleDateString()
+  if (diffMin < 1) return "just now";
+  if (diffMin < 60) return `${diffMin}m ago`;
+  if (diffHr < 24) return `${diffHr}h ago`;
+  if (diffDay < 7) return `${diffDay}d ago`;
+  return new Date(isoStr).toLocaleDateString();
 }
 
 function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 function getConversationDisplayName(
   conv: Conversation,
   users: ChatUser[],
-  currentUserId: string
+  ownSenderIds: string[],
 ): string {
-  const otherId = conv.members.find((m) => m.userId !== currentUserId)?.userId
-  return users.find((u) => u.id === otherId)?.name ?? "Unknown User"
+  const otherId = conv.members.find(
+    (m) => !ownSenderIds.includes(m.userId),
+  )?.userId;
+  return users.find((u) => u.id === otherId)?.name ?? "Unknown User";
 }
 
 function _getLastMessage(
-  messages: Message[]
+  messages: Message[],
 ): { preview: string; sentAt: string } | null {
-  const last = messages.at(-1)
-  if (!last) return null
-  let preview: string
+  const last = messages.at(-1);
+  if (!last) return null;
+  let preview: string;
   if (last.isDeleted) {
-    preview = "This message was deleted."
+    preview = "This message was deleted.";
   } else if (last.isSystemMessage) {
-    preview = last.content
+    preview = last.content;
   } else if (last.attachments.length > 0 && !last.content) {
-    preview = `📎 ${last.attachments[0].fileName}`
+    preview = `📎 ${last.attachments[0].fileName}`;
   } else {
-    preview = last.content
+    preview = last.content;
   }
-  return { preview, sentAt: last.sentAt }
+  return { preview, sentAt: last.sentAt };
 }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
@@ -126,47 +134,49 @@ function _getLastMessage(
 function ConversationAvatar({
   conv,
   users,
-  currentUserId,
-  size = "default"
+  ownSenderIds,
+  size = "default",
 }: {
-  conv: Conversation
-  users: ChatUser[]
-  currentUserId: string
-  size?: "sm" | "default"
+  conv: Conversation;
+  users: ChatUser[];
+  ownSenderIds: string[];
+  size?: "sm" | "default";
 }) {
-  const otherId = conv.members.find((m) => m.userId !== currentUserId)?.userId
-  const other = users.find((u) => u.id === otherId)
+  const otherId = conv.members.find(
+    (m) => !ownSenderIds.includes(m.userId),
+  )?.userId;
+  const other = users.find((u) => u.id === otherId);
   const initials = other?.name
     .split(" ")
     .map((w) => w[0])
     .slice(0, 2)
     .join("")
-    .toUpperCase()
+    .toUpperCase();
 
   return (
     <Avatar size={size === "sm" ? "sm" : "default"}>
       <AvatarFallback>{initials ?? "?"}</AvatarFallback>
     </Avatar>
-  )
+  );
 }
 
 function UserHoverCard({
   user,
   side = "right",
   children,
-  onMessageClick
+  onMessageClick,
 }: {
-  user: ChatUser
-  side?: "top" | "right" | "bottom" | "left"
-  children: React.ReactNode
-  onMessageClick?: () => void
+  user: ChatUser;
+  side?: "top" | "right" | "bottom" | "left";
+  children: React.ReactNode;
+  onMessageClick?: () => void;
 }) {
   const initials = user.name
     .split(" ")
     .map((w) => w[0])
     .slice(0, 2)
     .join("")
-    .toUpperCase()
+    .toUpperCase();
 
   return (
     <HoverCard openDelay={400} closeDelay={150}>
@@ -239,7 +249,7 @@ function UserHoverCard({
         )}
       </HoverCardContent>
     </HoverCard>
-  )
+  );
 }
 
 // ─── Main component ───────────────────────────────────────────────────────────
@@ -250,188 +260,194 @@ export function DealRoomManager({
   initialConversations,
   initialMessagesMap,
   initialUnreadCounts,
-  currentUserId
+  currentUserId,
+  basePath = "/seller/deal-room",
+  ownSenderIds = [currentUserId],
 }: {
-  initialConversationId?: string
-  initialUsers: ChatUser[]
-  initialConversations: Conversation[]
-  initialMessagesMap: Record<string, Message[]>
-  initialUnreadCounts: Record<string, number>
-  currentUserId: string
+  initialConversationId?: string;
+  initialUsers: ChatUser[];
+  initialConversations: Conversation[];
+  initialMessagesMap: Record<string, Message[]>;
+  initialUnreadCounts: Record<string, number>;
+  currentUserId: string;
+  basePath?: string;
+  ownSenderIds?: string[];
 }) {
-  const router = useRouter()
+  const router = useRouter();
 
   // ── State ──
   const [conversations, setConversations] = useState<Conversation[]>(() =>
-    structuredClone(initialConversations)
-  )
+    structuredClone(initialConversations),
+  );
   const [messagesMap, setMessagesMap] = useState<Record<string, Message[]>>(
-    () => structuredClone(initialMessagesMap)
-  )
-  const [users] = useState<ChatUser[]>(initialUsers)
+    () => structuredClone(initialMessagesMap),
+  );
+  const [users] = useState<ChatUser[]>(initialUsers);
   const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>(
-    () => ({ ...initialUnreadCounts })
-  )
+    () => ({ ...initialUnreadCounts }),
+  );
   const [activeConversationId, setActiveConversationId] = useState<
     string | null
-  >(initialConversationId ?? null)
+  >(initialConversationId ?? null);
 
-  const [isLoadingMessages, setIsLoadingMessages] = useState(false)
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
 
-  const [inboxSearch, setInboxSearch] = useState("")
+  const [inboxSearch, setInboxSearch] = useState("");
   const [inboxFilter, setInboxFilter] = useState<"active" | "archived">(
-    "active"
-  )
-  const [composerValue, setComposerValue] = useState("")
+    "active",
+  );
+  const [composerValue, setComposerValue] = useState("");
   const [pendingAttachments, setPendingAttachments] = useState<
     PendingAttachment[]
-  >([])
-  const [composerError, setComposerError] = useState<string | null>(null)
-  const [editingMessageId, setEditingMessageId] = useState<string | null>(null)
-  const [editingContent, setEditingContent] = useState("")
+  >([]);
+  const [composerError, setComposerError] = useState<string | null>(null);
+  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
+  const [editingContent, setEditingContent] = useState("");
 
-  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // ── Derived ──
   const activeConversation =
-    conversations.find((c) => c.id === activeConversationId) ?? null
+    conversations.find((c) => c.id === activeConversationId) ?? null;
   const activeMessages = activeConversationId
     ? (messagesMap[activeConversationId] ?? [])
-    : []
+    : [];
 
   useEffect(() => {
     async function fetchMessages() {
-      if (!activeConversationId) return
-      if (messagesMap[activeConversationId]) return // Already loaded
+      if (!activeConversationId) return;
+      if (messagesMap[activeConversationId]) return; // Already loaded
 
-      setIsLoadingMessages(true)
+      setIsLoadingMessages(true);
       try {
         const res = await fetch(
-          `/api/deal-room/conversations/${activeConversationId}/messages`
-        )
-        const payload = await res.json()
+          `/api/deal-room/conversations/${activeConversationId}/messages`,
+        );
+        const payload = await res.json();
         if (payload.messages) {
           setMessagesMap((prev) => ({
             ...prev,
-            [activeConversationId]: payload.messages
-          }))
+            [activeConversationId]: payload.messages,
+          }));
         }
       } catch (err) {
-        console.error("Failed to fetch messages", err)
+        console.error("Failed to fetch messages", err);
       } finally {
-        setIsLoadingMessages(false)
+        setIsLoadingMessages(false);
       }
     }
-    fetchMessages()
-  }, [activeConversationId, messagesMap])
+    fetchMessages();
+  }, [activeConversationId, messagesMap]);
 
   const visibleConversations = conversations
 
     .filter((c) => {
-      const myMember = c.members.find((m) => m.userId === currentUserId)
-      if (!myMember) return false
-      if (inboxFilter === "active" && myMember.isArchived) return false
-      if (inboxFilter === "archived" && !myMember.isArchived) return false
-      if (!inboxSearch) return true
-      const name = getConversationDisplayName(c, users, currentUserId)
-      const otherId = c.members.find((m) => m.userId !== currentUserId)?.userId
-      const otherUser = users.find((u) => u.id === otherId)
-      const query = inboxSearch.toLowerCase()
+      const myMember = c.members.find((m) => m.userId === currentUserId);
+      const isArchived = c.participantArchived ?? myMember?.isArchived ?? false;
+      if (inboxFilter === "active" && isArchived) return false;
+      if (inboxFilter === "archived" && !isArchived) return false;
+      if (!inboxSearch) return true;
+      const name = getConversationDisplayName(c, users, ownSenderIds);
+      const otherId = c.members.find(
+        (m) => !ownSenderIds.includes(m.userId),
+      )?.userId;
+      const otherUser = users.find((u) => u.id === otherId);
+      const query = inboxSearch.toLowerCase();
       return (
         name.toLowerCase().includes(query) ||
         (otherUser?.company.toLowerCase().includes(query) ?? false)
-      )
+      );
     })
     .sort((a, b) => {
-      const aTime = a.lastMessageAt ?? a.createdAt
-      const bTime = b.lastMessageAt ?? b.createdAt
-      return new Date(bTime).getTime() - new Date(aTime).getTime()
-    })
+      const aTime = a.lastMessageAt ?? a.createdAt;
+      const bTime = b.lastMessageAt ?? b.createdAt;
+      return new Date(bTime).getTime() - new Date(aTime).getTime();
+    });
 
   // ── Handlers ──
   function selectConversation(id: string) {
-    setActiveConversationId(id)
-    setUnreadCounts((prev) => ({ ...prev, [id]: 0 }))
-    setComposerValue("")
-    setPendingAttachments([])
-    setComposerError(null)
-    setEditingMessageId(null)
-    router.push(`/seller/deal-room/${id}`, { scroll: false })
+    setActiveConversationId(id);
+    setUnreadCounts((prev) => ({ ...prev, [id]: 0 }));
+    setComposerValue("");
+    setPendingAttachments([]);
+    setComposerError(null);
+    setEditingMessageId(null);
+    router.push(`${basePath}/${id}`, { scroll: false });
   }
 
   async function handleSelectAttachments(
-    event: React.ChangeEvent<HTMLInputElement>
+    event: React.ChangeEvent<HTMLInputElement>,
   ) {
-    const files = Array.from(event.target.files ?? [])
-    if (files.length === 0) return
+    const files = Array.from(event.target.files ?? []);
+    if (files.length === 0) return;
 
     async function toDataUrl(file: File): Promise<string> {
       return await new Promise((resolve, reject) => {
-        const reader = new FileReader()
+        const reader = new FileReader();
         reader.onload = () =>
-          resolve(typeof reader.result === "string" ? reader.result : "#")
-        reader.onerror = () => reject(new Error("Failed to read file"))
-        reader.readAsDataURL(file)
-      })
+          resolve(typeof reader.result === "string" ? reader.result : "#");
+        reader.onerror = () => reject(new Error("Failed to read file"));
+        reader.readAsDataURL(file);
+      });
     }
 
-    setComposerError(null)
-    const accepted: PendingAttachment[] = []
+    setComposerError(null);
+    const accepted: PendingAttachment[] = [];
     for (const file of files) {
-      const ext = file.name.split(".").pop()?.toLowerCase() ?? ""
+      const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
       if (!ALLOWED_FILE_TYPES.has(ext)) {
         setComposerError(
-          "File type not supported. Allowed: JPG, JPEG, PNG, WEBP, MP4, PDF, MD, DOC, DOCX, CSV, XLSX."
-        )
-        continue
+          "File type not supported. Allowed: JPG, JPEG, PNG, WEBP, MP4, PDF, MD, DOC, DOCX, CSV, XLSX.",
+        );
+        continue;
       }
       if (file.size > MAX_FILE_SIZE_BYTES) {
-        setComposerError("File too large. Maximum file size is 20 MB.")
-        continue
+        setComposerError("File too large. Maximum file size is 20 MB.");
+        continue;
       }
       if (
         IMAGE_FILE_TYPES.has(ext) &&
         file.size > MAX_INLINE_IMAGE_SIZE_BYTES
       ) {
         setComposerError(
-          "Image too large to preview. Maximum preview size is 5 MB."
-        )
-        continue
+          "Image too large to preview. Maximum preview size is 5 MB.",
+        );
+        continue;
       }
-      const fileUrl = IMAGE_FILE_TYPES.has(ext) ? await toDataUrl(file) : "#"
+      const fileUrl = IMAGE_FILE_TYPES.has(ext) ? await toDataUrl(file) : "#";
       accepted.push({
         id: `pending-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
         fileName: file.name,
         fileUrl,
         fileSize: file.size,
-        fileType: ext
-      })
+        fileType: ext,
+      });
     }
     setPendingAttachments((prev) => {
       const availableSlots = Math.max(
         MAX_ATTACHMENTS_PER_MESSAGE - prev.length,
-        0
-      )
+        0,
+      );
       if (accepted.length > availableSlots) {
-        setComposerError("Maximum 5 files per message.")
+        setComposerError("Maximum 5 files per message.");
       }
-      return [...prev, ...accepted.slice(0, availableSlots)]
-    })
-    event.target.value = ""
+      return [...prev, ...accepted.slice(0, availableSlots)];
+    });
+    event.target.value = "";
   }
 
   function handleRemovePendingAttachment(id: string) {
-    setPendingAttachments((prev) => prev.filter((att) => att.id !== id))
+    setPendingAttachments((prev) => prev.filter((att) => att.id !== id));
   }
 
   async function handleSendMessage() {
-    const text = composerValue.trim()
-    if (!activeConversationId) return
+    const text = composerValue.trim();
+    if (!activeConversationId) return;
     if (!text && pendingAttachments.length === 0) {
-      setComposerError("Message cannot be empty.")
-      return
+      setComposerError("Message cannot be empty.");
+      return;
     }
-    setComposerError(null)
+    setComposerError(null);
 
     const newMsg: Message = {
       id: `msg-${Date.now()}`,
@@ -454,13 +470,13 @@ export function DealRoomManager({
           | "doc"
           | "docx"
           | "csv"
-          | "xlsx"
+          | "xlsx",
       })),
       status: "sent",
       sentAt: new Date().toISOString(),
       isDeleted: false,
-      isSystemMessage: false
-    }
+      isSystemMessage: false,
+    };
 
     try {
       const response = await fetch(
@@ -474,18 +490,18 @@ export function DealRoomManager({
             content: newMsg.content,
             attachments: newMsg.attachments,
             status: newMsg.status,
-            sentAt: newMsg.sentAt
-          })
-        }
-      )
+            sentAt: newMsg.sentAt,
+          }),
+        },
+      );
       if (!response.ok) {
-        setComposerError("Unable to send message.")
-        return
+        setComposerError("Unable to send message.");
+        return;
       }
       setMessagesMap((prev) => ({
         ...prev,
-        [activeConversationId]: [...(prev[activeConversationId] ?? []), newMsg]
-      }))
+        [activeConversationId]: [...(prev[activeConversationId] ?? []), newMsg],
+      }));
       setConversations((prev) =>
         prev.map((conv) =>
           conv.id === activeConversationId
@@ -494,62 +510,62 @@ export function DealRoomManager({
                 members: conv.members.map((member) =>
                   member.userId === currentUserId
                     ? { ...member, isArchived: false }
-                    : member
-                )
+                    : member,
+                ),
               }
-            : conv
-        )
-      )
-      setComposerValue("")
-      setPendingAttachments([])
+            : conv,
+        ),
+      );
+      setComposerValue("");
+      setPendingAttachments([]);
     } catch {
-      setComposerError("Unable to send message.")
+      setComposerError("Unable to send message.");
     }
   }
 
   async function handleSaveEdit() {
-    if (!activeConversationId || !editingMessageId) return
-    const text = editingContent.trim()
-    if (!text) return
-    const editedAt = new Date().toISOString()
+    if (!activeConversationId || !editingMessageId) return;
+    const text = editingContent.trim();
+    if (!text) return;
+    const editedAt = new Date().toISOString();
     try {
       const response = await fetch(
         `/api/deal-room/conversations/${activeConversationId}/messages/${editingMessageId}`,
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ content: text, editedAt })
-        }
-      )
-      if (!response.ok) return
+          body: JSON.stringify({ content: text, editedAt }),
+        },
+      );
+      if (!response.ok) return;
       setMessagesMap((prev) => ({
         ...prev,
         [activeConversationId]:
           prev[activeConversationId]?.map((m) =>
-            m.id === editingMessageId ? { ...m, content: text, editedAt } : m
-          ) ?? []
-      }))
-      setEditingMessageId(null)
+            m.id === editingMessageId ? { ...m, content: text, editedAt } : m,
+          ) ?? [],
+      }));
+      setEditingMessageId(null);
     } catch {
       // keep editing state to let user retry
     }
   }
 
   async function handleDeleteMessage(id: string) {
-    if (!activeConversationId) return
+    if (!activeConversationId) return;
     try {
       const response = await fetch(
         `/api/deal-room/conversations/${activeConversationId}/messages/${id}`,
-        { method: "DELETE" }
-      )
-      if (!response.ok) return
+        { method: "DELETE" },
+      );
+      if (!response.ok) return;
       setMessagesMap((prev) => ({
         ...prev,
         [activeConversationId]:
           prev[activeConversationId]?.map((m) =>
-            m.id === id ? { ...m, isDeleted: true, attachments: [] } : m
-          ) ?? []
-      }))
+            m.id === id ? { ...m, isDeleted: true, attachments: [] } : m,
+          ) ?? [],
+      }));
     } catch {
       // no-op
     }
@@ -562,25 +578,25 @@ export function DealRoomManager({
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: currentUserId })
-        }
-      )
-      if (!response.ok) return
+          body: JSON.stringify({ userId: currentUserId }),
+        },
+      );
+      if (!response.ok) return;
       setConversations((prev) =>
         prev.map((c) =>
           c.id === id
             ? {
                 ...c,
                 members: c.members.map((m) =>
-                  m.userId === currentUserId ? { ...m, isArchived: true } : m
-                )
+                  m.userId === currentUserId ? { ...m, isArchived: true } : m,
+                ),
               }
-            : c
-        )
-      )
+            : c,
+        ),
+      );
       if (activeConversationId === id) {
-        setActiveConversationId(null)
-        router.push("/seller/deal-room", { scroll: false })
+        setActiveConversationId(null);
+        router.push(basePath, { scroll: false });
       }
     } catch {
       // no-op
@@ -591,7 +607,7 @@ export function DealRoomManager({
   return (
     <div className="flex flex-1 overflow-hidden">
       {/* ── Left panel: Conversation list ── */}
-      <aside className="flex w-72 shrink-0 flex-col border-r bg-sidebar">
+      <aside className="flex w-72 shrink-0 flex-col border-r">
         {/* Search */}
         <div className="p-2">
           <InputGroup className="h-8 rounded-full text-xs">
@@ -633,10 +649,10 @@ export function DealRoomManager({
               const displayName = getConversationDisplayName(
                 conv,
                 users,
-                currentUserId
-              )
-              const unread = unreadCounts[conv.id] ?? 0
-              const isActive = conv.id === activeConversationId
+                ownSenderIds,
+              );
+              const unread = unreadCounts[conv.id] ?? 0;
+              const isActive = conv.id === activeConversationId;
 
               return (
                 <button
@@ -644,14 +660,14 @@ export function DealRoomManager({
                   type="button"
                   className={cn(
                     "flex w-full items-start gap-3 px-3 py-2.5 text-left transition-colors hover:bg-sidebar-accent",
-                    isActive && "bg-sidebar-accent"
+                    isActive && "bg-sidebar-accent",
                   )}
                   onClick={() => selectConversation(conv.id)}
                 >
                   <ConversationAvatar
                     conv={conv}
                     users={users}
-                    currentUserId={currentUserId}
+                    ownSenderIds={ownSenderIds}
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-1">
@@ -660,7 +676,7 @@ export function DealRoomManager({
                           "truncate text-sm",
                           unread > 0
                             ? "font-semibold text-foreground"
-                            : "font-medium"
+                            : "font-medium",
                         )}
                       >
                         {displayName}
@@ -683,7 +699,7 @@ export function DealRoomManager({
                     </div>
                   </div>
                 </button>
-              )
+              );
             })
           )}
         </div>
@@ -698,9 +714,9 @@ export function DealRoomManager({
               {(() => {
                 if (activeConversation.type === "direct") {
                   const otherId = activeConversation.members.find(
-                    (m) => m.userId !== currentUserId
-                  )?.userId
-                  const other = users.find((u) => u.id === otherId)
+                    (m) => !ownSenderIds.includes(m.userId),
+                  )?.userId;
+                  const other = users.find((u) => u.id === otherId);
                   if (other) {
                     return (
                       <UserHoverCard user={other} side="bottom">
@@ -711,7 +727,7 @@ export function DealRoomManager({
                           <ConversationAvatar
                             conv={activeConversation}
                             users={users}
-                            currentUserId={currentUserId}
+                            ownSenderIds={ownSenderIds}
                             size="sm"
                           />
                           <div className="text-left">
@@ -724,7 +740,7 @@ export function DealRoomManager({
                           </div>
                         </button>
                       </UserHoverCard>
-                    )
+                    );
                   }
                 }
                 return (
@@ -732,7 +748,7 @@ export function DealRoomManager({
                     <ConversationAvatar
                       conv={activeConversation}
                       users={users}
-                      currentUserId={currentUserId}
+                      ownSenderIds={ownSenderIds}
                       size="sm"
                     />
                     <div>
@@ -740,7 +756,7 @@ export function DealRoomManager({
                         {getConversationDisplayName(
                           activeConversation,
                           users,
-                          currentUserId
+                          ownSenderIds,
                         )}
                       </p>
                       <p className="text-muted-foreground text-xs">
@@ -748,7 +764,7 @@ export function DealRoomManager({
                       </p>
                     </div>
                   </div>
-                )
+                );
               })()}
             </div>
             <DropdownMenu>
@@ -784,20 +800,21 @@ export function DealRoomManager({
               </div>
             ) : (
               activeMessages.map((msg, idx) => {
-                const isOwn = msg.senderId === currentUserId
-                const sender = users.find((u) => u.id === msg.senderId)
-                const prevMsg = activeMessages[idx - 1]
+                const isOwn = ownSenderIds.includes(msg.senderId);
+                const sender = users.find((u) => u.id === msg.senderId);
+                const prevMsg = activeMessages[idx - 1];
                 const showSenderName =
                   !isOwn &&
                   !msg.isSystemMessage &&
-                  msg.senderId !== prevMsg?.senderId
+                  msg.senderId !== prevMsg?.senderId;
 
-                const sentMs = new Date(msg.sentAt).getTime()
+                const sentMs = new Date(msg.sentAt).getTime();
+                const isCurrentUserMessage = msg.senderId === currentUserId;
                 const isEditable =
-                  isOwn &&
+                  isCurrentUserMessage &&
                   !msg.isDeleted &&
                   !msg.isSystemMessage &&
-                  Date.now() - sentMs < 15 * 60 * 1000
+                  Date.now() - sentMs < 15 * 60 * 1000;
 
                 // System message
                 if (msg.isSystemMessage) {
@@ -807,7 +824,7 @@ export function DealRoomManager({
                         {msg.content}
                       </span>
                     </div>
-                  )
+                  );
                 }
 
                 return (
@@ -818,7 +835,7 @@ export function DealRoomManager({
                       isOwn ? "justify-end" : "justify-start",
                       idx > 0 &&
                         activeMessages[idx - 1].senderId !== msg.senderId &&
-                        "mt-3"
+                        "mt-3",
                     )}
                   >
                     {/* Other's avatar */}
@@ -850,7 +867,7 @@ export function DealRoomManager({
                     <div
                       className={cn(
                         "flex max-w-[60%] flex-col gap-0.5",
-                        isOwn ? "items-end" : "items-start"
+                        isOwn ? "items-end" : "items-start",
                       )}
                     >
                       {showSenderName && sender && (
@@ -874,10 +891,10 @@ export function DealRoomManager({
                             rows={3}
                             onKeyDown={(e) => {
                               if (e.key === "Enter" && !e.shiftKey) {
-                                e.preventDefault()
-                                handleSaveEdit()
+                                e.preventDefault();
+                                handleSaveEdit();
                               }
-                              if (e.key === "Escape") setEditingMessageId(null)
+                              if (e.key === "Escape") setEditingMessageId(null);
                             }}
                             autoFocus
                           />
@@ -906,7 +923,7 @@ export function DealRoomManager({
                             isOwn
                               ? "rounded-br-sm bg-primary text-primary-foreground"
                               : "rounded-bl-sm bg-muted text-foreground",
-                            msg.isDeleted && "italic opacity-60"
+                            msg.isDeleted && "italic opacity-60",
                           )}
                         >
                           {msg.isDeleted ? (
@@ -929,7 +946,7 @@ export function DealRoomManager({
                                             "block overflow-hidden rounded-lg border",
                                             isOwn
                                               ? "border-primary-foreground/30"
-                                              : "border-border/70"
+                                              : "border-border/70",
                                           )}
                                         >
                                           <Image
@@ -947,7 +964,7 @@ export function DealRoomManager({
                                             "flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs",
                                             isOwn
                                               ? "bg-primary-foreground/20"
-                                              : "bg-background/60"
+                                              : "bg-background/60",
                                           )}
                                         >
                                           <PaperclipIcon className="size-3.5 shrink-0" />
@@ -967,7 +984,7 @@ export function DealRoomManager({
                           )}
 
                           {/* Hover actions (own messages only) */}
-                          {isOwn && !msg.isDeleted && (
+                          {isCurrentUserMessage && !msg.isDeleted && (
                             <div className="absolute -top-7 right-0 hidden items-center gap-0.5 rounded-full border bg-popover px-1 py-0.5 shadow-xs group-hover:flex">
                               {isEditable && (
                                 <Button
@@ -975,8 +992,8 @@ export function DealRoomManager({
                                   variant="ghost"
                                   className="size-6"
                                   onClick={() => {
-                                    setEditingMessageId(msg.id)
-                                    setEditingContent(msg.content)
+                                    setEditingMessageId(msg.id);
+                                    setEditingContent(msg.content);
                                   }}
                                 >
                                   <PencilIcon className="size-3" />
@@ -1007,7 +1024,7 @@ export function DealRoomManager({
                             · Edited
                           </span>
                         )}
-                        {isOwn && !msg.isDeleted && (
+                        {isCurrentUserMessage && !msg.isDeleted && (
                           <span className="text-muted-foreground text-xs">
                             ·{" "}
                             {msg.status === "read"
@@ -1023,7 +1040,7 @@ export function DealRoomManager({
                     {/* Own avatar placeholder for alignment */}
                     {isOwn && <div className="mb-4 size-7 shrink-0" />}
                   </div>
-                )
+                );
               })
             )}
             <div ref={messagesEndRef} />
@@ -1072,8 +1089,8 @@ export function DealRoomManager({
                   onChange={(e) => setComposerValue(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault()
-                      handleSendMessage()
+                      e.preventDefault();
+                      handleSendMessage();
                     }
                   }}
                 />
@@ -1112,5 +1129,5 @@ export function DealRoomManager({
         </div>
       )}
     </div>
-  )
+  );
 }

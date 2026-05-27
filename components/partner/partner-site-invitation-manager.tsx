@@ -1,13 +1,10 @@
 "use client";
 
 import {
-  CheckCircle2Icon,
-  Clock3Icon,
   CopyIcon,
   LinkIcon,
   MailIcon,
   QrCodeIcon,
-  RotateCwIcon,
   SearchIcon,
   SendIcon,
   XIcon,
@@ -239,7 +236,7 @@ export function PartnerSiteInvitationManager({
   }
 
   return (
-    <div className="mt-5 space-y-4 px-4 pb-8">
+    <div className="mt-5 space-y-4">
       <div className="flex flex-col justify-between gap-2 sm:flex-row">
         <div className="flex gap-2">
           <InputGroup className="w-full rounded-full sm:w-80">
@@ -315,14 +312,7 @@ export function PartnerSiteInvitationManager({
             {filteredInvitations.map((invitation) => (
               <TableRow key={invitation.id}>
                 <TableCell>
-                  <div className="space-y-1">
-                    <p className="font-medium">
-                      {invitation.recipient || "No recipient email"}
-                    </p>
-                    <p className="text-muted-foreground text-xs">
-                      {invitation.enterpriseName}
-                    </p>
-                  </div>
+                  {invitation.recipient || "No recipient email"}
                 </TableCell>
                 <TableCell>
                   <InvitationStatusBadge status={invitation.status} />
@@ -337,7 +327,6 @@ export function PartnerSiteInvitationManager({
                       }
                       onClick={() => resendInvitation(invitation)}
                     >
-                      <RotateCwIcon className="h-4 w-4" />
                       {resendingId === invitation.id
                         ? "Resending..."
                         : "Resend"}
@@ -573,18 +562,8 @@ function getInvitationStatus(
 
 function InvitationStatusBadge({ status }: { status: InvitationStatus }) {
   if (status === "accepted") {
-    return (
-      <Badge className="gap-1" variant="default">
-        <CheckCircle2Icon className="h-3.5 w-3.5" />
-        Accepted
-      </Badge>
-    );
+    return <Badge variant="default">Accepted</Badge>;
   }
 
-  return (
-    <Badge className="gap-1" variant="secondary">
-      <Clock3Icon className="h-3.5 w-3.5" />
-      Pending
-    </Badge>
-  );
+  return <Badge variant="secondary">Pending</Badge>;
 }

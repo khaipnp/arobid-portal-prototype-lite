@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { requireApiUserId } from "@/lib/auth/api-user"
 import {
   createMessage,
-  isConversationMember,
+  isConversationParticipant,
   listConversationMessages
 } from "@/lib/deal-room/db"
 import type { Message } from "@/lib/deal-room/types"
@@ -51,7 +51,7 @@ export async function POST(request: Request, { params }: Props) {
     if (body.senderId !== userId) {
       return NextResponse.json({ error: "Forbidden." }, { status: 403 })
     }
-    const canAccessConversation = await isConversationMember({
+    const canAccessConversation = await isConversationParticipant({
       conversationId,
       userId
     })
