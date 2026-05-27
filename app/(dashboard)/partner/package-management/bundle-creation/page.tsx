@@ -11,22 +11,14 @@ import {
   EmptyMedia,
   EmptyTitle
 } from "@/components/ui/empty"
-import { requireRole } from "@/lib/auth/rbac"
-import { requirePartnerTab } from "@/lib/partner/access"
-import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 
-export const dynamic = "force-dynamic"
-
-export default async function PartnerTradeCreditPage() {
-  await ensurePlatformSchema()
-  const userId = await requireRole("partner")
-  await requirePartnerTab(userId, "quota")
-
+export default function DeferredPartnerModulePage() {
   return (
     <DashboardShell
       breadcrumbs={[
-        { label: "Partner", href: "/partner" },
-        { label: "TradeCredit Reports" }
+        { label: "Dashboard", href: "/partner" },
+        { label: "Package Management" },
+        { label: "Bundle Creation" }
       ]}
     >
       <Empty>
@@ -43,8 +35,8 @@ export default async function PartnerTradeCreditPage() {
             Feature Coming Soon!
           </EmptyTitle>
           <EmptyDescription>
-            The feature is coming soon. In the meantime, please reach out to
-            your account manager for any TradeCredit usage reports or questions.
+            The feature is coming soon. In the meantime, please contact with
+            Customer Support for any questions.
           </EmptyDescription>
         </EmptyHeader>
         <EmptyContent className="flex-row justify-center gap-2">
