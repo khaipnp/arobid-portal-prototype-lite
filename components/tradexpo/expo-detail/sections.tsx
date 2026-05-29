@@ -2,12 +2,15 @@
 
 import {
   ArrowRightIcon,
+  BadgeCheckIcon,
   BoxIcon,
   CheckIcon,
   ChevronRightIcon,
+  GemIcon,
   HeartIcon,
   HomeIcon,
   RadioIcon,
+  RocketIcon,
   SendIcon
 } from "lucide-react"
 import Image from "next/image"
@@ -19,17 +22,36 @@ import type { BFMBroadcastItem } from "@/components/tradexpo/expo-detail/broadca
 import { Button } from "@/components/ui/button"
 import { getAssetUrl } from "@/lib/image-utils"
 import type { ExpoDetailExhibitor } from "@/lib/tradexpo/db/platform-data"
+import type {
+  ExpoBenefitCardContent,
+  ExpoCategoryDisplay,
+  ExpoMarketingContent
+} from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
 import {
   asset,
   audiences,
   BOOTH_TIERS,
-  categories,
   productImages,
   sponsors,
   valueCards
 } from "./data"
 import { VirtualLobbyDialog } from "./virtual-lobby-dialog"
+
+const BENEFIT_ICON_BY_KEY: Record<
+  ExpoBenefitCardContent["icon"],
+  typeof BadgeCheckIcon
+> = {
+  badge: BadgeCheckIcon,
+  rocket: RocketIcon,
+  gem: GemIcon
+}
+
+const BENEFIT_TONE_BY_KEY: Record<ExpoBenefitCardContent["icon"], string> = {
+  badge: "bg-[#ecfdf5] text-[#16a34a]",
+  rocket: "bg-[#fff7ed] text-[#ed6203]",
+  gem: "bg-[#ecfeff] text-[#0ea5e9]"
+}
 
 function formatHeroStat(value: number) {
   if (value >= 1000) {
@@ -280,60 +302,94 @@ export function Sponsors() {
   )
 }
 
-export function Audience() {
+export function Audience({
+  content
+}: {
+  content?: ExpoMarketingContent["whoShouldJoin"]
+}) {
+  const block = content ?? {
+    enabled: true,
+    sectionTitle: "Who should join?",
+    audienceCards: audiences.map((audience, index) => ({
+      title: audience.title,
+      description: audience.body,
+      tags: [...audience.tags],
+      displayOrder: index
+    }))
+  }
+  if (!block.enabled || block.audienceCards.length === 0) return null
+
   return (
     <section className="container mx-auto px-4 py-16 md:px-0">
       <h2 className="text-center font-semibold text-[32px] leading-10">
-        Who Should Attend?
+        {block.sectionTitle}
       </h2>
+      {block.sectionSubtitle ? (
+        <p className="mx-auto mt-2 max-w-2xl text-center text-foreground">
+          {block.sectionSubtitle}
+        </p>
+      ) : null}
       <div className="mt-10 grid gap-10 lg:grid-cols-3">
-        {audiences.map((audience) => (
-          <article
-            key={audience.number}
-            className={cn("flex gap-6", audience.offset)}
-          >
-            <p className="pt-10 font-medium text-[#9ba5ff] text-[32px] leading-10">
-              {audience.number}
-            </p>
-            <div>
-              <h3 className="font-semibold text-xl leading-7">
-                {audience.title}
-              </h3>
-              <p className="mt-1 text-foreground text-sm leading-5">
-                {audience.body}
+        {block.audienceCards
+          .slice()
+          .sort((a, b) => a.displayOrder - b.displayOrder)
+          .map((audience, index) => (
+            <article
+              key={`${audience.title}-${audience.displayOrder}`}
+              className={cn(
+                "flex gap-6",
+                index % 2 === 0 ? "lg:pt-23.25" : "lg:pt-0"
+              )}
+            >
+              <p className="pt-10 font-medium text-[#9ba5ff] text-[32px] leading-10">
+                {String(index + 1).padStart(2, "0")}
               </p>
-              <div className="mt-6 flex flex-wrap gap-1">
-                {audience.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full bg-[#f3f4f6] px-2 py-1 text-foreground text-xs"
-                  >
-                    {tag}
-                  </span>
-                ))}
+              <div>
+                <h3 className="font-semibold text-xl leading-7">
+                  {audience.title}
+                </h3>
+                <p className="mt-1 text-foreground text-sm leading-5">
+                  {audience.description}
+                </p>
+                {audience.tags.length > 0 ? (
+                  <div className="mt-6 flex flex-wrap gap-1">
+                    {audience.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="rounded-full bg-[#f3f4f6] px-2 py-1 text-foreground text-xs"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
               </div>
-            </div>
-          </article>
-        ))}
+            </article>
+          ))}
       </div>
     </section>
   )
 }
 
-export function Categories() {
+export function Categories({
+  categories
+}: {
+  categories: ExpoCategoryDisplay[]
+}) {
+  if (categories.length === 0) return null
+
   return (
     <section className="container mx-auto px-4 pb-16 text-center md:px-0">
       <h2 className="font-semibold text-[32px] leading-10">
         Exhibited Categories
       </h2>
       <p className="mt-2 text-foreground">
-        Navigating the complete spectrum of construction materials and
-        architectural solutions.
+        Navigating selected categories for this Expo.
       </p>
       <div className="mt-10 grid gap-6 text-left md:grid-cols-2 xl:grid-cols-3">
         {categories.map((category, index) => (
           <div
-            key={category}
+            key={category.id}
             className="flex h-20 items-center gap-4 rounded-lg border border-[#f3f4f6] bg-white p-2"
           >
             <div className="relative size-16 overflow-hidden rounded">
@@ -345,7 +401,7 @@ export function Categories() {
                 className="object-cover"
               />
             </div>
-            <p className="font-medium text-lg">{category}</p>
+            <p className="font-medium text-lg">{category.name}</p>
           </div>
         ))}
       </div>
@@ -353,41 +409,79 @@ export function Categories() {
   )
 }
 
-export function ParticipantValues() {
+export function ParticipantValues({
+  content
+}: {
+  content?: ExpoMarketingContent["audienceBenefits"]
+}) {
+  const block =
+    content ??
+    ({
+      enabled: true,
+      sectionTitle: "Giá trị đặc quyền từng đối tượng",
+      sectionSubtitle:
+        "Specialized digital solutions to maximize trade efficiency and technical connectivity for all participants.",
+      benefitCards: valueCards.map((card, index) => ({
+        audienceName: card.title,
+        icon: index === 1 ? "rocket" : index === 2 ? "gem" : "badge",
+        benefitItems: [...card.points],
+        isFeatured: index === 1,
+        displayOrder: index
+      }))
+    } satisfies ExpoMarketingContent["audienceBenefits"])
+  if (!block.enabled || block.benefitCards.length === 0) return null
+
   return (
     <section className="bg-[#f9fafb] px-4 py-16 md:px-20">
       <div className="container mx-auto text-center">
         <h2 className="font-semibold text-[32px] leading-10">
-          Exclusive Values for Each Participant
+          {block.sectionTitle}
         </h2>
-        <p className="mt-2 text-foreground">
-          Specialized digital solutions to maximize trade efficiency and
-          technical connectivity for all participants.
-        </p>
+        {block.sectionSubtitle ? (
+          <p className="mt-2 text-foreground">{block.sectionSubtitle}</p>
+        ) : null}
         <div className="mt-10 grid gap-6 text-left lg:grid-cols-3">
-          {valueCards.map(({ title, icon: Icon, tone, points }) => (
-            <article key={title} className="rounded-xl bg-white p-6">
-              <div
-                className={cn(
-                  "grid size-14 place-items-center rounded-lg",
-                  tone
-                )}
-              >
-                <Icon className="size-7" />
-              </div>
-              <h3 className="mt-4 font-semibold text-xl leading-7">{title}</h3>
-              <div className="mt-4 border-[#e5e7eb] border-t pt-4">
-                <ul className="space-y-4">
-                  {points.map((point) => (
-                    <li key={point} className="flex gap-3 text-sm leading-5">
-                      <CheckIcon className="mt-0.5 size-4 shrink-0 text-[#16a34a]" />
-                      <span>{point}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </article>
-          ))}
+          {block.benefitCards
+            .slice()
+            .sort((a, b) => a.displayOrder - b.displayOrder)
+            .map((card) => {
+              const Icon = BENEFIT_ICON_BY_KEY[card.icon]
+              const tone = BENEFIT_TONE_BY_KEY[card.icon]
+              return (
+                <article
+                  key={`${card.audienceName}-${card.displayOrder}`}
+                  className={cn(
+                    "rounded-xl bg-white p-6",
+                    card.isFeatured && "ring-2 ring-legend/20"
+                  )}
+                >
+                  <div
+                    className={cn(
+                      "grid size-14 place-items-center rounded-lg",
+                      tone
+                    )}
+                  >
+                    <Icon className="size-7" />
+                  </div>
+                  <h3 className="mt-4 font-semibold text-xl leading-7">
+                    {card.audienceName}
+                  </h3>
+                  <div className="mt-4 border-[#e5e7eb] border-t pt-4">
+                    <ul className="space-y-4">
+                      {card.benefitItems.map((point) => (
+                        <li
+                          key={point}
+                          className="flex gap-3 text-sm leading-5"
+                        >
+                          <CheckIcon className="mt-0.5 size-4 shrink-0 text-[#16a34a]" />
+                          <span>{point}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </article>
+              )
+            })}
         </div>
       </div>
     </section>

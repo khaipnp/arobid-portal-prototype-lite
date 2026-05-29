@@ -5,10 +5,12 @@ import {
   deleteExpo,
   getExpoById,
   listExpoLayoutTemplates,
+  publishAdminExpoMarketingContent,
   updateExpoStatus,
   updateExpoWithHalls
 } from "@/lib/tradexpo/db/platform-data"
 import { validateHallBlocks } from "@/lib/tradexpo/expo-create-validation"
+import { validateExpoMarketingContent } from "@/lib/tradexpo/expo-marketing-content"
 import type { ExpoHallDraft, ExpoStatus } from "@/lib/tradexpo/types"
 
 interface Props {
@@ -47,6 +49,7 @@ export async function PUT(request: Request, { params }: Props) {
     ownerUserId?: string
     ownerEmail?: string
     halls?: ExpoHallDraft[]
+    marketingContent?: unknown
   }
   try {
     body = (await request.json()) as typeof body
@@ -140,6 +143,18 @@ export async function PUT(request: Request, { params }: Props) {
     return NextResponse.json({ error: hallErr }, { status: 400 })
   }
 
+  const marketingResult = validateExpoMarketingContent(body.marketingContent)
+  if (!marketingResult.ok) {
+    return NextResponse.json({ error: marketingResult.error }, { status: 400 })
+  }
+
+  let userId: string | null = null
+  try {
+    userId = await getCurrentUserIdFromRequest()
+  } catch {
+    userId = null
+  }
+
   try {
     await updateExpoWithHalls(expoId, {
       name,
@@ -155,6 +170,11 @@ export async function PUT(request: Request, { params }: Props) {
       ownerEmail,
       halls
     })
+    await publishAdminExpoMarketingContent(
+      expoId,
+      marketingResult.content,
+      userId
+    )
     return NextResponse.json({ ok: true })
   } catch (e) {
     const message = e instanceof Error ? e.message : "Failed to update expo."

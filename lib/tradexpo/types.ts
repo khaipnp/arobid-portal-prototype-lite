@@ -147,6 +147,68 @@ export interface ExpoHall extends ExpoHallDraft {
   sortOrder: number
 }
 
+export type ExpoMarketingIconKey = "badge" | "rocket" | "gem"
+
+export type ExpoMarketingSourceRole = "admin" | "partner"
+
+export type ExpoMarketingContentStatus =
+  | "draft"
+  | "submitted"
+  | "published"
+  | "rejected"
+
+export interface ExpoAudienceCardContent {
+  title: string
+  description: string
+  tags: string[]
+  displayOrder: number
+}
+
+export interface ExpoBenefitCardContent {
+  audienceName: string
+  icon: ExpoMarketingIconKey
+  benefitItems: string[]
+  isFeatured: boolean
+  displayOrder: number
+}
+
+export interface ExpoMarketingContent {
+  whoShouldJoin: {
+    enabled: boolean
+    sectionTitle: string
+    sectionSubtitle?: string
+    audienceCards: ExpoAudienceCardContent[]
+  }
+  audienceBenefits: {
+    enabled: boolean
+    sectionTitle: string
+    sectionSubtitle?: string
+    benefitCards: ExpoBenefitCardContent[]
+  }
+}
+
+export interface ExpoMarketingContentVersion {
+  id: string
+  expoId: string
+  sourceRole: ExpoMarketingSourceRole
+  status: ExpoMarketingContentStatus
+  contentVersion: number
+  contentLocale: string
+  content: ExpoMarketingContent
+  submittedBy?: string | null
+  submittedAt?: string | null
+  reviewedBy?: string | null
+  reviewedAt?: string | null
+  reviewNote?: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ExpoCategoryDisplay {
+  id: string
+  name: string
+}
+
 export interface ExpoLayoutTemplate {
   id: string
   name: string

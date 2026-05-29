@@ -6,6 +6,7 @@ import { getPartnerAssignedExpo } from "@/lib/partner/db"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 import { listHallTemplates } from "@/lib/tradexpo/db/hall-templates"
 import {
+  getLatestExpoMarketingContentForEdit,
   getUserById,
   listExpoCategories,
   listExpoHalls,
@@ -33,14 +34,14 @@ export default async function PartnerEditExpoPage({
     assignment.capabilities.includes("edit_expo_content")
   if (!canEditDraft) notFound()
 
-  const [categories, layoutTemplates, hallTemplates, halls] = await Promise.all(
-    [
+  const [categories, layoutTemplates, hallTemplates, halls, marketingVersion] =
+    await Promise.all([
       listExpoCategories(),
       listExpoLayoutTemplates(),
       listHallTemplates(),
-      listExpoHalls(expoId)
-    ]
-  )
+      listExpoHalls(expoId),
+      getLatestExpoMarketingContentForEdit(expoId)
+    ])
 
   const initialOwner =
     expo.ownerUserId != null ? await getUserById(expo.ownerUserId) : null
@@ -67,6 +68,7 @@ export default async function PartnerEditExpoPage({
         categories={categories}
         layoutTemplates={layoutTemplates}
         hallTemplates={hallTemplates}
+        initialMarketingContent={marketingVersion?.content}
         submitEndpoint={`/api/partner/expos/${expoId}`}
         successHref={`/partner/expos/${expoId}`}
         cancelHref={`/partner/expos/${expoId}`}

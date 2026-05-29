@@ -20,9 +20,12 @@ import {
   countExpoDetailProducts,
   getExpoBySlug,
   getExpoHeroStatsByExpo,
+  getPublishedExpoMarketingContent,
+  listExpoCategoriesByIds,
   listExpoDetailExhibitorsByName,
   listExpoDetailProducts
 } from "@/lib/tradexpo/db/platform-data"
+import { getExpoMarketingContentForRender } from "@/lib/tradexpo/expo-marketing-content"
 import { listWishlistedTargetIds } from "@/lib/wishlist/db"
 
 const VIRTUAL_LOBBY_URL_BY_EXPO_SLUG: Record<string, string> = {
@@ -53,13 +56,24 @@ export default async function Page({
   if (!expo) notFound()
 
   const userId = await getCurrentSessionUserId()
-  const [exhibitors, heroStats, wishlistedExpoIds, productCount] =
-    await Promise.all([
-      listExpoDetailExhibitorsByName(expo.name, { userId }),
-      getExpoHeroStatsByExpo({ id: expo.id, name: expo.name }),
-      userId ? listWishlistedTargetIds(userId, "expo") : new Set<string>(),
-      countExpoDetailProducts(expo.id)
-    ])
+  const [
+    exhibitors,
+    heroStats,
+    wishlistedExpoIds,
+    productCount,
+    publishedMarketing,
+    expoCategories
+  ] = await Promise.all([
+    listExpoDetailExhibitorsByName(expo.name, { userId }),
+    getExpoHeroStatsByExpo({ id: expo.id, name: expo.name }),
+    userId ? listWishlistedTargetIds(userId, "expo") : new Set<string>(),
+    countExpoDetailProducts(expo.id),
+    getPublishedExpoMarketingContent(expo.id),
+    listExpoCategoriesByIds(expo.categoryIds)
+  ])
+  const marketingContent = getExpoMarketingContentForRender(
+    publishedMarketing?.content
+  )
   const initialProducts =
     productCount >= PRODUCT_FEATURE_MIN_PRODUCTS
       ? await listExpoDetailProducts(expo.id, {
@@ -113,9 +127,9 @@ export default async function Page({
           isAuthenticated={!!userId}
         />
       ) : null}
-      <Audience />
-      <Categories />
-      <ParticipantValues />
+      <Audience content={marketingContent.whoShouldJoin} />
+      <Categories categories={expoCategories} />
+      <ParticipantValues content={marketingContent.audienceBenefits} />
       <BoothTier slug={slug} isAuthenticated={!!userId} />
       <BroadcastBFM items={bfmBroadcastItems} />
       <TxFooter />
