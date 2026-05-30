@@ -7,7 +7,9 @@ import {
 import { getCurrentSessionUserId } from "@/lib/auth/session"
 
 function isNotFoundError(error: unknown) {
-  return error instanceof Error && error.message === "Account profile not found."
+  return (
+    error instanceof Error && error.message === "Account profile not found."
+  )
 }
 
 export async function GET() {
@@ -61,7 +63,10 @@ export async function PATCH(request: Request) {
   try {
     body = await request.json()
   } catch {
-    return NextResponse.json({ error: "Invalid JSON payload." }, { status: 400 })
+    return NextResponse.json(
+      { error: "Invalid JSON payload." },
+      { status: 400 }
+    )
   }
 
   try {
@@ -74,7 +79,9 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ ok: true, profile })
   } catch (error) {
     const message =
-      error instanceof Error ? error.message : "Failed to update account profile."
+      error instanceof Error
+        ? error.message
+        : "Failed to update account profile."
     return NextResponse.json({ error: message }, { status: 400 })
   }
 }
