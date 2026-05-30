@@ -31,7 +31,10 @@ const EMPTY_FORM = {
   dateOfBirth: ""
 }
 
+const UNSPECIFIED_GENDER = "__none__"
+
 const GENDER_OPTIONS = [
+  { value: UNSPECIFIED_GENDER, label: "Unspecified" },
   { value: "male", label: "Male" },
   { value: "female", label: "Female" },
   { value: "other", label: "Other" },
@@ -229,8 +232,13 @@ export function AccountProfileDialog({
               <Label htmlFor="account-gender">Gender</Label>
               <Select
                 disabled={loading || submitting}
-                value={form.gender}
-                onValueChange={(value) => updateField("gender", value)}
+                value={form.gender || UNSPECIFIED_GENDER}
+                onValueChange={(value) =>
+                  updateField(
+                    "gender",
+                    value === UNSPECIFIED_GENDER ? "" : value
+                  )
+                }
               >
                 <SelectTrigger id="account-gender" className="w-full">
                   <SelectValue placeholder="Select gender" />

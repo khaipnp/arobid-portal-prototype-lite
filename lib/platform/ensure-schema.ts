@@ -76,6 +76,14 @@ async function ensureCompanyRepresentativeSchema() {
   `
 }
 
+async function ensureAccountProfileSchema() {
+  await sql`alter table users add column if not exists first_name text`
+  await sql`alter table users add column if not exists last_name text`
+  await sql`alter table users add column if not exists gender text`
+  await sql`alter table users add column if not exists mobile text`
+  await sql`alter table users add column if not exists date_of_birth date`
+}
+
 async function backfillCompanyRepresentatives() {
   await sql`
     with ranked_company_users as (
@@ -128,6 +136,7 @@ export async function ensurePlatformSchema() {
       await backfillCompanyRepresentatives()
       await ensureExpoMarketingContentSchema()
       await ensureTradeCreditSchema()
+      await ensureAccountProfileSchema()
       platformSchemaReady = true
       return
     }
@@ -754,11 +763,7 @@ export async function ensurePlatformSchema() {
     alter table users
     add column if not exists industry_category_id text
   `
-  await sql`alter table users add column if not exists first_name text`
-  await sql`alter table users add column if not exists last_name text`
-  await sql`alter table users add column if not exists gender text`
-  await sql`alter table users add column if not exists mobile text`
-  await sql`alter table users add column if not exists date_of_birth date`
+  await ensureAccountProfileSchema()
   await sql`
     do $$
     begin

@@ -6,6 +6,20 @@ import {
 } from "@/lib/account/profile"
 import { getCurrentSessionUserId } from "@/lib/auth/session"
 
+function isValidationError(error: unknown) {
+  if (!(error instanceof Error)) {
+    return false
+  }
+
+  return [
+    "First name is required.",
+    "Last name is required.",
+    "Gender must be male, female, other, or prefer_not_to_say.",
+    "Date of birth must use YYYY-MM-DD format.",
+    "Date of birth must be a real date."
+  ].includes(error.message)
+}
+
 function isNotFoundError(error: unknown) {
   return (
     error instanceof Error && error.message === "Account profile not found."
@@ -51,37 +65,54 @@ export async function GET() {
 }
 
 export async function PATCH(request: Request) {
-  const userId = await getCurrentSessionUserId({ clearInvalidCookie: true })
-  if (!userId) {
-    return NextResponse.json(
-      { error: "Authentication required." },
-      { status: 401 }
-    )
-  }
-
-  let body: unknown
   try {
-    body = await request.json()
+    const userId = await getCurrentSessionUserId({ clearInvalidCookie: true })
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Authentication required." },
+        { status: 401 }
+      )
+    }
+
+    let body: unknown
+    try {
+      body = await request.json()
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid JSON payload." },
+        { status: 400 }
+      )
+    }
+
+    try {
+      const input: UpdateAccountProfileInput =
+        typeof body === "object" && body !== null
+          ? (body as UpdateAccountProfileInput)
+          : {}
+      const profile = await updateAccountProfile(userId, input)
+
+      return NextResponse.json({ ok: true, profile })
+    } catch (error) {
+      if (isValidationError(error)) {
+        return NextResponse.json(
+          { error: (error as Error).message },
+          { status: 400 }
+        )
+      }
+
+      if (isNotFoundError(error)) {
+        return NextResponse.json(
+          { error: "Account profile not found." },
+          { status: 404 }
+        )
+      }
+
+      throw error
+    }
   } catch {
     return NextResponse.json(
-      { error: "Invalid JSON payload." },
-      { status: 400 }
+      { error: "Failed to update account profile." },
+      { status: 500 }
     )
-  }
-
-  try {
-    const input: UpdateAccountProfileInput =
-      typeof body === "object" && body !== null
-        ? (body as UpdateAccountProfileInput)
-        : {}
-    const profile = await updateAccountProfile(userId, input)
-
-    return NextResponse.json({ ok: true, profile })
-  } catch (error) {
-    const message =
-      error instanceof Error
-        ? error.message
-        : "Failed to update account profile."
-    return NextResponse.json({ error: message }, { status: 400 })
   }
 }
