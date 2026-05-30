@@ -754,6 +754,11 @@ export async function ensurePlatformSchema() {
     alter table users
     add column if not exists industry_category_id text
   `
+  await sql`alter table users add column if not exists first_name text`
+  await sql`alter table users add column if not exists last_name text`
+  await sql`alter table users add column if not exists gender text`
+  await sql`alter table users add column if not exists mobile text`
+  await sql`alter table users add column if not exists date_of_birth date`
   await sql`
     do $$
     begin
