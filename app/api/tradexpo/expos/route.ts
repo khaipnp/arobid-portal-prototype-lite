@@ -2,9 +2,11 @@ import { NextResponse } from "next/server"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 import {
   createExpoWithHalls,
-  listExpoLayoutTemplates
+  listExpoLayoutTemplates,
+  publishAdminExpoMarketingContent
 } from "@/lib/tradexpo/db/platform-data"
 import { validateHallBlocks } from "@/lib/tradexpo/expo-create-validation"
+import { validateExpoMarketingContent } from "@/lib/tradexpo/expo-marketing-content"
 import type { ExpoHallDraft } from "@/lib/tradexpo/types"
 
 export async function POST(request: Request) {
@@ -22,6 +24,7 @@ export async function POST(request: Request) {
     ownerUserId?: string
     ownerEmail?: string
     halls?: ExpoHallDraft[]
+    marketingContent?: unknown
   }
 
   const name = body.name?.trim() ?? ""
@@ -98,6 +101,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: hallErr }, { status: 400 })
   }
 
+  const marketingResult = validateExpoMarketingContent(body.marketingContent)
+  if (!marketingResult.ok) {
+    return NextResponse.json({ error: marketingResult.error }, { status: 400 })
+  }
+
   try {
     const result = await createExpoWithHalls({
       name,
@@ -112,6 +120,11 @@ export async function POST(request: Request) {
       ownerEmail,
       halls
     })
+    await publishAdminExpoMarketingContent(
+      result.id,
+      marketingResult.content,
+      null
+    )
     return NextResponse.json({ id: result.id })
   } catch (e) {
     const message = e instanceof Error ? e.message : "Failed to create expo."

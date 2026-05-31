@@ -7,6 +7,7 @@ import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 import { listHallTemplates } from "@/lib/tradexpo/db/hall-templates"
 import {
   getExpoById,
+  getLatestExpoMarketingContentForEdit,
   getUserById,
   listExpoCategories,
   listExpoHalls,
@@ -29,14 +30,14 @@ export default async function EditExpoPage({
   const expo = await getExpoById(expoId)
   if (!expo) notFound()
 
-  const [categories, layoutTemplates, hallTemplates, halls] = await Promise.all(
-    [
+  const [categories, layoutTemplates, hallTemplates, halls, marketingVersion] =
+    await Promise.all([
       listExpoCategories(),
       listExpoLayoutTemplates(),
       listHallTemplates(),
-      listExpoHalls(expoId)
-    ]
-  )
+      listExpoHalls(expoId),
+      getLatestExpoMarketingContentForEdit(expoId)
+    ])
 
   const initialOwner =
     expo.ownerUserId != null ? await getUserById(expo.ownerUserId) : null
@@ -63,6 +64,7 @@ export default async function EditExpoPage({
         categories={categories}
         layoutTemplates={layoutTemplates}
         hallTemplates={hallTemplates}
+        initialMarketingContent={marketingVersion?.content}
       />
     </DashboardShell>
   )

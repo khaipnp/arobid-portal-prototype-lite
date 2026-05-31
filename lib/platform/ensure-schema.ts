@@ -30,6 +30,40 @@ export async function ensurePlatformPaymentConfig(db: SqlClient = sql) {
   `
 }
 
+async function ensureExpoMarketingContentSchema() {
+  await sql`
+    create table if not exists expo_marketing_content_versions (
+      id text primary key,
+      expo_id text not null references expos(id) on delete cascade,
+      source_role text not null check (source_role in ('admin', 'partner')),
+      status text not null check (status in ('draft', 'submitted', 'published', 'rejected')),
+      content_version int not null,
+      content_locale text not null default 'en',
+      content jsonb not null default '{}'::jsonb,
+      submitted_by text references users(id) on delete set null,
+      submitted_at timestamptz,
+      reviewed_by text references users(id) on delete set null,
+      reviewed_at timestamptz,
+      review_note text,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    create index if not exists idx_expo_marketing_content_public
+    on expo_marketing_content_versions (expo_id, status, content_version desc)
+  `
+  await sql`
+    create index if not exists idx_expo_marketing_content_updated
+    on expo_marketing_content_versions (expo_id, updated_at desc)
+  `
+  await sql`
+    insert into platform_schema_migrations (name)
+    values ('expo_marketing_content_v1')
+    on conflict (name) do update set applied_at = now()
+  `
+}
+
 async function ensureCompanyRepresentativeSchema() {
   await sql`
     alter table companies
@@ -40,6 +74,14 @@ async function ensureCompanyRepresentativeSchema() {
     on companies (representative_user_id)
     where representative_user_id is not null
   `
+}
+
+async function ensureAccountProfileSchema() {
+  await sql`alter table users add column if not exists first_name text`
+  await sql`alter table users add column if not exists last_name text`
+  await sql`alter table users add column if not exists gender text`
+  await sql`alter table users add column if not exists mobile text`
+  await sql`alter table users add column if not exists date_of_birth date`
 }
 
 async function backfillCompanyRepresentatives() {
@@ -92,7 +134,9 @@ export async function ensurePlatformSchema() {
       await ensurePlatformPaymentConfig()
       await ensureCompanyRepresentativeSchema()
       await backfillCompanyRepresentatives()
+      await ensureExpoMarketingContentSchema()
       await ensureTradeCreditSchema()
+      await ensureAccountProfileSchema()
       platformSchemaReady = true
       return
     }
@@ -719,6 +763,7 @@ export async function ensurePlatformSchema() {
     alter table users
     add column if not exists industry_category_id text
   `
+  await ensureAccountProfileSchema()
   await sql`
     do $$
     begin
@@ -2402,6 +2447,8 @@ async function migrateExpoManagementSchema() {
       premium_qty int not null
     )
   `
+
+  await ensureExpoMarketingContentSchema()
 
   await sql`
     create index if not exists expos_name_lower_uq on expos (lower(name))

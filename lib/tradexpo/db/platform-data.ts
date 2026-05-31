@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto"
 import { sql } from "@/lib/db/neon"
 import { getAssetUrl } from "@/lib/image-utils"
 import { ensureCoHostPartnerAssignment } from "@/lib/partner/db"
+import { normalizeExpoMarketingContent } from "@/lib/tradexpo/expo-marketing-content"
 import type {
   AdminNotification,
   BoothCustomization,
@@ -13,6 +14,10 @@ import type {
   ExpoHall,
   ExpoHallDraft,
   ExpoLayoutTemplate,
+  ExpoMarketingContent,
+  ExpoMarketingContentStatus,
+  ExpoMarketingContentVersion,
+  ExpoMarketingSourceRole,
   ExpoStatus,
   GoLIVEEvent,
   GoLIVEEventStatus,
@@ -674,6 +679,217 @@ export async function updateExpoWithHalls(
     await sql`rollback`
     throw e
   }
+}
+
+type ExpoMarketingContentVersionRow = {
+  id: string
+  expo_id: string
+  source_role: ExpoMarketingSourceRole
+  status: ExpoMarketingContentStatus
+  content_version: number
+  content_locale: string
+  content: unknown
+  submitted_by: string | null
+  submitted_at: string | Date | null
+  reviewed_by: string | null
+  reviewed_at: string | Date | null
+  review_note: string | null
+  created_at: string | Date
+  updated_at: string | Date
+}
+
+function rowToMarketingContentVersion(
+  row: ExpoMarketingContentVersionRow
+): ExpoMarketingContentVersion {
+  return {
+    id: row.id,
+    expoId: row.expo_id,
+    sourceRole: row.source_role,
+    status: row.status,
+    contentVersion: row.content_version,
+    contentLocale: row.content_locale,
+    content: normalizeExpoMarketingContent(row.content),
+    submittedBy: row.submitted_by,
+    submittedAt: row.submitted_at
+      ? new Date(row.submitted_at).toISOString()
+      : null,
+    reviewedBy: row.reviewed_by,
+    reviewedAt: row.reviewed_at
+      ? new Date(row.reviewed_at).toISOString()
+      : null,
+    reviewNote: row.review_note,
+    createdAt: new Date(row.created_at).toISOString(),
+    updatedAt: new Date(row.updated_at).toISOString()
+  }
+}
+
+async function nextMarketingContentVersion(expoId: string) {
+  const rows = (await sql`
+    select coalesce(max(content_version), 0)::int + 1 as next_version
+    from expo_marketing_content_versions
+    where expo_id = ${expoId}
+  `) as { next_version: number }[]
+  return rows[0]?.next_version ?? 1
+}
+
+export async function getPublishedExpoMarketingContent(
+  expoId: string
+): Promise<ExpoMarketingContentVersion | null> {
+  const rows = (await sql`
+    select *
+    from expo_marketing_content_versions
+    where expo_id = ${expoId} and status = 'published'
+    order by content_version desc, updated_at desc
+    limit 1
+  `) as ExpoMarketingContentVersionRow[]
+  return rows[0] ? rowToMarketingContentVersion(rows[0]) : null
+}
+
+export async function getLatestExpoMarketingContentForEdit(
+  expoId: string
+): Promise<ExpoMarketingContentVersion | null> {
+  const rows = (await sql`
+    select *
+    from expo_marketing_content_versions
+    where expo_id = ${expoId}
+    order by updated_at desc
+    limit 1
+  `) as ExpoMarketingContentVersionRow[]
+  return rows[0] ? rowToMarketingContentVersion(rows[0]) : null
+}
+
+export async function publishAdminExpoMarketingContent(
+  expoId: string,
+  content: ExpoMarketingContent,
+  userId?: string | null
+): Promise<ExpoMarketingContentVersion> {
+  const id = `expo-marketing-${randomUUID()}`
+  const version = await nextMarketingContentVersion(expoId)
+  const rows = (await sql`
+    insert into expo_marketing_content_versions (
+      id,
+      expo_id,
+      source_role,
+      status,
+      content_version,
+      content_locale,
+      content,
+      submitted_by,
+      submitted_at,
+      reviewed_by,
+      reviewed_at,
+      created_at,
+      updated_at
+    )
+    values (
+      ${id},
+      ${expoId},
+      'admin',
+      'published',
+      ${version},
+      'en',
+      ${JSON.stringify(content)}::jsonb,
+      ${userId ?? null},
+      now(),
+      ${userId ?? null},
+      now(),
+      now(),
+      now()
+    )
+    returning *
+  `) as ExpoMarketingContentVersionRow[]
+  return rowToMarketingContentVersion(rows[0])
+}
+
+export async function submitPartnerExpoMarketingContent(
+  expoId: string,
+  content: ExpoMarketingContent,
+  userId: string
+): Promise<ExpoMarketingContentVersion> {
+  const id = `expo-marketing-${randomUUID()}`
+  const version = await nextMarketingContentVersion(expoId)
+  const rows = (await sql`
+    insert into expo_marketing_content_versions (
+      id,
+      expo_id,
+      source_role,
+      status,
+      content_version,
+      content_locale,
+      content,
+      submitted_by,
+      submitted_at,
+      created_at,
+      updated_at
+    )
+    values (
+      ${id},
+      ${expoId},
+      'partner',
+      'submitted',
+      ${version},
+      'en',
+      ${JSON.stringify(content)}::jsonb,
+      ${userId},
+      now(),
+      now(),
+      now()
+    )
+    returning *
+  `) as ExpoMarketingContentVersionRow[]
+  return rowToMarketingContentVersion(rows[0])
+}
+
+export async function approveExpoMarketingContentVersion(
+  expoId: string,
+  versionId: string,
+  userId: string
+): Promise<ExpoMarketingContentVersion> {
+  const rows = (await sql`
+    update expo_marketing_content_versions
+    set status = 'published', reviewed_by = ${userId}, reviewed_at = now(), updated_at = now()
+    where id = ${versionId} and expo_id = ${expoId} and status = 'submitted'
+    returning *
+  `) as ExpoMarketingContentVersionRow[]
+  if (!rows[0]) throw new Error("Submitted marketing content not found.")
+  return rowToMarketingContentVersion(rows[0])
+}
+
+export async function rejectExpoMarketingContentVersion(
+  expoId: string,
+  versionId: string,
+  userId: string,
+  note?: string
+): Promise<ExpoMarketingContentVersion> {
+  const rows = (await sql`
+    update expo_marketing_content_versions
+    set
+      status = 'rejected',
+      reviewed_by = ${userId},
+      reviewed_at = now(),
+      review_note = ${note?.trim() || null},
+      updated_at = now()
+    where id = ${versionId} and expo_id = ${expoId} and status = 'submitted'
+    returning *
+  `) as ExpoMarketingContentVersionRow[]
+  if (!rows[0]) throw new Error("Submitted marketing content not found.")
+  return rowToMarketingContentVersion(rows[0])
+}
+
+export async function listExpoCategoriesByIds(
+  categoryIds: string[]
+): Promise<ExpoCategory[]> {
+  if (categoryIds.length === 0) return []
+  const rows = (await sql`
+    select id, name, level
+    from expo_categories
+    where id = any(${categoryIds})
+  `) as CategoryRow[]
+  const byId = new Map(rows.map((row) => [row.id, row]))
+  return categoryIds
+    .map((id) => byId.get(id))
+    .filter((row): row is CategoryRow => Boolean(row))
+    .map((row) => ({ id: row.id, name: row.name, level: 1 }))
 }
 
 export async function updateExpoStatus(

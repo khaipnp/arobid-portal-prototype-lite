@@ -5,9 +5,11 @@ import { getPartnerAssignedExpo } from "@/lib/partner/db"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 import {
   listExpoHalls,
+  submitPartnerExpoMarketingContent,
   updateExpoWithHalls
 } from "@/lib/tradexpo/db/platform-data"
 import { validateHallBlocks } from "@/lib/tradexpo/expo-create-validation"
+import { validateExpoMarketingContent } from "@/lib/tradexpo/expo-marketing-content"
 
 interface Props {
   params: Promise<{ expoId: string }>
@@ -55,6 +57,7 @@ export async function PUT(request: Request, { params }: Props) {
     startAt?: string
     endAt?: string
     timezone?: string
+    marketingContent?: unknown
   }
 
   const name = body.name?.trim() ?? ""
@@ -103,6 +106,11 @@ export async function PUT(request: Request, { params }: Props) {
     return NextResponse.json({ error: hallErr }, { status: 400 })
   }
 
+  const marketingResult = validateExpoMarketingContent(body.marketingContent)
+  if (!marketingResult.ok) {
+    return NextResponse.json({ error: marketingResult.error }, { status: 400 })
+  }
+
   try {
     await updateExpoWithHalls(expoId, {
       name,
@@ -117,7 +125,12 @@ export async function PUT(request: Request, { params }: Props) {
       ownerEmail: expo.ownerEmail,
       halls
     })
-    return NextResponse.json({ ok: true })
+    const marketingVersion = await submitPartnerExpoMarketingContent(
+      expoId,
+      marketingResult.content,
+      userId
+    )
+    return NextResponse.json({ ok: true, marketingVersion })
   } catch (e) {
     const message = e instanceof Error ? e.message : "Failed to update expo."
     return NextResponse.json({ error: message }, { status: 400 })
