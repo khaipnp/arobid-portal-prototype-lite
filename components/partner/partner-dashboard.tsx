@@ -1,14 +1,15 @@
-"use client"
+"use client";
 
 import {
   ActivityIcon,
   EyeIcon,
+  InfoIcon,
   RadioTowerIcon,
   TrendingUpIcon,
-  UsersIcon
-} from "lucide-react"
-import Link from "next/link"
-import { type ReactNode, useState } from "react"
+  UsersIcon,
+} from "lucide-react";
+import Link from "next/link";
+import { type ReactNode, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -16,101 +17,107 @@ import {
   Line,
   LineChart,
   XAxis,
-  YAxis
-} from "recharts"
-import { Button } from "@/components/ui/button"
+  YAxis,
+} from "recharts";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardAction,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
-} from "@/components/ui/card"
+  CardTitle,
+} from "@/components/ui/card";
 import {
   type ChartConfig,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
-  ChartTooltipContent
-} from "@/components/ui/chart"
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
-} from "@/components/ui/table"
-import type { PartnerDashboardMetrics } from "@/lib/partner/db"
-import { ExpoStatusBadge } from "../tradexpo/status-badge"
+  TableRow,
+} from "@/components/ui/table";
+import type { PartnerDashboardMetrics } from "@/lib/partner/db";
+import { ExpoStatusBadge } from "../tradexpo/status-badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
 
 const compactNumber = new Intl.NumberFormat("en", {
   notation: "compact",
-  maximumFractionDigits: 1
-})
+  maximumFractionDigits: 1,
+});
 
-const numberFormat = new Intl.NumberFormat("en")
+const numberFormat = new Intl.NumberFormat("en");
 
 const currencyFormat = new Intl.NumberFormat("vi-VN", {
   style: "currency",
   currency: "VND",
   notation: "compact",
-  maximumFractionDigits: 1
-})
+  maximumFractionDigits: 1,
+});
 
-const dashboardDurations = ["3D", "7D", "15D", "30D"] as const
+const dashboardDurations = ["3D", "7D", "15D", "30D"] as const;
 
 const inventoryChartConfig = {
   soldBooths: {
     label: "Sold booths",
-    color: "var(--chart-1)"
+    color: "var(--chart-1)",
   },
   unsoldBooths: {
     label: "Unsold booths",
-    color: "var(--chart-2)"
-  }
-} satisfies ChartConfig
+    color: "var(--chart-2)",
+  },
+} satisfies ChartConfig;
 
 const tierTrendColors = [
   "var(--chart-1)",
   "var(--chart-2)",
   "var(--chart-3)",
   "var(--chart-4)",
-  "var(--chart-5)"
-]
+  "var(--chart-5)",
+];
 
 function formatPercent(value: number) {
-  return `${Math.round(value)}%`
+  return `${Math.round(value)}%`;
 }
 
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString("en-GB", {
     day: "2-digit",
-    month: "short"
-  })
+    month: "short",
+  });
 }
 
 function formatRatio(value: number, total: number) {
-  return total > 0 ? Math.round((value / total) * 100) : 0
+  return total > 0 ? Math.round((value / total) * 100) : 0;
 }
 
 function toTrendKey(value: string, index: number) {
-  return `tier_${index}_${value.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`
+  return `tier_${index}_${value.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`;
 }
 
 function HeroStat({
   label,
   value,
-  icon
+  icon,
 }: {
-  label: string
-  value: string
-  icon: ReactNode
+  label: string;
+  value: string;
+  icon: ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-white/20 bg-white/10 p-4 text-primary-foreground shadow-sm backdrop-blur">
+    <div className="col-span-1 rounded-2xl border border-white/20 bg-white/10 p-4 text-primary-foreground shadow-sm backdrop-blur">
       <div className="mb-3 flex items-center gap-2 font-semibold text-primary-foreground/75 text-sm">
         {icon}
         {label}
@@ -119,98 +126,90 @@ function HeroStat({
         {value}
       </div>
     </div>
-  )
+  );
 }
 
 function MetricWidget({
   label,
   value,
   description,
-  icon
+  icon,
 }: {
-  label: string
-  value: number
-  description: string
-  icon: ReactNode
+  label: string;
+  value: number;
+  description: string;
+  icon: ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border bg-muted/20 p-4 shadow-xs">
-      <div className="mb-5 flex items-start justify-between gap-4">
-        <div className="space-y-1">
-          <div className="font-medium text-muted-foreground text-xs uppercase tracking-[0.16em]">
-            {label}
+    <TooltipProvider>
+      <div className="rounded-2xl border bg-muted/20 p-4 shadow-xs">
+        <div className="mb-5 flex items-start justify-between gap-4">
+          <div className="flex items-center space-x-1">
+            <span className="font-medium text-muted-foreground text-sm">
+              {label}
+            </span>
+            <Tooltip>
+              <TooltipTrigger>
+                <InfoIcon className="size-3 text-muted-foreground" />
+              </TooltipTrigger>
+              <TooltipContent>{description}</TooltipContent>
+            </Tooltip>
           </div>
-          <p className="text-muted-foreground text-xs leading-relaxed">
-            {description}
-          </p>
+          <div className="rounded-xl bg-background p-2 text-primary shadow-xs">
+            {icon}
+          </div>
         </div>
-        <div className="rounded-xl bg-background p-2 text-primary shadow-xs">
-          {icon}
+        <div className="font-semibold text-3xl tabular-nums tracking-tight">
+          {numberFormat.format(value)}
         </div>
       </div>
-      <div className="font-semibold text-3xl tabular-nums tracking-tight">
-        {numberFormat.format(value)}
-      </div>
-    </div>
-  )
+    </TooltipProvider>
+  );
 }
 
 export function PartnerDashboard({
-  metrics
+  metrics,
 }: {
-  metrics: PartnerDashboardMetrics
+  metrics: PartnerDashboardMetrics;
 }) {
   const [selectedDuration, setSelectedDuration] =
-    useState<(typeof dashboardDurations)[number]>("3D")
-  const operationsSummary = metrics.operationsByDuration[selectedDuration]
-  const hasCountryData = metrics.countryBreakdown.length > 0
-  const hasTierData = metrics.boothTierBreakdown.length > 0
+    useState<(typeof dashboardDurations)[number]>("3D");
+  const operationsSummary = metrics.operationsByDuration[selectedDuration];
+  const hasCountryData = metrics.countryBreakdown.length > 0;
+  const hasTierData = metrics.boothTierBreakdown.length > 0;
 
   return (
     <div className="space-y-6 px-4 py-4">
-      <section className="overflow-hidden rounded-3xl border bg-legend text-primary-foreground shadow-sm">
-        <div className="grid gap-5 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.28),_transparent_34rem)] p-5 sm:p-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-          <div className="flex min-h-52 flex-col justify-between gap-6">
-            <div className="space-y-4">
-              <div className="space-y-3">
-                <h1 className="max-w-3xl font-semibold text-3xl tracking-tight sm:text-4xl lg:text-[2.65rem]">
-                  Partner Analytics Command Center
-                </h1>
-                <p className="max-w-2xl text-primary-foreground/75 text-sm leading-6 sm:text-base">
-                  Follow capacity, activation, revenue, and live engagement
-                  signals across assigned Expo Programs.
-                </p>
-              </div>
-            </div>
+      <section className="overflow-hidden rounded-4xl border bg-legend text-primary-foreground shadow-md">
+        <div className="flex gap-8 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.28),_transparent_34rem)] p-5 sm:p-10">
+          <div className="flex max-w-1/2 flex-col gap-2">
+            <h1 className="font-semibold text-2xl tracking-tight sm:text-3xl">
+              Partner Analytics Command Center
+            </h1>
+            <p className="text-primary-foreground/75 text-sm leading-relaxed sm:text-base">
+              Follow capacity, activation, revenue, and live engagement signals
+              across assigned Expo Programs.
+            </p>
           </div>
-          <div className="flex w-full items-start gap-5 self-start xl:gap-3">
-            <div className="grid w-1/2 grid-cols-3 gap-3 xl:grid-cols-1">
-              <HeroStat
-                label="Visitor traffic"
-                value={numberFormat.format(operationsSummary.views)}
-                icon={<EyeIcon className="size-4" />}
-              />
-              <HeroStat
-                label="Members"
-                value={numberFormat.format(
-                  operationsSummary.activatedEnterprises
-                )}
-                icon={<UsersIcon className="size-4" />}
-              />
-            </div>
 
-            <div className="grid w-1/2 grid-cols-3 gap-3 xl:grid-cols-1">
-              <HeroStat
-                label="Live expos"
-                value={numberFormat.format(metrics.totals.liveExpos)}
-                icon={<RadioTowerIcon className="size-4" />}
-              />
-              <HeroStat
-                label="Booth usage"
-                value={formatPercent(metrics.totals.boothUtilization)}
-                icon={<ActivityIcon className="size-4" />}
-              />
-            </div>
+          <div className="grid w-1/2 grid-cols-3 gap-3">
+            <HeroStat
+              label="Visitor traffic"
+              value={numberFormat.format(operationsSummary.views)}
+              icon={<EyeIcon className="size-4" />}
+            />
+            <HeroStat
+              label="Members"
+              value={numberFormat.format(
+                operationsSummary.activatedEnterprises,
+              )}
+              icon={<UsersIcon className="size-4" />}
+            />
+            <HeroStat
+              label="Live expos"
+              value={numberFormat.format(metrics.totals.liveExpos)}
+              icon={<RadioTowerIcon className="size-4" />}
+            />
           </div>
         </div>
       </section>
@@ -218,10 +217,9 @@ export function PartnerDashboard({
       <div className="grid gap-4 xl:grid-cols-3">
         <Card className="xl:col-span-3">
           <CardHeader>
-            <div className="space-y-1">
-              <CardDescription>Partner performance snapshot</CardDescription>
-              <CardTitle>Operations Summary</CardTitle>
-            </div>
+            <CardTitle className="font-semibold text-xl">
+              Operations Summary
+            </CardTitle>
             <CardAction>
               <div className="flex rounded-xl bg-muted p-1">
                 {dashboardDurations.map((duration) => (
@@ -276,50 +274,50 @@ export function PartnerDashboard({
         </section>
       </div>
     </div>
-  )
+  );
 }
 
 function ExpoInventorySection({
-  metrics
+  metrics,
 }: {
-  metrics: PartnerDashboardMetrics
+  metrics: PartnerDashboardMetrics;
 }) {
   const inventoryData = metrics.expoMetrics.map((item) => ({
     ...item,
     soldPercent: formatRatio(item.soldBooths, item.totalBooths),
-    unsoldPercent: formatRatio(item.unsoldBooths, item.totalBooths)
-  }))
+    unsoldPercent: formatRatio(item.unsoldBooths, item.totalBooths),
+  }));
   const tiers = Array.from(
-    new Set(metrics.boothTierMonthlyTrend.map((item) => item.tier))
-  )
+    new Set(metrics.boothTierMonthlyTrend.map((item) => item.tier)),
+  );
   const tierKeys = tiers.map((tier, index) => ({
     tier,
     key: toTrendKey(tier, index),
-    color: tierTrendColors[index % tierTrendColors.length]
-  }))
+    color: tierTrendColors[index % tierTrendColors.length],
+  }));
   const trendConfig = tierKeys.reduce<ChartConfig>((acc, item) => {
     acc[item.key] = {
       label: item.tier,
-      color: item.color
-    }
-    return acc
-  }, {})
+      color: item.color,
+    };
+    return acc;
+  }, {});
   const trendData = Array.from(
     metrics.boothTierMonthlyTrend.reduce((acc, item) => {
       const month = acc.get(item.monthKey) ?? {
         monthKey: item.monthKey,
-        monthLabel: item.monthLabel
-      }
-      const tierKey = tierKeys.find((tier) => tier.tier === item.tier)?.key
+        monthLabel: item.monthLabel,
+      };
+      const tierKey = tierKeys.find((tier) => tier.tier === item.tier)?.key;
       if (tierKey) {
-        month[tierKey] = item.soldBooths
+        month[tierKey] = item.soldBooths;
       }
-      acc.set(item.monthKey, month)
-      return acc
-    }, new Map<string, Record<string, string | number>>())
-  ).map(([, value]) => value)
-  const hasExpoData = inventoryData.length > 0
-  const hasTrendData = trendData.length > 0 && tierKeys.length > 0
+      acc.set(item.monthKey, month);
+      return acc;
+    }, new Map<string, Record<string, string | number>>()),
+  ).map(([, value]) => value);
+  const hasExpoData = inventoryData.length > 0;
+  const hasTrendData = trendData.length > 0 && tierKeys.length > 0;
 
   return (
     <section className="space-y-4 xl:col-span-3">
@@ -501,7 +499,7 @@ function ExpoInventorySection({
         </CardContent>
       </Card>
     </section>
-  )
+  );
 }
 
 function EmptyInventoryState() {
@@ -510,19 +508,19 @@ function EmptyInventoryState() {
       <TrendingUpIcon className="mb-3 size-5 text-primary" />
       No assigned expo inventory available yet.
     </div>
-  )
+  );
 }
 
 function BreakdownList({
   title,
   items,
-  empty
+  empty,
 }: {
-  title: string
-  items: { name: string; value: number }[]
-  empty: boolean
+  title: string;
+  items: { name: string; value: number }[];
+  empty: boolean;
 }) {
-  const total = items.reduce((sum, item) => sum + item.value, 0)
+  const total = items.reduce((sum, item) => sum + item.value, 0);
 
   return (
     <section className="space-y-3">
@@ -537,7 +535,7 @@ function BreakdownList({
       ) : (
         <div className="space-y-3">
           {items.map((item) => {
-            const percent = total > 0 ? (item.value / total) * 100 : 0
+            const percent = total > 0 ? (item.value / total) * 100 : 0;
 
             return (
               <div key={item.name} className="space-y-1.5">
@@ -554,10 +552,10 @@ function BreakdownList({
                   />
                 </div>
               </div>
-            )
+            );
           })}
         </div>
       )}
     </section>
-  )
+  );
 }
