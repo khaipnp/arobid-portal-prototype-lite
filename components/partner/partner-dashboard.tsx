@@ -3,6 +3,7 @@
 import {
   ActivityIcon,
   EyeIcon,
+  GaugeIcon,
   InfoIcon,
   RadioTowerIcon,
   TrendingUpIcon,
@@ -142,27 +143,23 @@ function MetricWidget({
 }) {
   return (
     <TooltipProvider>
-      <div className="rounded-2xl border bg-muted/20 p-4 shadow-xs">
-        <div className="mb-5 flex items-start justify-between gap-4">
-          <div className="flex items-center space-x-1">
-            <span className="font-medium text-muted-foreground text-sm">
-              {label}
-            </span>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-1.5">
+            <CardTitle>{label}</CardTitle>
             <Tooltip>
               <TooltipTrigger>
-                <InfoIcon className="size-3 text-muted-foreground" />
+                <InfoIcon className="size-3.5 text-muted-foreground" />
               </TooltipTrigger>
               <TooltipContent>{description}</TooltipContent>
             </Tooltip>
           </div>
-          <div className="rounded-xl bg-background p-2 text-primary shadow-xs">
-            {icon}
-          </div>
-        </div>
-        <div className="font-semibold text-3xl tabular-nums tracking-tight">
+          <CardAction className="text-legend">{icon}</CardAction>
+        </CardHeader>
+        <CardContent className="font-semibold text-3xl tabular-nums tracking-tight">
           {numberFormat.format(value)}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </TooltipProvider>
   );
 }
@@ -181,92 +178,69 @@ export function PartnerDashboard({
   return (
     <div className="space-y-6 px-4 py-4">
       <section className="overflow-hidden rounded-4xl border bg-legend text-primary-foreground shadow-md">
-        <div className="flex gap-8 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.28),_transparent_34rem)] p-5 sm:p-10">
+        <div className="relative flex gap-8 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.28),_transparent_34rem)] p-5 sm:p-10">
           <div className="flex max-w-1/2 flex-col gap-2">
-            <h1 className="font-semibold text-2xl tracking-tight sm:text-3xl">
+            <h1 className="select-none font-semibold text-2xl tracking-tight sm:text-3xl">
               Partner Analytics Command Center
             </h1>
-            <p className="text-primary-foreground/75 text-sm leading-relaxed sm:text-base">
+            <p className="select-none text-primary-foreground/70 text-sm leading-relaxed sm:text-lg">
               Follow capacity, activation, revenue, and live engagement signals
               across assigned Expo Programs.
             </p>
           </div>
+          <GaugeIcon
+            className="absolute -right-4 -bottom-7 size-48 text-primary-foreground/40"
+            stroke-width="2.5"
+          />
+        </div>
+      </section>
 
-          <div className="grid w-1/2 grid-cols-3 gap-3">
-            <HeroStat
-              label="Visitor traffic"
-              value={numberFormat.format(operationsSummary.views)}
+      <div className="grid gap-12 xl:grid-cols-3">
+        <div className="space-y-5 xl:col-span-3">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold text-2xl">Operations Summary</h2>
+            <div className="flex rounded-xl bg-muted p-1">
+              {dashboardDurations.map((duration) => (
+                <Button
+                  key={duration}
+                  size="sm"
+                  variant={selectedDuration === duration ? "default" : "ghost"}
+                  className="rounded-lg"
+                  onClick={() => setSelectedDuration(duration)}
+                >
+                  {duration}
+                </Button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <MetricWidget
+              label="Visitor Traffic"
+              value={operationsSummary.views}
+              description="Visitor activity in the selected duration"
               icon={<EyeIcon className="size-4" />}
             />
-            <HeroStat
-              label="Members"
-              value={numberFormat.format(
-                operationsSummary.activatedEnterprises,
-              )}
+            <MetricWidget
+              label="Activated Members"
+              value={operationsSummary.activatedEnterprises}
+              description="Member activity in the selected duration"
               icon={<UsersIcon className="size-4" />}
             />
-            <HeroStat
-              label="Live expos"
-              value={numberFormat.format(metrics.totals.liveExpos)}
+            <MetricWidget
+              label="Sold Booth"
+              value={operationsSummary.soldBooths}
+              description="Booth sold in the selected duration"
+              icon={<ActivityIcon className="size-4" />}
+            />
+            <MetricWidget
+              label="RFQs"
+              value={operationsSummary.rfqs}
+              description="RFQs created in the selected duration"
               icon={<RadioTowerIcon className="size-4" />}
             />
           </div>
         </div>
-      </section>
-
-      <div className="grid gap-4 xl:grid-cols-3">
-        <Card className="xl:col-span-3">
-          <CardHeader>
-            <CardTitle className="font-semibold text-xl">
-              Operations Summary
-            </CardTitle>
-            <CardAction>
-              <div className="flex rounded-xl bg-muted p-1">
-                {dashboardDurations.map((duration) => (
-                  <Button
-                    key={duration}
-                    size="sm"
-                    variant={
-                      selectedDuration === duration ? "default" : "ghost"
-                    }
-                    className="rounded-lg"
-                    onClick={() => setSelectedDuration(duration)}
-                  >
-                    {duration}
-                  </Button>
-                ))}
-              </div>
-            </CardAction>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <MetricWidget
-                label="Views"
-                value={operationsSummary.views}
-                description="Visitor truy cập trang trong duration đã chọn"
-                icon={<EyeIcon className="size-4" />}
-              />
-              <MetricWidget
-                label="Activated Enterprises"
-                value={operationsSummary.activatedEnterprises}
-                description="Member hoạt động trong duration đã chọn"
-                icon={<UsersIcon className="size-4" />}
-              />
-              <MetricWidget
-                label="Sold Booth"
-                value={operationsSummary.soldBooths}
-                description="Booth đã bán trong duration đã chọn"
-                icon={<ActivityIcon className="size-4" />}
-              />
-              <MetricWidget
-                label="RFQs"
-                value={operationsSummary.rfqs}
-                description="RFQs được tạo trong duration đã chọn"
-                icon={<RadioTowerIcon className="size-4" />}
-              />
-            </div>
-          </CardContent>
-        </Card>
         <ExpoInventorySection metrics={metrics} />
         <section>
           <h1>Trade Activity</h1>
@@ -320,77 +294,54 @@ function ExpoInventorySection({
   const hasTrendData = trendData.length > 0 && tierKeys.length > 0;
 
   return (
-    <section className="space-y-4 xl:col-span-3">
+    <section className="space-y-5 xl:col-span-3">
       <div className="flex flex-col gap-1">
-        <h2 className="font-semibold text-2xl tracking-tight">
-          Expo and Inventory
-        </h2>
-        <p className="text-muted-foreground text-sm">
-          Expo usage and booth capacity
-        </p>
+        <h2 className="font-semibold text-2xl">Expo and Inventory</h2>
       </div>
       <div className="grid gap-4 xl:grid-cols-2">
         <Card>
           <CardHeader>
+            <CardTitle className="capitalize">Booth sold vs unsold</CardTitle>
             <CardDescription>Capacity allocation by Expo</CardDescription>
-            <CardTitle>Booth sold vs unsold</CardTitle>
           </CardHeader>
           <CardContent className="space-y-5">
             {hasExpoData ? (
-              <>
-                <ChartContainer
-                  config={inventoryChartConfig}
-                  className="h-80 w-full"
+              <ChartContainer
+                config={inventoryChartConfig}
+                className="h-80 w-full"
+              >
+                <BarChart
+                  accessibilityLayer
+                  data={inventoryData}
+                  layout="vertical"
+                  margin={{ left: 8, right: 16 }}
                 >
-                  <BarChart
-                    accessibilityLayer
-                    data={inventoryData}
-                    layout="vertical"
-                    margin={{ left: 8, right: 16 }}
-                  >
-                    <CartesianGrid horizontal={false} />
-                    <XAxis type="number" hide />
-                    <YAxis
-                      dataKey="expoName"
-                      type="category"
-                      tickLine={false}
-                      axisLine={false}
-                      width={118}
-                      tickFormatter={(value) => String(value).slice(0, 18)}
-                    />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <ChartLegend content={<ChartLegendContent />} />
-                    <Bar
-                      dataKey="soldBooths"
-                      stackId="booths"
-                      fill="var(--color-soldBooths)"
-                      radius={[4, 0, 0, 4]}
-                    />
-                    <Bar
-                      dataKey="unsoldBooths"
-                      stackId="booths"
-                      fill="var(--color-unsoldBooths)"
-                      radius={[0, 4, 4, 0]}
-                    />
-                  </BarChart>
-                </ChartContainer>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {inventoryData.map((item) => (
-                    <div
-                      key={item.expoId}
-                      className="rounded-xl border bg-muted/20 p-3 text-sm"
-                    >
-                      <div className="truncate font-medium">
-                        {item.expoName}
-                      </div>
-                      <div className="mt-1 text-muted-foreground text-xs tabular-nums">
-                        {formatPercent(item.unsoldPercent)} unsold ·{" "}
-                        {formatPercent(item.soldPercent)} sold
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </>
+                  <CartesianGrid horizontal={false} />
+                  <XAxis type="number" hide />
+                  <YAxis
+                    dataKey="expoName"
+                    type="category"
+                    tickLine={false}
+                    axisLine={false}
+                    width={118}
+                    tickFormatter={(value) => String(value).slice(0, 18)}
+                  />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <ChartLegend content={<ChartLegendContent />} />
+                  <Bar
+                    dataKey="soldBooths"
+                    stackId="booths"
+                    fill="var(--color-soldBooths)"
+                    radius={[4, 0, 0, 4]}
+                  />
+                  <Bar
+                    dataKey="unsoldBooths"
+                    stackId="booths"
+                    fill="var(--color-unsoldBooths)"
+                    radius={[0, 4, 4, 0]}
+                  />
+                </BarChart>
+              </ChartContainer>
             ) : (
               <EmptyInventoryState />
             )}
@@ -399,8 +350,8 @@ function ExpoInventorySection({
 
         <Card>
           <CardHeader>
+            <CardTitle className="capitalize">Purchased booth trend</CardTitle>
             <CardDescription>Last 6 months by booth tier</CardDescription>
-            <CardTitle>Purchased booth trend</CardTitle>
           </CardHeader>
           <CardContent>
             {hasTrendData ? (
@@ -439,65 +390,62 @@ function ExpoInventorySection({
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardDescription>Per-Expo booth capacity status</CardDescription>
-          <CardTitle>Expo inventory board</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {hasExpoData ? (
-            <div className="overflow-x-auto rounded-2xl border">
-              <Table className="min-w-2/3">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Expo Program</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Total booth</TableHead>
-                    <TableHead className="text-right">Sold</TableHead>
-                    <TableHead className="text-right">Unsold</TableHead>
-                    <TableHead className="text-right">Utilization</TableHead>
+      <div className="mt-10 space-y-5">
+        <h2 className="font-semibold text-2xl capitalize">
+          Expo inventory board
+        </h2>
+        {hasExpoData ? (
+          <div className="overflow-x-auto rounded-3xl border">
+            <Table className="min-w-2/3">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Expo Program</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Total booth</TableHead>
+                  <TableHead className="text-right">Sold</TableHead>
+                  <TableHead className="text-right">Unsold</TableHead>
+                  <TableHead className="text-right">Utilization</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {inventoryData.map((item) => (
+                  <TableRow key={item.expoId}>
+                    <TableCell className="max-w-80 whitespace-normal py-4 font-medium">
+                      <Link
+                        href={`/partner/expo-program/expos/${item.expoId}`}
+                        className="underline-offset-4 hover:underline"
+                      >
+                        {item.expoName}
+                      </Link>
+                      <div className="text-muted-foreground text-xs">
+                        {formatDate(item.startDate)} -{" "}
+                        {formatDate(item.endDate)}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <ExpoStatusBadge status={item.status} />
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {numberFormat.format(item.totalBooths)}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {numberFormat.format(item.soldBooths)}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {numberFormat.format(item.unsoldBooths)}
+                    </TableCell>
+                    <TableCell className="text-right font-medium tabular-nums">
+                      {formatPercent(item.boothUtilization)}
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {inventoryData.map((item) => (
-                    <TableRow key={item.expoId}>
-                      <TableCell className="max-w-80 whitespace-normal py-4 font-medium">
-                        <Link
-                          href={`/partner/expos/${item.expoId}`}
-                          className="underline-offset-4 hover:underline"
-                        >
-                          {item.expoName}
-                        </Link>
-                        <div className="text-muted-foreground text-xs">
-                          {formatDate(item.startDate)} -{" "}
-                          {formatDate(item.endDate)}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <ExpoStatusBadge status={item.status} />
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {numberFormat.format(item.totalBooths)}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {numberFormat.format(item.soldBooths)}
-                      </TableCell>
-                      <TableCell className="text-right tabular-nums">
-                        {numberFormat.format(item.unsoldBooths)}
-                      </TableCell>
-                      <TableCell className="text-right font-medium tabular-nums">
-                        {formatPercent(item.boothUtilization)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          ) : (
-            <EmptyInventoryState />
-          )}
-        </CardContent>
-      </Card>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        ) : (
+          <EmptyInventoryState />
+        )}
+      </div>
     </section>
   );
 }
