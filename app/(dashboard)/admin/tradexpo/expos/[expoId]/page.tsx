@@ -102,7 +102,6 @@ export default async function ExpoDetailPage({
   return (
     <DashboardShell
       title={expo.name}
-      description={`${expo.ownerEmail} · ${formatDate(expo.startDate)} – ${formatDate(expo.endDate)}`}
       breadcrumbs={[
         { label: "Admin", href: "/admin" },
         { label: "TradeXpo", href: "/admin/tradexpo" },
@@ -111,7 +110,7 @@ export default async function ExpoDetailPage({
       ]}
       showBackButton
     >
-      <div className="space-y-6 px-4 lg:px-10">
+      <div className="mt-5 space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="outline" className={statusStyles[expo.status]}>
