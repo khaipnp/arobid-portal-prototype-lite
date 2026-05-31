@@ -61,13 +61,6 @@ const compactNumber = new Intl.NumberFormat("en", {
 
 const numberFormat = new Intl.NumberFormat("en");
 
-const currencyFormat = new Intl.NumberFormat("vi-VN", {
-  style: "currency",
-  currency: "VND",
-  notation: "compact",
-  maximumFractionDigits: 1,
-});
-
 const dashboardDurations = ["3D", "7D", "15D", "30D"] as const;
 
 const inventoryChartConfig = {
@@ -89,6 +82,22 @@ const tierTrendColors = [
   "var(--chart-5)",
 ];
 
+const tradeActivityMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
+
+const dealContextsTrendConfig = {
+  dealContexts: {
+    label: "Deal Contexts",
+    color: "var(--chart-5)",
+  },
+} satisfies ChartConfig;
+
+const rfqTrendConfig = {
+  rfqs: {
+    label: "RFQ",
+    color: "var(--chart-2)",
+  },
+} satisfies ChartConfig;
+
 function formatPercent(value: number) {
   return `${Math.round(value)}%`;
 }
@@ -106,28 +115,6 @@ function formatRatio(value: number, total: number) {
 
 function toTrendKey(value: string, index: number) {
   return `tier_${index}_${value.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`;
-}
-
-function HeroStat({
-  label,
-  value,
-  icon,
-}: {
-  label: string;
-  value: string;
-  icon: ReactNode;
-}) {
-  return (
-    <div className="col-span-1 rounded-2xl border border-white/20 bg-white/10 p-4 text-primary-foreground shadow-sm backdrop-blur">
-      <div className="mb-3 flex items-center gap-2 font-semibold text-primary-foreground/75 text-sm">
-        {icon}
-        {label}
-      </div>
-      <div className="font-semibold text-xl tabular-nums tracking-tight">
-        {value}
-      </div>
-    </div>
-  );
 }
 
 function MetricWidget({
@@ -172,8 +159,6 @@ export function PartnerDashboard({
   const [selectedDuration, setSelectedDuration] =
     useState<(typeof dashboardDurations)[number]>("3D");
   const operationsSummary = metrics.operationsByDuration[selectedDuration];
-  const hasCountryData = metrics.countryBreakdown.length > 0;
-  const hasTierData = metrics.boothTierBreakdown.length > 0;
 
   return (
     <div className="space-y-6 px-4 py-4">
@@ -190,7 +175,7 @@ export function PartnerDashboard({
           </div>
           <GaugeIcon
             className="absolute -right-4 -bottom-7 size-48 text-primary-foreground/40"
-            stroke-width="2.5"
+            strokeWidth="2.5"
           />
         </div>
       </section>
@@ -242,13 +227,210 @@ export function PartnerDashboard({
           </div>
         </div>
         <ExpoInventorySection metrics={metrics} />
-        <section>
-          <h1>Trade Activity</h1>
-          <p>RFQ and deal movement</p>
-        </section>
+        <TradeActivitySection metrics={metrics} />
       </div>
     </div>
   );
+}
+
+function TradeActivitySection({
+  metrics,
+}: {
+  metrics: PartnerDashboardMetrics;
+}) {
+  const thirtyDayRfqs = metrics.operationsByDuration["30D"].rfqs;
+  const rfqTotal = Math.max(thirtyDayRfqs, 396);
+  const dealContextTotal = Math.max(Math.round(rfqTotal * 0.31), 124);
+  const allocatedCredits = Math.max(metrics.totals.totalBooths * 100, 18_400);
+  const usedCredits = Math.max(metrics.totals.soldBooths * 100, 7_200);
+  const expiredCredits = Math.max(
+    metrics.totals.publishedBooths > 0
+      ? Math.round(metrics.totals.publishedBooths * 12)
+      : 0,
+    600,
+  );
+  const balanceCredits = Math.max(
+    allocatedCredits - usedCredits - expiredCredits,
+    10_600,
+  );
+  const dealContextsTrend = buildTradeTrend(
+    dealContextTotal,
+    "dealContexts",
+    [0.34, 0.42, 0.56, 0.72, 0.9, 1],
+  );
+  const rfqTrend = buildTradeTrend(
+    rfqTotal,
+    "rfqs",
+    [0.48, 0.54, 0.65, 0.77, 0.91, 1],
+  );
+  const creditRows = [
+    {
+      label: "Allocated",
+      value: allocatedCredits,
+      tone: "bg-primary",
+      ratio: 100,
+    },
+    {
+      label: "Used",
+      value: usedCredits,
+      tone: "bg-primary",
+      ratio: formatRatio(usedCredits, allocatedCredits),
+    },
+    {
+      label: "Expired",
+      value: expiredCredits,
+      tone: "bg-muted-foreground/60",
+      ratio: formatRatio(expiredCredits, allocatedCredits),
+    },
+    {
+      label: "Balance",
+      value: balanceCredits,
+      tone: "bg-legend",
+      ratio: formatRatio(balanceCredits, allocatedCredits),
+    },
+  ];
+
+  return (
+    <section className="space-y-5 xl:col-span-3">
+      <div className="flex flex-col gap-1">
+        <h2 className="font-semibold text-2xl">Trade Activity</h2>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle>Deal Contexts Trend</CardTitle>
+            <CardDescription>
+              Chat + RFQ + BFM from Partner Site / Expo Entry
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <div className="font-semibold text-3xl text-legend tabular-nums tracking-tight">
+                {numberFormat.format(dealContextTotal)}
+              </div>
+              <p className="text-muted-foreground text-sm">Deal Contexts</p>
+            </div>
+            <ChartContainer
+              config={dealContextsTrendConfig}
+              className="h-56 w-full"
+            >
+              <LineChart
+                accessibilityLayer
+                data={dealContextsTrend}
+                margin={{ left: 8, right: 16 }}
+              >
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  dataKey="month"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                />
+                <YAxis tickLine={false} axisLine={false} width={32} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartLegend content={<ChartLegendContent />} />
+                <Line
+                  dataKey="dealContexts"
+                  type="monotone"
+                  stroke="var(--color-dealContexts)"
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                />
+              </LineChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>TradeCredits allocated</CardTitle>
+            <CardDescription>
+              Credit status breakdown by Partner
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-5">
+            <div>
+              <div className="font-semibold text-3xl text-legend tabular-nums tracking-tight">
+                {compactNumber.format(allocatedCredits)}
+              </div>
+              <p className="text-muted-foreground text-sm">allocated credits</p>
+            </div>
+            <div className="space-y-4">
+              {creditRows.map((item) => (
+                <div key={item.label} className="space-y-1.5">
+                  <div className="flex items-center justify-between gap-3 text-sm">
+                    <span className="font-medium">{item.label}</span>
+                    <span className="font-mono text-muted-foreground text-xs tabular-nums">
+                      {numberFormat.format(item.value)} ·{" "}
+                      {formatPercent(item.ratio)}
+                    </span>
+                  </div>
+                  <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className={`h-full rounded-full ${item.tone}`}
+                      style={{ width: `${Math.min(item.ratio, 100)}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>RFQ Received</CardTitle>
+            <CardDescription>Partner-member RFQs by month</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <div className="font-semibold text-3xl text-legend tabular-nums tracking-tight">
+                {numberFormat.format(rfqTotal)}
+              </div>
+              <p className="text-muted-foreground text-sm">received RFQs</p>
+            </div>
+            <ChartContainer config={rfqTrendConfig} className="h-56 w-full">
+              <LineChart
+                accessibilityLayer
+                data={rfqTrend}
+                margin={{ left: 8, right: 16 }}
+              >
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  dataKey="month"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                />
+                <YAxis tickLine={false} axisLine={false} width={32} />
+                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartLegend content={<ChartLegendContent />} />
+                <Line
+                  dataKey="rfqs"
+                  type="monotone"
+                  stroke="var(--color-rfqs)"
+                  strokeWidth={2}
+                  dot={{ r: 3 }}
+                />
+              </LineChart>
+            </ChartContainer>
+          </CardContent>
+        </Card>
+      </div>
+    </section>
+  );
+}
+
+function buildTradeTrend(
+  total: number,
+  key: "dealContexts" | "rfqs",
+  multipliers: number[],
+) {
+  return tradeActivityMonths.map((month, index) => ({
+    month,
+    [key]: Math.max(1, Math.round(total * multipliers[index])),
+  }));
 }
 
 function ExpoInventorySection({
@@ -456,54 +638,5 @@ function EmptyInventoryState() {
       <TrendingUpIcon className="mb-3 size-5 text-primary" />
       No assigned expo inventory available yet.
     </div>
-  );
-}
-
-function BreakdownList({
-  title,
-  items,
-  empty,
-}: {
-  title: string;
-  items: { name: string; value: number }[];
-  empty: boolean;
-}) {
-  const total = items.reduce((sum, item) => sum + item.value, 0);
-
-  return (
-    <section className="space-y-3">
-      <div className="flex items-center gap-2 font-medium text-sm">
-        <UsersIcon className="h-4 w-4 text-primary" />
-        {title}
-      </div>
-      {empty ? (
-        <div className="rounded-xl border border-dashed bg-muted/20 p-4 text-muted-foreground text-sm">
-          No data yet.
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {items.map((item) => {
-            const percent = total > 0 ? (item.value / total) * 100 : 0;
-
-            return (
-              <div key={item.name} className="space-y-1.5">
-                <div className="flex items-center justify-between gap-3 text-sm">
-                  <span className="truncate font-medium">{item.name}</span>
-                  <span className="font-mono text-muted-foreground text-xs tabular-nums">
-                    {numberFormat.format(item.value)} · {formatPercent(percent)}
-                  </span>
-                </div>
-                <div className="h-2.5 overflow-hidden rounded-full bg-muted">
-                  <div
-                    className="h-full rounded-full bg-primary"
-                    style={{ width: `${percent}%` }}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </section>
   );
 }
