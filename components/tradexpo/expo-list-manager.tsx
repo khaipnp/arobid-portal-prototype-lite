@@ -49,6 +49,7 @@ import {
   TableRow
 } from "@/components/ui/table"
 import { getAssetUrl } from "@/lib/image-utils"
+import { formatExpoScheduleLabel } from "@/lib/tradexpo/schedule"
 import type { Expo, ExpoCategory, ExpoStatus } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
 import {
@@ -72,12 +73,6 @@ const statusStyles: Record<ExpoStatus, string> = {
   Live: "border-emerald-300 bg-emerald-100 text-emerald-700",
   Archived: "border-purple-300 bg-purple-100 text-purple-700",
   Canceled: "border-rose-300 bg-rose-100 text-rose-700"
-}
-
-function formatDate(iso: string) {
-  return new Intl.DateTimeFormat("en-GB", { dateStyle: "short" }).format(
-    new Date(iso)
-  )
 }
 
 function toLocalIsoDate(date: Date) {
@@ -490,8 +485,7 @@ export function ExpoListManager({
                       {expo.ownerEmail}
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-sm">
-                      {formatDate(expo.startDate ?? "")} –{" "}
-                      {formatDate(expo.endDate ?? "")}
+                      {formatExpoScheduleLabel(expo)}
                     </TableCell>
                     <TableCell>
                       <Badge
