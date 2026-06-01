@@ -1,482 +1,273 @@
-"use client";
+"use client"
 
-import {
-  BadgeCheckIcon,
-  GemIcon,
-  ImagePlusIcon,
-  InfoIcon,
-  PlusIcon,
-  RocketIcon,
-  SearchIcon,
-  Trash2Icon,
-} from "lucide-react";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import * as React from "react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { useUpload } from "@/hooks/use-upload";
-import {
-  EXPO_FORM_TIMEZONES,
-  toDatetimeLocalValue,
-} from "@/lib/tradexpo/expo-form-utils";
+import { useRouter } from "next/navigation"
+import * as React from "react"
+import { Button } from "@/components/ui/button"
+import { Spinner } from "@/components/ui/spinner"
+import { useUpload } from "@/hooks/use-upload"
+import { toDatetimeLocalValue } from "@/lib/tradexpo/expo-form-utils"
 import {
   DEFAULT_EXPO_MARKETING_CONTENT,
   normalizeExpoMarketingContent,
-  validateExpoMarketingContent,
-} from "@/lib/tradexpo/expo-marketing-content";
+  validateExpoMarketingContent
+} from "@/lib/tradexpo/expo-marketing-content"
 import {
   confirmOwnerChange,
-  getOwnerDisplay,
-} from "@/lib/tradexpo/expo-owner-flow";
+  getOwnerDisplay
+} from "@/lib/tradexpo/expo-owner-flow"
 import {
-  EXPO_MONTH_OPTIONS,
   getExpoSchedulePrecision,
-  normalizeExpoScheduleInput,
-} from "@/lib/tradexpo/schedule";
+  normalizeExpoScheduleInput
+} from "@/lib/tradexpo/schedule"
 import type {
-  Expo,
-  ExpoCategory,
-  ExpoHall,
-  ExpoLayoutTemplate,
   ExpoMarketingContent,
-  ExpoMarketingIconKey,
-  ExpoSchedulePrecision,
-  HallTemplate,
-} from "@/lib/tradexpo/types";
-import { cn } from "@/lib/utils";
+  ExpoSchedulePrecision
+} from "@/lib/tradexpo/types"
 import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "../ui/input-group";
-import { Spinner } from "../ui/spinner";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+  ADMIN_EXPO_FORM_STEPS,
+  PARTNER_EXPO_FORM_STEPS
+} from "./expo-form/constants"
+import { GeneralStep } from "./expo-form/general-step"
+import { HallsStep } from "./expo-form/halls-step"
+import { MarketingStep } from "./expo-form/marketing-step"
+import { OwnerChangeDialog } from "./expo-form/owner-change-dialog"
+import { OwnerStep } from "./expo-form/owner-step"
+import {
+  audienceRowsFromContent,
+  benefitRowsFromContent,
+  hallsToRows,
+  newHallRow
+} from "./expo-form/row-helpers"
+import { ScheduleStep } from "./expo-form/schedule-step"
+import { StepNavigation } from "./expo-form/step-navigation"
+import type {
+  AudienceCardFormRow,
+  BenefitCardFormRow,
+  ExpoFormProps,
+  ExpoFormStep,
+  ExpoFormStepId,
+  HallFormRow,
+  OwnerPick
+} from "./expo-form/types"
 
-type HallFormRow = {
-  key: string;
-  hallName: string;
-  hallTemplateId: string;
-  basicQty: number;
-  professionalQty: number;
-  premiumQty: number;
-};
-
-type OwnerPick = { id: string; email: string; name: string };
-
-type AudienceCardFormRow =
-  ExpoMarketingContent["whoShouldJoin"]["audienceCards"][number] & {
-    key: string;
-  };
-
-type BenefitCardFormRow =
-  ExpoMarketingContent["audienceBenefits"]["benefitCards"][number] & {
-    key: string;
-  };
-
-const MARKETING_ICON_OPTIONS: Array<{
-  value: ExpoMarketingIconKey;
-  label: string;
-  Icon: typeof BadgeCheckIcon;
-}> = [
-  { value: "badge", label: "Badge", Icon: BadgeCheckIcon },
-  { value: "rocket", label: "Rocket", Icon: RocketIcon },
-  { value: "gem", label: "Gem", Icon: GemIcon },
-];
-
-const SCHEDULE_PRECISION_OPTIONS: Array<{
-  value: ExpoSchedulePrecision;
-  label: string;
-  description: string;
-}> = [
-  {
-    value: "exact_date_range",
-    label: "Exact date range",
-    description: "Use confirmed start and end date/time.",
-  },
-  {
-    value: "month_year",
-    label: "Month & year",
-    description: "Use event month and year while exact dates are pending.",
-  },
-  {
-    value: "unscheduled",
-    label: "To be announced",
-    description: "Create this Expo without schedule fields.",
-  },
-];
-
-type ExpoFormStepId = "general" | "schedule" | "owner" | "halls" | "marketing";
-
-type ExpoFormStep = {
-  id: ExpoFormStepId;
-  title: string;
-  description: string;
-};
-
-const ADMIN_EXPO_FORM_STEPS: ExpoFormStep[] = [
-  {
-    id: "general",
-    title: "General information",
-    description: "Name, description, image and category",
-  },
-  {
-    id: "schedule",
-    title: "Schedule information",
-    description: "Schedule precision and event dates",
-  },
-  {
-    id: "owner",
-    title: "Expo owner",
-    description: "Expo owner and operator information",
-  },
-  {
-    id: "halls",
-    title: "Hall configuration",
-    description: "Hall, template and booth quantity configuration",
-  },
-  {
-    id: "marketing",
-    title: "Marketing content",
-    description: "Marketing content for the Expo landing page",
-  },
-];
-
-const PARTNER_EXPO_FORM_STEPS = ADMIN_EXPO_FORM_STEPS.filter(
-  (step) => step.id !== "owner" && step.id !== "halls",
-);
-
-function rowKey(prefix: string) {
-  return `${prefix}-${Math.random().toString(36).slice(2)}`;
-}
-
-function newHallRow(index: number): HallFormRow {
-  return {
-    key: `hall-${Math.random().toString(36).slice(2)}`,
-    hallName: `Hall ${String.fromCharCode(65 + index)}`,
-    hallTemplateId: "",
-    basicQty: 0,
-    professionalQty: 0,
-    premiumQty: 0,
-  };
-}
-
-function hallsToRows(halls: ExpoHall[]): HallFormRow[] {
-  if (halls.length === 0) return [newHallRow(0)];
-  return halls.map((h) => ({
-    key: h.id,
-    hallName: h.hallName,
-    hallTemplateId: h.hallTemplateId,
-    basicQty: h.basicQty,
-    professionalQty: h.professionalQty,
-    premiumQty: h.premiumQty,
-  }));
-}
-
-function audienceRowsFromContent(
-  content: ExpoMarketingContent,
-): AudienceCardFormRow[] {
-  return content.whoShouldJoin.audienceCards.map((card) => ({
-    ...card,
-    key: rowKey("audience"),
-  }));
-}
-
-function benefitRowsFromContent(
-  content: ExpoMarketingContent,
-): BenefitCardFormRow[] {
-  return content.audienceBenefits.benefitCards.map((card) => ({
-    ...card,
-    key: rowKey("benefit"),
-  }));
-}
-
-function newAudienceCard(): AudienceCardFormRow {
-  return {
-    key: rowKey("audience"),
-    title: "",
-    description: "",
-    tags: [],
-    displayOrder: 0,
-  };
-}
-
-function newBenefitCard(): BenefitCardFormRow {
-  return {
-    key: rowKey("benefit"),
-    audienceName: "",
-    icon: "badge",
-    benefitItems: [""],
-    isFeatured: false,
-    displayOrder: 0,
-  };
-}
-
-export type ExpoFormProps = {
-  categories: ExpoCategory[];
-  layoutTemplates: ExpoLayoutTemplate[];
-  hallTemplates: HallTemplate[];
-  cancelHref?: string;
-  successHref?: string;
-  submitEndpoint?: string;
-  editableScope?: "admin" | "partner-content";
-  isSuper?: boolean;
-  initialMarketingContent?: ExpoMarketingContent;
-} & (
-  | { mode: "create" }
-  | {
-      mode: "edit";
-      expoId: string;
-      initialExpo: Expo;
-      initialHalls: ExpoHall[];
-      initialOwner: OwnerPick | null;
-    }
-);
+export type { ExpoFormProps } from "./expo-form/types"
 
 export function ExpoForm(props: ExpoFormProps) {
-  const router = useRouter();
-  const isEdit = props.mode === "edit";
-  const editableScope = props.editableScope ?? "admin";
-  const isPartnerContentEdit = isEdit && editableScope === "partner-content";
-  const isSuper = props.isSuper ?? false;
+  const router = useRouter()
+  const isEdit = props.mode === "edit"
+  const editableScope = props.editableScope ?? "admin"
+  const isPartnerContentEdit = isEdit && editableScope === "partner-content"
+  const isSuper = props.isSuper ?? false
   const visibleSteps = isPartnerContentEdit
     ? PARTNER_EXPO_FORM_STEPS
-    : ADMIN_EXPO_FORM_STEPS;
+    : ADMIN_EXPO_FORM_STEPS
   const [activeStepId, setActiveStepId] =
-    React.useState<ExpoFormStepId>("general");
+    React.useState<ExpoFormStepId>("general")
 
   React.useEffect(() => {
     if (!visibleSteps.some((step) => step.id === activeStepId)) {
-      setActiveStepId(visibleSteps[0]?.id ?? "general");
+      setActiveStepId(visibleSteps[0]?.id ?? "general")
     }
-  }, [activeStepId, visibleSteps]);
+  }, [activeStepId, visibleSteps])
 
   const [name, setName] = React.useState(() =>
-    isEdit ? props.initialExpo.name : "",
-  );
+    isEdit ? props.initialExpo.name : ""
+  )
   const [slug, setSlug] = React.useState(() =>
-    isEdit ? (props.initialExpo.slug ?? "") : "",
-  );
+    isEdit ? (props.initialExpo.slug ?? "") : ""
+  )
   const [description, setDescription] = React.useState(() =>
-    isEdit ? (props.initialExpo.description ?? "") : "",
-  );
+    isEdit ? (props.initialExpo.description ?? "") : ""
+  )
   const [thumbnailUrl, setThumbnailUrl] = React.useState(() =>
-    isEdit ? props.initialExpo.thumbnailUrl : "",
-  );
+    isEdit ? props.initialExpo.thumbnailUrl : ""
+  )
   const [expoTemplateId, setExpoTemplateId] = React.useState(() =>
-    isEdit ? (props.initialExpo.expoTemplateId ?? "") : "",
-  );
+    isEdit ? (props.initialExpo.expoTemplateId ?? "") : ""
+  )
   const [categoryIds, setCategoryIds] = React.useState<string[]>(() =>
-    isEdit ? props.initialExpo.categoryIds : [],
-  );
-  const [categoryQuery, setCategoryQuery] = React.useState("");
+    isEdit ? props.initialExpo.categoryIds : []
+  )
+  const [categoryQuery, setCategoryQuery] = React.useState("")
   const [timezone, setTimezone] = React.useState(() =>
-    isEdit ? (props.initialExpo.timezone ?? "Asia/Bangkok") : "Asia/Bangkok",
-  );
+    isEdit ? (props.initialExpo.timezone ?? "Asia/Bangkok") : "Asia/Bangkok"
+  )
 
   const [schedulePrecision, setSchedulePrecision] =
     React.useState<ExpoSchedulePrecision>(() =>
-      isEdit ? getExpoSchedulePrecision(props.initialExpo) : "unscheduled",
-    );
+      isEdit ? getExpoSchedulePrecision(props.initialExpo) : "unscheduled"
+    )
   const [scheduleMonth, setScheduleMonth] = React.useState(() =>
     isEdit && props.initialExpo.scheduleMonth
       ? String(props.initialExpo.scheduleMonth)
-      : "",
-  );
+      : ""
+  )
   const [scheduleYear, setScheduleYear] = React.useState(() =>
     isEdit && props.initialExpo.scheduleYear
       ? String(props.initialExpo.scheduleYear)
-      : "",
-  );
-  const [scheduleError, setScheduleError] = React.useState<string | null>(null);
+      : ""
+  )
+  const [scheduleError, setScheduleError] = React.useState<string | null>(null)
 
   const [startLocal, setStartLocal] = React.useState(() => {
     if (isEdit) {
       if (props.initialExpo.startAt) {
-        return toDatetimeLocalValue(new Date(props.initialExpo.startAt));
+        return toDatetimeLocalValue(new Date(props.initialExpo.startAt))
       }
       if (props.initialExpo.startDate) {
         return toDatetimeLocalValue(
-          new Date(`${props.initialExpo.startDate}T12:00:00`),
-        );
+          new Date(`${props.initialExpo.startDate}T12:00:00`)
+        )
       }
     }
-    return "";
-  });
+    return ""
+  })
   const [endLocal, setEndLocal] = React.useState(() => {
     if (isEdit) {
       if (props.initialExpo.endAt) {
-        return toDatetimeLocalValue(new Date(props.initialExpo.endAt));
+        return toDatetimeLocalValue(new Date(props.initialExpo.endAt))
       }
       if (props.initialExpo.endDate) {
         return toDatetimeLocalValue(
-          new Date(`${props.initialExpo.endDate}T12:00:00`),
-        );
+          new Date(`${props.initialExpo.endDate}T12:00:00`)
+        )
       }
     }
-    return "";
-  });
+    return ""
+  })
 
   const [ownerQuery, setOwnerQuery] = React.useState(() =>
     isEdit
       ? (props.initialOwner?.email ?? props.initialExpo.ownerEmail ?? "")
-      : "",
-  );
-  const [ownerResults, setOwnerResults] = React.useState<OwnerPick[]>([]);
+      : ""
+  )
+  const [ownerResults, setOwnerResults] = React.useState<OwnerPick[]>([])
   const [ownerPick, setOwnerPick] = React.useState<OwnerPick | null>(() =>
-    isEdit ? props.initialOwner : null,
-  );
-  const [ownerLoading, setOwnerLoading] = React.useState(false);
-  const [isChangingOwner, setIsChangingOwner] = React.useState(!isEdit);
+    isEdit ? props.initialOwner : null
+  )
+  const [ownerLoading, setOwnerLoading] = React.useState(false)
+  const [isChangingOwner, setIsChangingOwner] = React.useState(!isEdit)
   const [showOwnerChangeConfirm, setShowOwnerChangeConfirm] =
-    React.useState(false);
+    React.useState(false)
 
   const initialMarketingContent = normalizeExpoMarketingContent(
-    props.initialMarketingContent ?? DEFAULT_EXPO_MARKETING_CONTENT,
-  );
+    props.initialMarketingContent ?? DEFAULT_EXPO_MARKETING_CONTENT
+  )
   const [whoEnabled, setWhoEnabled] = React.useState(
-    initialMarketingContent.whoShouldJoin.enabled,
-  );
+    initialMarketingContent.whoShouldJoin.enabled
+  )
   const [whoTitle, setWhoTitle] = React.useState(
-    initialMarketingContent.whoShouldJoin.sectionTitle,
-  );
+    initialMarketingContent.whoShouldJoin.sectionTitle
+  )
   const [whoSubtitle, setWhoSubtitle] = React.useState(
-    initialMarketingContent.whoShouldJoin.sectionSubtitle ?? "",
-  );
+    initialMarketingContent.whoShouldJoin.sectionSubtitle ?? ""
+  )
   const [audienceCards, setAudienceCards] = React.useState<
     AudienceCardFormRow[]
-  >(() => audienceRowsFromContent(initialMarketingContent));
+  >(() => audienceRowsFromContent(initialMarketingContent))
   const [benefitsEnabled, setBenefitsEnabled] = React.useState(
-    initialMarketingContent.audienceBenefits.enabled,
-  );
+    initialMarketingContent.audienceBenefits.enabled
+  )
   const [benefitsTitle, setBenefitsTitle] = React.useState(
-    initialMarketingContent.audienceBenefits.sectionTitle,
-  );
+    initialMarketingContent.audienceBenefits.sectionTitle
+  )
   const [benefitsSubtitle, setBenefitsSubtitle] = React.useState(
-    initialMarketingContent.audienceBenefits.sectionSubtitle ?? "",
-  );
+    initialMarketingContent.audienceBenefits.sectionSubtitle ?? ""
+  )
   const [benefitCards, setBenefitCards] = React.useState<BenefitCardFormRow[]>(
-    () => benefitRowsFromContent(initialMarketingContent),
-  );
+    () => benefitRowsFromContent(initialMarketingContent)
+  )
 
   const [halls, setHalls] = React.useState<HallFormRow[]>(() =>
-    isEdit ? hallsToRows(props.initialHalls) : [newHallRow(0)],
-  );
+    isEdit ? hallsToRows(props.initialHalls) : [newHallRow(0)]
+  )
 
-  const { uploadFile, isUploading } = useUpload();
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const { uploadFile, isUploading } = useUpload()
+  const fileInputRef = React.useRef<HTMLInputElement>(null)
 
-  const [submitting, setSubmitting] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
+  const [submitting, setSubmitting] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const file = e.target.files?.[0]
+    if (!file) return
 
-    const result = await uploadFile(file, "thumbnail");
+    const result = await uploadFile(file, "thumbnail")
     if (result) {
-      setThumbnailUrl(result.fileUrl);
+      setThumbnailUrl(result.fileUrl)
     }
-  };
+  }
 
   React.useEffect(() => {
-    const q = ownerQuery.trim();
+    const q = ownerQuery.trim()
     if (q.length < 2) {
-      setOwnerResults([]);
-      return;
+      setOwnerResults([])
+      return
     }
     const t = window.setTimeout(async () => {
-      setOwnerLoading(true);
+      setOwnerLoading(true)
       try {
         const res = await fetch(
-          `/api/tradexpo/expo-owners/search?q=${encodeURIComponent(q)}`,
-        );
-        const data = (await res.json()) as { users?: OwnerPick[] };
-        setOwnerResults(data.users ?? []);
+          `/api/tradexpo/expo-owners/search?q=${encodeURIComponent(q)}`
+        )
+        const data = (await res.json()) as { users?: OwnerPick[] }
+        setOwnerResults(data.users ?? [])
       } catch {
-        setOwnerResults([]);
+        setOwnerResults([])
       } finally {
-        setOwnerLoading(false);
+        setOwnerLoading(false)
       }
-    }, 400);
-    return () => window.clearTimeout(t);
-  }, [ownerQuery]);
+    }, 400)
+    return () => window.clearTimeout(t)
+  }, [ownerQuery])
 
   function toggleCategory(id: string) {
     setCategoryIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    )
   }
 
   function addHall() {
-    setHalls((prev) => [...prev, newHallRow(prev.length)]);
+    setHalls((prev) => [...prev, newHallRow(prev.length)])
   }
 
   function removeHall(index: number) {
-    setHalls((prev) => prev.filter((_, i) => i !== index));
+    setHalls((prev) => prev.filter((_, i) => i !== index))
   }
 
   function updateHall(index: number, patch: Partial<HallFormRow>) {
     setHalls((prev) =>
-      prev.map((h, i) => (i === index ? { ...h, ...patch } : h)),
-    );
+      prev.map((h, i) => (i === index ? { ...h, ...patch } : h))
+    )
   }
 
   function updateAudienceCard(
     index: number,
-    patch: Partial<AudienceCardFormRow>,
+    patch: Partial<AudienceCardFormRow>
   ) {
     setAudienceCards((prev) =>
-      prev.map((card, i) => (i === index ? { ...card, ...patch } : card)),
-    );
+      prev.map((card, i) => (i === index ? { ...card, ...patch } : card))
+    )
   }
 
   function updateBenefitCard(
     index: number,
-    patch: Partial<BenefitCardFormRow>,
+    patch: Partial<BenefitCardFormRow>
   ) {
     setBenefitCards((prev) =>
       prev.map((card, i) => {
         if (i !== index) {
-          return patch.isFeatured ? { ...card, isFeatured: false } : card;
+          return patch.isFeatured ? { ...card, isFeatured: false } : card
         }
-        return { ...card, ...patch };
-      }),
-    );
+        return { ...card, ...patch }
+      })
+    )
   }
 
   function updateBenefitItem(
     cardIndex: number,
     itemIndex: number,
-    value: string,
+    value: string
   ) {
     setBenefitCards((prev) =>
       prev.map((card, i) =>
@@ -484,12 +275,12 @@ export function ExpoForm(props: ExpoFormProps) {
           ? {
               ...card,
               benefitItems: card.benefitItems.map((item, j) =>
-                j === itemIndex ? value : item,
-              ),
+                j === itemIndex ? value : item
+              )
             }
-          : card,
-      ),
-    );
+          : card
+      )
+    )
   }
 
   function buildMarketingContent(): ExpoMarketingContent {
@@ -498,33 +289,33 @@ export function ExpoForm(props: ExpoFormProps) {
         enabled: whoEnabled,
         sectionTitle: whoTitle,
         sectionSubtitle: whoSubtitle,
-        audienceCards: audienceCards.map(({ key: _key, ...card }) => card),
+        audienceCards: audienceCards.map(({ key: _key, ...card }) => card)
       },
       audienceBenefits: {
         enabled: benefitsEnabled,
         sectionTitle: benefitsTitle,
         sectionSubtitle: benefitsSubtitle,
-        benefitCards: benefitCards.map(({ key: _key, ...card }) => card),
-      },
-    });
+        benefitCards: benefitCards.map(({ key: _key, ...card }) => card)
+      }
+    })
   }
 
   function handleConfirmOwnerChange() {
-    const next = confirmOwnerChange(ownerPick);
-    setOwnerQuery(next.ownerQuery);
-    setOwnerPick(next.ownerPick);
-    setIsChangingOwner(next.isChangingOwner);
-    setOwnerResults([]);
-    setError(null);
+    const next = confirmOwnerChange(ownerPick)
+    setOwnerQuery(next.ownerQuery)
+    setOwnerPick(next.ownerPick)
+    setIsChangingOwner(next.isChangingOwner)
+    setOwnerResults([])
+    setError(null)
   }
 
   async function onSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    setScheduleError(null);
+    e.preventDefault()
+    setError(null)
+    setScheduleError(null)
     if (!ownerPick) {
-      setError("Search and select an expo owner by email.");
-      return;
+      setError("Search and select an expo owner by email.")
+      return
     }
 
     const scheduleResult = normalizeExpoScheduleInput({
@@ -533,19 +324,19 @@ export function ExpoForm(props: ExpoFormProps) {
       endAt: endLocal,
       timezone,
       scheduleMonth,
-      scheduleYear,
-    });
+      scheduleYear
+    })
     if (!scheduleResult.ok) {
-      setScheduleError(scheduleResult.error);
-      return;
+      setScheduleError(scheduleResult.error)
+      return
     }
-    const schedule = scheduleResult.schedule;
+    const schedule = scheduleResult.schedule
 
-    const marketingContent = buildMarketingContent();
-    const marketingResult = validateExpoMarketingContent(marketingContent);
+    const marketingContent = buildMarketingContent()
+    const marketingResult = validateExpoMarketingContent(marketingContent)
     if (!marketingResult.ok) {
-      setError(marketingResult.error);
-      return;
+      setError(marketingResult.error)
+      return
     }
 
     const payload = {
@@ -569,11 +360,11 @@ export function ExpoForm(props: ExpoFormProps) {
         hallTemplateId: h.hallTemplateId,
         basicQty: h.basicQty,
         professionalQty: h.professionalQty,
-        premiumQty: h.premiumQty,
-      })),
-    };
+        premiumQty: h.premiumQty
+      }))
+    }
 
-    setSubmitting(true);
+    setSubmitting(true)
     try {
       if (isEdit) {
         const res = await fetch(
@@ -581,38 +372,38 @@ export function ExpoForm(props: ExpoFormProps) {
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          },
-        );
-        const data = (await res.json()) as { ok?: boolean; error?: string };
+            body: JSON.stringify(payload)
+          }
+        )
+        const data = (await res.json()) as { ok?: boolean; error?: string }
         if (!res.ok) {
-          setError(data.error ?? "Could not save expo.");
-          return;
+          setError(data.error ?? "Could not save expo.")
+          return
         }
         router.push(
-          props.successHref ?? `/admin/tradexpo/expos/${props.expoId}`,
-        );
-        router.refresh();
+          props.successHref ?? `/admin/tradexpo/expos/${props.expoId}`
+        )
+        router.refresh()
       } else {
         const res = await fetch("/api/tradexpo/expos", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        const data = (await res.json()) as { id?: string; error?: string };
+          body: JSON.stringify(payload)
+        })
+        const data = (await res.json()) as { id?: string; error?: string }
         if (!res.ok) {
-          setError(data.error ?? "Could not create expo.");
-          return;
+          setError(data.error ?? "Could not create expo.")
+          return
         }
         if (data.id) {
-          router.push(`/admin/tradexpo/expos/${data.id}`);
-          router.refresh();
+          router.push(`/admin/tradexpo/expos/${data.id}`)
+          router.refresh()
         }
       }
     } catch {
-      setError("Network error. Please try again.");
+      setError("Network error. Please try again.")
     } finally {
-      setSubmitting(false);
+      setSubmitting(false)
     }
   }
 
@@ -621,7 +412,7 @@ export function ExpoForm(props: ExpoFormProps) {
       ? startLocal.trim().length > 0 && endLocal.trim().length > 0
       : schedulePrecision === "month_year"
         ? scheduleMonth.trim().length > 0 && scheduleYear.trim().length > 0
-        : true;
+        : true
 
   const canSubmit =
     name.trim().length > 0 &&
@@ -629,960 +420,161 @@ export function ExpoForm(props: ExpoFormProps) {
     expoTemplateId &&
     categoryIds.length > 0 &&
     ownerPick !== null &&
-    hasScheduleInput;
+    hasScheduleInput
 
   const cancelHref =
     props.cancelHref ??
-    (isEdit
-      ? `/admin/tradexpo/expos/${props.expoId}`
-      : "/admin/tradexpo/expos");
+    (isEdit ? `/admin/tradexpo/expos/${props.expoId}` : "/admin/tradexpo/expos")
   const currentOwnerDisplay = isEdit
     ? getOwnerDisplay(ownerPick, props.initialExpo.ownerEmail)
-    : null;
+    : null
   const filteredCategories = React.useMemo(() => {
-    const q = categoryQuery.trim().toLowerCase();
-    if (!q) return props.categories;
-    return props.categories.filter((cat) => cat.name.toLowerCase().includes(q));
-  }, [categoryQuery, props.categories]);
+    const q = categoryQuery.trim().toLowerCase()
+    if (!q) return props.categories
+    return props.categories.filter((cat) => cat.name.toLowerCase().includes(q))
+  }, [categoryQuery, props.categories])
 
   const activeStepIndex = Math.max(
     visibleSteps.findIndex((step) => step.id === activeStepId),
-    0,
-  );
+    0
+  )
   const activeStep =
-    visibleSteps[activeStepIndex] ?? (ADMIN_EXPO_FORM_STEPS[0] as ExpoFormStep);
-  const isFirstStep = activeStepIndex === 0;
-  const isLastStep = activeStepIndex === visibleSteps.length - 1;
+    visibleSteps[activeStepIndex] ?? (ADMIN_EXPO_FORM_STEPS[0] as ExpoFormStep)
+  const isFirstStep = activeStepIndex === 0
+  const isLastStep = activeStepIndex === visibleSteps.length - 1
 
   function goToPreviousStep() {
-    const previousStep = visibleSteps[activeStepIndex - 1];
+    const previousStep = visibleSteps[activeStepIndex - 1]
     if (previousStep) {
-      setActiveStepId(previousStep.id);
+      setActiveStepId(previousStep.id)
     }
   }
 
   function goToNextStep() {
-    const nextStep = visibleSteps[activeStepIndex + 1];
+    const nextStep = visibleSteps[activeStepIndex + 1]
     if (nextStep) {
-      setActiveStepId(nextStep.id);
+      setActiveStepId(nextStep.id)
     }
   }
 
   return (
     <form className="mt-5 space-y-4" onSubmit={onSubmit}>
       <div className="grid gap-10 lg:grid-cols-[320px_minmax(0,1fr)]">
-        <nav
-          aria-label="Expo form steps"
-          className="flex gap-2 overflow-x-auto rounded-2xl border bg-card p-2 lg:flex-col lg:self-start"
-        >
-          {visibleSteps.map((step, index) => {
-            const isActive = step.id === activeStep.id;
-
-            return (
-              <button
-                key={step.id}
-                type="button"
-                onClick={() => setActiveStepId(step.id)}
-                className={cn(
-                  "flex min-w-56 items-start gap-3 rounded-xl px-3 py-3 text-left transition-colors lg:min-w-0",
-                  isActive
-                    ? "bg-legend/10 text-legend"
-                    : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
-                )}
-                aria-current={isActive ? "step" : undefined}
-              >
-                <span
-                  className={cn(
-                    "flex size-6 shrink-0 items-center justify-center rounded-full font-medium text-xs",
-                    isActive
-                      ? "bg-legend text-primary-foreground"
-                      : "bg-muted text-muted-foreground",
-                  )}
-                >
-                  {index + 1}
-                </span>
-                <span className="grid gap-1">
-                  <span className="font-medium text-sm leading-none capitalize">
-                    {step.title}
-                  </span>
-                  <span className="line-clamp-2 text-xs leading-snug">
-                    {step.description}
-                  </span>
-                </span>
-              </button>
-            );
-          })}
-        </nav>
+        <StepNavigation
+          steps={visibleSteps}
+          activeStep={activeStep}
+          onStepChange={setActiveStepId}
+        />
 
         <div className="min-w-0 space-y-3">
           {activeStep.id === "general" ? (
-            <div className="space-y-6">
-              <div className="space-y-1">
-                <h2 className="text-lg font-semibold leading-none">
-                  {isPartnerContentEdit
-                    ? "Expo information"
-                    : "General information"}
-                </h2>
-                <p className="text-muted-foreground text-sm">
-                  {activeStep.description}
-                </p>
-              </div>
-
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="expo-name" className="capitalize">
-                    Expo name
-                  </Label>
-                  <Input
-                    id="expo-name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    maxLength={255}
-                    required
-                    placeholder="Unique name"
-                  />
-                </div>
-                {isSuper && isEdit ? (
-                  <div className="grid gap-2">
-                    <div className="flex items-center gap-1">
-                      <Label htmlFor="expo-slug">Slug</Label>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <InfoIcon className="size-3" strokeWidth="1.5" />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          Lowercase letters, numbers, and single hyphens only.
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                    <Input
-                      id="expo-slug"
-                      value={slug}
-                      onChange={(e) => setSlug(e.target.value)}
-                      pattern="[a-z0-9]+(-[a-z0-9]+)*"
-                      placeholder="expo-url-slug"
-                    />
-                  </div>
-                ) : null}
-                <div className="grid gap-2">
-                  <Label htmlFor="expo-desc">Description</Label>
-                  <Textarea
-                    id="expo-desc"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    required
-                    rows={4}
-                    placeholder="What is this expo about?"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Thumbnail</Label>
-                  <div className="flex flex-col gap-3">
-                    {thumbnailUrl ? (
-                      <div className="relative aspect-video w-full max-w-md overflow-hidden rounded-lg border bg-muted">
-                        <Image
-                          src={thumbnailUrl}
-                          alt="Expo thumbnail preview"
-                          fill
-                          className="object-cover"
-                        />
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="icon-sm"
-                          className="absolute top-2 right-2 opacity-80 hover:opacity-100"
-                          onClick={() => setThumbnailUrl("")}
-                        >
-                          <Trash2Icon />
-                        </Button>
-                      </div>
-                    ) : (
-                      <button
-                        type="button"
-                        className="flex aspect-video w-full max-w-md cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed bg-muted/30 transition-colors hover:bg-muted/50"
-                        onClick={() => fileInputRef.current?.click()}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            fileInputRef.current?.click();
-                          }
-                        }}
-                      >
-                        {isUploading ? (
-                          <Spinner />
-                        ) : (
-                          <>
-                            <ImagePlusIcon className="size-8 text-muted-foreground" />
-                            <p className="text-muted-foreground text-sm">
-                              Click to upload 16:9 thumbnail
-                            </p>
-                          </>
-                        )}
-                      </button>
-                    )}
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      className="hidden"
-                      accept="image/*"
-                      onChange={handleFileChange}
-                      disabled={isUploading}
-                    />
-                    <p className="text-muted-foreground text-xs">
-                      Recommended size: 1280x720 (16:9). JPG, PNG, or WEBP.
-                    </p>
-                  </div>
-                </div>
-                {!isPartnerContentEdit ? (
-                  <div className="grid gap-2">
-                    <Label>Expo Template</Label>
-                    <Select
-                      value={expoTemplateId || undefined}
-                      onValueChange={setExpoTemplateId}
-                      required
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select layout template" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {props.layoutTemplates.map((t) => (
-                          <SelectItem key={t.id} value={t.id}>
-                            {t.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                ) : null}
-                <div className="grid gap-2">
-                  <Label>Categories</Label>
-                  <InputGroup>
-                    <InputGroupInput
-                      value={categoryQuery}
-                      onChange={(e) => setCategoryQuery(e.target.value)}
-                      placeholder="Search categories..."
-                    />
-                    <InputGroupAddon>
-                      <SearchIcon />
-                    </InputGroupAddon>
-                  </InputGroup>
-                  <div className="max-h-48 overflow-y-auto rounded-lg border">
-                    {filteredCategories.map((cat) => (
-                      <label
-                        key={cat.id}
-                        className="flex cursor-pointer items-center gap-2 rounded px-3 py-1.5 text-sm hover:bg-muted/60"
-                      >
-                        <Checkbox
-                          checked={categoryIds.includes(cat.id)}
-                          onCheckedChange={() => toggleCategory(cat.id)}
-                        />
-                        <span>{cat.name}</span>
-                      </label>
-                    ))}
-                    {filteredCategories.length === 0 ? (
-                      <p className="text-muted-foreground text-sm">
-                        No category matches your search.
-                      </p>
-                    ) : null}
-                  </div>
-                  {categoryIds.length === 0 ? (
-                    <p className="text-amber-600 text-xs">
-                      Select at least one.
-                    </p>
-                  ) : null}
-                </div>
-              </div>
-            </div>
+            <GeneralStep
+              title={
+                isPartnerContentEdit
+                  ? "Expo information"
+                  : "General information"
+              }
+              stepDescription={activeStep.description}
+              name={name}
+              onNameChange={setName}
+              isSuper={isSuper}
+              isEdit={isEdit}
+              slug={slug}
+              onSlugChange={setSlug}
+              expoDescription={description}
+              onExpoDescriptionChange={setDescription}
+              thumbnailUrl={thumbnailUrl}
+              onThumbnailUrlChange={setThumbnailUrl}
+              isUploading={isUploading}
+              fileInputRef={fileInputRef}
+              onFileChange={handleFileChange}
+              isPartnerContentEdit={isPartnerContentEdit}
+              expoTemplateId={expoTemplateId}
+              onExpoTemplateIdChange={setExpoTemplateId}
+              layoutTemplates={props.layoutTemplates}
+              categoryQuery={categoryQuery}
+              onCategoryQueryChange={setCategoryQuery}
+              filteredCategories={filteredCategories}
+              categoryIds={categoryIds}
+              onToggleCategory={toggleCategory}
+            />
           ) : null}
 
           {activeStep.id === "schedule" ? (
-            <div className="space-y-6">
-              <div className="space-y-1">
-                <h2 className="text-lg font-semibold leading-none">Schedule</h2>
-                <p className="text-muted-foreground text-sm">
-                  Choose how precise the Expo schedule is right now.
-                </p>
-              </div>
-
-              <section className="space-y-4">
-                <RadioGroup
-                  value={schedulePrecision}
-                  onValueChange={(value) => {
-                    setSchedulePrecision(value as ExpoSchedulePrecision);
-                    setScheduleError(null);
-                  }}
-                  className="grid gap-3 md:grid-cols-3"
-                >
-                  {SCHEDULE_PRECISION_OPTIONS.map((option) => (
-                    <label
-                      key={option.value}
-                      className="flex cursor-pointer gap-3 rounded-2xl border p-3 text-sm transition-colors hover:bg-muted/60 has-[[data-state=checked]]:border-legend has-[[data-state=checked]]:bg-legend/5"
-                    >
-                      <RadioGroupItem value={option.value} className="mt-0.5" />
-                      <span className="grid gap-1">
-                        <span className="font-medium">{option.label}</span>
-                        <span className="text-muted-foreground text-xs">
-                          {option.description}
-                        </span>
-                      </span>
-                    </label>
-                  ))}
-                </RadioGroup>
-
-                {schedulePrecision === "exact_date_range" ? (
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    <div className="grid gap-2">
-                      <Label htmlFor="start">Start</Label>
-                      <Input
-                        id="start"
-                        type="datetime-local"
-                        value={startLocal}
-                        onChange={(e) => setStartLocal(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="end">End</Label>
-                      <Input
-                        id="end"
-                        type="datetime-local"
-                        value={endLocal}
-                        onChange={(e) => setEndLocal(e.target.value)}
-                        required
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label>Timezone</Label>
-                      <Select value={timezone} onValueChange={setTimezone}>
-                        <SelectTrigger className="w-full">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {EXPO_FORM_TIMEZONES.map((tz) => (
-                            <SelectItem key={tz.value} value={tz.value}>
-                              {tz.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                ) : null}
-
-                {schedulePrecision === "month_year" ? (
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="grid gap-2">
-                      <Label>Month</Label>
-                      <Select
-                        value={scheduleMonth}
-                        onValueChange={setScheduleMonth}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Select month" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {EXPO_MONTH_OPTIONS.map((month) => (
-                            <SelectItem
-                              key={month.value}
-                              value={String(month.value)}
-                            >
-                              {month.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="schedule-year">Year</Label>
-                      <Input
-                        id="schedule-year"
-                        inputMode="numeric"
-                        pattern="[0-9]{4}"
-                        value={scheduleYear}
-                        onChange={(e) => setScheduleYear(e.target.value)}
-                        placeholder="2026"
-                        required
-                      />
-                    </div>
-                  </div>
-                ) : null}
-
-                {schedulePrecision === "unscheduled" ? (
-                  <p className="rounded-md bg-muted/50 px-3 py-2 text-muted-foreground text-sm">
-                    Schedule to be announced. You can add exact dates later from
-                    Edit Expo.
-                  </p>
-                ) : null}
-
-                {scheduleError ? (
-                  <p className="text-destructive text-xs">{scheduleError}</p>
-                ) : null}
-              </section>
-            </div>
+            <ScheduleStep
+              schedulePrecision={schedulePrecision}
+              onSchedulePrecisionChange={setSchedulePrecision}
+              startLocal={startLocal}
+              onStartLocalChange={setStartLocal}
+              endLocal={endLocal}
+              onEndLocalChange={setEndLocal}
+              timezone={timezone}
+              onTimezoneChange={setTimezone}
+              scheduleMonth={scheduleMonth}
+              onScheduleMonthChange={setScheduleMonth}
+              scheduleYear={scheduleYear}
+              onScheduleYearChange={setScheduleYear}
+              scheduleError={scheduleError}
+              onScheduleErrorChange={setScheduleError}
+            />
           ) : null}
 
           {!isPartnerContentEdit && activeStep.id === "owner" ? (
-            <div className="space-y-6">
-              <div className="space-y-1">
-                <h2 className="text-lg font-semibold leading-none">
-                  Expo owner
-                </h2>
-                <p className="text-muted-foreground text-sm">
-                  Changing owner requires confirmation, then selecting a new
-                  user from search results.
-                </p>
-              </div>
-              <div className="space-y-3">
-                {isEdit && !isChangingOwner && currentOwnerDisplay ? (
-                  <div className="flex flex-col gap-3 rounded-md border px-3 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <p className="text-muted-foreground text-xs">
-                        Current owner
-                      </p>
-                      <p>
-                        <strong>{currentOwnerDisplay.label}</strong> (
-                        {currentOwnerDisplay.email})
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setShowOwnerChangeConfirm(true)}
-                    >
-                      Change owner
-                    </Button>
-                  </div>
-                ) : null}
-
-                {isChangingOwner ? (
-                  <>
-                    {isEdit ? (
-                      <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-amber-800 text-sm dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
-                        Owner change is pending. Search and select a new owner
-                        before saving.
-                      </p>
-                    ) : null}
-                    <div className="grid gap-2">
-                      <Label htmlFor="owner-q">Owner email</Label>
-                      <Input
-                        id="owner-q"
-                        value={ownerQuery}
-                        onChange={(e) => {
-                          setOwnerQuery(e.target.value);
-                          setOwnerPick(null);
-                        }}
-                        placeholder="Type at least 2 characters…"
-                        autoComplete="off"
-                      />
-                    </div>
-                    {ownerLoading ? (
-                      <p className="text-muted-foreground text-xs">
-                        Searching…
-                      </p>
-                    ) : null}
-                    {ownerResults.length > 0 && !ownerPick ? (
-                      <ul className="space-y-2">
-                        {ownerResults.map((u) => (
-                          <li key={u.id}>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setOwnerPick(u);
-                                setOwnerQuery(u.email);
-                              }}
-                              className="w-full rounded-lg border bg-card px-3 py-2 text-left text-sm hover:bg-muted/50"
-                            >
-                              <span className="font-medium">{u.name}</span>
-                              <span className="block text-muted-foreground">
-                                {u.email}
-                              </span>
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : null}
-                    {ownerQuery.trim().length >= 2 &&
-                    !ownerLoading &&
-                    ownerResults.length === 0 &&
-                    !ownerPick ? (
-                      <p className="text-amber-700 text-sm">
-                        No user found for that search.
-                      </p>
-                    ) : null}
-                    {ownerPick ? (
-                      <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm dark:border-emerald-900 dark:bg-emerald-950/40">
-                        Selected: <strong>{ownerPick.name}</strong> (
-                        {ownerPick.email})
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="ml-2 h-7"
-                          onClick={() => {
-                            setOwnerPick(null);
-                            setOwnerQuery("");
-                          }}
-                        >
-                          Change
-                        </Button>
-                      </div>
-                    ) : null}
-                  </>
-                ) : null}
-              </div>
-            </div>
+            <OwnerStep
+              isEdit={isEdit}
+              isChangingOwner={isChangingOwner}
+              currentOwnerDisplay={currentOwnerDisplay}
+              ownerQuery={ownerQuery}
+              onOwnerQueryChange={setOwnerQuery}
+              ownerResults={ownerResults}
+              ownerPick={ownerPick}
+              onOwnerPickChange={setOwnerPick}
+              ownerLoading={ownerLoading}
+              onRequestOwnerChange={() => setShowOwnerChangeConfirm(true)}
+            />
           ) : null}
 
           {!isPartnerContentEdit && activeStep.id === "halls" ? (
-            <div className="space-y-6">
-              <div className="flex flex-row items-start justify-between gap-2">
-                <div className="space-y-1">
-                  <h2 className="text-lg font-semibold leading-none">
-                    Hall configuration
-                  </h2>
-                  <p className="text-muted-foreground text-sm">
-                    One or more halls: name, hall template, and booth tier
-                    counts (Basic / Professional / Premium).
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addHall}
-                >
-                  <PlusIcon />
-                  Add hall
-                </Button>
-              </div>
-              <div className="space-y-6">
-                {halls.map((hall, index) => (
-                  <div
-                    key={hall.key}
-                    className="space-y-3 rounded-3xl border p-4"
-                  >
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-medium text-base">
-                        Hall {index + 1}
-                      </span>
-                      {halls.length > 1 ? (
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          size="icon-sm"
-                          onClick={() => removeHall(index)}
-                          aria-label="Remove hall"
-                        >
-                          <Trash2Icon />
-                        </Button>
-                      ) : null}
-                    </div>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div className="grid gap-2">
-                        <Label>Hall name</Label>
-                        <Input
-                          className="w-full"
-                          value={hall.hallName}
-                          onChange={(e) =>
-                            updateHall(index, { hallName: e.target.value })
-                          }
-                          maxLength={100}
-                          required
-                        />
-                      </div>
-                      <div className="grid gap-2">
-                        <Label>Hall template</Label>
-                        <Select
-                          value={hall.hallTemplateId || undefined}
-                          onValueChange={(v) =>
-                            updateHall(index, { hallTemplateId: v })
-                          }
-                        >
-                          <SelectTrigger className="w-full">
-                            <SelectValue placeholder="Select hall template" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {props.hallTemplates.map((t) => (
-                              <SelectItem key={t.id} value={t.id}>
-                                {t.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    {hall.hallTemplateId ? (
-                      <div className="grid gap-3 sm:grid-cols-3">
-                        <div className="grid gap-1">
-                          <Label className="text-xs">Basic</Label>
-                          <Input
-                            type="number"
-                            min={0}
-                            value={hall.basicQty}
-                            onChange={(e) =>
-                              updateHall(index, {
-                                basicQty:
-                                  Number.parseInt(e.target.value, 10) || 0,
-                              })
-                            }
-                          />
-                        </div>
-                        <div className="grid gap-1">
-                          <Label className="text-xs">Professional</Label>
-                          <Input
-                            type="number"
-                            min={0}
-                            value={hall.professionalQty}
-                            onChange={(e) =>
-                              updateHall(index, {
-                                professionalQty:
-                                  Number.parseInt(e.target.value, 10) || 0,
-                              })
-                            }
-                          />
-                        </div>
-                        <div className="grid gap-1">
-                          <Label className="text-xs">Premium</Label>
-                          <Input
-                            type="number"
-                            min={0}
-                            value={hall.premiumQty}
-                            onChange={(e) =>
-                              updateHall(index, {
-                                premiumQty:
-                                  Number.parseInt(e.target.value, 10) || 0,
-                              })
-                            }
-                          />
-                        </div>
-                      </div>
-                    ) : (
-                      <p className="text-muted-foreground text-xs">
-                        Select a hall template to set booth tier quantities.
-                      </p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
+            <HallsStep
+              halls={halls}
+              hallTemplates={props.hallTemplates}
+              onAddHall={addHall}
+              onRemoveHall={removeHall}
+              onUpdateHall={updateHall}
+            />
           ) : null}
 
           {activeStep.id === "marketing" ? (
-            <div className="space-y-6">
-              <div className="space-y-1">
-                <h2 className="text-lg font-semibold leading-none">
-                  Marketing
-                </h2>
-                <p className="text-muted-foreground text-sm">
-                  Configure public Expo Detail content. Exhibited Categories
-                  still come from selected Expo categories.
-                </p>
-              </div>
-              <div className="space-y-6">
-                <section className="space-y-4 rounded-2xl border p-4">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <h3 className="font-medium text-sm">Who should join?</h3>
-                      <p className="text-muted-foreground text-xs">
-                        Add audience groups shown on Expo Detail.
-                      </p>
-                    </div>
-                    <label className="flex items-center gap-2 text-sm">
-                      <Checkbox
-                        checked={whoEnabled}
-                        onCheckedChange={(v) => setWhoEnabled(Boolean(v))}
-                      />
-                      Enabled
-                    </label>
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="grid gap-2">
-                      <Label>Section title</Label>
-                      <Input
-                        value={whoTitle}
-                        onChange={(e) => setWhoTitle(e.target.value)}
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label>Subtitle</Label>
-                      <Input
-                        value={whoSubtitle}
-                        onChange={(e) => setWhoSubtitle(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    {audienceCards.map((card, index) => (
-                      <div
-                        key={card.key}
-                        className="grid gap-3 rounded-md border p-3"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="font-medium text-sm">
-                            Audience {index + 1}
-                          </p>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-sm"
-                            disabled={audienceCards.length <= 1}
-                            onClick={() =>
-                              setAudienceCards((prev) =>
-                                prev.filter((_, i) => i !== index),
-                              )
-                            }
-                          >
-                            <Trash2Icon />
-                          </Button>
-                        </div>
-                        <div className="grid gap-3 sm:grid-cols-2">
-                          <Input
-                            value={card.title}
-                            onChange={(e) =>
-                              updateAudienceCard(index, {
-                                title: e.target.value,
-                              })
-                            }
-                            placeholder="The Buyers"
-                          />
-                          <Input
-                            value={card.tags.join(", ")}
-                            onChange={(e) =>
-                              updateAudienceCard(index, {
-                                tags: e.target.value
-                                  .split(",")
-                                  .map((tag) => tag.trim())
-                                  .filter(Boolean),
-                              })
-                            }
-                            placeholder="Retailers, Distributors"
-                          />
-                        </div>
-                        <Textarea
-                          value={card.description}
-                          onChange={(e) =>
-                            updateAudienceCard(index, {
-                              description: e.target.value,
-                            })
-                          }
-                          rows={2}
-                          placeholder="Describe why this group should join."
-                        />
-                      </div>
-                    ))}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={audienceCards.length >= 6}
-                      onClick={() =>
-                        setAudienceCards((prev) => [...prev, newAudienceCard()])
-                      }
-                    >
-                      <PlusIcon className="mr-1 size-4" />
-                      Add audience
-                    </Button>
-                  </div>
-                </section>
-
-                <section className="space-y-4 rounded-lg border p-4">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <h3 className="font-medium text-sm">
-                        Giá trị đặc quyền từng đối tượng
-                      </h3>
-                      <p className="text-muted-foreground text-xs">
-                        Benefit cards render without user-configured CTA.
-                      </p>
-                    </div>
-                    <label className="flex items-center gap-2 text-sm">
-                      <Checkbox
-                        checked={benefitsEnabled}
-                        onCheckedChange={(v) => setBenefitsEnabled(Boolean(v))}
-                      />
-                      Enabled
-                    </label>
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="grid gap-2">
-                      <Label>Section title</Label>
-                      <Input
-                        value={benefitsTitle}
-                        onChange={(e) => setBenefitsTitle(e.target.value)}
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label>Subtitle</Label>
-                      <Input
-                        value={benefitsSubtitle}
-                        onChange={(e) => setBenefitsSubtitle(e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    {benefitCards.map((card, cardIndex) => (
-                      <div
-                        key={card.key}
-                        className="grid gap-3 rounded-md border p-3"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <p className="font-medium text-sm">
-                            Benefit {cardIndex + 1}
-                          </p>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon-sm"
-                            disabled={benefitCards.length <= 1}
-                            onClick={() =>
-                              setBenefitCards((prev) =>
-                                prev.filter((_, i) => i !== cardIndex),
-                              )
-                            }
-                          >
-                            <Trash2Icon />
-                          </Button>
-                        </div>
-                        <div className="grid gap-3 sm:grid-cols-[1fr_160px_auto]">
-                          <Input
-                            value={card.audienceName}
-                            onChange={(e) =>
-                              updateBenefitCard(cardIndex, {
-                                audienceName: e.target.value,
-                              })
-                            }
-                            placeholder="Dành cho Buyers"
-                          />
-                          <Select
-                            value={card.icon}
-                            onValueChange={(value) =>
-                              updateBenefitCard(cardIndex, {
-                                icon: value as ExpoMarketingIconKey,
-                              })
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {MARKETING_ICON_OPTIONS.map(
-                                ({ value, label, Icon }) => (
-                                  <SelectItem key={value} value={value}>
-                                    <span className="inline-flex items-center gap-2">
-                                      <Icon className="size-4" />
-                                      {label}
-                                    </span>
-                                  </SelectItem>
-                                ),
-                              )}
-                            </SelectContent>
-                          </Select>
-                          <label className="flex items-center gap-2 text-sm">
-                            <Checkbox
-                              checked={card.isFeatured}
-                              onCheckedChange={(v) =>
-                                updateBenefitCard(cardIndex, {
-                                  isFeatured: Boolean(v),
-                                })
-                              }
-                            />
-                            Featured
-                          </label>
-                        </div>
-                        <div className="space-y-2">
-                          {card.benefitItems.map((item, itemIndex) => (
-                            <div
-                              key={`${card.key}-item-${item}`}
-                              className="flex gap-2"
-                            >
-                              <Input
-                                value={item}
-                                onChange={(e) =>
-                                  updateBenefitItem(
-                                    cardIndex,
-                                    itemIndex,
-                                    e.target.value,
-                                  )
-                                }
-                                placeholder="Benefit item"
-                              />
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="icon-sm"
-                                disabled={card.benefitItems.length <= 1}
-                                onClick={() =>
-                                  updateBenefitCard(cardIndex, {
-                                    benefitItems: card.benefitItems.filter(
-                                      (_, i) => i !== itemIndex,
-                                    ),
-                                  })
-                                }
-                              >
-                                <Trash2Icon />
-                              </Button>
-                            </div>
-                          ))}
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            disabled={card.benefitItems.length >= 8}
-                            onClick={() =>
-                              updateBenefitCard(cardIndex, {
-                                benefitItems: [...card.benefitItems, ""],
-                              })
-                            }
-                          >
-                            <PlusIcon className="mr-1 size-4" />
-                            Add benefit
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={benefitCards.length >= 6}
-                      onClick={() =>
-                        setBenefitCards((prev) => [...prev, newBenefitCard()])
-                      }
-                    >
-                      <PlusIcon className="mr-1 size-4" />
-                      Add benefit card
-                    </Button>
-                  </div>
-                </section>
-              </div>
-            </div>
+            <MarketingStep
+              whoEnabled={whoEnabled}
+              onWhoEnabledChange={setWhoEnabled}
+              whoTitle={whoTitle}
+              onWhoTitleChange={setWhoTitle}
+              whoSubtitle={whoSubtitle}
+              onWhoSubtitleChange={setWhoSubtitle}
+              audienceCards={audienceCards}
+              onAudienceCardsChange={setAudienceCards}
+              onUpdateAudienceCard={updateAudienceCard}
+              benefitsEnabled={benefitsEnabled}
+              onBenefitsEnabledChange={setBenefitsEnabled}
+              benefitsTitle={benefitsTitle}
+              onBenefitsTitleChange={setBenefitsTitle}
+              benefitsSubtitle={benefitsSubtitle}
+              onBenefitsSubtitleChange={setBenefitsSubtitle}
+              benefitCards={benefitCards}
+              onBenefitCardsChange={setBenefitCards}
+              onUpdateBenefitCard={updateBenefitCard}
+              onUpdateBenefitItem={updateBenefitItem}
+            />
           ) : null}
         </div>
       </div>
 
-      <AlertDialog
+      <OwnerChangeDialog
         open={showOwnerChangeConfirm}
         onOpenChange={setShowOwnerChangeConfirm}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Change expo owner?</AlertDialogTitle>
-            <AlertDialogDescription>
-              The current owner will be unassigned from this expo when you save.
-              After confirming, select a new owner from search results before
-              saving changes.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmOwnerChange}>
-              Confirm
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onConfirm={handleConfirmOwnerChange}
+      />
 
       {error ? (
         <p className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-rose-800 text-sm dark:border-rose-900 dark:bg-rose-950/50 dark:text-rose-200">
@@ -1620,5 +612,5 @@ export function ExpoForm(props: ExpoFormProps) {
         </div>
       </div>
     </form>
-  );
+  )
 }
