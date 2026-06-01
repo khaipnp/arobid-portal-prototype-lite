@@ -4,6 +4,7 @@ import {
   BadgeCheckIcon,
   GemIcon,
   ImagePlusIcon,
+  InfoIcon,
   PlusIcon,
   RocketIcon,
   SearchIcon,
@@ -41,7 +42,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { useUpload } from "@/hooks/use-upload";
 import {
@@ -72,12 +72,14 @@ import type {
   ExpoSchedulePrecision,
   HallTemplate,
 } from "@/lib/tradexpo/types";
+import { cn } from "@/lib/utils";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
 } from "../ui/input-group";
 import { Spinner } from "../ui/spinner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 type HallFormRow = {
   key: string;
@@ -131,6 +133,46 @@ const SCHEDULE_PRECISION_OPTIONS: Array<{
     description: "Create this Expo without schedule fields.",
   },
 ];
+
+type ExpoFormStepId = "general" | "schedule" | "owner" | "halls" | "marketing";
+
+type ExpoFormStep = {
+  id: ExpoFormStepId;
+  title: string;
+  description: string;
+};
+
+const ADMIN_EXPO_FORM_STEPS: ExpoFormStep[] = [
+  {
+    id: "general",
+    title: "General information",
+    description: "Name, description, image and category",
+  },
+  {
+    id: "schedule",
+    title: "Schedule information",
+    description: "Schedule precision and event dates",
+  },
+  {
+    id: "owner",
+    title: "Expo owner",
+    description: "Expo owner and operator information",
+  },
+  {
+    id: "halls",
+    title: "Hall configuration",
+    description: "Hall, template and booth quantity configuration",
+  },
+  {
+    id: "marketing",
+    title: "Marketing content",
+    description: "Marketing content for the Expo landing page",
+  },
+];
+
+const PARTNER_EXPO_FORM_STEPS = ADMIN_EXPO_FORM_STEPS.filter(
+  (step) => step.id !== "owner" && step.id !== "halls",
+);
 
 function rowKey(prefix: string) {
   return `${prefix}-${Math.random().toString(36).slice(2)}`;
@@ -225,6 +267,17 @@ export function ExpoForm(props: ExpoFormProps) {
   const editableScope = props.editableScope ?? "admin";
   const isPartnerContentEdit = isEdit && editableScope === "partner-content";
   const isSuper = props.isSuper ?? false;
+  const visibleSteps = isPartnerContentEdit
+    ? PARTNER_EXPO_FORM_STEPS
+    : ADMIN_EXPO_FORM_STEPS;
+  const [activeStepId, setActiveStepId] =
+    React.useState<ExpoFormStepId>("general");
+
+  React.useEffect(() => {
+    if (!visibleSteps.some((step) => step.id === activeStepId)) {
+      setActiveStepId(visibleSteps[0]?.id ?? "general");
+    }
+  }, [activeStepId, visibleSteps]);
 
   const [name, setName] = React.useState(() =>
     isEdit ? props.initialExpo.name : "",
@@ -592,184 +645,266 @@ export function ExpoForm(props: ExpoFormProps) {
     return props.categories.filter((cat) => cat.name.toLowerCase().includes(q));
   }, [categoryQuery, props.categories]);
 
-  return (
-    <form className="mt-5 space-y-3" onSubmit={onSubmit}>
-      <Tabs defaultValue="general" className="space-y-3">
-        <TabsList>
-          <TabsTrigger value="general">General Info</TabsTrigger>
-          <TabsTrigger value="marketing">Marketing Content</TabsTrigger>
-        </TabsList>
+  const activeStepIndex = Math.max(
+    visibleSteps.findIndex((step) => step.id === activeStepId),
+    0,
+  );
+  const activeStep =
+    visibleSteps[activeStepIndex] ?? (ADMIN_EXPO_FORM_STEPS[0] as ExpoFormStep);
+  const isFirstStep = activeStepIndex === 0;
+  const isLastStep = activeStepIndex === visibleSteps.length - 1;
 
-        <TabsContent value="general" className="space-y-3">
-          <Card>
-            <CardHeader>
-              <CardTitle>
-                {isPartnerContentEdit
-                  ? "Expo information"
-                  : "General information"}
-              </CardTitle>
-              <CardDescription />
-            </CardHeader>
-            <CardContent className="grid gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="expo-name">Expo name</Label>
-                <Input
-                  id="expo-name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  maxLength={255}
-                  required
-                  placeholder="Unique name"
-                />
-              </div>
-              {isSuper && isEdit ? (
-                <div className="grid gap-2">
-                  <Label htmlFor="expo-slug">Slug</Label>
-                  <Input
-                    id="expo-slug"
-                    value={slug}
-                    onChange={(e) => setSlug(e.target.value)}
-                    pattern="[a-z0-9]+(-[a-z0-9]+)*"
-                    placeholder="expo-url-slug"
-                  />
-                  <p className="text-muted-foreground text-xs">
-                    Lowercase letters, numbers, and single hyphens only.
-                  </p>
-                </div>
-              ) : null}
-              <div className="grid gap-2">
-                <Label htmlFor="expo-desc">Description</Label>
-                <Textarea
-                  id="expo-desc"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  required
-                  rows={4}
-                  placeholder="What is this expo about?"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label>Thumbnail</Label>
-                <div className="flex flex-col gap-3">
-                  {thumbnailUrl ? (
-                    <div className="relative aspect-video w-full max-w-md overflow-hidden rounded-lg border bg-muted">
-                      <Image
-                        src={thumbnailUrl}
-                        alt="Expo thumbnail preview"
-                        fill
-                        className="object-cover"
-                      />
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="icon-sm"
-                        className="absolute top-2 right-2 opacity-80 hover:opacity-100"
-                        onClick={() => setThumbnailUrl("")}
-                      >
-                        <Trash2Icon />
-                      </Button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      className="flex aspect-video w-full max-w-md cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed bg-muted/30 transition-colors hover:bg-muted/50"
-                      onClick={() => fileInputRef.current?.click()}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault();
-                          fileInputRef.current?.click();
-                        }
-                      }}
-                    >
-                      {isUploading ? (
-                        <Spinner />
-                      ) : (
-                        <>
-                          <ImagePlusIcon className="size-8 text-muted-foreground" />
-                          <p className="text-muted-foreground text-sm">
-                            Click to upload 16:9 thumbnail
-                          </p>
-                        </>
-                      )}
-                    </button>
+  function goToPreviousStep() {
+    const previousStep = visibleSteps[activeStepIndex - 1];
+    if (previousStep) {
+      setActiveStepId(previousStep.id);
+    }
+  }
+
+  function goToNextStep() {
+    const nextStep = visibleSteps[activeStepIndex + 1];
+    if (nextStep) {
+      setActiveStepId(nextStep.id);
+    }
+  }
+
+  return (
+    <form className="mt-5 space-y-4" onSubmit={onSubmit}>
+      <div className="grid gap-10 lg:grid-cols-[320px_minmax(0,1fr)]">
+        <nav
+          aria-label="Expo form steps"
+          className="flex gap-2 overflow-x-auto rounded-2xl border bg-card p-2 lg:flex-col lg:self-start"
+        >
+          {visibleSteps.map((step, index) => {
+            const isActive = step.id === activeStep.id;
+
+            return (
+              <button
+                key={step.id}
+                type="button"
+                onClick={() => setActiveStepId(step.id)}
+                className={cn(
+                  "flex min-w-56 items-start gap-3 rounded-xl px-3 py-3 text-left transition-colors lg:min-w-0",
+                  isActive
+                    ? "bg-legend/10 text-legend"
+                    : "text-muted-foreground hover:bg-muted/70 hover:text-foreground",
+                )}
+                aria-current={isActive ? "step" : undefined}
+              >
+                <span
+                  className={cn(
+                    "flex size-6 shrink-0 items-center justify-center rounded-full font-medium text-xs",
+                    isActive
+                      ? "bg-legend text-primary-foreground"
+                      : "bg-muted text-muted-foreground",
                   )}
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    className="hidden"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    disabled={isUploading}
-                  />
-                  <p className="text-muted-foreground text-xs">
-                    Recommended size: 1280x720 (16:9). JPG, PNG, or WEBP.
-                  </p>
-                </div>
+                >
+                  {index + 1}
+                </span>
+                <span className="grid gap-1">
+                  <span className="font-medium text-sm leading-none capitalize">
+                    {step.title}
+                  </span>
+                  <span className="line-clamp-2 text-xs leading-snug">
+                    {step.description}
+                  </span>
+                </span>
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="min-w-0 space-y-3">
+          {activeStep.id === "general" ? (
+            <div className="space-y-6">
+              <div className="space-y-1">
+                <h2 className="text-lg font-semibold leading-none">
+                  {isPartnerContentEdit
+                    ? "Expo information"
+                    : "General information"}
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  {activeStep.description}
+                </p>
               </div>
-              {!isPartnerContentEdit ? (
+
+              <div className="grid gap-4">
                 <div className="grid gap-2">
-                  <Label>Expo Template</Label>
-                  <Select
-                    value={expoTemplateId || undefined}
-                    onValueChange={setExpoTemplateId}
+                  <Label htmlFor="expo-name" className="capitalize">
+                    Expo name
+                  </Label>
+                  <Input
+                    id="expo-name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    maxLength={255}
                     required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select layout template" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {props.layoutTemplates.map((t) => (
-                        <SelectItem key={t.id} value={t.id}>
-                          {t.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              ) : null}
-              <div className="grid gap-2">
-                <Label>Categories</Label>
-                <InputGroup>
-                  <InputGroupInput
-                    value={categoryQuery}
-                    onChange={(e) => setCategoryQuery(e.target.value)}
-                    placeholder="Search categories..."
+                    placeholder="Unique name"
                   />
-                  <InputGroupAddon>
-                    <SearchIcon />
-                  </InputGroupAddon>
-                </InputGroup>
-                <div className="max-h-48 overflow-y-auto rounded-lg border">
-                  {filteredCategories.map((cat) => (
-                    <label
-                      key={cat.id}
-                      className="flex cursor-pointer items-center gap-2 rounded px-3 py-1.5 text-sm hover:bg-muted/60"
+                </div>
+                {isSuper && isEdit ? (
+                  <div className="grid gap-2">
+                    <div className="flex items-center gap-1">
+                      <Label htmlFor="expo-slug">Slug</Label>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <InfoIcon className="size-3" strokeWidth="1.5" />
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          Lowercase letters, numbers, and single hyphens only.
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                    <Input
+                      id="expo-slug"
+                      value={slug}
+                      onChange={(e) => setSlug(e.target.value)}
+                      pattern="[a-z0-9]+(-[a-z0-9]+)*"
+                      placeholder="expo-url-slug"
+                    />
+                  </div>
+                ) : null}
+                <div className="grid gap-2">
+                  <Label htmlFor="expo-desc">Description</Label>
+                  <Textarea
+                    id="expo-desc"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    required
+                    rows={4}
+                    placeholder="What is this expo about?"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label>Thumbnail</Label>
+                  <div className="flex flex-col gap-3">
+                    {thumbnailUrl ? (
+                      <div className="relative aspect-video w-full max-w-md overflow-hidden rounded-lg border bg-muted">
+                        <Image
+                          src={thumbnailUrl}
+                          alt="Expo thumbnail preview"
+                          fill
+                          className="object-cover"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="icon-sm"
+                          className="absolute top-2 right-2 opacity-80 hover:opacity-100"
+                          onClick={() => setThumbnailUrl("")}
+                        >
+                          <Trash2Icon />
+                        </Button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        className="flex aspect-video w-full max-w-md cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed bg-muted/30 transition-colors hover:bg-muted/50"
+                        onClick={() => fileInputRef.current?.click()}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            fileInputRef.current?.click();
+                          }
+                        }}
+                      >
+                        {isUploading ? (
+                          <Spinner />
+                        ) : (
+                          <>
+                            <ImagePlusIcon className="size-8 text-muted-foreground" />
+                            <p className="text-muted-foreground text-sm">
+                              Click to upload 16:9 thumbnail
+                            </p>
+                          </>
+                        )}
+                      </button>
+                    )}
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      disabled={isUploading}
+                    />
+                    <p className="text-muted-foreground text-xs">
+                      Recommended size: 1280x720 (16:9). JPG, PNG, or WEBP.
+                    </p>
+                  </div>
+                </div>
+                {!isPartnerContentEdit ? (
+                  <div className="grid gap-2">
+                    <Label>Expo Template</Label>
+                    <Select
+                      value={expoTemplateId || undefined}
+                      onValueChange={setExpoTemplateId}
+                      required
                     >
-                      <Checkbox
-                        checked={categoryIds.includes(cat.id)}
-                        onCheckedChange={() => toggleCategory(cat.id)}
-                      />
-                      <span>{cat.name}</span>
-                    </label>
-                  ))}
-                  {filteredCategories.length === 0 ? (
-                    <p className="text-muted-foreground text-sm">
-                      No category matches your search.
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select layout template" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {props.layoutTemplates.map((t) => (
+                          <SelectItem key={t.id} value={t.id}>
+                            {t.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : null}
+                <div className="grid gap-2">
+                  <Label>Categories</Label>
+                  <InputGroup>
+                    <InputGroupInput
+                      value={categoryQuery}
+                      onChange={(e) => setCategoryQuery(e.target.value)}
+                      placeholder="Search categories..."
+                    />
+                    <InputGroupAddon>
+                      <SearchIcon />
+                    </InputGroupAddon>
+                  </InputGroup>
+                  <div className="max-h-48 overflow-y-auto rounded-lg border">
+                    {filteredCategories.map((cat) => (
+                      <label
+                        key={cat.id}
+                        className="flex cursor-pointer items-center gap-2 rounded px-3 py-1.5 text-sm hover:bg-muted/60"
+                      >
+                        <Checkbox
+                          checked={categoryIds.includes(cat.id)}
+                          onCheckedChange={() => toggleCategory(cat.id)}
+                        />
+                        <span>{cat.name}</span>
+                      </label>
+                    ))}
+                    {filteredCategories.length === 0 ? (
+                      <p className="text-muted-foreground text-sm">
+                        No category matches your search.
+                      </p>
+                    ) : null}
+                  </div>
+                  {categoryIds.length === 0 ? (
+                    <p className="text-amber-600 text-xs">
+                      Select at least one.
                     </p>
                   ) : null}
                 </div>
-                {categoryIds.length === 0 ? (
-                  <p className="text-amber-600 text-xs">Select at least one.</p>
-                ) : null}
+              </div>
+            </div>
+          ) : null}
+
+          {activeStep.id === "schedule" ? (
+            <div className="space-y-6">
+              <div className="space-y-1">
+                <h2 className="text-lg font-semibold leading-none">Schedule</h2>
+                <p className="text-muted-foreground text-sm">
+                  Choose how precise the Expo schedule is right now.
+                </p>
               </div>
 
-              <section className="space-y-3 rounded-lg border p-4">
-                <div>
-                  <h3 className="font-medium text-sm">Schedule</h3>
-                  <p className="text-muted-foreground text-xs">
-                    Choose how precise the Expo schedule is right now.
-                  </p>
-                </div>
+              <section className="space-y-4">
                 <RadioGroup
                   value={schedulePrecision}
                   onValueChange={(value) => {
@@ -883,19 +1018,21 @@ export function ExpoForm(props: ExpoFormProps) {
                   <p className="text-destructive text-xs">{scheduleError}</p>
                 ) : null}
               </section>
-            </CardContent>
-          </Card>
+            </div>
+          ) : null}
 
-          {!isPartnerContentEdit ? (
-            <Card>
-              <CardHeader>
-                <CardTitle>Expo owner</CardTitle>
-                <CardDescription>
+          {!isPartnerContentEdit && activeStep.id === "owner" ? (
+            <div className="space-y-6">
+              <div className="space-y-1">
+                <h2 className="text-lg font-semibold leading-none">
+                  Expo owner
+                </h2>
+                <p className="text-muted-foreground text-sm">
                   Changing owner requires confirmation, then selecting a new
                   user from search results.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
+                </p>
+              </div>
+              <div className="space-y-3">
                 {isEdit && !isChangingOwner && currentOwnerDisplay ? (
                   <div className="flex flex-col gap-3 rounded-md border px-3 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
                     <div>
@@ -993,19 +1130,21 @@ export function ExpoForm(props: ExpoFormProps) {
                     ) : null}
                   </>
                 ) : null}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ) : null}
 
-          {!isPartnerContentEdit ? (
-            <Card>
-              <CardHeader className="flex flex-row items-start justify-between gap-2">
-                <div>
-                  <CardTitle>Hall configuration</CardTitle>
-                  <CardDescription>
+          {!isPartnerContentEdit && activeStep.id === "halls" ? (
+            <div className="space-y-6">
+              <div className="flex flex-row items-start justify-between gap-2">
+                <div className="space-y-1">
+                  <h2 className="text-lg font-semibold leading-none">
+                    Hall configuration
+                  </h2>
+                  <p className="text-muted-foreground text-sm">
                     One or more halls: name, hall template, and booth tier
                     counts (Basic / Professional / Premium).
-                  </CardDescription>
+                  </p>
                 </div>
                 <Button
                   type="button"
@@ -1013,18 +1152,18 @@ export function ExpoForm(props: ExpoFormProps) {
                   size="sm"
                   onClick={addHall}
                 >
-                  <PlusIcon className="mr-1 size-4" />
+                  <PlusIcon />
                   Add hall
                 </Button>
-              </CardHeader>
-              <CardContent className="space-y-6">
+              </div>
+              <div className="space-y-6">
                 {halls.map((hall, index) => (
                   <div
                     key={hall.key}
-                    className="space-y-3 rounded-lg border p-4"
+                    className="space-y-3 rounded-3xl border p-4"
                   >
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-medium text-sm">
+                      <span className="font-medium text-base">
                         Hall {index + 1}
                       </span>
                       {halls.length > 1 ? (
@@ -1126,298 +1265,302 @@ export function ExpoForm(props: ExpoFormProps) {
                     )}
                   </div>
                 ))}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           ) : null}
-        </TabsContent>
 
-        <TabsContent value="marketing" className="space-y-3">
-          <Card>
-            <CardHeader>
-              <CardTitle>Marketing</CardTitle>
-              <CardDescription>
-                Configure public Expo Detail content. Exhibited Categories still
-                come from selected Expo categories.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <section className="space-y-4 rounded-lg border p-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <h3 className="font-medium text-sm">Who should join?</h3>
-                    <p className="text-muted-foreground text-xs">
-                      Add audience groups shown on Expo Detail.
-                    </p>
+          {activeStep.id === "marketing" ? (
+            <div className="space-y-6">
+              <div className="space-y-1">
+                <h2 className="text-lg font-semibold leading-none">
+                  Marketing
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  Configure public Expo Detail content. Exhibited Categories
+                  still come from selected Expo categories.
+                </p>
+              </div>
+              <div className="space-y-6">
+                <section className="space-y-4 rounded-2xl border p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <h3 className="font-medium text-sm">Who should join?</h3>
+                      <p className="text-muted-foreground text-xs">
+                        Add audience groups shown on Expo Detail.
+                      </p>
+                    </div>
+                    <label className="flex items-center gap-2 text-sm">
+                      <Checkbox
+                        checked={whoEnabled}
+                        onCheckedChange={(v) => setWhoEnabled(Boolean(v))}
+                      />
+                      Enabled
+                    </label>
                   </div>
-                  <label className="flex items-center gap-2 text-sm">
-                    <Checkbox
-                      checked={whoEnabled}
-                      onCheckedChange={(v) => setWhoEnabled(Boolean(v))}
-                    />
-                    Enabled
-                  </label>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="grid gap-2">
-                    <Label>Section title</Label>
-                    <Input
-                      value={whoTitle}
-                      onChange={(e) => setWhoTitle(e.target.value)}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>Subtitle</Label>
-                    <Input
-                      value={whoSubtitle}
-                      onChange={(e) => setWhoSubtitle(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  {audienceCards.map((card, index) => (
-                    <div
-                      key={card.key}
-                      className="grid gap-3 rounded-md border p-3"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="font-medium text-sm">
-                          Audience {index + 1}
-                        </p>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon-sm"
-                          disabled={audienceCards.length <= 1}
-                          onClick={() =>
-                            setAudienceCards((prev) =>
-                              prev.filter((_, i) => i !== index),
-                            )
-                          }
-                        >
-                          <Trash2Icon />
-                        </Button>
-                      </div>
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <Input
-                          value={card.title}
-                          onChange={(e) =>
-                            updateAudienceCard(index, { title: e.target.value })
-                          }
-                          placeholder="The Buyers"
-                        />
-                        <Input
-                          value={card.tags.join(", ")}
-                          onChange={(e) =>
-                            updateAudienceCard(index, {
-                              tags: e.target.value
-                                .split(",")
-                                .map((tag) => tag.trim())
-                                .filter(Boolean),
-                            })
-                          }
-                          placeholder="Retailers, Distributors"
-                        />
-                      </div>
-                      <Textarea
-                        value={card.description}
-                        onChange={(e) =>
-                          updateAudienceCard(index, {
-                            description: e.target.value,
-                          })
-                        }
-                        rows={2}
-                        placeholder="Describe why this group should join."
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="grid gap-2">
+                      <Label>Section title</Label>
+                      <Input
+                        value={whoTitle}
+                        onChange={(e) => setWhoTitle(e.target.value)}
                       />
                     </div>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={audienceCards.length >= 6}
-                    onClick={() =>
-                      setAudienceCards((prev) => [...prev, newAudienceCard()])
-                    }
-                  >
-                    <PlusIcon className="mr-1 size-4" />
-                    Add audience
-                  </Button>
-                </div>
-              </section>
-
-              <section className="space-y-4 rounded-lg border p-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <h3 className="font-medium text-sm">
-                      Giá trị đặc quyền từng đối tượng
-                    </h3>
-                    <p className="text-muted-foreground text-xs">
-                      Benefit cards render without user-configured CTA.
-                    </p>
+                    <div className="grid gap-2">
+                      <Label>Subtitle</Label>
+                      <Input
+                        value={whoSubtitle}
+                        onChange={(e) => setWhoSubtitle(e.target.value)}
+                      />
+                    </div>
                   </div>
-                  <label className="flex items-center gap-2 text-sm">
-                    <Checkbox
-                      checked={benefitsEnabled}
-                      onCheckedChange={(v) => setBenefitsEnabled(Boolean(v))}
-                    />
-                    Enabled
-                  </label>
-                </div>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="grid gap-2">
-                    <Label>Section title</Label>
-                    <Input
-                      value={benefitsTitle}
-                      onChange={(e) => setBenefitsTitle(e.target.value)}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label>Subtitle</Label>
-                    <Input
-                      value={benefitsSubtitle}
-                      onChange={(e) => setBenefitsSubtitle(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  {benefitCards.map((card, cardIndex) => (
-                    <div
-                      key={card.key}
-                      className="grid gap-3 rounded-md border p-3"
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="font-medium text-sm">
-                          Benefit {cardIndex + 1}
-                        </p>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon-sm"
-                          disabled={benefitCards.length <= 1}
-                          onClick={() =>
-                            setBenefitCards((prev) =>
-                              prev.filter((_, i) => i !== cardIndex),
-                            )
-                          }
-                        >
-                          <Trash2Icon />
-                        </Button>
-                      </div>
-                      <div className="grid gap-3 sm:grid-cols-[1fr_160px_auto]">
-                        <Input
-                          value={card.audienceName}
-                          onChange={(e) =>
-                            updateBenefitCard(cardIndex, {
-                              audienceName: e.target.value,
-                            })
-                          }
-                          placeholder="Dành cho Buyers"
-                        />
-                        <Select
-                          value={card.icon}
-                          onValueChange={(value) =>
-                            updateBenefitCard(cardIndex, {
-                              icon: value as ExpoMarketingIconKey,
-                            })
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {MARKETING_ICON_OPTIONS.map(
-                              ({ value, label, Icon }) => (
-                                <SelectItem key={value} value={value}>
-                                  <span className="inline-flex items-center gap-2">
-                                    <Icon className="size-4" />
-                                    {label}
-                                  </span>
-                                </SelectItem>
-                              ),
-                            )}
-                          </SelectContent>
-                        </Select>
-                        <label className="flex items-center gap-2 text-sm">
-                          <Checkbox
-                            checked={card.isFeatured}
-                            onCheckedChange={(v) =>
-                              updateBenefitCard(cardIndex, {
-                                isFeatured: Boolean(v),
+                  <div className="space-y-3">
+                    {audienceCards.map((card, index) => (
+                      <div
+                        key={card.key}
+                        className="grid gap-3 rounded-md border p-3"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="font-medium text-sm">
+                            Audience {index + 1}
+                          </p>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            disabled={audienceCards.length <= 1}
+                            onClick={() =>
+                              setAudienceCards((prev) =>
+                                prev.filter((_, i) => i !== index),
+                              )
+                            }
+                          >
+                            <Trash2Icon />
+                          </Button>
+                        </div>
+                        <div className="grid gap-3 sm:grid-cols-2">
+                          <Input
+                            value={card.title}
+                            onChange={(e) =>
+                              updateAudienceCard(index, {
+                                title: e.target.value,
                               })
                             }
+                            placeholder="The Buyers"
                           />
-                          Featured
-                        </label>
-                      </div>
-                      <div className="space-y-2">
-                        {card.benefitItems.map((item, itemIndex) => (
-                          <div
-                            key={`${card.key}-item-${item}`}
-                            className="flex gap-2"
-                          >
-                            <Input
-                              value={item}
-                              onChange={(e) =>
-                                updateBenefitItem(
-                                  cardIndex,
-                                  itemIndex,
-                                  e.target.value,
-                                )
-                              }
-                              placeholder="Benefit item"
-                            />
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon-sm"
-                              disabled={card.benefitItems.length <= 1}
-                              onClick={() =>
-                                updateBenefitCard(cardIndex, {
-                                  benefitItems: card.benefitItems.filter(
-                                    (_, i) => i !== itemIndex,
-                                  ),
-                                })
-                              }
-                            >
-                              <Trash2Icon />
-                            </Button>
-                          </div>
-                        ))}
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          disabled={card.benefitItems.length >= 8}
-                          onClick={() =>
-                            updateBenefitCard(cardIndex, {
-                              benefitItems: [...card.benefitItems, ""],
+                          <Input
+                            value={card.tags.join(", ")}
+                            onChange={(e) =>
+                              updateAudienceCard(index, {
+                                tags: e.target.value
+                                  .split(",")
+                                  .map((tag) => tag.trim())
+                                  .filter(Boolean),
+                              })
+                            }
+                            placeholder="Retailers, Distributors"
+                          />
+                        </div>
+                        <Textarea
+                          value={card.description}
+                          onChange={(e) =>
+                            updateAudienceCard(index, {
+                              description: e.target.value,
                             })
                           }
-                        >
-                          <PlusIcon className="mr-1 size-4" />
-                          Add benefit
-                        </Button>
+                          rows={2}
+                          placeholder="Describe why this group should join."
+                        />
                       </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={audienceCards.length >= 6}
+                      onClick={() =>
+                        setAudienceCards((prev) => [...prev, newAudienceCard()])
+                      }
+                    >
+                      <PlusIcon className="mr-1 size-4" />
+                      Add audience
+                    </Button>
+                  </div>
+                </section>
+
+                <section className="space-y-4 rounded-lg border p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <h3 className="font-medium text-sm">
+                        Giá trị đặc quyền từng đối tượng
+                      </h3>
+                      <p className="text-muted-foreground text-xs">
+                        Benefit cards render without user-configured CTA.
+                      </p>
                     </div>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={benefitCards.length >= 6}
-                    onClick={() =>
-                      setBenefitCards((prev) => [...prev, newBenefitCard()])
-                    }
-                  >
-                    <PlusIcon className="mr-1 size-4" />
-                    Add benefit card
-                  </Button>
-                </div>
-              </section>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                    <label className="flex items-center gap-2 text-sm">
+                      <Checkbox
+                        checked={benefitsEnabled}
+                        onCheckedChange={(v) => setBenefitsEnabled(Boolean(v))}
+                      />
+                      Enabled
+                    </label>
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="grid gap-2">
+                      <Label>Section title</Label>
+                      <Input
+                        value={benefitsTitle}
+                        onChange={(e) => setBenefitsTitle(e.target.value)}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>Subtitle</Label>
+                      <Input
+                        value={benefitsSubtitle}
+                        onChange={(e) => setBenefitsSubtitle(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    {benefitCards.map((card, cardIndex) => (
+                      <div
+                        key={card.key}
+                        className="grid gap-3 rounded-md border p-3"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="font-medium text-sm">
+                            Benefit {cardIndex + 1}
+                          </p>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon-sm"
+                            disabled={benefitCards.length <= 1}
+                            onClick={() =>
+                              setBenefitCards((prev) =>
+                                prev.filter((_, i) => i !== cardIndex),
+                              )
+                            }
+                          >
+                            <Trash2Icon />
+                          </Button>
+                        </div>
+                        <div className="grid gap-3 sm:grid-cols-[1fr_160px_auto]">
+                          <Input
+                            value={card.audienceName}
+                            onChange={(e) =>
+                              updateBenefitCard(cardIndex, {
+                                audienceName: e.target.value,
+                              })
+                            }
+                            placeholder="Dành cho Buyers"
+                          />
+                          <Select
+                            value={card.icon}
+                            onValueChange={(value) =>
+                              updateBenefitCard(cardIndex, {
+                                icon: value as ExpoMarketingIconKey,
+                              })
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {MARKETING_ICON_OPTIONS.map(
+                                ({ value, label, Icon }) => (
+                                  <SelectItem key={value} value={value}>
+                                    <span className="inline-flex items-center gap-2">
+                                      <Icon className="size-4" />
+                                      {label}
+                                    </span>
+                                  </SelectItem>
+                                ),
+                              )}
+                            </SelectContent>
+                          </Select>
+                          <label className="flex items-center gap-2 text-sm">
+                            <Checkbox
+                              checked={card.isFeatured}
+                              onCheckedChange={(v) =>
+                                updateBenefitCard(cardIndex, {
+                                  isFeatured: Boolean(v),
+                                })
+                              }
+                            />
+                            Featured
+                          </label>
+                        </div>
+                        <div className="space-y-2">
+                          {card.benefitItems.map((item, itemIndex) => (
+                            <div
+                              key={`${card.key}-item-${item}`}
+                              className="flex gap-2"
+                            >
+                              <Input
+                                value={item}
+                                onChange={(e) =>
+                                  updateBenefitItem(
+                                    cardIndex,
+                                    itemIndex,
+                                    e.target.value,
+                                  )
+                                }
+                                placeholder="Benefit item"
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon-sm"
+                                disabled={card.benefitItems.length <= 1}
+                                onClick={() =>
+                                  updateBenefitCard(cardIndex, {
+                                    benefitItems: card.benefitItems.filter(
+                                      (_, i) => i !== itemIndex,
+                                    ),
+                                  })
+                                }
+                              >
+                                <Trash2Icon />
+                              </Button>
+                            </div>
+                          ))}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            disabled={card.benefitItems.length >= 8}
+                            onClick={() =>
+                              updateBenefitCard(cardIndex, {
+                                benefitItems: [...card.benefitItems, ""],
+                              })
+                            }
+                          >
+                            <PlusIcon className="mr-1 size-4" />
+                            Add benefit
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={benefitCards.length >= 6}
+                      onClick={() =>
+                        setBenefitCards((prev) => [...prev, newBenefitCard()])
+                      }
+                    >
+                      <PlusIcon className="mr-1 size-4" />
+                      Add benefit card
+                    </Button>
+                  </div>
+                </section>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </div>
 
       <AlertDialog
         open={showOwnerChangeConfirm}
@@ -1447,7 +1590,7 @@ export function ExpoForm(props: ExpoFormProps) {
         </p>
       ) : null}
 
-      <div className="flex justify-end gap-2">
+      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
         <Button
           type="button"
           variant="outline"
@@ -1455,10 +1598,26 @@ export function ExpoForm(props: ExpoFormProps) {
         >
           Cancel
         </Button>
-        <Button type="submit" disabled={!canSubmit || submitting}>
-          {submitting ? <Spinner /> : null}
-          {isEdit ? "Save changes" : "Create expo"}
-        </Button>
+        <div className="flex justify-end gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isFirstStep}
+            onClick={goToPreviousStep}
+          >
+            Previous
+          </Button>
+          {isLastStep ? (
+            <Button type="submit" disabled={!canSubmit || submitting}>
+              {submitting ? <Spinner /> : null}
+              {isEdit ? "Save changes" : "Create expo"}
+            </Button>
+          ) : (
+            <Button type="button" onClick={goToNextStep}>
+              Next
+            </Button>
+          )}
+        </div>
       </div>
     </form>
   );
