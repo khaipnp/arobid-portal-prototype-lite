@@ -1,53 +1,53 @@
-import { EyeIcon } from "lucide-react";
-import { notFound } from "next/navigation";
-import { BoothTemplateActiveToggleButton } from "@/components/tradexpo/booth-template-active-toggle-button";
-import { BoothTemplateDeleteButton } from "@/components/tradexpo/booth-template-delete-button";
-import { BoothTemplateDetailManager } from "@/components/tradexpo/booth-template-detail-manager";
-import { DashboardShell } from "@/components/tradexpo/dashboard-shell";
-import { Button } from "@/components/ui/button";
+import { EyeIcon } from "lucide-react"
+import { notFound } from "next/navigation"
+import { BoothTemplateActiveToggleButton } from "@/components/tradexpo/booth-template-active-toggle-button"
+import { BoothTemplateDeleteButton } from "@/components/tradexpo/booth-template-delete-button"
+import { BoothTemplateDetailManager } from "@/components/tradexpo/booth-template-detail-manager"
+import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  CardTitle
+} from "@/components/ui/card"
 import {
   listBoothTemplates,
   listBoothTemplateUsage,
-  listBoothTypes,
-} from "@/lib/tradexpo/db/booth-templates";
-import { listHallTemplateAssets } from "@/lib/tradexpo/db/hall-templates";
-import { formatDateTime } from "@/lib/tradexpo/utils";
+  listBoothTypes
+} from "@/lib/tradexpo/db/booth-templates"
+import { listHallTemplateAssets } from "@/lib/tradexpo/db/hall-templates"
+import { formatDateTime } from "@/lib/tradexpo/utils"
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"
 
 export default async function BoothTemplateDetailPage({
-  params,
+  params
 }: {
-  params: Promise<{ templateId: string }>;
+  params: Promise<{ templateId: string }>
 }) {
-  const { templateId } = await params;
+  const { templateId } = await params
 
   const [assets, templates, _usages, boothTypes] = await Promise.all([
     listHallTemplateAssets(),
     listBoothTemplates(),
     listBoothTemplateUsage(),
-    listBoothTypes(),
-  ]);
+    listBoothTypes()
+  ])
 
-  const template = templates.find((item) => item.id === templateId);
+  const template = templates.find((item) => item.id === templateId)
 
   if (!template) {
-    notFound();
+    notFound()
   }
 
   const boothTypeName =
     boothTypes.find((type) => type.id === template.boothTypeId)?.name ??
-    "Unknown";
+    "Unknown"
 
-  const status = template.isActive ? "Active" : "Inactive";
+  const status = template.isActive ? "Active" : "Inactive"
 
   return (
     <DashboardShell
@@ -56,7 +56,7 @@ export default async function BoothTemplateDetailPage({
         { label: "Dashboard", href: "/admin" },
         { label: "TradeXpo", href: "/admin/tradexpo" },
         { label: "Booth Templates", href: "/admin/tradexpo/booth-templates" },
-        { label: template.name },
+        { label: template.name }
       ]}
       showBackButton
     >
@@ -116,5 +116,5 @@ export default async function BoothTemplateDetailPage({
         />
       </div>
     </DashboardShell>
-  );
+  )
 }

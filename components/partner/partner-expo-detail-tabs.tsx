@@ -1,16 +1,16 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { GoLIVEManager } from "@/components/tradexpo/golive-manager";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useState } from "react"
+import { GoLIVEManager } from "@/components/tradexpo/golive-manager"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type {
   PartnerAssignedExpo,
   PartnerExpoExhibitorsWorkspace,
-  PartnerExpoOperationsDetail,
-} from "@/lib/partner/db";
-import type { GoLIVEEvent, StreamSession } from "@/lib/tradexpo/types";
-import { PartnerExpoDetailOverview } from "./partner-expo-detail-overview";
-import { PartnerExpoExhibitorsTable } from "./partner-expo-exhibitors-table";
+  PartnerExpoOperationsDetail
+} from "@/lib/partner/db"
+import type { GoLIVEEvent, StreamSession } from "@/lib/tradexpo/types"
+import { PartnerExpoDetailOverview } from "./partner-expo-detail-overview"
+import { PartnerExpoExhibitorsTable } from "./partner-expo-exhibitors-table"
 
 export function PartnerExpoDetailTabs({
   expoId,
@@ -18,18 +18,18 @@ export function PartnerExpoDetailTabs({
   operations,
   exhibitorsWorkspace,
   initialGoLIVEEvents,
-  initialStreamSessions,
+  initialStreamSessions
 }: {
-  expoId: string;
-  assignedExpo: PartnerAssignedExpo;
-  operations: PartnerExpoOperationsDetail;
-  exhibitorsWorkspace: PartnerExpoExhibitorsWorkspace;
-  initialGoLIVEEvents: GoLIVEEvent[];
-  initialStreamSessions: StreamSession[];
+  expoId: string
+  assignedExpo: PartnerAssignedExpo
+  operations: PartnerExpoOperationsDetail
+  exhibitorsWorkspace: PartnerExpoExhibitorsWorkspace
+  initialGoLIVEEvents: GoLIVEEvent[]
+  initialStreamSessions: StreamSession[]
 }) {
-  const [tab, setTab] = useState("overview");
+  const [tab, setTab] = useState("overview")
   const canUseGoLive =
-    assignedExpo.assignment.capabilities.includes("manage_golive");
+    assignedExpo.assignment.capabilities.includes("manage_golive")
 
   return (
     <Tabs value={tab} onValueChange={setTab} className="mt-5 gap-4">
@@ -65,5 +65,5 @@ export function PartnerExpoDetailTabs({
         />
       </TabsContent>
     </Tabs>
-  );
+  )
 }

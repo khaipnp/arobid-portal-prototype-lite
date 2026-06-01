@@ -5,90 +5,90 @@ import {
   LockIcon,
   RadioIcon,
   StoreIcon,
-  WalletCardsIcon,
-} from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+  WalletCardsIcon
+} from "lucide-react"
+import Image from "next/image"
+import Link from "next/link"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardAction,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+  CardTitle
+} from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
 import type {
   PartnerAssignedExpo,
   PartnerExpoExhibitorsWorkspace,
-  PartnerExpoOperationsDetail,
-} from "@/lib/partner/db";
-import { ExpoStatusBadge } from "../tradexpo/status-badge";
-import { PartnerExpoExhibitorsOverviewCard } from "./partner-expo-exhibitors-overview-card";
+  PartnerExpoOperationsDetail
+} from "@/lib/partner/db"
+import { ExpoStatusBadge } from "../tradexpo/status-badge"
+import { PartnerExpoExhibitorsOverviewCard } from "./partner-expo-exhibitors-overview-card"
 
-const numberFormat = new Intl.NumberFormat("en");
+const numberFormat = new Intl.NumberFormat("en")
 
 const currencyFormat = new Intl.NumberFormat("vi-VN", {
   style: "currency",
   currency: "VND",
   notation: "compact",
-  maximumFractionDigits: 1,
-});
+  maximumFractionDigits: 1
+})
 
 const _partnerModelLabel: Record<string, string> = {
   co_host: "Co-host",
   turnkey: "Turnkey",
-  tenant: "Tenant",
-};
+  tenant: "Tenant"
+}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", {
     day: "2-digit",
     month: "short",
-    year: "numeric",
-  });
+    year: "numeric"
+  })
 }
 
 function getTimelineLabel(startDate: string, endDate: string) {
-  const now = Date.now();
-  const start = new Date(startDate).getTime();
-  const end = new Date(endDate).getTime();
-  if (now < start) return "Upcoming";
-  if (now > end) return "Archived";
-  return "In progress";
+  const now = Date.now()
+  const start = new Date(startDate).getTime()
+  const end = new Date(endDate).getTime()
+  if (now < start) return "Upcoming"
+  if (now > end) return "Archived"
+  return "In progress"
 }
 
 function getDaysLabel(startDate: string, endDate: string) {
-  const dayMs = 24 * 60 * 60 * 1000;
-  const now = Date.now();
-  const start = new Date(startDate).getTime();
-  const end = new Date(endDate).getTime();
+  const dayMs = 24 * 60 * 60 * 1000
+  const now = Date.now()
+  const start = new Date(startDate).getTime()
+  const end = new Date(endDate).getTime()
 
   if (now < start) {
-    return `${Math.ceil((start - now) / dayMs)} days to start`;
+    return `${Math.ceil((start - now) / dayMs)} days to start`
   }
 
   if (now <= end) {
-    return `${Math.max(0, Math.ceil((end - now) / dayMs))} days remaining`;
+    return `${Math.max(0, Math.ceil((end - now) / dayMs))} days remaining`
   }
 
-  return `${Math.ceil((now - end) / dayMs)} days since close`;
+  return `${Math.ceil((now - end) / dayMs)} days since close`
 }
 
 function publicExpoHref(slug?: string) {
-  return slug ? `/expos/${slug}` : null;
+  return slug ? `/expos/${slug}` : null
 }
 
 function MetricCard({
   title,
   value,
-  icon,
+  icon
 }: {
-  title: string;
-  value: string;
-  icon: React.ReactNode;
+  title: string
+  value: string
+  icon: React.ReactNode
 }) {
   return (
     <Card size="sm">
@@ -104,21 +104,21 @@ function MetricCard({
         </CardAction>
       </CardHeader>
     </Card>
-  );
+  )
 }
 
 function TierRow({
   tier,
   capacity,
   sold,
-  published,
+  published
 }: {
-  tier: string;
-  capacity: number;
-  sold: number;
-  published: number;
+  tier: string
+  capacity: number
+  sold: number
+  published: number
 }) {
-  const utilization = capacity > 0 ? Math.round((sold / capacity) * 100) : 0;
+  const utilization = capacity > 0 ? Math.round((sold / capacity) * 100) : 0
 
   return (
     <div className="space-y-2">
@@ -138,30 +138,33 @@ function TierRow({
       </div>
       <Progress value={utilization} />
     </div>
-  );
+  )
 }
 
 export function PartnerExpoDetailOverview({
   assignedExpo,
   operations,
   exhibitorsWorkspace,
-  onViewAllExhibitors,
+  onViewAllExhibitors
 }: {
-  assignedExpo: PartnerAssignedExpo;
-  operations: PartnerExpoOperationsDetail;
-  exhibitorsWorkspace: PartnerExpoExhibitorsWorkspace;
-  onViewAllExhibitors?: () => void;
+  assignedExpo: PartnerAssignedExpo
+  operations: PartnerExpoOperationsDetail
+  exhibitorsWorkspace: PartnerExpoExhibitorsWorkspace
+  onViewAllExhibitors?: () => void
 }) {
-  const { expo, assignment, goLiveCount } = assignedExpo;
-  const publicHref = publicExpoHref(expo.slug);
-  const isTurnkey = assignment.partnershipModel === "turnkey";
+  const { expo, assignment, goLiveCount } = assignedExpo
+  const publicHref = publicExpoHref(expo.slug)
+  const isTurnkey = assignment.partnershipModel === "turnkey"
   const canEditDraft =
     !isTurnkey &&
     expo.status === "Draft" &&
-    assignment.capabilities.includes("edit_expo_content");
-  const timelineLabel = getTimelineLabel(expo.startDate, expo.endDate);
-  const daysLabel = getDaysLabel(expo.startDate, expo.endDate);
-  const summary = operations.summary;
+    assignment.capabilities.includes("edit_expo_content")
+  const timelineLabel = getTimelineLabel(
+    expo.startDate ?? "",
+    expo.endDate ?? ""
+  )
+  const daysLabel = getDaysLabel(expo.startDate ?? "", expo.endDate ?? "")
+  const summary = operations.summary
 
   return (
     <div className="space-y-4">
@@ -208,13 +211,13 @@ export function PartnerExpoDetailOverview({
                 <div>
                   <p className="text-muted-foreground text-xs">Start</p>
                   <p className="font-medium text-sm">
-                    {formatDate(expo.startDate)}
+                    {formatDate(expo.startDate ?? "")}
                   </p>
                 </div>
                 <div>
                   <p className="text-muted-foreground text-xs">End</p>
                   <p className="font-medium text-sm">
-                    {formatDate(expo.endDate)}
+                    {formatDate(expo.endDate ?? "")}
                   </p>
                 </div>
                 <div>
@@ -312,5 +315,5 @@ export function PartnerExpoDetailOverview({
         />
       </section>
     </div>
-  );
+  )
 }

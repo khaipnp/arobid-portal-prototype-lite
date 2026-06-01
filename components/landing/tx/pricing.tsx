@@ -1,7 +1,7 @@
-import { Check } from "lucide-react";
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { asset, plans } from "./data";
+import { Check } from "lucide-react"
+import Image from "next/image"
+import { Button } from "@/components/ui/button"
+import { asset, plans } from "./data"
 
 export function Pricing() {
   return (
@@ -67,5 +67,5 @@ export function Pricing() {
         ))}
       </div>
     </section>
-  );
+  )
 }

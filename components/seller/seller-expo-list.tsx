@@ -93,8 +93,8 @@ function buildData(
     })
     .sort(
       (a, b) =>
-        new Date(b.expo.startDate).getTime() -
-        new Date(a.expo.startDate).getTime()
+        new Date(b.expo.startDate ?? "9999-12-31").getTime() -
+        new Date(a.expo.startDate ?? "9999-12-31").getTime()
     )
 }
 
@@ -246,7 +246,8 @@ function ExpoCard({
         <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-muted-foreground text-sm">
           <span className="flex items-center gap-1">
             <CalendarIcon className="h-3.5 w-3.5" />
-            {formatDate(expo.startDate)} – {formatDate(expo.endDate)}
+            {formatDate(expo.startDate ?? "")} –{" "}
+            {formatDate(expo.endDate ?? "")}
           </span>
           <span className="flex items-center gap-1">
             <StoreIcon className="h-3.5 w-3.5" />

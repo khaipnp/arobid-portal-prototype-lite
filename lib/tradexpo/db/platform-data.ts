@@ -18,6 +18,7 @@ import type {
   ExpoMarketingContentStatus,
   ExpoMarketingContentVersion,
   ExpoMarketingSourceRole,
+  ExpoSchedulePrecision,
   ExpoStatus,
   GoLIVEEvent,
   GoLIVEEventStatus,
@@ -74,8 +75,8 @@ type ExpoRow = {
   name: string
   thumbnail_url: string
   owner_email: string
-  start_date: string | Date
-  end_date: string | Date
+  start_date: string | Date | null
+  end_date: string | Date | null
   status: Expo["status"]
   category_ids: string[]
   created_at: string | Date
@@ -85,6 +86,9 @@ type ExpoRow = {
   owner_user_id?: string | null
   start_at?: string | Date | null
   end_at?: string | Date | null
+  schedule_precision?: ExpoSchedulePrecision | null
+  schedule_month?: number | null
+  schedule_year?: number | null
 }
 
 type CategoryRow = {
@@ -197,6 +201,10 @@ export async function listExpoCategories(): Promise<ExpoCategory[]> {
 export function rowToExpo(r: ExpoRow): Expo {
   const startAt = r.start_at ? toIso(r.start_at) : undefined
   const endAt = r.end_at ? toIso(r.end_at) : undefined
+  const schedulePrecision =
+    r.schedule_precision ??
+    (startAt && endAt ? "exact_date_range" : "unscheduled")
+
   return {
     id: r.id,
     slug: r.slug ?? undefined,
@@ -205,12 +213,19 @@ export function rowToExpo(r: ExpoRow): Expo {
     ownerEmail: r.owner_email,
     startDate: startAt
       ? toDateOnly(r.start_at as string | Date)
-      : toDateOnly(r.start_date),
+      : r.start_date
+        ? toDateOnly(r.start_date)
+        : undefined,
     endDate: endAt
       ? toDateOnly(r.end_at as string | Date)
-      : toDateOnly(r.end_date),
+      : r.end_date
+        ? toDateOnly(r.end_date)
+        : undefined,
     startAt,
     endAt,
+    schedulePrecision,
+    scheduleMonth: r.schedule_month ?? null,
+    scheduleYear: r.schedule_year ?? null,
     status: r.status,
     categoryIds: r.category_ids,
     createdAt: toIso(r.created_at),
@@ -433,17 +448,38 @@ export type CreateExpoWithHallsInput = {
   thumbnailUrl: string
   expoTemplateId: string
   categoryIds: string[]
-  startAt: string
-  endAt: string
+  schedulePrecision: ExpoSchedulePrecision
+  startAt: string | null
+  endAt: string | null
   timezone: string
+  scheduleMonth: number | null
+  scheduleYear: number | null
   ownerUserId: string
   ownerEmail: string
   halls: ExpoHallDraft[]
 }
 
-export async function createExpoWithHalls(
-  input: CreateExpoWithHallsInput
-): Promise<{ id: string }> {
+/**
+ * Derive persistence values from a CreateExpoWithHallsInput.
+ * For non-exact schedules, dates are nulled. For exact schedules,
+ * dates are computed from the provided start/end timestamps.
+ */
+function getSchedulePersistence(input: CreateExpoWithHallsInput) {
+  if (input.schedulePrecision !== "exact_date_range") {
+    return {
+      startDate: null,
+      endDate: null,
+      startAt: null,
+      endAt: null,
+      scheduleMonth: input.scheduleMonth,
+      scheduleYear: input.scheduleYear
+    }
+  }
+
+  if (!input.startAt || !input.endAt) {
+    throw new Error("Start and end date/time are required.")
+  }
+
   const start = new Date(input.startAt)
   const end = new Date(input.endAt)
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
@@ -452,6 +488,21 @@ export async function createExpoWithHalls(
   if (end.getTime() <= start.getTime()) {
     throw new Error("End must be after start.")
   }
+
+  return {
+    startDate: start.toISOString().slice(0, 10),
+    endDate: end.toISOString().slice(0, 10),
+    startAt: start.toISOString(),
+    endAt: end.toISOString(),
+    scheduleMonth: null,
+    scheduleYear: null
+  }
+}
+
+export async function createExpoWithHalls(
+  input: CreateExpoWithHallsInput
+): Promise<{ id: string }> {
+  const schedule = getSchedulePersistence(input)
 
   const dup = (await sql`
     select id from expos where lower(name) = lower(${input.name}) limit 1
@@ -463,8 +514,6 @@ export async function createExpoWithHalls(
   const expoId = `expo-${randomUUID()}`
   const slug = await uniqueExpoSlug(slugifyExpoName(input.name))
   const createdAt = new Date().toISOString()
-  const startDateStr = start.toISOString().slice(0, 10)
-  const endDateStr = end.toISOString().slice(0, 10)
   const thumb = getAssetUrl(input.thumbnailUrl, expoId)
 
   await sql`begin`
@@ -486,7 +535,10 @@ export async function createExpoWithHalls(
         expo_template_id,
         owner_user_id,
         start_at,
-        end_at
+        end_at,
+        schedule_precision,
+        schedule_month,
+        schedule_year
       )
       values (
         ${expoId},
@@ -494,8 +546,8 @@ export async function createExpoWithHalls(
         ${input.name},
         ${thumb},
         ${input.ownerEmail},
-        ${startDateStr},
-        ${endDateStr},
+        ${schedule.startDate},
+        ${schedule.endDate},
         ${"Draft" satisfies ExpoStatus},
         ${JSON.stringify(input.categoryIds)}::jsonb,
         ${createdAt},
@@ -503,8 +555,11 @@ export async function createExpoWithHalls(
         ${input.timezone},
         ${input.expoTemplateId},
         ${input.ownerUserId},
-        ${start.toISOString()},
-        ${end.toISOString()}
+        ${schedule.startAt},
+        ${schedule.endAt},
+        ${input.schedulePrecision},
+        ${schedule.scheduleMonth},
+        ${schedule.scheduleYear}
       )
     `
 
@@ -578,14 +633,7 @@ export async function updateExpoWithHalls(
   expoId: string,
   input: CreateExpoWithHallsInput
 ): Promise<void> {
-  const start = new Date(input.startAt)
-  const end = new Date(input.endAt)
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
-    throw new Error("Invalid start or end date/time.")
-  }
-  if (end.getTime() <= start.getTime()) {
-    throw new Error("End must be after start.")
-  }
+  const schedule = getSchedulePersistence(input)
 
   const dup = (await sql`
     select id from expos
@@ -597,11 +645,17 @@ export async function updateExpoWithHalls(
   }
 
   const currentRows = (await sql`
-    select slug from expos where id = ${expoId} limit 1
-  `) as { slug: string | null }[]
+    select slug, status from expos where id = ${expoId} limit 1
+  `) as { slug: string | null; status: ExpoStatus }[]
   const currentSlug = currentRows[0]?.slug ?? null
-  const startDateStr = start.toISOString().slice(0, 10)
-  const endDateStr = end.toISOString().slice(0, 10)
+  const currentStatus = currentRows[0]?.status
+
+  const nextStatus =
+    input.schedulePrecision !== "exact_date_range" &&
+    (currentStatus === "Live" || currentStatus === "Archived")
+      ? ("Draft" satisfies ExpoStatus)
+      : currentStatus
+
   const slug = input.slug
     ? await validateManualExpoSlug(input.slug, expoId)
     : (currentSlug ??
@@ -617,15 +671,19 @@ export async function updateExpoWithHalls(
         slug = ${slug},
         thumbnail_url = ${thumb},
         owner_email = ${input.ownerEmail},
-        start_date = ${startDateStr},
-        end_date = ${endDateStr},
+        start_date = ${schedule.startDate},
+        end_date = ${schedule.endDate},
+        status = ${nextStatus},
         category_ids = ${JSON.stringify(input.categoryIds)}::jsonb,
         description = ${input.description},
         timezone = ${input.timezone},
         expo_template_id = ${input.expoTemplateId},
         owner_user_id = ${input.ownerUserId},
-        start_at = ${start.toISOString()},
-        end_at = ${end.toISOString()}
+        start_at = ${schedule.startAt},
+        end_at = ${schedule.endAt},
+        schedule_precision = ${input.schedulePrecision},
+        schedule_month = ${schedule.scheduleMonth},
+        schedule_year = ${schedule.scheduleYear}
       where id = ${expoId}
     `
 

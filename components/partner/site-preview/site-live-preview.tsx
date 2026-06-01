@@ -1,35 +1,31 @@
-import type { CSSProperties } from "react";
-import { alwaysVisibleSections } from "./constants";
-import { BannerSection } from "./sections/banner-section";
-import { BfmSection } from "./sections/bfm-section";
-import { CategoriesSection } from "./sections/categories-section";
-import { CommunitySection } from "./sections/community-section";
-import { CtaSection } from "./sections/cta-section";
-import { DealsSection } from "./sections/deals-section";
-import { ExpoCarouselSection } from "./sections/expo-carousel-section";
-import { FeatureCardsSection } from "./sections/feature-cards-section";
-import { FooterSection } from "./sections/footer-section";
-import { HeaderSection } from "./sections/header-section";
-import { PartnersSection } from "./sections/partners-section";
-import { ProductsSection } from "./sections/products-section";
-import { PromoSection } from "./sections/promo-section";
-import { SuppliersSection } from "./sections/suppliers-section";
-import type {
-  EnabledSiteSections,
-  SiteBranding,
-  TenantRelation,
-} from "./types";
+import type { CSSProperties } from "react"
+import { alwaysVisibleSections } from "./constants"
+import { BannerSection } from "./sections/banner-section"
+import { BfmSection } from "./sections/bfm-section"
+import { CategoriesSection } from "./sections/categories-section"
+import { CommunitySection } from "./sections/community-section"
+import { CtaSection } from "./sections/cta-section"
+import { DealsSection } from "./sections/deals-section"
+import { ExpoCarouselSection } from "./sections/expo-carousel-section"
+import { FeatureCardsSection } from "./sections/feature-cards-section"
+import { FooterSection } from "./sections/footer-section"
+import { HeaderSection } from "./sections/header-section"
+import { PartnersSection } from "./sections/partners-section"
+import { ProductsSection } from "./sections/products-section"
+import { PromoSection } from "./sections/promo-section"
+import { SuppliersSection } from "./sections/suppliers-section"
+import type { EnabledSiteSections, SiteBranding, TenantRelation } from "./types"
 
-const visibleCoreSections = new Set(alwaysVisibleSections);
+const visibleCoreSections = new Set(alwaysVisibleSections)
 
 export function SiteLivePreview({
   branding,
   relations,
-  sections,
+  sections
 }: {
-  branding: SiteBranding;
-  relations: TenantRelation[];
-  sections: EnabledSiteSections;
+  branding: SiteBranding
+  relations: TenantRelation[]
+  sections: EnabledSiteSections
 }) {
   return (
     <div
@@ -37,7 +33,7 @@ export function SiteLivePreview({
       style={
         {
           "--site-primary": branding.primaryColor,
-          "--site-accent": branding.accentColor,
+          "--site-accent": branding.accentColor
         } as CSSProperties
       }
     >
@@ -70,5 +66,5 @@ export function SiteLivePreview({
         ) : null}
       </div>
     </div>
-  );
+  )
 }

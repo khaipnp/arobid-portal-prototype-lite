@@ -33,6 +33,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import {
   Select,
   SelectContent,
@@ -56,6 +57,11 @@ import {
   confirmOwnerChange,
   getOwnerDisplay
 } from "@/lib/tradexpo/expo-owner-flow"
+import {
+  EXPO_MONTH_OPTIONS,
+  getExpoSchedulePrecision,
+  normalizeExpoScheduleInput
+} from "@/lib/tradexpo/schedule"
 import type {
   Expo,
   ExpoCategory,
@@ -63,6 +69,7 @@ import type {
   ExpoLayoutTemplate,
   ExpoMarketingContent,
   ExpoMarketingIconKey,
+  ExpoSchedulePrecision,
   HallTemplate
 } from "@/lib/tradexpo/types"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group"
@@ -97,6 +104,28 @@ const MARKETING_ICON_OPTIONS: Array<{
   { value: "badge", label: "Badge", Icon: BadgeCheckIcon },
   { value: "rocket", label: "Rocket", Icon: RocketIcon },
   { value: "gem", label: "Gem", Icon: GemIcon }
+]
+
+const SCHEDULE_PRECISION_OPTIONS: Array<{
+  value: ExpoSchedulePrecision
+  label: string
+  description: string
+}> = [
+  {
+    value: "exact_date_range",
+    label: "Exact date range",
+    description: "Use confirmed start and end date/time."
+  },
+  {
+    value: "month_year",
+    label: "Month & year",
+    description: "Use event month and year while exact dates are pending."
+  },
+  {
+    value: "unscheduled",
+    label: "To be announced",
+    description: "Create this Expo without schedule fields."
+  }
 ]
 
 function rowKey(prefix: string) {
@@ -216,29 +245,47 @@ export function ExpoForm(props: ExpoFormProps) {
     isEdit ? (props.initialExpo.timezone ?? "Asia/Bangkok") : "Asia/Bangkok"
   )
 
+  const [schedulePrecision, setSchedulePrecision] =
+    React.useState<ExpoSchedulePrecision>(() =>
+      isEdit ? getExpoSchedulePrecision(props.initialExpo) : "unscheduled"
+    )
+  const [scheduleMonth, setScheduleMonth] = React.useState(() =>
+    isEdit && props.initialExpo.scheduleMonth
+      ? String(props.initialExpo.scheduleMonth)
+      : ""
+  )
+  const [scheduleYear, setScheduleYear] = React.useState(() =>
+    isEdit && props.initialExpo.scheduleYear
+      ? String(props.initialExpo.scheduleYear)
+      : ""
+  )
+  const [scheduleError, setScheduleError] = React.useState<string | null>(null)
+
   const [startLocal, setStartLocal] = React.useState(() => {
     if (isEdit) {
       if (props.initialExpo.startAt) {
         return toDatetimeLocalValue(new Date(props.initialExpo.startAt))
       }
-      return toDatetimeLocalValue(
-        new Date(`${props.initialExpo.startDate}T12:00:00`)
-      )
+      if (props.initialExpo.startDate) {
+        return toDatetimeLocalValue(
+          new Date(`${props.initialExpo.startDate}T12:00:00`)
+        )
+      }
     }
-    return toDatetimeLocalValue(new Date())
+    return ""
   })
   const [endLocal, setEndLocal] = React.useState(() => {
     if (isEdit) {
       if (props.initialExpo.endAt) {
         return toDatetimeLocalValue(new Date(props.initialExpo.endAt))
       }
-      return toDatetimeLocalValue(
-        new Date(`${props.initialExpo.endDate}T12:00:00`)
-      )
+      if (props.initialExpo.endDate) {
+        return toDatetimeLocalValue(
+          new Date(`${props.initialExpo.endDate}T12:00:00`)
+        )
+      }
     }
-    const d = new Date()
-    d.setDate(d.getDate() + 3)
-    return toDatetimeLocalValue(d)
+    return ""
   })
 
   const [ownerQuery, setOwnerQuery] = React.useState(() =>
@@ -417,13 +464,26 @@ export function ExpoForm(props: ExpoFormProps) {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+    setScheduleError(null)
     if (!ownerPick) {
       setError("Search and select an expo owner by email.")
       return
     }
 
-    const startAt = new Date(startLocal).toISOString()
-    const endAt = new Date(endLocal).toISOString()
+    const scheduleResult = normalizeExpoScheduleInput({
+      schedulePrecision,
+      startAt: startLocal,
+      endAt: endLocal,
+      timezone,
+      scheduleMonth,
+      scheduleYear
+    })
+    if (!scheduleResult.ok) {
+      setScheduleError(scheduleResult.error)
+      return
+    }
+    const schedule = scheduleResult.schedule
+
     const marketingContent = buildMarketingContent()
     const marketingResult = validateExpoMarketingContent(marketingContent)
     if (!marketingResult.ok) {
@@ -438,9 +498,12 @@ export function ExpoForm(props: ExpoFormProps) {
       thumbnailUrl,
       expoTemplateId,
       categoryIds,
-      startAt,
-      endAt,
-      timezone,
+      schedulePrecision: schedule.schedulePrecision,
+      startAt: schedule.startAt,
+      endAt: schedule.endAt,
+      timezone: schedule.timezone,
+      scheduleMonth: schedule.scheduleMonth,
+      scheduleYear: schedule.scheduleYear,
       ownerUserId: ownerPick.id,
       ownerEmail: ownerPick.email,
       marketingContent,
@@ -496,12 +559,20 @@ export function ExpoForm(props: ExpoFormProps) {
     }
   }
 
+  const hasScheduleInput =
+    schedulePrecision === "exact_date_range"
+      ? startLocal.trim().length > 0 && endLocal.trim().length > 0
+      : schedulePrecision === "month_year"
+        ? scheduleMonth.trim().length > 0 && scheduleYear.trim().length > 0
+        : true
+
   const canSubmit =
     name.trim().length > 0 &&
     description.trim().length > 0 &&
     expoTemplateId &&
     categoryIds.length > 0 &&
-    ownerPick !== null
+    ownerPick !== null &&
+    hasScheduleInput
 
   const cancelHref =
     props.cancelHref ??
@@ -686,43 +757,126 @@ export function ExpoForm(props: ExpoFormProps) {
                 ) : null}
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="grid gap-2">
-                  <Label htmlFor="start">Start</Label>
-                  <Input
-                    id="start"
-                    type="datetime-local"
-                    value={startLocal}
-                    onChange={(e) => setStartLocal(e.target.value)}
-                    required
-                  />
+              <section className="space-y-3 rounded-lg border p-4">
+                <div>
+                  <h3 className="font-medium text-sm">Schedule</h3>
+                  <p className="text-muted-foreground text-xs">
+                    Choose how precise the Expo schedule is right now.
+                  </p>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="end">End</Label>
-                  <Input
-                    id="end"
-                    type="datetime-local"
-                    value={endLocal}
-                    onChange={(e) => setEndLocal(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Timezone</Label>
-                  <Select value={timezone} onValueChange={setTimezone}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {EXPO_FORM_TIMEZONES.map((tz) => (
-                        <SelectItem key={tz.value} value={tz.value}>
-                          {tz.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+                <RadioGroup
+                  value={schedulePrecision}
+                  onValueChange={(value) => {
+                    setSchedulePrecision(value as ExpoSchedulePrecision)
+                    setScheduleError(null)
+                  }}
+                  className="grid gap-3 md:grid-cols-3"
+                >
+                  {SCHEDULE_PRECISION_OPTIONS.map((option) => (
+                    <label
+                      key={option.value}
+                      className="flex cursor-pointer gap-3 rounded-md border p-3 text-sm transition-colors hover:bg-muted/60 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/5"
+                    >
+                      <RadioGroupItem value={option.value} className="mt-0.5" />
+                      <span className="grid gap-1">
+                        <span className="font-medium">{option.label}</span>
+                        <span className="text-muted-foreground text-xs">
+                          {option.description}
+                        </span>
+                      </span>
+                    </label>
+                  ))}
+                </RadioGroup>
+
+                {schedulePrecision === "exact_date_range" ? (
+                  <div className="grid gap-3 sm:grid-cols-3">
+                    <div className="grid gap-2">
+                      <Label htmlFor="start">Start</Label>
+                      <Input
+                        id="start"
+                        type="datetime-local"
+                        value={startLocal}
+                        onChange={(e) => setStartLocal(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="end">End</Label>
+                      <Input
+                        id="end"
+                        type="datetime-local"
+                        value={endLocal}
+                        onChange={(e) => setEndLocal(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label>Timezone</Label>
+                      <Select value={timezone} onValueChange={setTimezone}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {EXPO_FORM_TIMEZONES.map((tz) => (
+                            <SelectItem key={tz.value} value={tz.value}>
+                              {tz.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                ) : null}
+
+                {schedulePrecision === "month_year" ? (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="grid gap-2">
+                      <Label>Month</Label>
+                      <Select
+                        value={scheduleMonth}
+                        onValueChange={setScheduleMonth}
+                      >
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Select month" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {EXPO_MONTH_OPTIONS.map((month) => (
+                            <SelectItem
+                              key={month.value}
+                              value={String(month.value)}
+                            >
+                              {month.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="schedule-year">Year</Label>
+                      <Input
+                        id="schedule-year"
+                        inputMode="numeric"
+                        pattern="[0-9]{4}"
+                        value={scheduleYear}
+                        onChange={(e) => setScheduleYear(e.target.value)}
+                        placeholder="2026"
+                        required
+                      />
+                    </div>
+                  </div>
+                ) : null}
+
+                {schedulePrecision === "unscheduled" ? (
+                  <p className="rounded-md bg-muted/50 px-3 py-2 text-muted-foreground text-sm">
+                    Schedule to be announced. You can add exact dates later from
+                    Edit Expo.
+                  </p>
+                ) : null}
+
+                {scheduleError ? (
+                  <p className="text-destructive text-xs">{scheduleError}</p>
+                ) : null}
+              </section>
             </CardContent>
           </Card>
 

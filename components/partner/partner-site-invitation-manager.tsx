@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   CopyIcon,
@@ -7,231 +7,231 @@ import {
   QrCodeIcon,
   SearchIcon,
   SendIcon,
-  XIcon,
-} from "lucide-react";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+  XIcon
+} from "lucide-react"
+import Image from "next/image"
+import { useRouter } from "next/navigation"
+import { useMemo, useState } from "react"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+  DialogTitle
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
-  InputGroupInput,
-} from "@/components/ui/input-group";
-import { Label } from "@/components/ui/label";
-import { NativeSelect } from "@/components/ui/native-select";
+  InputGroupInput
+} from "@/components/ui/input-group"
+import { Label } from "@/components/ui/label"
+import { NativeSelect } from "@/components/ui/native-select"
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
-import type { PartnerAccess } from "@/lib/partner/access";
+  TableRow
+} from "@/components/ui/table"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Textarea } from "@/components/ui/textarea"
+import type { PartnerAccess } from "@/lib/partner/access"
 import type {
   PartnerEnterpriseMember,
-  PartnerEnterpriseWorkspace,
-} from "@/lib/partner/db";
+  PartnerEnterpriseWorkspace
+} from "@/lib/partner/db"
 
 const invitationStatusLabels = {
   accepted: "Accepted",
-  pending: "Pending",
-} as const;
+  pending: "Pending"
+} as const
 
 const invitationTypeLabels = {
   site_visit: "Site Visit Link",
-  join_partner_site: "Join Partner Site",
-} as const;
+  join_partner_site: "Join Partner Site"
+} as const
 
-const invitationTypeOptions = ["site_visit", "join_partner_site"] as const;
+const invitationTypeOptions = ["site_visit", "join_partner_site"] as const
 
-type InvitationStatus = keyof typeof invitationStatusLabels;
-type StatusFilter = InvitationStatus | "all";
-type InvitationType = (typeof invitationTypeOptions)[number];
+type InvitationStatus = keyof typeof invitationStatusLabels
+type StatusFilter = InvitationStatus | "all"
+type InvitationType = (typeof invitationTypeOptions)[number]
 
 type InvitationRow = {
-  id: string;
-  recipient: string;
-  enterpriseName: string;
-  status: InvitationStatus;
-  updatedAt: string;
-};
+  id: string
+  recipient: string
+  enterpriseName: string
+  status: InvitationStatus
+  updatedAt: string
+}
 
 type ParsedRecipients = {
-  valid: string[];
-  invalid: string[];
-};
+  valid: string[]
+  invalid: string[]
+}
 
 type SendInvitationResponse = {
-  sentCount: number;
-  createdCount: number;
-  resentCount: number;
-  skipped: { email: string; reason: string }[];
-};
+  sentCount: number
+  createdCount: number
+  resentCount: number
+  skipped: { email: string; reason: string }[]
+}
 
 export function PartnerSiteInvitationManager({
   access,
   workspace,
-  inviteBaseUrl,
+  inviteBaseUrl
 }: {
-  access: PartnerAccess;
-  workspace: PartnerEnterpriseWorkspace;
-  inviteBaseUrl: string;
+  access: PartnerAccess
+  workspace: PartnerEnterpriseWorkspace
+  inviteBaseUrl: string
 }) {
-  const router = useRouter();
-  const canManageInvitations = access.actions["invite.manage"];
-  const partnerId = workspace.organization?.id ?? "";
-  const [query, setQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [inviteOpen, setInviteOpen] = useState(false);
+  const router = useRouter()
+  const canManageInvitations = access.actions["invite.manage"]
+  const partnerId = workspace.organization?.id ?? ""
+  const [query, setQuery] = useState("")
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all")
+  const [inviteOpen, setInviteOpen] = useState(false)
   const [invitationType, setInvitationType] =
-    useState<InvitationType>("join_partner_site");
-  const [recipientText, setRecipientText] = useState("");
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [resendingId, setResendingId] = useState<string | null>(null);
-  const [isSending, setIsSending] = useState(false);
+    useState<InvitationType>("join_partner_site")
+  const [recipientText, setRecipientText] = useState("")
+  const [message, setMessage] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [resendingId, setResendingId] = useState<string | null>(null)
+  const [isSending, setIsSending] = useState(false)
 
   const invitationLink = useMemo(
     () =>
       partnerId
         ? buildInvitationLink({ inviteBaseUrl, invitationType, partnerId })
         : "",
-    [inviteBaseUrl, invitationType, partnerId],
-  );
+    [inviteBaseUrl, invitationType, partnerId]
+  )
   const parsedRecipients = useMemo(
     () => parseRecipientEmails(recipientText),
-    [recipientText],
-  );
+    [recipientText]
+  )
   const qrCodeUrl = invitationLink
     ? `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(invitationLink)}`
-    : "";
+    : ""
 
   const invitations = useMemo(
     () => workspace.members.map(toInvitationRow).filter(isInvitationRow),
-    [workspace.members],
-  );
+    [workspace.members]
+  )
 
   const filteredInvitations = useMemo(() => {
-    const search = query.trim().toLowerCase();
+    const search = query.trim().toLowerCase()
 
     return invitations.filter((invitation) => {
       const matchesSearch =
-        !search || invitation.recipient.toLowerCase().includes(search);
+        !search || invitation.recipient.toLowerCase().includes(search)
       const matchesStatus =
-        statusFilter === "all" || invitation.status === statusFilter;
+        statusFilter === "all" || invitation.status === statusFilter
 
-      return matchesSearch && matchesStatus;
-    });
-  }, [invitations, query, statusFilter]);
+      return matchesSearch && matchesStatus
+    })
+  }, [invitations, query, statusFilter])
 
   async function copyInvitationLink() {
-    if (!invitationLink) return;
+    if (!invitationLink) return
 
-    setError(null);
+    setError(null)
     try {
-      await navigator.clipboard.writeText(invitationLink);
-      setMessage("Invitation link copied.");
+      await navigator.clipboard.writeText(invitationLink)
+      setMessage("Invitation link copied.")
     } catch {
-      setError("Could not copy invitation link.");
+      setError("Could not copy invitation link.")
     }
   }
 
   async function sendInvitationEmail() {
-    setMessage(null);
-    setError(null);
+    setMessage(null)
+    setError(null)
 
     if (!partnerId) {
-      setError("Partner context is required before sending invitations.");
-      return;
+      setError("Partner context is required before sending invitations.")
+      return
     }
     if (parsedRecipients.invalid.length > 0) {
-      setError(`Invalid email: ${parsedRecipients.invalid.join(", ")}`);
-      return;
+      setError(`Invalid email: ${parsedRecipients.invalid.join(", ")}`)
+      return
     }
     if (parsedRecipients.valid.length === 0) {
-      setError("Enter at least one valid recipient email.");
-      return;
+      setError("Enter at least one valid recipient email.")
+      return
     }
 
-    setIsSending(true);
+    setIsSending(true)
     try {
       const response = await fetch("/api/partner/partner-site/invitations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ invitationType, recipientText }),
-      });
+        body: JSON.stringify({ invitationType, recipientText })
+      })
       if (!response.ok) {
         const payload = (await response.json().catch(() => null)) as {
-          error?: string;
-        } | null;
-        throw new Error(payload?.error ?? "Could not send invitations.");
+          error?: string
+        } | null
+        throw new Error(payload?.error ?? "Could not send invitations.")
       }
 
-      const result = (await response.json()) as SendInvitationResponse;
+      const result = (await response.json()) as SendInvitationResponse
       setMessage(
-        `Invitation email sent to ${result.sentCount} recipient(s). ${result.createdCount} new, ${result.resentCount} resent.`,
-      );
+        `Invitation email sent to ${result.sentCount} recipient(s). ${result.createdCount} new, ${result.resentCount} resent.`
+      )
       if (result.skipped.length > 0) {
         setError(
-          `Skipped: ${result.skipped.map((item) => `${item.email} (${item.reason})`).join(", ")}`,
-        );
+          `Skipped: ${result.skipped.map((item) => `${item.email} (${item.reason})`).join(", ")}`
+        )
       }
-      setInviteOpen(false);
-      router.refresh();
+      setInviteOpen(false)
+      router.refresh()
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Could not send invitations.",
-      );
+        err instanceof Error ? err.message : "Could not send invitations."
+      )
     } finally {
-      setIsSending(false);
+      setIsSending(false)
     }
   }
 
   async function resendInvitation(invitation: InvitationRow) {
-    if (invitation.status !== "pending" || resendingId) return;
+    if (invitation.status !== "pending" || resendingId) return
 
-    setResendingId(invitation.id);
-    setMessage(null);
-    setError(null);
+    setResendingId(invitation.id)
+    setMessage(null)
+    setError(null)
 
     try {
       const response = await fetch(
         `/api/partner/enterprise-members/${invitation.id}/resend`,
-        { method: "POST" },
-      );
+        { method: "POST" }
+      )
       if (!response.ok) {
         const payload = (await response.json().catch(() => null)) as {
-          error?: string;
-        } | null;
-        throw new Error(payload?.error ?? "Could not resend invitation.");
+          error?: string
+        } | null
+        throw new Error(payload?.error ?? "Could not resend invitation.")
       }
 
       setMessage(
         invitation.recipient
           ? `Invitation resent to ${invitation.recipient}.`
-          : "Invitation resent.",
-      );
-      router.refresh();
+          : "Invitation resent."
+      )
+      router.refresh()
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Could not resend invitation.",
-      );
+        err instanceof Error ? err.message : "Could not resend invitation."
+      )
     } finally {
-      setResendingId(null);
+      setResendingId(null)
     }
   }
 
@@ -459,111 +459,111 @@ export function PartnerSiteInvitationManager({
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }
 
 function Field({
   children,
-  label,
+  label
 }: {
-  children: React.ReactNode;
-  label: string;
+  children: React.ReactNode
+  label: string
 }) {
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
       {children}
     </div>
-  );
+  )
 }
 
 function parseRecipientEmails(value: string): ParsedRecipients {
   const emails = value
     .split(",")
     .map((email) => email.trim().toLowerCase())
-    .filter(Boolean);
-  const uniqueEmails = Array.from(new Set(emails));
+    .filter(Boolean)
+  const uniqueEmails = Array.from(new Set(emails))
 
   return {
     valid: uniqueEmails.filter(isEmail),
-    invalid: uniqueEmails.filter((email) => !isEmail(email)),
-  };
+    invalid: uniqueEmails.filter((email) => !isEmail(email))
+  }
 }
 
 function isEmail(value: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
 }
 
 function buildInvitationLink({
   inviteBaseUrl,
   invitationType,
-  partnerId,
+  partnerId
 }: {
-  inviteBaseUrl: string;
-  invitationType: InvitationType;
-  partnerId: string;
+  inviteBaseUrl: string
+  invitationType: InvitationType
+  partnerId: string
 }) {
-  const url = getInvitationBaseUrl(inviteBaseUrl);
-  url.searchParams.set("partnerId", partnerId);
+  const url = getInvitationBaseUrl(inviteBaseUrl)
+  url.searchParams.set("partnerId", partnerId)
   url.searchParams.set(
     "type",
-    invitationType === "site_visit" ? "visit" : "join",
-  );
-  return url.toString();
+    invitationType === "site_visit" ? "visit" : "join"
+  )
+  return url.toString()
 }
 
 function getInvitationBaseUrl(value: string) {
   try {
-    const url = new URL(value);
-    if (url.protocol === "https:") return url;
+    const url = new URL(value)
+    if (url.protocol === "https:") return url
   } catch {
-    return new URL("https://arobid.site/invite");
+    return new URL("https://arobid.site/invite")
   }
 
-  return new URL("https://arobid.site/invite");
+  return new URL("https://arobid.site/invite")
 }
 
 function isInvitationRow(row: InvitationRow | null): row is InvitationRow {
-  return row !== null;
+  return row !== null
 }
 
 function toInvitationRow(
-  member: Required<PartnerEnterpriseMember>,
+  member: Required<PartnerEnterpriseMember>
 ): InvitationRow | null {
-  if (member.source !== "tenant_invite") return null;
+  if (member.source !== "tenant_invite") return null
 
-  const status = getInvitationStatus(member);
-  if (!status) return null;
+  const status = getInvitationStatus(member)
+  if (!status) return null
 
   return {
     id: member.id,
     recipient: member.contactEmail ?? "",
     enterpriseName: member.enterpriseName,
     status,
-    updatedAt: member.updatedAt,
-  };
+    updatedAt: member.updatedAt
+  }
 }
 
 function getInvitationStatus(
-  member: Required<PartnerEnterpriseMember>,
+  member: Required<PartnerEnterpriseMember>
 ): InvitationStatus | null {
   if (member.activationStatus === "active" || member.acceptedAt) {
-    return "accepted";
+    return "accepted"
   }
   if (
     member.activationStatus === "invited" ||
     member.activationStatus === "pending_acceptance"
   ) {
-    return "pending";
+    return "pending"
   }
 
-  return null;
+  return null
 }
 
 function InvitationStatusBadge({ status }: { status: InvitationStatus }) {
   if (status === "accepted") {
-    return <Badge variant="default">Accepted</Badge>;
+    return <Badge variant="default">Accepted</Badge>
   }
 
-  return <Badge variant="secondary">Pending</Badge>;
+  return <Badge variant="secondary">Pending</Badge>
 }

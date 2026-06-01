@@ -54,9 +54,6 @@ export async function PUT(request: Request, { params }: Props) {
     description?: string
     thumbnailUrl?: string
     categoryIds?: string[]
-    startAt?: string
-    endAt?: string
-    timezone?: string
     marketingContent?: unknown
   }
 
@@ -80,15 +77,6 @@ export async function PUT(request: Request, { params }: Props) {
   if (categoryIds.length === 0) {
     return NextResponse.json(
       { error: "Select at least one category." },
-      { status: 400 }
-    )
-  }
-
-  const startAt = body.startAt?.trim() ?? ""
-  const endAt = body.endAt?.trim() ?? ""
-  if (!startAt || !endAt) {
-    return NextResponse.json(
-      { error: "Start and end date/time are required." },
       { status: 400 }
     )
   }
@@ -118,9 +106,12 @@ export async function PUT(request: Request, { params }: Props) {
       thumbnailUrl: body.thumbnailUrl?.trim() ?? expo.thumbnailUrl,
       expoTemplateId: expo.expoTemplateId,
       categoryIds,
-      startAt,
-      endAt,
-      timezone: body.timezone?.trim() || expo.timezone || "Asia/Bangkok",
+      schedulePrecision: expo.schedulePrecision,
+      startAt: expo.startAt ?? null,
+      endAt: expo.endAt ?? null,
+      timezone: expo.timezone || "Asia/Bangkok",
+      scheduleMonth: expo.scheduleMonth ?? null,
+      scheduleYear: expo.scheduleYear ?? null,
       ownerUserId: expo.ownerUserId,
       ownerEmail: expo.ownerEmail,
       halls

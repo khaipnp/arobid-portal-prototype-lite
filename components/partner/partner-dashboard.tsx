@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   ActivityIcon,
@@ -7,10 +7,11 @@ import {
   InfoIcon,
   RadioTowerIcon,
   TrendingUpIcon,
-  UsersIcon,
-} from "lucide-react";
-import Link from "next/link";
-import { type ReactNode, useState } from "react";
+  UsersIcon
+} from "lucide-react"
+import Image from "next/image"
+import Link from "next/link"
+import { type ReactNode, useState } from "react"
 import {
   Bar,
   BarChart,
@@ -18,116 +19,115 @@ import {
   Line,
   LineChart,
   XAxis,
-  YAxis,
-} from "recharts";
-import { Button } from "@/components/ui/button";
+  YAxis
+} from "recharts"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardAction,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  CardTitle
+} from "@/components/ui/card"
 import {
   type ChartConfig,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+  ChartTooltipContent
+} from "@/components/ui/chart"
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import type { PartnerDashboardMetrics } from "@/lib/partner/db";
-import { ExpoStatusBadge } from "../tradexpo/status-badge";
+  TableRow
+} from "@/components/ui/table"
+import type { PartnerDashboardMetrics } from "@/lib/partner/db"
+import { ExpoStatusBadge } from "../tradexpo/status-badge"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
-} from "../ui/tooltip";
-import Image from "next/image";
+  TooltipTrigger
+} from "../ui/tooltip"
 
 const compactNumber = new Intl.NumberFormat("en", {
   notation: "compact",
-  maximumFractionDigits: 1,
-});
+  maximumFractionDigits: 1
+})
 
-const numberFormat = new Intl.NumberFormat("en");
+const numberFormat = new Intl.NumberFormat("en")
 
-const dashboardDurations = ["3D", "7D", "15D", "30D"] as const;
+const dashboardDurations = ["3D", "7D", "15D", "30D"] as const
 
 const inventoryChartConfig = {
   soldBooths: {
     label: "Sold booths",
-    color: "var(--chart-1)",
+    color: "var(--chart-1)"
   },
   unsoldBooths: {
     label: "Unsold booths",
-    color: "var(--chart-2)",
-  },
-} satisfies ChartConfig;
+    color: "var(--chart-2)"
+  }
+} satisfies ChartConfig
 
 const tierTrendColors = [
   "var(--chart-1)",
   "var(--chart-2)",
   "var(--chart-3)",
   "var(--chart-4)",
-  "var(--chart-5)",
-];
+  "var(--chart-5)"
+]
 
-const tradeActivityMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"];
+const tradeActivityMonths = ["Jan", "Feb", "Mar", "Apr", "May", "Jun"]
 
 const dealContextsTrendConfig = {
   dealContexts: {
     label: "Deal Contexts",
-    color: "var(--chart-5)",
-  },
-} satisfies ChartConfig;
+    color: "var(--chart-5)"
+  }
+} satisfies ChartConfig
 
 const rfqTrendConfig = {
   rfqs: {
     label: "RFQ",
-    color: "var(--chart-2)",
-  },
-} satisfies ChartConfig;
+    color: "var(--chart-2)"
+  }
+} satisfies ChartConfig
 
 function formatPercent(value: number) {
-  return `${Math.round(value)}%`;
+  return `${Math.round(value)}%`
 }
 
 function formatDate(value: string) {
   return new Date(value).toLocaleDateString("en-GB", {
     day: "2-digit",
-    month: "short",
-  });
+    month: "short"
+  })
 }
 
 function formatRatio(value: number, total: number) {
-  return total > 0 ? Math.round((value / total) * 100) : 0;
+  return total > 0 ? Math.round((value / total) * 100) : 0
 }
 
 function toTrendKey(value: string, index: number) {
-  return `tier_${index}_${value.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`;
+  return `tier_${index}_${value.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`
 }
 
 function MetricWidget({
   label,
   value,
   description,
-  icon,
+  icon
 }: {
-  label: string;
-  value: number;
-  description: string;
-  icon: ReactNode;
+  label: string
+  value: number
+  description: string
+  icon: ReactNode
 }) {
   return (
     <TooltipProvider>
@@ -149,17 +149,17 @@ function MetricWidget({
         </CardContent>
       </Card>
     </TooltipProvider>
-  );
+  )
 }
 
 export function PartnerDashboard({
-  metrics,
+  metrics
 }: {
-  metrics: PartnerDashboardMetrics;
+  metrics: PartnerDashboardMetrics
 }) {
   const [selectedDuration, setSelectedDuration] =
-    useState<(typeof dashboardDurations)[number]>("3D");
-  const operationsSummary = metrics.operationsByDuration[selectedDuration];
+    useState<(typeof dashboardDurations)[number]>("3D")
+  const operationsSummary = metrics.operationsByDuration[selectedDuration]
 
   return (
     <div className="space-y-6 px-4 py-4">
@@ -231,65 +231,65 @@ export function PartnerDashboard({
         <TradeActivitySection metrics={metrics} />
       </div>
     </div>
-  );
+  )
 }
 
 function TradeActivitySection({
-  metrics,
+  metrics
 }: {
-  metrics: PartnerDashboardMetrics;
+  metrics: PartnerDashboardMetrics
 }) {
-  const thirtyDayRfqs = metrics.operationsByDuration["30D"].rfqs;
-  const rfqTotal = Math.max(thirtyDayRfqs, 396);
-  const dealContextTotal = Math.max(Math.round(rfqTotal * 0.31), 124);
-  const allocatedCredits = Math.max(metrics.totals.totalBooths * 100, 18_400);
-  const usedCredits = Math.max(metrics.totals.soldBooths * 100, 7_200);
+  const thirtyDayRfqs = metrics.operationsByDuration["30D"].rfqs
+  const rfqTotal = Math.max(thirtyDayRfqs, 396)
+  const dealContextTotal = Math.max(Math.round(rfqTotal * 0.31), 124)
+  const allocatedCredits = Math.max(metrics.totals.totalBooths * 100, 18_400)
+  const usedCredits = Math.max(metrics.totals.soldBooths * 100, 7_200)
   const expiredCredits = Math.max(
     metrics.totals.publishedBooths > 0
       ? Math.round(metrics.totals.publishedBooths * 12)
       : 0,
-    600,
-  );
+    600
+  )
   const balanceCredits = Math.max(
     allocatedCredits - usedCredits - expiredCredits,
-    10_600,
-  );
+    10_600
+  )
   const dealContextsTrend = buildTradeTrend(
     dealContextTotal,
     "dealContexts",
-    [0.34, 0.42, 0.56, 0.72, 0.9, 1],
-  );
+    [0.34, 0.42, 0.56, 0.72, 0.9, 1]
+  )
   const rfqTrend = buildTradeTrend(
     rfqTotal,
     "rfqs",
-    [0.48, 0.54, 0.65, 0.77, 0.91, 1],
-  );
+    [0.48, 0.54, 0.65, 0.77, 0.91, 1]
+  )
   const creditRows = [
     {
       label: "Allocated",
       value: allocatedCredits,
       tone: "bg-primary",
-      ratio: 100,
+      ratio: 100
     },
     {
       label: "Used",
       value: usedCredits,
       tone: "bg-primary",
-      ratio: formatRatio(usedCredits, allocatedCredits),
+      ratio: formatRatio(usedCredits, allocatedCredits)
     },
     {
       label: "Expired",
       value: expiredCredits,
       tone: "bg-muted-foreground/60",
-      ratio: formatRatio(expiredCredits, allocatedCredits),
+      ratio: formatRatio(expiredCredits, allocatedCredits)
     },
     {
       label: "Balance",
       value: balanceCredits,
       tone: "bg-legend",
-      ratio: formatRatio(balanceCredits, allocatedCredits),
-    },
-  ];
+      ratio: formatRatio(balanceCredits, allocatedCredits)
+    }
+  ]
 
   return (
     <section className="space-y-5 xl:col-span-3">
@@ -420,61 +420,61 @@ function TradeActivitySection({
         </Card>
       </div>
     </section>
-  );
+  )
 }
 
 function buildTradeTrend(
   total: number,
   key: "dealContexts" | "rfqs",
-  multipliers: number[],
+  multipliers: number[]
 ) {
   return tradeActivityMonths.map((month, index) => ({
     month,
-    [key]: Math.max(1, Math.round(total * multipliers[index])),
-  }));
+    [key]: Math.max(1, Math.round(total * multipliers[index]))
+  }))
 }
 
 function ExpoInventorySection({
-  metrics,
+  metrics
 }: {
-  metrics: PartnerDashboardMetrics;
+  metrics: PartnerDashboardMetrics
 }) {
   const inventoryData = metrics.expoMetrics.map((item) => ({
     ...item,
     soldPercent: formatRatio(item.soldBooths, item.totalBooths),
-    unsoldPercent: formatRatio(item.unsoldBooths, item.totalBooths),
-  }));
+    unsoldPercent: formatRatio(item.unsoldBooths, item.totalBooths)
+  }))
   const tiers = Array.from(
-    new Set(metrics.boothTierMonthlyTrend.map((item) => item.tier)),
-  );
+    new Set(metrics.boothTierMonthlyTrend.map((item) => item.tier))
+  )
   const tierKeys = tiers.map((tier, index) => ({
     tier,
     key: toTrendKey(tier, index),
-    color: tierTrendColors[index % tierTrendColors.length],
-  }));
+    color: tierTrendColors[index % tierTrendColors.length]
+  }))
   const trendConfig = tierKeys.reduce<ChartConfig>((acc, item) => {
     acc[item.key] = {
       label: item.tier,
-      color: item.color,
-    };
-    return acc;
-  }, {});
+      color: item.color
+    }
+    return acc
+  }, {})
   const trendData = Array.from(
     metrics.boothTierMonthlyTrend.reduce((acc, item) => {
       const month = acc.get(item.monthKey) ?? {
         monthKey: item.monthKey,
-        monthLabel: item.monthLabel,
-      };
-      const tierKey = tierKeys.find((tier) => tier.tier === item.tier)?.key;
-      if (tierKey) {
-        month[tierKey] = item.soldBooths;
+        monthLabel: item.monthLabel
       }
-      acc.set(item.monthKey, month);
-      return acc;
-    }, new Map<string, Record<string, string | number>>()),
-  ).map(([, value]) => value);
-  const hasExpoData = inventoryData.length > 0;
-  const hasTrendData = trendData.length > 0 && tierKeys.length > 0;
+      const tierKey = tierKeys.find((tier) => tier.tier === item.tier)?.key
+      if (tierKey) {
+        month[tierKey] = item.soldBooths
+      }
+      acc.set(item.monthKey, month)
+      return acc
+    }, new Map<string, Record<string, string | number>>())
+  ).map(([, value]) => value)
+  const hasExpoData = inventoryData.length > 0
+  const hasTrendData = trendData.length > 0 && tierKeys.length > 0
 
   return (
     <section className="space-y-5 xl:col-span-3">
@@ -630,7 +630,7 @@ function ExpoInventorySection({
         )}
       </div>
     </section>
-  );
+  )
 }
 
 function EmptyInventoryState() {
@@ -639,5 +639,5 @@ function EmptyInventoryState() {
       <TrendingUpIcon className="mb-3 size-5 text-primary" />
       No assigned expo inventory available yet.
     </div>
-  );
+  )
 }

@@ -362,20 +362,20 @@ function RemindersPanel({
 
   const startingSoon = expos
     .filter((e) => {
-      const d = daysUntil(e.startDate)
+      const d = daysUntil(e.startDate ?? "")
       return (
         d >= 0 &&
         d <= 14 &&
         (e.status === "Draft" || e.status === "Pending Review")
       )
     })
-    .sort((a, b) => daysUntil(a.startDate) - daysUntil(b.startDate))
+    .sort((a, b) => daysUntil(a.startDate ?? "") - daysUntil(b.startDate ?? ""))
 
   const archivableFinished = expos.filter(
     (e) =>
       e.status !== "Archived" &&
       e.status !== "Canceled" &&
-      daysUntil(e.endDate) < -7
+      daysUntil(e.endDate ?? "") < -7
   )
 
   const failedTemplates = [
@@ -446,7 +446,7 @@ function RemindersPanel({
               </p>
               <ul className="mt-2 space-y-1.5">
                 {startingSoon.map((expo) => {
-                  const days = daysUntil(expo.startDate)
+                  const days = daysUntil(expo.startDate ?? "")
                   return (
                     <li
                       key={expo.id}
@@ -478,7 +478,7 @@ function RemindersPanel({
                     key={expo.id}
                     className="truncate text-muted-foreground text-xs"
                   >
-                    {expo.name} — ended {formatShortDate(expo.endDate)}
+                    {expo.name} — ended {formatShortDate(expo.endDate ?? "")}
                   </li>
                 ))}
               </ul>

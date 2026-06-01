@@ -110,19 +110,27 @@ export interface ExpoCategory {
   level: 1
 }
 
+export type ExpoSchedulePrecision =
+  | "exact_date_range"
+  | "month_year"
+  | "unscheduled"
+
 export interface Expo {
   id: string
   slug?: string
   name: string
   thumbnailUrl: string
   ownerEmail: string
-  /** ISO date (YYYY-MM-DD), derived from `startAt` when present. */
-  startDate: string
-  /** ISO date (YYYY-MM-DD), derived from `endAt` when present. */
-  endDate: string
-  /** Full timestamps for lazy timeline phase (US-02). */
+  /** ISO date (YYYY-MM-DD), present only when exact dates exist. */
+  startDate?: string
+  /** ISO date (YYYY-MM-DD), present only when exact dates exist. */
+  endDate?: string
+  /** Full timestamps for exact date range schedules. */
   startAt?: string
   endAt?: string
+  schedulePrecision: ExpoSchedulePrecision
+  scheduleMonth?: number | null
+  scheduleYear?: number | null
   status: ExpoStatus
   categoryIds: string[]
   createdAt: string

@@ -1,23 +1,23 @@
-"use client";
+"use client"
 
-import { EditIcon, PlusIcon, Trash2Icon } from "lucide-react";
-import Image from "next/image";
-import { type ReactNode, useEffect, useId, useState } from "react";
+import { EditIcon, PlusIcon, Trash2Icon } from "lucide-react"
+import Image from "next/image"
+import { type ReactNode, useEffect, useId, useState } from "react"
 import {
   emptyRelationForm,
   initialBranding,
   initialRelations,
-  initialSections,
-} from "@/components/partner/site-preview/constants";
-import { SiteLivePreview } from "@/components/partner/site-preview/site-live-preview";
-import { SitePreviewControls } from "@/components/partner/site-preview/site-preview-controls";
+  initialSections
+} from "@/components/partner/site-preview/constants"
+import { SiteLivePreview } from "@/components/partner/site-preview/site-live-preview"
+import { SitePreviewControls } from "@/components/partner/site-preview/site-preview-controls"
 import type {
   RelationForm,
   SiteBranding,
   SiteSectionKey,
   TenantRelation,
-  TenantRelationType,
-} from "@/components/partner/site-preview/types";
+  TenantRelationType
+} from "@/components/partner/site-preview/types"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,236 +26,236 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+  AlertDialogTitle
+} from "@/components/ui/alert-dialog"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { NativeSelect } from "@/components/ui/native-select";
-import { Switch } from "@/components/ui/switch";
+  DialogTitle
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { NativeSelect } from "@/components/ui/native-select"
+import { Switch } from "@/components/ui/switch"
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { useUpload } from "@/hooks/use-upload";
-import type { PartnerAccess } from "@/lib/partner/access";
-import { cn } from "@/lib/utils";
-import { ButtonGroup } from "../ui/button-group";
+  TableRow
+} from "@/components/ui/table"
+import { useUpload } from "@/hooks/use-upload"
+import type { PartnerAccess } from "@/lib/partner/access"
+import { cn } from "@/lib/utils"
+import { ButtonGroup } from "../ui/button-group"
 
-const logoMaxSizeBytes = 2 * 1024 * 1024;
-const hexColorPattern = /^#[0-9a-fA-F]{6}$/;
+const logoMaxSizeBytes = 2 * 1024 * 1024
+const hexColorPattern = /^#[0-9a-fA-F]{6}$/
 
 export function PartnerSiteManagementManager({
-  access,
+  access
 }: {
-  access: PartnerAccess;
+  access: PartnerAccess
 }) {
-  const [branding, setBranding] = useState(initialBranding);
-  const [sections, setSections] = useState(initialSections);
-  const [relations, setRelations] = useState(initialRelations);
+  const [branding, setBranding] = useState(initialBranding)
+  const [sections, setSections] = useState(initialSections)
+  const [relations, setRelations] = useState(initialRelations)
   const [editingRelation, setEditingRelation] = useState<TenantRelation | null>(
-    null,
-  );
-  const [form, setForm] = useState<RelationForm>(emptyRelationForm);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<TenantRelation | null>(null);
-  const { uploadFile, isUploading } = useUpload();
-  const [draftId, setDraftId] = useState<string | null>(null);
-  const [versionStatus, setVersionStatus] = useState<string | null>(null);
-  const [isSavingDraft, setIsSavingDraft] = useState(false);
-  const [statusMessage, setStatusMessage] = useState<string | null>(null);
-  const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const [submitNote, setSubmitNote] = useState("");
+    null
+  )
+  const [form, setForm] = useState<RelationForm>(emptyRelationForm)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<TenantRelation | null>(null)
+  const { uploadFile, isUploading } = useUpload()
+  const [draftId, setDraftId] = useState<string | null>(null)
+  const [versionStatus, setVersionStatus] = useState<string | null>(null)
+  const [isSavingDraft, setIsSavingDraft] = useState(false)
+  const [statusMessage, setStatusMessage] = useState<string | null>(null)
+  const [submitDialogOpen, setSubmitDialogOpen] = useState(false)
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false)
+  const [submitNote, setSubmitNote] = useState("")
 
-  const previewLabel = getPreviewLabel(versionStatus);
-  const isSubmitted = versionStatus === "submitted";
-  const isReadOnly = access.readOnly || isSubmitted;
-  const canSubmitRelation = form.name.trim().length > 0;
+  const previewLabel = getPreviewLabel(versionStatus)
+  const isSubmitted = versionStatus === "submitted"
+  const isReadOnly = access.readOnly || isSubmitted
+  const canSubmitRelation = form.name.trim().length > 0
 
   useEffect(() => {
-    let isMounted = true;
+    let isMounted = true
 
     async function loadPreviewVersion() {
-      const response = await fetch("/api/partner/mini-site/preview");
-      if (!response.ok) return;
+      const response = await fetch("/api/partner/mini-site/preview")
+      if (!response.ok) return
       const payload = (await response.json()) as {
         version: {
-          id: string;
-          status: string;
+          id: string
+          status: string
           content?: {
-            branding?: SiteBranding;
-            relations?: TenantRelation[];
-            sections?: Record<SiteSectionKey, boolean>;
-          };
-        } | null;
-      };
-      if (!isMounted || !payload.version) return;
-      setDraftId(payload.version.id);
-      setVersionStatus(payload.version.status);
+            branding?: SiteBranding
+            relations?: TenantRelation[]
+            sections?: Record<SiteSectionKey, boolean>
+          }
+        } | null
+      }
+      if (!isMounted || !payload.version) return
+      setDraftId(payload.version.id)
+      setVersionStatus(payload.version.status)
       if (payload.version.content?.branding) {
-        setBranding(payload.version.content.branding);
+        setBranding(payload.version.content.branding)
       }
       if (payload.version.content?.relations) {
-        setRelations(payload.version.content.relations);
+        setRelations(payload.version.content.relations)
       }
       if (payload.version.content?.sections) {
-        setSections(payload.version.content.sections);
+        setSections(payload.version.content.sections)
       }
     }
 
-    loadPreviewVersion();
+    loadPreviewVersion()
 
     return () => {
-      isMounted = false;
-    };
-  }, []);
+      isMounted = false
+    }
+  }, [])
 
   function updateBranding<Key extends keyof SiteBranding>(
     key: Key,
-    value: SiteBranding[Key],
+    value: SiteBranding[Key]
   ) {
     if (
       (key === "primaryColor" || key === "accentColor") &&
       !hexColorPattern.test(value)
     ) {
-      return;
+      return
     }
 
-    setBranding((current) => ({ ...current, [key]: value }));
+    setBranding((current) => ({ ...current, [key]: value }))
   }
 
   function toggleSection(key: SiteSectionKey) {
-    setSections((current) => ({ ...current, [key]: !current[key] }));
+    setSections((current) => ({ ...current, [key]: !current[key] }))
   }
 
   async function uploadLogo(file: File) {
-    if (!file.type.startsWith("image/") || file.size > logoMaxSizeBytes) return;
+    if (!file.type.startsWith("image/") || file.size > logoMaxSizeBytes) return
 
-    const result = await uploadFile(file, "image");
-    if (result?.fileUrl) updateBranding("logoUrl", result.fileUrl);
+    const result = await uploadFile(file, "image")
+    if (result?.fileUrl) updateBranding("logoUrl", result.fileUrl)
   }
 
   function removeLogo() {
-    updateBranding("logoUrl", "");
+    updateBranding("logoUrl", "")
   }
 
   function openCreateDialog() {
-    setEditingRelation(null);
-    setForm(emptyRelationForm);
-    setIsDialogOpen(true);
+    setEditingRelation(null)
+    setForm(emptyRelationForm)
+    setIsDialogOpen(true)
   }
 
   function openEditDialog(relation: TenantRelation) {
-    setEditingRelation(relation);
+    setEditingRelation(relation)
     setForm({
       name: relation.name,
       type: relation.type,
       tier: relation.tier,
       logoUrl: relation.logoUrl,
       websiteUrl: relation.websiteUrl,
-      active: relation.active,
-    });
-    setIsDialogOpen(true);
+      active: relation.active
+    })
+    setIsDialogOpen(true)
   }
 
   function saveRelation() {
-    if (!canSubmitRelation) return;
+    if (!canSubmitRelation) return
     if (editingRelation) {
       setRelations((current) =>
         current.map((relation) =>
           relation.id === editingRelation.id
             ? { ...relation, ...form }
-            : relation,
-        ),
-      );
+            : relation
+        )
+      )
     } else {
       setRelations((current) => [
         ...current,
         {
           ...form,
-          id: `relation-${Date.now()}`,
-        },
-      ]);
+          id: `relation-${Date.now()}`
+        }
+      ])
     }
-    setIsDialogOpen(false);
+    setIsDialogOpen(false)
   }
 
   function deleteRelation() {
-    if (!deleteTarget) return;
+    if (!deleteTarget) return
     setRelations((current) =>
-      current.filter((relation) => relation.id !== deleteTarget.id),
-    );
-    setDeleteTarget(null);
+      current.filter((relation) => relation.id !== deleteTarget.id)
+    )
+    setDeleteTarget(null)
   }
 
   async function saveDraft() {
-    if (isReadOnly) return;
-    setIsSavingDraft(true);
-    setStatusMessage(null);
+    if (isReadOnly) return
+    setIsSavingDraft(true)
+    setStatusMessage(null)
     try {
       const response = await fetch("/api/partner/mini-site", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: { branding, relations, sections } }),
-      });
+        body: JSON.stringify({ content: { branding, relations, sections } })
+      })
       if (!response.ok) {
-        setStatusMessage("Could not save mini-site draft.");
-        return;
+        setStatusMessage("Could not save mini-site draft.")
+        return
       }
-      const result = (await response.json()) as { id: string; status: string };
-      setDraftId(result.id);
-      setVersionStatus(result.status);
-      setStatusMessage("Draft saved.");
+      const result = (await response.json()) as { id: string; status: string }
+      setDraftId(result.id)
+      setVersionStatus(result.status)
+      setStatusMessage("Draft saved.")
     } finally {
-      setIsSavingDraft(false);
+      setIsSavingDraft(false)
     }
   }
 
   async function submitDraft() {
-    if (isReadOnly || !draftId) return;
-    setIsSavingDraft(true);
-    setStatusMessage(null);
+    if (isReadOnly || !draftId) return
+    setIsSavingDraft(true)
+    setStatusMessage(null)
     try {
       const response = await fetch("/api/partner/mini-site", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ miniSiteId: draftId, submitNote }),
-      });
+        body: JSON.stringify({ miniSiteId: draftId, submitNote })
+      })
       if (response.ok) {
-        setVersionStatus("submitted");
-        setSubmitDialogOpen(false);
-        setSubmitNote("");
-        setStatusMessage("Draft submitted for Admin review.");
+        setVersionStatus("submitted")
+        setSubmitDialogOpen(false)
+        setSubmitNote("")
+        setStatusMessage("Draft submitted for Admin review.")
       } else {
         const payload = (await response.json().catch(() => null)) as {
-          error?: string;
-        } | null;
-        setStatusMessage(payload?.error ?? "Could not submit mini-site draft.");
+          error?: string
+        } | null
+        setStatusMessage(payload?.error ?? "Could not submit mini-site draft.")
       }
     } finally {
-      setIsSavingDraft(false);
+      setIsSavingDraft(false)
     }
   }
 
   function resetDemo() {
-    setBranding(initialBranding);
-    setSections(initialSections);
-    setRelations(initialRelations);
+    setBranding(initialBranding)
+    setSections(initialSections)
+    setRelations(initialRelations)
   }
 
   return (
@@ -377,7 +377,7 @@ export function PartnerSiteManagementManager({
       <AlertDialog
         open={Boolean(deleteTarget)}
         onOpenChange={(open) => {
-          if (!open) setDeleteTarget(null);
+          if (!open) setDeleteTarget(null)
         }}
       >
         <AlertDialogContent>
@@ -400,16 +400,16 @@ export function PartnerSiteManagementManager({
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  );
+  )
 }
 
 function getPreviewLabel(status: string | null) {
-  if (status === "draft") return "Draft Preview";
-  if (status === "submitted") return "Submitted Preview";
-  if (status === "rejected") return "Rejected Preview";
-  if (status === "draft_update") return "Draft Update Preview";
-  if (status === "published") return "Published Preview";
-  return "New Draft Preview";
+  if (status === "draft") return "Draft Preview"
+  if (status === "submitted") return "Submitted Preview"
+  if (status === "rejected") return "Rejected Preview"
+  if (status === "draft_update") return "Draft Update Preview"
+  if (status === "published") return "Published Preview"
+  return "New Draft Preview"
 }
 
 function RelationsCard({
@@ -417,13 +417,13 @@ function RelationsCard({
   relations,
   onCreate,
   onEdit,
-  onDelete,
+  onDelete
 }: {
-  isReadOnly: boolean;
-  relations: TenantRelation[];
-  onCreate: () => void;
-  onEdit: (relation: TenantRelation) => void;
-  onDelete: (relation: TenantRelation) => void;
+  isReadOnly: boolean
+  relations: TenantRelation[]
+  onCreate: () => void
+  onEdit: (relation: TenantRelation) => void
+  onDelete: (relation: TenantRelation) => void
 }) {
   return (
     <Card>
@@ -509,7 +509,7 @@ function RelationsCard({
         </div>
       </CardContent>
     </Card>
-  );
+  )
 }
 
 function RelationDialog({
@@ -520,24 +520,24 @@ function RelationDialog({
   canSubmit,
   onChange,
   onOpenChange,
-  onSubmit,
+  onSubmit
 }: {
-  form: RelationForm;
-  isOpen: boolean;
-  isEditing: boolean;
-  isReadOnly: boolean;
-  canSubmit: boolean;
-  onChange: (form: RelationForm) => void;
-  onOpenChange: (open: boolean) => void;
-  onSubmit: () => void;
+  form: RelationForm
+  isOpen: boolean
+  isEditing: boolean
+  isReadOnly: boolean
+  canSubmit: boolean
+  onChange: (form: RelationForm) => void
+  onOpenChange: (open: boolean) => void
+  onSubmit: () => void
 }) {
-  const baseId = useId();
-  const nameId = `${baseId}-name`;
-  const typeId = `${baseId}-type`;
-  const tierId = `${baseId}-tier`;
-  const logoUrlId = `${baseId}-logo-url`;
-  const websiteUrlId = `${baseId}-website-url`;
-  const activeId = `${baseId}-active`;
+  const baseId = useId()
+  const nameId = `${baseId}-name`
+  const typeId = `${baseId}-type`
+  const tierId = `${baseId}-tier`
+  const logoUrlId = `${baseId}-logo-url`
+  const websiteUrlId = `${baseId}-website-url`
+  const activeId = `${baseId}-active`
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -568,7 +568,7 @@ function RelationDialog({
                 onChange={(event) =>
                   onChange({
                     ...form,
-                    type: event.target.value as TenantRelationType,
+                    type: event.target.value as TenantRelationType
                   })
                 }
               >
@@ -634,26 +634,26 @@ function RelationDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
 
 function Field({
   children,
   className,
   htmlFor,
-  label,
+  label
 }: {
-  children: ReactNode;
-  className?: string;
-  htmlFor?: string;
-  label: string;
+  children: ReactNode
+  className?: string
+  htmlFor?: string
+  label: string
 }) {
   return (
     <div className={cn("space-y-2", className)}>
       <Label htmlFor={htmlFor}>{label}</Label>
       {children}
     </div>
-  );
+  )
 }
 
 function LogoThumb({ relation }: { relation: TenantRelation }) {
@@ -666,12 +666,12 @@ function LogoThumb({ relation }: { relation: TenantRelation }) {
         src={relation.logoUrl}
         width={40}
       />
-    );
+    )
   }
 
   return (
     <div className="flex size-10 items-center justify-center rounded-md border bg-muted font-medium text-xs uppercase">
       {relation.name.slice(0, 2)}
     </div>
-  );
+  )
 }

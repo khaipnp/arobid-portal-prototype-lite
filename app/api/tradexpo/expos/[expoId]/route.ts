@@ -11,6 +11,7 @@ import {
 } from "@/lib/tradexpo/db/platform-data"
 import { validateHallBlocks } from "@/lib/tradexpo/expo-create-validation"
 import { validateExpoMarketingContent } from "@/lib/tradexpo/expo-marketing-content"
+import { normalizeExpoScheduleInput } from "@/lib/tradexpo/schedule"
 import type { ExpoHallDraft, ExpoStatus } from "@/lib/tradexpo/types"
 
 interface Props {
@@ -43,9 +44,12 @@ export async function PUT(request: Request, { params }: Props) {
     thumbnailUrl?: string
     expoTemplateId?: string
     categoryIds?: string[]
+    schedulePrecision?: string
     startAt?: string
     endAt?: string
     timezone?: string
+    scheduleMonth?: number | string | null
+    scheduleYear?: number | string | null
     ownerUserId?: string
     ownerEmail?: string
     halls?: ExpoHallDraft[]
@@ -118,16 +122,11 @@ export async function PUT(request: Request, { params }: Props) {
     )
   }
 
-  const startAt = body.startAt?.trim() ?? ""
-  const endAt = body.endAt?.trim() ?? ""
-  if (!startAt || !endAt) {
-    return NextResponse.json(
-      { error: "Start and end date/time are required." },
-      { status: 400 }
-    )
+  const scheduleResult = normalizeExpoScheduleInput(body)
+  if (!scheduleResult.ok) {
+    return NextResponse.json({ error: scheduleResult.error }, { status: 400 })
   }
-
-  const timezone = body.timezone?.trim() || "Asia/Bangkok"
+  const schedule = scheduleResult.schedule
   const ownerUserId = body.ownerUserId?.trim() ?? ""
   const ownerEmail = body.ownerEmail?.trim().toLowerCase() ?? ""
   if (!ownerUserId || !ownerEmail) {
@@ -163,9 +162,12 @@ export async function PUT(request: Request, { params }: Props) {
       thumbnailUrl: body.thumbnailUrl?.trim() ?? "",
       expoTemplateId,
       categoryIds,
-      startAt,
-      endAt,
-      timezone,
+      schedulePrecision: schedule.schedulePrecision,
+      startAt: schedule.startAt,
+      endAt: schedule.endAt,
+      timezone: schedule.timezone,
+      scheduleMonth: schedule.scheduleMonth,
+      scheduleYear: schedule.scheduleYear,
       ownerUserId,
       ownerEmail,
       halls
