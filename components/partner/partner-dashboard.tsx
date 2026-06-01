@@ -53,6 +53,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
+import Image from "next/image";
 
 const compactNumber = new Intl.NumberFormat("en", {
   notation: "compact",
@@ -577,7 +578,7 @@ function ExpoInventorySection({
           Expo inventory board
         </h2>
         {hasExpoData ? (
-          <div className="overflow-x-auto rounded-3xl border">
+          <div className="overflow-x-auto rounded-2xl border">
             <Table className="min-w-2/3">
               <TableHeader>
                 <TableRow>
