@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   BadgeCheckIcon,
@@ -7,11 +7,11 @@ import {
   PlusIcon,
   RocketIcon,
   SearchIcon,
-  Trash2Icon
-} from "lucide-react"
-import Image from "next/image"
-import { useRouter } from "next/navigation"
-import * as React from "react"
+  Trash2Icon,
+} from "lucide-react";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import * as React from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,48 +20,48 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle
-} from "@/components/ui/alert-dialog"
-import { Button } from "@/components/ui/button"
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
-} from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+  CardTitle,
+} from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
-} from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Textarea } from "@/components/ui/textarea"
-import { useUpload } from "@/hooks/use-upload"
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { useUpload } from "@/hooks/use-upload";
 import {
   EXPO_FORM_TIMEZONES,
-  toDatetimeLocalValue
-} from "@/lib/tradexpo/expo-form-utils"
+  toDatetimeLocalValue,
+} from "@/lib/tradexpo/expo-form-utils";
 import {
   DEFAULT_EXPO_MARKETING_CONTENT,
   normalizeExpoMarketingContent,
-  validateExpoMarketingContent
-} from "@/lib/tradexpo/expo-marketing-content"
+  validateExpoMarketingContent,
+} from "@/lib/tradexpo/expo-marketing-content";
 import {
   confirmOwnerChange,
-  getOwnerDisplay
-} from "@/lib/tradexpo/expo-owner-flow"
+  getOwnerDisplay,
+} from "@/lib/tradexpo/expo-owner-flow";
 import {
   EXPO_MONTH_OPTIONS,
   getExpoSchedulePrecision,
-  normalizeExpoScheduleInput
-} from "@/lib/tradexpo/schedule"
+  normalizeExpoScheduleInput,
+} from "@/lib/tradexpo/schedule";
 import type {
   Expo,
   ExpoCategory,
@@ -70,66 +70,70 @@ import type {
   ExpoMarketingContent,
   ExpoMarketingIconKey,
   ExpoSchedulePrecision,
-  HallTemplate
-} from "@/lib/tradexpo/types"
-import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group"
-import { Spinner } from "../ui/spinner"
+  HallTemplate,
+} from "@/lib/tradexpo/types";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "../ui/input-group";
+import { Spinner } from "../ui/spinner";
 
 type HallFormRow = {
-  key: string
-  hallName: string
-  hallTemplateId: string
-  basicQty: number
-  professionalQty: number
-  premiumQty: number
-}
+  key: string;
+  hallName: string;
+  hallTemplateId: string;
+  basicQty: number;
+  professionalQty: number;
+  premiumQty: number;
+};
 
-type OwnerPick = { id: string; email: string; name: string }
+type OwnerPick = { id: string; email: string; name: string };
 
 type AudienceCardFormRow =
   ExpoMarketingContent["whoShouldJoin"]["audienceCards"][number] & {
-    key: string
-  }
+    key: string;
+  };
 
 type BenefitCardFormRow =
   ExpoMarketingContent["audienceBenefits"]["benefitCards"][number] & {
-    key: string
-  }
+    key: string;
+  };
 
 const MARKETING_ICON_OPTIONS: Array<{
-  value: ExpoMarketingIconKey
-  label: string
-  Icon: typeof BadgeCheckIcon
+  value: ExpoMarketingIconKey;
+  label: string;
+  Icon: typeof BadgeCheckIcon;
 }> = [
   { value: "badge", label: "Badge", Icon: BadgeCheckIcon },
   { value: "rocket", label: "Rocket", Icon: RocketIcon },
-  { value: "gem", label: "Gem", Icon: GemIcon }
-]
+  { value: "gem", label: "Gem", Icon: GemIcon },
+];
 
 const SCHEDULE_PRECISION_OPTIONS: Array<{
-  value: ExpoSchedulePrecision
-  label: string
-  description: string
+  value: ExpoSchedulePrecision;
+  label: string;
+  description: string;
 }> = [
   {
     value: "exact_date_range",
     label: "Exact date range",
-    description: "Use confirmed start and end date/time."
+    description: "Use confirmed start and end date/time.",
   },
   {
     value: "month_year",
     label: "Month & year",
-    description: "Use event month and year while exact dates are pending."
+    description: "Use event month and year while exact dates are pending.",
   },
   {
     value: "unscheduled",
     label: "To be announced",
-    description: "Create this Expo without schedule fields."
-  }
-]
+    description: "Create this Expo without schedule fields.",
+  },
+];
 
 function rowKey(prefix: string) {
-  return `${prefix}-${Math.random().toString(36).slice(2)}`
+  return `${prefix}-${Math.random().toString(36).slice(2)}`;
 }
 
 function newHallRow(index: number): HallFormRow {
@@ -139,38 +143,38 @@ function newHallRow(index: number): HallFormRow {
     hallTemplateId: "",
     basicQty: 0,
     professionalQty: 0,
-    premiumQty: 0
-  }
+    premiumQty: 0,
+  };
 }
 
 function hallsToRows(halls: ExpoHall[]): HallFormRow[] {
-  if (halls.length === 0) return [newHallRow(0)]
+  if (halls.length === 0) return [newHallRow(0)];
   return halls.map((h) => ({
     key: h.id,
     hallName: h.hallName,
     hallTemplateId: h.hallTemplateId,
     basicQty: h.basicQty,
     professionalQty: h.professionalQty,
-    premiumQty: h.premiumQty
-  }))
+    premiumQty: h.premiumQty,
+  }));
 }
 
 function audienceRowsFromContent(
-  content: ExpoMarketingContent
+  content: ExpoMarketingContent,
 ): AudienceCardFormRow[] {
   return content.whoShouldJoin.audienceCards.map((card) => ({
     ...card,
-    key: rowKey("audience")
-  }))
+    key: rowKey("audience"),
+  }));
 }
 
 function benefitRowsFromContent(
-  content: ExpoMarketingContent
+  content: ExpoMarketingContent,
 ): BenefitCardFormRow[] {
   return content.audienceBenefits.benefitCards.map((card) => ({
     ...card,
-    key: rowKey("benefit")
-  }))
+    key: rowKey("benefit"),
+  }));
 }
 
 function newAudienceCard(): AudienceCardFormRow {
@@ -179,8 +183,8 @@ function newAudienceCard(): AudienceCardFormRow {
     title: "",
     description: "",
     tags: [],
-    displayOrder: 0
-  }
+    displayOrder: 0,
+  };
 }
 
 function newBenefitCard(): BenefitCardFormRow {
@@ -190,236 +194,236 @@ function newBenefitCard(): BenefitCardFormRow {
     icon: "badge",
     benefitItems: [""],
     isFeatured: false,
-    displayOrder: 0
-  }
+    displayOrder: 0,
+  };
 }
 
 export type ExpoFormProps = {
-  categories: ExpoCategory[]
-  layoutTemplates: ExpoLayoutTemplate[]
-  hallTemplates: HallTemplate[]
-  cancelHref?: string
-  successHref?: string
-  submitEndpoint?: string
-  editableScope?: "admin" | "partner-content"
-  isSuper?: boolean
-  initialMarketingContent?: ExpoMarketingContent
+  categories: ExpoCategory[];
+  layoutTemplates: ExpoLayoutTemplate[];
+  hallTemplates: HallTemplate[];
+  cancelHref?: string;
+  successHref?: string;
+  submitEndpoint?: string;
+  editableScope?: "admin" | "partner-content";
+  isSuper?: boolean;
+  initialMarketingContent?: ExpoMarketingContent;
 } & (
   | { mode: "create" }
   | {
-      mode: "edit"
-      expoId: string
-      initialExpo: Expo
-      initialHalls: ExpoHall[]
-      initialOwner: OwnerPick | null
+      mode: "edit";
+      expoId: string;
+      initialExpo: Expo;
+      initialHalls: ExpoHall[];
+      initialOwner: OwnerPick | null;
     }
-)
+);
 
 export function ExpoForm(props: ExpoFormProps) {
-  const router = useRouter()
-  const isEdit = props.mode === "edit"
-  const editableScope = props.editableScope ?? "admin"
-  const isPartnerContentEdit = isEdit && editableScope === "partner-content"
-  const isSuper = props.isSuper ?? false
+  const router = useRouter();
+  const isEdit = props.mode === "edit";
+  const editableScope = props.editableScope ?? "admin";
+  const isPartnerContentEdit = isEdit && editableScope === "partner-content";
+  const isSuper = props.isSuper ?? false;
 
   const [name, setName] = React.useState(() =>
-    isEdit ? props.initialExpo.name : ""
-  )
+    isEdit ? props.initialExpo.name : "",
+  );
   const [slug, setSlug] = React.useState(() =>
-    isEdit ? (props.initialExpo.slug ?? "") : ""
-  )
+    isEdit ? (props.initialExpo.slug ?? "") : "",
+  );
   const [description, setDescription] = React.useState(() =>
-    isEdit ? (props.initialExpo.description ?? "") : ""
-  )
+    isEdit ? (props.initialExpo.description ?? "") : "",
+  );
   const [thumbnailUrl, setThumbnailUrl] = React.useState(() =>
-    isEdit ? props.initialExpo.thumbnailUrl : ""
-  )
+    isEdit ? props.initialExpo.thumbnailUrl : "",
+  );
   const [expoTemplateId, setExpoTemplateId] = React.useState(() =>
-    isEdit ? (props.initialExpo.expoTemplateId ?? "") : ""
-  )
+    isEdit ? (props.initialExpo.expoTemplateId ?? "") : "",
+  );
   const [categoryIds, setCategoryIds] = React.useState<string[]>(() =>
-    isEdit ? props.initialExpo.categoryIds : []
-  )
-  const [categoryQuery, setCategoryQuery] = React.useState("")
+    isEdit ? props.initialExpo.categoryIds : [],
+  );
+  const [categoryQuery, setCategoryQuery] = React.useState("");
   const [timezone, setTimezone] = React.useState(() =>
-    isEdit ? (props.initialExpo.timezone ?? "Asia/Bangkok") : "Asia/Bangkok"
-  )
+    isEdit ? (props.initialExpo.timezone ?? "Asia/Bangkok") : "Asia/Bangkok",
+  );
 
   const [schedulePrecision, setSchedulePrecision] =
     React.useState<ExpoSchedulePrecision>(() =>
-      isEdit ? getExpoSchedulePrecision(props.initialExpo) : "unscheduled"
-    )
+      isEdit ? getExpoSchedulePrecision(props.initialExpo) : "unscheduled",
+    );
   const [scheduleMonth, setScheduleMonth] = React.useState(() =>
     isEdit && props.initialExpo.scheduleMonth
       ? String(props.initialExpo.scheduleMonth)
-      : ""
-  )
+      : "",
+  );
   const [scheduleYear, setScheduleYear] = React.useState(() =>
     isEdit && props.initialExpo.scheduleYear
       ? String(props.initialExpo.scheduleYear)
-      : ""
-  )
-  const [scheduleError, setScheduleError] = React.useState<string | null>(null)
+      : "",
+  );
+  const [scheduleError, setScheduleError] = React.useState<string | null>(null);
 
   const [startLocal, setStartLocal] = React.useState(() => {
     if (isEdit) {
       if (props.initialExpo.startAt) {
-        return toDatetimeLocalValue(new Date(props.initialExpo.startAt))
+        return toDatetimeLocalValue(new Date(props.initialExpo.startAt));
       }
       if (props.initialExpo.startDate) {
         return toDatetimeLocalValue(
-          new Date(`${props.initialExpo.startDate}T12:00:00`)
-        )
+          new Date(`${props.initialExpo.startDate}T12:00:00`),
+        );
       }
     }
-    return ""
-  })
+    return "";
+  });
   const [endLocal, setEndLocal] = React.useState(() => {
     if (isEdit) {
       if (props.initialExpo.endAt) {
-        return toDatetimeLocalValue(new Date(props.initialExpo.endAt))
+        return toDatetimeLocalValue(new Date(props.initialExpo.endAt));
       }
       if (props.initialExpo.endDate) {
         return toDatetimeLocalValue(
-          new Date(`${props.initialExpo.endDate}T12:00:00`)
-        )
+          new Date(`${props.initialExpo.endDate}T12:00:00`),
+        );
       }
     }
-    return ""
-  })
+    return "";
+  });
 
   const [ownerQuery, setOwnerQuery] = React.useState(() =>
     isEdit
       ? (props.initialOwner?.email ?? props.initialExpo.ownerEmail ?? "")
-      : ""
-  )
-  const [ownerResults, setOwnerResults] = React.useState<OwnerPick[]>([])
+      : "",
+  );
+  const [ownerResults, setOwnerResults] = React.useState<OwnerPick[]>([]);
   const [ownerPick, setOwnerPick] = React.useState<OwnerPick | null>(() =>
-    isEdit ? props.initialOwner : null
-  )
-  const [ownerLoading, setOwnerLoading] = React.useState(false)
-  const [isChangingOwner, setIsChangingOwner] = React.useState(!isEdit)
+    isEdit ? props.initialOwner : null,
+  );
+  const [ownerLoading, setOwnerLoading] = React.useState(false);
+  const [isChangingOwner, setIsChangingOwner] = React.useState(!isEdit);
   const [showOwnerChangeConfirm, setShowOwnerChangeConfirm] =
-    React.useState(false)
+    React.useState(false);
 
   const initialMarketingContent = normalizeExpoMarketingContent(
-    props.initialMarketingContent ?? DEFAULT_EXPO_MARKETING_CONTENT
-  )
+    props.initialMarketingContent ?? DEFAULT_EXPO_MARKETING_CONTENT,
+  );
   const [whoEnabled, setWhoEnabled] = React.useState(
-    initialMarketingContent.whoShouldJoin.enabled
-  )
+    initialMarketingContent.whoShouldJoin.enabled,
+  );
   const [whoTitle, setWhoTitle] = React.useState(
-    initialMarketingContent.whoShouldJoin.sectionTitle
-  )
+    initialMarketingContent.whoShouldJoin.sectionTitle,
+  );
   const [whoSubtitle, setWhoSubtitle] = React.useState(
-    initialMarketingContent.whoShouldJoin.sectionSubtitle ?? ""
-  )
+    initialMarketingContent.whoShouldJoin.sectionSubtitle ?? "",
+  );
   const [audienceCards, setAudienceCards] = React.useState<
     AudienceCardFormRow[]
-  >(() => audienceRowsFromContent(initialMarketingContent))
+  >(() => audienceRowsFromContent(initialMarketingContent));
   const [benefitsEnabled, setBenefitsEnabled] = React.useState(
-    initialMarketingContent.audienceBenefits.enabled
-  )
+    initialMarketingContent.audienceBenefits.enabled,
+  );
   const [benefitsTitle, setBenefitsTitle] = React.useState(
-    initialMarketingContent.audienceBenefits.sectionTitle
-  )
+    initialMarketingContent.audienceBenefits.sectionTitle,
+  );
   const [benefitsSubtitle, setBenefitsSubtitle] = React.useState(
-    initialMarketingContent.audienceBenefits.sectionSubtitle ?? ""
-  )
+    initialMarketingContent.audienceBenefits.sectionSubtitle ?? "",
+  );
   const [benefitCards, setBenefitCards] = React.useState<BenefitCardFormRow[]>(
-    () => benefitRowsFromContent(initialMarketingContent)
-  )
+    () => benefitRowsFromContent(initialMarketingContent),
+  );
 
   const [halls, setHalls] = React.useState<HallFormRow[]>(() =>
-    isEdit ? hallsToRows(props.initialHalls) : [newHallRow(0)]
-  )
+    isEdit ? hallsToRows(props.initialHalls) : [newHallRow(0)],
+  );
 
-  const { uploadFile, isUploading } = useUpload()
-  const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const { uploadFile, isUploading } = useUpload();
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const [submitting, setSubmitting] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
+  const [submitting, setSubmitting] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    const result = await uploadFile(file, "thumbnail")
+    const result = await uploadFile(file, "thumbnail");
     if (result) {
-      setThumbnailUrl(result.fileUrl)
+      setThumbnailUrl(result.fileUrl);
     }
-  }
+  };
 
   React.useEffect(() => {
-    const q = ownerQuery.trim()
+    const q = ownerQuery.trim();
     if (q.length < 2) {
-      setOwnerResults([])
-      return
+      setOwnerResults([]);
+      return;
     }
     const t = window.setTimeout(async () => {
-      setOwnerLoading(true)
+      setOwnerLoading(true);
       try {
         const res = await fetch(
-          `/api/tradexpo/expo-owners/search?q=${encodeURIComponent(q)}`
-        )
-        const data = (await res.json()) as { users?: OwnerPick[] }
-        setOwnerResults(data.users ?? [])
+          `/api/tradexpo/expo-owners/search?q=${encodeURIComponent(q)}`,
+        );
+        const data = (await res.json()) as { users?: OwnerPick[] };
+        setOwnerResults(data.users ?? []);
       } catch {
-        setOwnerResults([])
+        setOwnerResults([]);
       } finally {
-        setOwnerLoading(false)
+        setOwnerLoading(false);
       }
-    }, 400)
-    return () => window.clearTimeout(t)
-  }, [ownerQuery])
+    }, 400);
+    return () => window.clearTimeout(t);
+  }, [ownerQuery]);
 
   function toggleCategory(id: string) {
     setCategoryIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    )
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
   }
 
   function addHall() {
-    setHalls((prev) => [...prev, newHallRow(prev.length)])
+    setHalls((prev) => [...prev, newHallRow(prev.length)]);
   }
 
   function removeHall(index: number) {
-    setHalls((prev) => prev.filter((_, i) => i !== index))
+    setHalls((prev) => prev.filter((_, i) => i !== index));
   }
 
   function updateHall(index: number, patch: Partial<HallFormRow>) {
     setHalls((prev) =>
-      prev.map((h, i) => (i === index ? { ...h, ...patch } : h))
-    )
+      prev.map((h, i) => (i === index ? { ...h, ...patch } : h)),
+    );
   }
 
   function updateAudienceCard(
     index: number,
-    patch: Partial<AudienceCardFormRow>
+    patch: Partial<AudienceCardFormRow>,
   ) {
     setAudienceCards((prev) =>
-      prev.map((card, i) => (i === index ? { ...card, ...patch } : card))
-    )
+      prev.map((card, i) => (i === index ? { ...card, ...patch } : card)),
+    );
   }
 
   function updateBenefitCard(
     index: number,
-    patch: Partial<BenefitCardFormRow>
+    patch: Partial<BenefitCardFormRow>,
   ) {
     setBenefitCards((prev) =>
       prev.map((card, i) => {
         if (i !== index) {
-          return patch.isFeatured ? { ...card, isFeatured: false } : card
+          return patch.isFeatured ? { ...card, isFeatured: false } : card;
         }
-        return { ...card, ...patch }
-      })
-    )
+        return { ...card, ...patch };
+      }),
+    );
   }
 
   function updateBenefitItem(
     cardIndex: number,
     itemIndex: number,
-    value: string
+    value: string,
   ) {
     setBenefitCards((prev) =>
       prev.map((card, i) =>
@@ -427,12 +431,12 @@ export function ExpoForm(props: ExpoFormProps) {
           ? {
               ...card,
               benefitItems: card.benefitItems.map((item, j) =>
-                j === itemIndex ? value : item
-              )
+                j === itemIndex ? value : item,
+              ),
             }
-          : card
-      )
-    )
+          : card,
+      ),
+    );
   }
 
   function buildMarketingContent(): ExpoMarketingContent {
@@ -441,33 +445,33 @@ export function ExpoForm(props: ExpoFormProps) {
         enabled: whoEnabled,
         sectionTitle: whoTitle,
         sectionSubtitle: whoSubtitle,
-        audienceCards: audienceCards.map(({ key: _key, ...card }) => card)
+        audienceCards: audienceCards.map(({ key: _key, ...card }) => card),
       },
       audienceBenefits: {
         enabled: benefitsEnabled,
         sectionTitle: benefitsTitle,
         sectionSubtitle: benefitsSubtitle,
-        benefitCards: benefitCards.map(({ key: _key, ...card }) => card)
-      }
-    })
+        benefitCards: benefitCards.map(({ key: _key, ...card }) => card),
+      },
+    });
   }
 
   function handleConfirmOwnerChange() {
-    const next = confirmOwnerChange(ownerPick)
-    setOwnerQuery(next.ownerQuery)
-    setOwnerPick(next.ownerPick)
-    setIsChangingOwner(next.isChangingOwner)
-    setOwnerResults([])
-    setError(null)
+    const next = confirmOwnerChange(ownerPick);
+    setOwnerQuery(next.ownerQuery);
+    setOwnerPick(next.ownerPick);
+    setIsChangingOwner(next.isChangingOwner);
+    setOwnerResults([]);
+    setError(null);
   }
 
   async function onSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setError(null)
-    setScheduleError(null)
+    e.preventDefault();
+    setError(null);
+    setScheduleError(null);
     if (!ownerPick) {
-      setError("Search and select an expo owner by email.")
-      return
+      setError("Search and select an expo owner by email.");
+      return;
     }
 
     const scheduleResult = normalizeExpoScheduleInput({
@@ -476,19 +480,19 @@ export function ExpoForm(props: ExpoFormProps) {
       endAt: endLocal,
       timezone,
       scheduleMonth,
-      scheduleYear
-    })
+      scheduleYear,
+    });
     if (!scheduleResult.ok) {
-      setScheduleError(scheduleResult.error)
-      return
+      setScheduleError(scheduleResult.error);
+      return;
     }
-    const schedule = scheduleResult.schedule
+    const schedule = scheduleResult.schedule;
 
-    const marketingContent = buildMarketingContent()
-    const marketingResult = validateExpoMarketingContent(marketingContent)
+    const marketingContent = buildMarketingContent();
+    const marketingResult = validateExpoMarketingContent(marketingContent);
     if (!marketingResult.ok) {
-      setError(marketingResult.error)
-      return
+      setError(marketingResult.error);
+      return;
     }
 
     const payload = {
@@ -512,11 +516,11 @@ export function ExpoForm(props: ExpoFormProps) {
         hallTemplateId: h.hallTemplateId,
         basicQty: h.basicQty,
         professionalQty: h.professionalQty,
-        premiumQty: h.premiumQty
-      }))
-    }
+        premiumQty: h.premiumQty,
+      })),
+    };
 
-    setSubmitting(true)
+    setSubmitting(true);
     try {
       if (isEdit) {
         const res = await fetch(
@@ -524,38 +528,38 @@ export function ExpoForm(props: ExpoFormProps) {
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-          }
-        )
-        const data = (await res.json()) as { ok?: boolean; error?: string }
+            body: JSON.stringify(payload),
+          },
+        );
+        const data = (await res.json()) as { ok?: boolean; error?: string };
         if (!res.ok) {
-          setError(data.error ?? "Could not save expo.")
-          return
+          setError(data.error ?? "Could not save expo.");
+          return;
         }
         router.push(
-          props.successHref ?? `/admin/tradexpo/expos/${props.expoId}`
-        )
-        router.refresh()
+          props.successHref ?? `/admin/tradexpo/expos/${props.expoId}`,
+        );
+        router.refresh();
       } else {
         const res = await fetch("/api/tradexpo/expos", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        })
-        const data = (await res.json()) as { id?: string; error?: string }
+          body: JSON.stringify(payload),
+        });
+        const data = (await res.json()) as { id?: string; error?: string };
         if (!res.ok) {
-          setError(data.error ?? "Could not create expo.")
-          return
+          setError(data.error ?? "Could not create expo.");
+          return;
         }
         if (data.id) {
-          router.push(`/admin/tradexpo/expos/${data.id}`)
-          router.refresh()
+          router.push(`/admin/tradexpo/expos/${data.id}`);
+          router.refresh();
         }
       }
     } catch {
-      setError("Network error. Please try again.")
+      setError("Network error. Please try again.");
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
   }
 
@@ -564,7 +568,7 @@ export function ExpoForm(props: ExpoFormProps) {
       ? startLocal.trim().length > 0 && endLocal.trim().length > 0
       : schedulePrecision === "month_year"
         ? scheduleMonth.trim().length > 0 && scheduleYear.trim().length > 0
-        : true
+        : true;
 
   const canSubmit =
     name.trim().length > 0 &&
@@ -572,19 +576,21 @@ export function ExpoForm(props: ExpoFormProps) {
     expoTemplateId &&
     categoryIds.length > 0 &&
     ownerPick !== null &&
-    hasScheduleInput
+    hasScheduleInput;
 
   const cancelHref =
     props.cancelHref ??
-    (isEdit ? `/admin/tradexpo/expos/${props.expoId}` : "/admin/tradexpo/expos")
+    (isEdit
+      ? `/admin/tradexpo/expos/${props.expoId}`
+      : "/admin/tradexpo/expos");
   const currentOwnerDisplay = isEdit
     ? getOwnerDisplay(ownerPick, props.initialExpo.ownerEmail)
-    : null
+    : null;
   const filteredCategories = React.useMemo(() => {
-    const q = categoryQuery.trim().toLowerCase()
-    if (!q) return props.categories
-    return props.categories.filter((cat) => cat.name.toLowerCase().includes(q))
-  }, [categoryQuery, props.categories])
+    const q = categoryQuery.trim().toLowerCase();
+    if (!q) return props.categories;
+    return props.categories.filter((cat) => cat.name.toLowerCase().includes(q));
+  }, [categoryQuery, props.categories]);
 
   return (
     <form className="mt-5 space-y-3" onSubmit={onSubmit}>
@@ -670,8 +676,8 @@ export function ExpoForm(props: ExpoFormProps) {
                       onClick={() => fileInputRef.current?.click()}
                       onKeyDown={(e) => {
                         if (e.key === "Enter" || e.key === " ") {
-                          e.preventDefault()
-                          fileInputRef.current?.click()
+                          e.preventDefault();
+                          fileInputRef.current?.click();
                         }
                       }}
                     >
@@ -733,11 +739,11 @@ export function ExpoForm(props: ExpoFormProps) {
                     <SearchIcon />
                   </InputGroupAddon>
                 </InputGroup>
-                <div className="max-h-48 overflow-y-auto rounded-md border">
+                <div className="max-h-48 overflow-y-auto rounded-lg border">
                   {filteredCategories.map((cat) => (
                     <label
                       key={cat.id}
-                      className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-muted/60"
+                      className="flex cursor-pointer items-center gap-2 rounded px-3 py-1.5 text-sm hover:bg-muted/60"
                     >
                       <Checkbox
                         checked={categoryIds.includes(cat.id)}
@@ -767,15 +773,15 @@ export function ExpoForm(props: ExpoFormProps) {
                 <RadioGroup
                   value={schedulePrecision}
                   onValueChange={(value) => {
-                    setSchedulePrecision(value as ExpoSchedulePrecision)
-                    setScheduleError(null)
+                    setSchedulePrecision(value as ExpoSchedulePrecision);
+                    setScheduleError(null);
                   }}
                   className="grid gap-3 md:grid-cols-3"
                 >
                   {SCHEDULE_PRECISION_OPTIONS.map((option) => (
                     <label
                       key={option.value}
-                      className="flex cursor-pointer gap-3 rounded-md border p-3 text-sm transition-colors hover:bg-muted/60 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/5"
+                      className="flex cursor-pointer gap-3 rounded-2xl border p-3 text-sm transition-colors hover:bg-muted/60 has-[[data-state=checked]]:border-legend has-[[data-state=checked]]:bg-legend/5"
                     >
                       <RadioGroupItem value={option.value} className="mt-0.5" />
                       <span className="grid gap-1">
@@ -926,8 +932,8 @@ export function ExpoForm(props: ExpoFormProps) {
                         id="owner-q"
                         value={ownerQuery}
                         onChange={(e) => {
-                          setOwnerQuery(e.target.value)
-                          setOwnerPick(null)
+                          setOwnerQuery(e.target.value);
+                          setOwnerPick(null);
                         }}
                         placeholder="Type at least 2 characters…"
                         autoComplete="off"
@@ -945,8 +951,8 @@ export function ExpoForm(props: ExpoFormProps) {
                             <button
                               type="button"
                               onClick={() => {
-                                setOwnerPick(u)
-                                setOwnerQuery(u.email)
+                                setOwnerPick(u);
+                                setOwnerQuery(u.email);
                               }}
                               className="w-full rounded-lg border bg-card px-3 py-2 text-left text-sm hover:bg-muted/50"
                             >
@@ -977,8 +983,8 @@ export function ExpoForm(props: ExpoFormProps) {
                           size="sm"
                           className="ml-2 h-7"
                           onClick={() => {
-                            setOwnerPick(null)
-                            setOwnerQuery("")
+                            setOwnerPick(null);
+                            setOwnerQuery("");
                           }}
                         >
                           Change
@@ -1079,7 +1085,7 @@ export function ExpoForm(props: ExpoFormProps) {
                             onChange={(e) =>
                               updateHall(index, {
                                 basicQty:
-                                  Number.parseInt(e.target.value, 10) || 0
+                                  Number.parseInt(e.target.value, 10) || 0,
                               })
                             }
                           />
@@ -1093,7 +1099,7 @@ export function ExpoForm(props: ExpoFormProps) {
                             onChange={(e) =>
                               updateHall(index, {
                                 professionalQty:
-                                  Number.parseInt(e.target.value, 10) || 0
+                                  Number.parseInt(e.target.value, 10) || 0,
                               })
                             }
                           />
@@ -1107,7 +1113,7 @@ export function ExpoForm(props: ExpoFormProps) {
                             onChange={(e) =>
                               updateHall(index, {
                                 premiumQty:
-                                  Number.parseInt(e.target.value, 10) || 0
+                                  Number.parseInt(e.target.value, 10) || 0,
                               })
                             }
                           />
@@ -1184,7 +1190,7 @@ export function ExpoForm(props: ExpoFormProps) {
                           disabled={audienceCards.length <= 1}
                           onClick={() =>
                             setAudienceCards((prev) =>
-                              prev.filter((_, i) => i !== index)
+                              prev.filter((_, i) => i !== index),
                             )
                           }
                         >
@@ -1206,7 +1212,7 @@ export function ExpoForm(props: ExpoFormProps) {
                               tags: e.target.value
                                 .split(",")
                                 .map((tag) => tag.trim())
-                                .filter(Boolean)
+                                .filter(Boolean),
                             })
                           }
                           placeholder="Retailers, Distributors"
@@ -1216,7 +1222,7 @@ export function ExpoForm(props: ExpoFormProps) {
                         value={card.description}
                         onChange={(e) =>
                           updateAudienceCard(index, {
-                            description: e.target.value
+                            description: e.target.value,
                           })
                         }
                         rows={2}
@@ -1290,7 +1296,7 @@ export function ExpoForm(props: ExpoFormProps) {
                           disabled={benefitCards.length <= 1}
                           onClick={() =>
                             setBenefitCards((prev) =>
-                              prev.filter((_, i) => i !== cardIndex)
+                              prev.filter((_, i) => i !== cardIndex),
                             )
                           }
                         >
@@ -1302,7 +1308,7 @@ export function ExpoForm(props: ExpoFormProps) {
                           value={card.audienceName}
                           onChange={(e) =>
                             updateBenefitCard(cardIndex, {
-                              audienceName: e.target.value
+                              audienceName: e.target.value,
                             })
                           }
                           placeholder="Dành cho Buyers"
@@ -1311,7 +1317,7 @@ export function ExpoForm(props: ExpoFormProps) {
                           value={card.icon}
                           onValueChange={(value) =>
                             updateBenefitCard(cardIndex, {
-                              icon: value as ExpoMarketingIconKey
+                              icon: value as ExpoMarketingIconKey,
                             })
                           }
                         >
@@ -1327,7 +1333,7 @@ export function ExpoForm(props: ExpoFormProps) {
                                     {label}
                                   </span>
                                 </SelectItem>
-                              )
+                              ),
                             )}
                           </SelectContent>
                         </Select>
@@ -1336,7 +1342,7 @@ export function ExpoForm(props: ExpoFormProps) {
                             checked={card.isFeatured}
                             onCheckedChange={(v) =>
                               updateBenefitCard(cardIndex, {
-                                isFeatured: Boolean(v)
+                                isFeatured: Boolean(v),
                               })
                             }
                           />
@@ -1355,7 +1361,7 @@ export function ExpoForm(props: ExpoFormProps) {
                                 updateBenefitItem(
                                   cardIndex,
                                   itemIndex,
-                                  e.target.value
+                                  e.target.value,
                                 )
                               }
                               placeholder="Benefit item"
@@ -1368,8 +1374,8 @@ export function ExpoForm(props: ExpoFormProps) {
                               onClick={() =>
                                 updateBenefitCard(cardIndex, {
                                   benefitItems: card.benefitItems.filter(
-                                    (_, i) => i !== itemIndex
-                                  )
+                                    (_, i) => i !== itemIndex,
+                                  ),
                                 })
                               }
                             >
@@ -1384,7 +1390,7 @@ export function ExpoForm(props: ExpoFormProps) {
                           disabled={card.benefitItems.length >= 8}
                           onClick={() =>
                             updateBenefitCard(cardIndex, {
-                              benefitItems: [...card.benefitItems, ""]
+                              benefitItems: [...card.benefitItems, ""],
                             })
                           }
                         >
@@ -1455,5 +1461,5 @@ export function ExpoForm(props: ExpoFormProps) {
         </Button>
       </div>
     </form>
-  )
+  );
 }
