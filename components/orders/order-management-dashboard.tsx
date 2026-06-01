@@ -1,63 +1,68 @@
-"use client"
+"use client";
 
 import {
-  CheckIcon,
   ChevronsUpDownIcon,
   FilterXIcon,
-  SearchIcon
-} from "lucide-react"
-import { useRouter } from "next/navigation"
-import { useEffect, useMemo, useState } from "react"
-import { toast } from "sonner"
+  SearchIcon,
+  XIcon,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { toast } from "sonner";
 import {
   getOrderStatusLabel,
-  OrderStatusBadge
-} from "@/components/orders/order-status-badge"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
+  OrderStatusBadge,
+} from "@/components/orders/order-status-badge";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   type DateRange,
-  DateRangePicker
-} from "@/components/ui/date-range-picker"
+  DateRangePicker,
+} from "@/components/ui/date-range-picker";
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger
-} from "@/components/ui/popover"
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
-} from "@/components/ui/select"
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
-} from "@/components/ui/table"
+  TableRow,
+} from "@/components/ui/table";
 import type {
   InvoiceStatus,
   Order,
   OrderStatus,
-  OrderType
-} from "@/lib/tradexpo/types"
-import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group"
+  OrderType,
+} from "@/lib/tradexpo/types";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "../ui/input-group";
+import Link from "next/link";
 
-const PAGE_SIZE = 20
-const FILTERS_SESSION_KEY = "admin-order-management-filters"
+const PAGE_SIZE = 20;
+const FILTERS_SESSION_KEY = "admin-order-management-filters";
 
 const ALL_STATUSES: OrderStatus[] = [
   "Pending Payment",
   "Paid",
   "Failed",
   "Cancelled",
-  "Expired"
-]
+  "Expired",
+];
 
 const INVOICE_STATUS_OPTIONS: Array<"all" | InvoiceStatus> = [
   "all",
@@ -66,25 +71,25 @@ const INVOICE_STATUS_OPTIONS: Array<"all" | InvoiceStatus> = [
   "requested_paid",
   "exported",
   "issued",
-  "sent"
-]
+  "sent",
+];
 
 function getInvoiceStatusLabel(status: "all" | InvoiceStatus) {
   switch (status) {
     case "all":
-      return "All invoice states"
+      return "All invoice states";
     case "not_requested":
-      return "Not requested"
+      return "Not requested";
     case "requested_pending_payment":
-      return "Requested, pending payment"
+      return "Requested, pending payment";
     case "requested_paid":
-      return "Ready to export"
+      return "Ready to export";
     case "exported":
-      return "Exported"
+      return "Exported";
     case "issued":
-      return "Issued"
+      return "Issued";
     case "sent":
-      return "Sent"
+      return "Sent";
   }
 }
 
@@ -92,8 +97,8 @@ function formatVND(amount: number) {
   return new Intl.NumberFormat("vi-VN", {
     style: "currency",
     currency: "VND",
-    maximumFractionDigits: 0
-  }).format(amount)
+    maximumFractionDigits: 0,
+  }).format(amount);
 }
 
 function formatDate(iso: string) {
@@ -102,60 +107,59 @@ function formatDate(iso: string) {
     month: "2-digit",
     year: "numeric",
     hour: "2-digit",
-    minute: "2-digit"
-  })
+    minute: "2-digit",
+  });
 }
 
 export function OrderManagementDashboard({
-  initialOrders
+  initialOrders,
 }: {
-  initialOrders: Order[]
+  initialOrders: Order[];
 }) {
-  const router = useRouter()
   const [orders] = useState<Order[]>(() =>
     [...initialOrders].sort(
       (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    )
-  )
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    ),
+  );
 
-  const [search, setSearch] = useState("")
-  const [statusFilters, setStatusFilters] = useState<OrderStatus[]>([])
-  const [typeFilter, setTypeFilter] = useState<"all" | OrderType>("all")
+  const [search, setSearch] = useState("");
+  const [statusFilters, setStatusFilters] = useState<OrderStatus[]>([]);
+  const [typeFilter, setTypeFilter] = useState<"all" | OrderType>("all");
   const [invoiceStatusFilter, setInvoiceStatusFilter] = useState<
     "all" | InvoiceStatus
-  >("all")
-  const [dateRange, setDateRange] = useState<DateRange | undefined>()
-  const [page, setPage] = useState(1)
+  >("all");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
-    const raw = sessionStorage.getItem(FILTERS_SESSION_KEY)
-    if (!raw) return
+    const raw = sessionStorage.getItem(FILTERS_SESSION_KEY);
+    if (!raw) return;
     try {
       const parsed = JSON.parse(raw) as {
-        search?: string
-        statusFilters?: OrderStatus[]
-        typeFilter?: "all" | OrderType
-        invoiceStatusFilter?: "all" | InvoiceStatus
-        dateFrom?: string
-        dateTo?: string
-      }
-      setSearch(parsed.search ?? "")
+        search?: string;
+        statusFilters?: OrderStatus[];
+        typeFilter?: "all" | OrderType;
+        invoiceStatusFilter?: "all" | InvoiceStatus;
+        dateFrom?: string;
+        dateTo?: string;
+      };
+      setSearch(parsed.search ?? "");
       setStatusFilters(
-        Array.isArray(parsed.statusFilters) ? parsed.statusFilters : []
-      )
-      setTypeFilter(parsed.typeFilter ?? "all")
-      setInvoiceStatusFilter(parsed.invoiceStatusFilter ?? "all")
+        Array.isArray(parsed.statusFilters) ? parsed.statusFilters : [],
+      );
+      setTypeFilter(parsed.typeFilter ?? "all");
+      setInvoiceStatusFilter(parsed.invoiceStatusFilter ?? "all");
       if (parsed.dateFrom || parsed.dateTo) {
         setDateRange({
           from: parsed.dateFrom ? new Date(parsed.dateFrom) : undefined,
-          to: parsed.dateTo ? new Date(parsed.dateTo) : undefined
-        })
+          to: parsed.dateTo ? new Date(parsed.dateTo) : undefined,
+        });
       }
     } catch {
       // Ignore invalid stored filters.
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
     sessionStorage.setItem(
@@ -166,13 +170,13 @@ export function OrderManagementDashboard({
         typeFilter,
         invoiceStatusFilter,
         dateFrom: dateRange?.from?.toISOString(),
-        dateTo: dateRange?.to?.toISOString()
-      })
-    )
-  }, [search, statusFilters, typeFilter, invoiceStatusFilter, dateRange])
+        dateTo: dateRange?.to?.toISOString(),
+      }),
+    );
+  }, [search, statusFilters, typeFilter, invoiceStatusFilter, dateRange]);
 
   const filtered = useMemo(() => {
-    const q = search.toLowerCase()
+    const q = search.toLowerCase();
     return orders.filter((o) => {
       if (
         q &&
@@ -184,42 +188,42 @@ export function OrderManagementDashboard({
           .includes(q) &&
         !(o.billingInfoSnapshot?.taxCode ?? "").toLowerCase().includes(q)
       )
-        return false
+        return false;
       if (statusFilters.length > 0 && !statusFilters.includes(o.status))
-        return false
-      if (typeFilter !== "all" && o.orderType !== typeFilter) return false
+        return false;
+      if (typeFilter !== "all" && o.orderType !== typeFilter) return false;
       if (
         invoiceStatusFilter !== "all" &&
         o.invoiceStatus !== invoiceStatusFilter
       )
-        return false
+        return false;
       if (dateRange?.from && o.createdAt < dateRange.from.toISOString())
-        return false
+        return false;
       if (dateRange?.to) {
-        const toEnd = new Date(dateRange.to)
-        toEnd.setHours(23, 59, 59, 999)
-        if (o.createdAt > toEnd.toISOString()) return false
+        const toEnd = new Date(dateRange.to);
+        toEnd.setHours(23, 59, 59, 999);
+        if (o.createdAt > toEnd.toISOString()) return false;
       }
-      return true
-    })
+      return true;
+    });
   }, [
     orders,
     search,
     statusFilters,
     typeFilter,
     invoiceStatusFilter,
-    dateRange
-  ])
+    dateRange,
+  ]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
-  const currentPage = Math.min(page, totalPages)
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
   const pageItems = filtered.slice(
     (currentPage - 1) * PAGE_SIZE,
-    currentPage * PAGE_SIZE
-  )
+    currentPage * PAGE_SIZE,
+  );
 
   function handleFilterChange() {
-    setPage(1)
+    setPage(1);
   }
 
   const selectedStatusLabel =
@@ -227,26 +231,40 @@ export function OrderManagementDashboard({
       ? "All statuses"
       : statusFilters.length === 1
         ? getOrderStatusLabel(statusFilters[0])
-        : `${statusFilters.length} statuses`
+        : `${statusFilters.length} statuses`;
 
   return (
-    <div className="mt-4 space-y-4">
+    <div className="mt-6 space-y-4">
       {/* Filters */}
       <div className="flex flex-wrap items-end gap-2">
         <div className="relative min-w-56 flex-1">
-          <InputGroup className="max-w-sm rounded-full">
+          <InputGroup className="max-w-xs">
             <InputGroupAddon>
               <SearchIcon />
             </InputGroupAddon>
             <InputGroupInput
-              placeholder="Search by Order ID, customer, invoice email, or MST…"
+              placeholder="Order ID, customer, email or Tax Code"
               value={search}
               onChange={(e) => {
-                setSearch(e.target.value)
-                handleFilterChange()
+                setSearch(e.target.value);
+                handleFilterChange();
               }}
-              className="pl-8"
             />
+            {search && (
+              <InputGroupAddon align="inline-end">
+                <Button
+                  variant="ghost"
+                  size="icon-xs"
+                  className="rounded-full"
+                  onClick={() => {
+                    setSearch("");
+                    handleFilterChange();
+                  }}
+                >
+                  <XIcon />
+                </Button>
+              </InputGroupAddon>
+            )}
           </InputGroup>
         </div>
 
@@ -255,13 +273,14 @@ export function OrderManagementDashboard({
             <Button
               variant="outline"
               role="combobox"
-              className="w-56 justify-between font-normal"
+              size="lg"
+              className="max-w-xs justify-between font-normal"
             >
               <span className="truncate">{selectedStatusLabel}</span>
               <ChevronsUpDownIcon className="size-4 opacity-50" />
             </Button>
           </PopoverTrigger>
-          <PopoverContent align="start" className="w-64 space-y-2 p-2">
+          <PopoverContent align="start" className="w-xs">
             <div className="mb-1 flex items-center justify-between">
               <span className="font-medium text-xs uppercase tracking-wide">
                 Status
@@ -269,11 +288,10 @@ export function OrderManagementDashboard({
               {statusFilters.length > 0 && (
                 <Button
                   variant="ghost"
-                  size="sm"
-                  className="h-6 px-2 text-xs"
+                  size="xs"
                   onClick={() => {
-                    setStatusFilters([])
-                    handleFilterChange()
+                    setStatusFilters([]);
+                    handleFilterChange();
                   }}
                 >
                   Clear
@@ -281,26 +299,25 @@ export function OrderManagementDashboard({
               )}
             </div>
             {ALL_STATUSES.map((status) => {
-              const checked = statusFilters.includes(status)
+              const checked = statusFilters.includes(status);
               return (
                 <label
                   key={status}
-                  className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted"
+                  className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-muted"
                 >
                   <Checkbox
                     checked={checked}
                     onCheckedChange={(nextChecked) => {
                       setStatusFilters((prev) => {
-                        if (nextChecked) return [...prev, status]
-                        return prev.filter((s) => s !== status)
-                      })
-                      handleFilterChange()
+                        if (nextChecked) return [...prev, status];
+                        return prev.filter((s) => s !== status);
+                      });
+                      handleFilterChange();
                     }}
                   />
                   <span className="flex-1">{getOrderStatusLabel(status)}</span>
-                  {checked && <CheckIcon className="size-3.5 text-primary" />}
                 </label>
-              )
+              );
             })}
           </PopoverContent>
         </Popover>
@@ -308,11 +325,11 @@ export function OrderManagementDashboard({
         <Select
           value={typeFilter}
           onValueChange={(v) => {
-            setTypeFilter(v as typeof typeFilter)
-            handleFilterChange()
+            setTypeFilter(v as typeof typeFilter);
+            handleFilterChange();
           }}
         >
-          <SelectTrigger className="w-48 rounded-full">
+          <SelectTrigger className="max-w-xs">
             <SelectValue placeholder="All types" />
           </SelectTrigger>
           <SelectContent>
@@ -327,11 +344,11 @@ export function OrderManagementDashboard({
         <Select
           value={invoiceStatusFilter}
           onValueChange={(v) => {
-            setInvoiceStatusFilter(v as typeof invoiceStatusFilter)
-            handleFilterChange()
+            setInvoiceStatusFilter(v as typeof invoiceStatusFilter);
+            handleFilterChange();
           }}
         >
-          <SelectTrigger className="w-56 rounded-full">
+          <SelectTrigger className="max-w-xs">
             <SelectValue placeholder="All invoice states" />
           </SelectTrigger>
           <SelectContent>
@@ -346,11 +363,11 @@ export function OrderManagementDashboard({
         <DateRangePicker
           value={dateRange}
           onChange={(r) => {
-            setDateRange(r)
-            handleFilterChange()
+            setDateRange(r);
+            handleFilterChange();
           }}
           placeholder="Date range"
-          className="w-64"
+          className="max-w-xs"
         />
 
         {(search ||
@@ -362,12 +379,12 @@ export function OrderManagementDashboard({
             variant="ghost"
             size="icon"
             onClick={() => {
-              setSearch("")
-              setStatusFilters([])
-              setTypeFilter("all")
-              setInvoiceStatusFilter("all")
-              setDateRange(undefined)
-              setPage(1)
+              setSearch("");
+              setStatusFilters([]);
+              setTypeFilter("all");
+              setInvoiceStatusFilter("all");
+              setDateRange(undefined);
+              setPage(1);
             }}
           >
             <FilterXIcon />
@@ -376,7 +393,7 @@ export function OrderManagementDashboard({
       </div>
 
       {/* Table */}
-      <div className="rounded-2xl border">
+      <div className="mt-4 overflow-hidden rounded-2xl border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -389,7 +406,6 @@ export function OrderManagementDashboard({
               <TableHead>Method</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Created</TableHead>
-              <TableHead className="w-16" />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -405,14 +421,13 @@ export function OrderManagementDashboard({
             ) : (
               pageItems.map((order) => (
                 <TableRow key={order.id}>
-                  <TableCell
-                    className="max-w-48 cursor-pointer truncate font-medium font-mono text-xs"
-                    onClick={() => {
-                      navigator.clipboard.writeText(order.id)
-                      toast("Order ID copied to clipboard")
-                    }}
-                  >
-                    {order.id}
+                  <TableCell className="max-w-32 cursor-pointer truncate font-medium font-mono text-xs">
+                    <Link
+                      href={`/admin/orders/${order.id}`}
+                      className="hover:underline"
+                    >
+                      {order.id}
+                    </Link>
                   </TableCell>
                   <TableCell>
                     <div className="font-medium text-sm">
@@ -430,8 +445,8 @@ export function OrderManagementDashboard({
                       ? "Booth Registration"
                       : "B2B Subscription"}
                   </TableCell>
-                  <TableCell>
-                    <div className="text-sm">
+                  <TableCell className="max-w-32">
+                    <div className="truncate text-sm">
                       {order.expoName ?? order.referenceId}
                     </div>
                     {order.orderType === "booth_registration" ? (
@@ -459,15 +474,6 @@ export function OrderManagementDashboard({
                   </TableCell>
                   <TableCell className="whitespace-nowrap text-muted-foreground text-xs">
                     {formatDate(order.createdAt)}
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => router.push(`/admin/orders/${order.id}`)}
-                    >
-                      View
-                    </Button>
                   </TableCell>
                 </TableRow>
               ))
@@ -504,5 +510,5 @@ export function OrderManagementDashboard({
         </div>
       )}
     </div>
-  )
+  );
 }

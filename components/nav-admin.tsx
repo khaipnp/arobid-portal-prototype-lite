@@ -145,7 +145,7 @@ export function NavAdmin() {
 
   return (
     <>
-      <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+      <SidebarGroup>
         <SidebarGroupLabel className="select-none">TradeXpo</SidebarGroupLabel>
         <SidebarMenu>
           {tradexpoLinks.map((item) => (
@@ -171,7 +171,7 @@ export function NavAdmin() {
         </SidebarMenu>
       </SidebarGroup>
 
-      <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+      <SidebarGroup>
         <SidebarGroupLabel className="select-none">
           Service Management
         </SidebarGroupLabel>
@@ -199,7 +199,7 @@ export function NavAdmin() {
         </SidebarMenu>
       </SidebarGroup>
 
-      <SidebarGroup className="group-data-[collapsible=icon]:hidden">
+      <SidebarGroup>
         <SidebarGroupLabel className="select-none">
           Administration
         </SidebarGroupLabel>
