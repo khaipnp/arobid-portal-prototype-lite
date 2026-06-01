@@ -1,31 +1,31 @@
-"use client"
+"use client";
 
-import { BadgeCheckIcon, Building2Icon } from "lucide-react"
-import { useMemo } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import type { PartnerAccess } from "@/lib/partner/access"
-import type { PartnerExpoProgramsWorkspace } from "@/lib/partner/db"
-import { PartnerExpoList } from "./partner-expo-list"
+import { BadgeCheckIcon, Building2Icon } from "lucide-react";
+import { useMemo } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import type { PartnerAccess } from "@/lib/partner/access";
+import type { PartnerExpoProgramsWorkspace } from "@/lib/partner/db";
+import { PartnerExpoList } from "./partner-expo-list";
 
-const numberFormat = new Intl.NumberFormat("en")
+const numberFormat = new Intl.NumberFormat("en");
 
 export function PartnerExpoPrograms({
   access,
-  workspace
+  workspace,
 }: {
-  access: PartnerAccess
-  workspace: PartnerExpoProgramsWorkspace
+  access: PartnerAccess;
+  workspace: PartnerExpoProgramsWorkspace;
 }) {
   const summary = useMemo(() => {
     return workspace.assignedExpos.reduce(
       (acc, item) => {
-        acc.assigned += 1
-        if (item.assignment.partnershipModel === "co_host") acc.coHost += 1
-        if (item.assignment.partnershipModel === "turnkey") acc.turnkey += 1
-        if (item.assignment.partnershipModel === "tenant") acc.tenant += 1
-        acc.booths += item.totalBooths
-        acc.soldBooths += item.soldBooths
-        return acc
+        acc.assigned += 1;
+        if (item.assignment.partnershipModel === "co_host") acc.coHost += 1;
+        if (item.assignment.partnershipModel === "turnkey") acc.turnkey += 1;
+        if (item.assignment.partnershipModel === "tenant") acc.tenant += 1;
+        acc.booths += item.totalBooths;
+        acc.soldBooths += item.soldBooths;
+        return acc;
       },
       {
         assigned: 0,
@@ -33,18 +33,18 @@ export function PartnerExpoPrograms({
         turnkey: 0,
         tenant: 0,
         booths: 0,
-        soldBooths: 0
-      }
-    )
-  }, [workspace.assignedExpos])
+        soldBooths: 0,
+      },
+    );
+  }, [workspace.assignedExpos]);
 
   return (
-    <div className="space-y-4">
-      <section className="grid gap-3 px-4 sm:grid-cols-2">
+    <div className="mt-6 space-y-4">
+      <section className="grid gap-3 sm:grid-cols-2">
         <MetricCard
           title="Assigned Programs"
           value={numberFormat.format(
-            summary.coHost + summary.turnkey + summary.tenant
+            summary.coHost + summary.turnkey + summary.tenant,
           )}
           icon={<Building2Icon />}
         />
@@ -61,17 +61,17 @@ export function PartnerExpoPrograms({
         assignedExpos={workspace.assignedExpos}
       />
     </div>
-  )
+  );
 }
 
 function MetricCard({
   title,
   value,
-  icon
+  icon,
 }: {
-  title: string
-  value: string
-  icon: React.ReactNode
+  title: string;
+  value: string;
+  icon: React.ReactNode;
 }) {
   return (
     <Card>
@@ -85,5 +85,5 @@ function MetricCard({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
