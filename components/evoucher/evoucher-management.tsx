@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   AlertCircleIcon,
@@ -7,9 +7,10 @@ import {
   EllipsisVerticalIcon,
   FilterXIcon,
   PlusIcon,
-  SearchIcon
-} from "lucide-react"
-import { useMemo, useState } from "react"
+  SearchIcon,
+  XIcon,
+} from "lucide-react";
+import { useMemo, useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,55 +19,55 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle
-} from "@/components/ui/alert-dialog"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Command,
   CommandEmpty,
   CommandInput,
   CommandItem,
-  CommandList
-} from "@/components/ui/command"
+  CommandList,
+} from "@/components/ui/command";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
-  DialogTitle
-} from "@/components/ui/dialog"
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from "@/components/ui/dropdown-menu"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Popover,
   PopoverContent,
-  PopoverTrigger
-} from "@/components/ui/popover"
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
-} from "@/components/ui/select"
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
-} from "@/components/ui/table"
-import { Textarea } from "@/components/ui/textarea"
+  TableRow,
+} from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
 import type {
   DiscountType,
   VoucherBatch,
@@ -75,17 +76,22 @@ import type {
   VoucherCode,
   VoucherCodeType,
   VoucherScope,
-  VoucherTarget
-} from "@/lib/evoucher/types"
+  VoucherTarget,
+} from "@/lib/evoucher/types";
 import {
   buildVoucherBatchView,
   displayCode,
   formatDate,
   formatDiscount,
-  generateCodes
-} from "@/lib/evoucher/utils"
-import { InputGroup, InputGroupAddon, InputGroupInput } from "../ui/input-group"
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
+  generateCodes,
+} from "@/lib/evoucher/utils";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupButton,
+  InputGroupInput,
+} from "../ui/input-group";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 // ─── Badges ───────────────────────────────────────────────────────────────────
 
@@ -93,17 +99,17 @@ function VoucherStatusBadge({ status }: { status: VoucherBatchStatus }) {
   const map: Record<
     VoucherBatchStatus,
     {
-      label: string
-      variant: "default" | "secondary" | "destructive" | "outline"
+      label: string;
+      variant: "default" | "secondary" | "destructive" | "outline";
     }
   > = {
     Active: { label: "Active", variant: "default" },
     Expired: { label: "Expired", variant: "secondary" },
     Depleted: { label: "Depleted", variant: "outline" },
-    Revoked: { label: "Revoked", variant: "destructive" }
-  }
-  const { label, variant } = map[status]
-  return <Badge variant={variant}>{label}</Badge>
+    Revoked: { label: "Revoked", variant: "destructive" },
+  };
+  const { label, variant } = map[status];
+  return <Badge variant={variant}>{label}</Badge>;
 }
 
 function CodeTypeBadge({ type }: { type: VoucherCodeType }) {
@@ -115,7 +121,7 @@ function CodeTypeBadge({ type }: { type: VoucherCodeType }) {
     <Badge variant="default" className="bg-mauve-600">
       Single-use
     </Badge>
-  )
+  );
 }
 
 function CodeTypeCard({
@@ -124,14 +130,14 @@ function CodeTypeCard({
   description,
   disabled,
   label,
-  onClick
+  onClick,
 }: {
-  active: boolean
-  badge: string
-  description: string
-  disabled?: boolean
-  label: string
-  onClick: () => void
+  active: boolean;
+  badge: string;
+  description: string;
+  disabled?: boolean;
+  label: string;
+  onClick: () => void;
 }) {
   return (
     <button
@@ -158,7 +164,7 @@ function CodeTypeCard({
         <p className="text-muted-foreground text-xs leading-5">{description}</p>
       </div>
     </button>
-  )
+  );
 }
 
 function DiscountTypeBadge({ type }: { type: DiscountType }) {
@@ -166,7 +172,7 @@ function DiscountTypeBadge({ type }: { type: DiscountType }) {
     <Badge variant="secondary">Percent</Badge>
   ) : (
     <Badge variant="outline">Fixed</Badge>
-  )
+  );
 }
 
 // ─── CSV Export ───────────────────────────────────────────────────────────────
@@ -174,26 +180,26 @@ function DiscountTypeBadge({ type }: { type: DiscountType }) {
 function exportBatchCSV(
   batch: VoucherBatch,
   codes: VoucherCode[],
-  remainingCount: number
+  remainingCount: number,
 ) {
-  const today = new Date().toISOString().slice(0, 10)
+  const today = new Date().toISOString().slice(0, 10);
   const discount =
     batch.discountType === "percentage"
       ? `${batch.discountValue}%`
-      : `${batch.discountValue.toLocaleString("vi-VN")} VND`
+      : `${batch.discountValue.toLocaleString("vi-VN")} VND`;
   const fileSlug =
     batch.codeType === "multi-use"
       ? batch.multiUseCode.toLowerCase()
-      : batch.codePrefix.toLowerCase()
+      : batch.codePrefix.toLowerCase();
 
-  let csv: string
+  let csv: string;
 
   const moduleLabel =
-    batch.applicableTo === "expo" ? "TradeXpo" : "B2B Marketplace"
+    batch.applicableTo === "expo" ? "TradeXpo" : "B2B Marketplace";
 
   if (batch.codeType === "multi-use") {
     const header =
-      "Code,Voucher Name,Module,Valid From,Valid Until,Discount,Issued Quantity,Remaining,Description"
+      "Code,Voucher Name,Module,Valid From,Valid Until,Discount,Issued Quantity,Remaining,Description";
     const row = [
       batch.multiUseCode,
       `"${batch.name}"`,
@@ -203,13 +209,13 @@ function exportBatchCSV(
       discount,
       batch.issuedQuantity,
       remainingCount,
-      `"${batch.description ?? ""}"`
-    ].join(",")
-    csv = [header, row].join("\n")
+      `"${batch.description ?? ""}"`,
+    ].join(",");
+    csv = [header, row].join("\n");
   } else {
-    const batchCodes = codes.filter((c) => c.batchId === batch.id)
+    const batchCodes = codes.filter((c) => c.batchId === batch.id);
     const header =
-      "Code,Voucher Name,Module,Valid From,Valid Until,Discount,Description,Status"
+      "Code,Voucher Name,Module,Valid From,Valid Until,Discount,Description,Status";
     const rows = batchCodes.map((c) =>
       [
         c.code,
@@ -219,36 +225,36 @@ function exportBatchCSV(
         batch.validUntil,
         discount,
         `"${batch.description ?? ""}"`,
-        c.status
-      ].join(",")
-    )
-    csv = [header, ...rows].join("\n")
+        c.status,
+      ].join(","),
+    );
+    csv = [header, ...rows].join("\n");
   }
 
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement("a")
-  a.href = url
-  a.download = `evoucher-${fileSlug}-${today}.csv`
-  a.click()
-  URL.revokeObjectURL(url)
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `evoucher-${fileSlug}-${today}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 // ─── Form Types ───────────────────────────────────────────────────────────────
 
 interface FormState {
-  codeType: VoucherCodeType | ""
-  codePrefix: string // single-use
-  multiUseCode: string // multi-use
-  name: string
-  applicableTo: VoucherScope | ""
-  targetId: string
-  validFrom: string
-  validUntil: string
-  issuedQuantity: string
-  discountType: DiscountType | ""
-  discountValue: string
-  description: string
+  codeType: VoucherCodeType | "";
+  codePrefix: string; // single-use
+  multiUseCode: string; // multi-use
+  name: string;
+  applicableTo: VoucherScope | "";
+  targetId: string;
+  validFrom: string;
+  validUntil: string;
+  issuedQuantity: string;
+  discountType: DiscountType | "";
+  discountValue: string;
+  description: string;
 }
 
 const emptyForm: FormState = {
@@ -263,20 +269,20 @@ const emptyForm: FormState = {
   issuedQuantity: "",
   discountType: "",
   discountValue: "",
-  description: ""
-}
+  description: "",
+};
 
 // ─── Create / Edit Dialog ─────────────────────────────────────────────────────
 
 interface VoucherFormDialogProps {
-  open: boolean
-  onClose: () => void
-  editing: VoucherBatchView | null
-  existingPrefixes: Set<string>
-  existingMultiUseCodes: Set<string>
-  existingCodes: VoucherCode[]
-  targets: VoucherTarget[]
-  onSave: (batch: VoucherBatch, deltaCodes: VoucherCode[]) => void
+  open: boolean;
+  onClose: () => void;
+  editing: VoucherBatchView | null;
+  existingPrefixes: Set<string>;
+  existingMultiUseCodes: Set<string>;
+  existingCodes: VoucherCode[];
+  targets: VoucherTarget[];
+  onSave: (batch: VoucherBatch, deltaCodes: VoucherCode[]) => void;
 }
 
 function VoucherFormDialog({
@@ -287,10 +293,10 @@ function VoucherFormDialog({
   existingMultiUseCodes,
   existingCodes,
   targets,
-  onSave
+  onSave,
 }: VoucherFormDialogProps) {
-  const isEdit = editing !== null
-  const hasRedemptions = isEdit ? editing.redeemedCount > 0 : false
+  const isEdit = editing !== null;
+  const hasRedemptions = isEdit ? editing.redeemedCount > 0 : false;
 
   const [form, setForm] = useState<FormState>(() => {
     if (editing) {
@@ -306,101 +312,102 @@ function VoucherFormDialog({
         issuedQuantity: String(editing.issuedQuantity),
         discountType: editing.discountType,
         discountValue: String(editing.discountValue),
-        description: editing.description ?? ""
-      }
+        description: editing.description ?? "",
+      };
     }
-    return emptyForm
-  })
+    return emptyForm;
+  });
 
   const [errors, setErrors] = useState<
     Partial<Record<keyof FormState | "form", string>>
-  >({})
+  >({});
 
   const filteredTargets = useMemo(
     () => targets.filter((t) => t.type === form.applicableTo),
-    [form.applicableTo, targets]
-  )
-  const [targetPickerOpen, setTargetPickerOpen] = useState(false)
-  const [targetSearch, setTargetSearch] = useState("")
+    [form.applicableTo, targets],
+  );
+  const [targetPickerOpen, setTargetPickerOpen] = useState(false);
+  const [targetSearch, setTargetSearch] = useState("");
 
   const selectedTarget = useMemo(
     () => targets.find((t) => t.id === form.targetId) ?? null,
-    [form.targetId, targets]
-  )
+    [form.targetId, targets],
+  );
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
-    setForm((prev) => ({ ...prev, [key]: value }))
-    setErrors((prev) => ({ ...prev, [key]: undefined }))
+    setForm((prev) => ({ ...prev, [key]: value }));
+    setErrors((prev) => ({ ...prev, [key]: undefined }));
   }
 
   function validate(): boolean {
-    const errs: typeof errors = {}
+    const errs: typeof errors = {};
 
-    if (!isEdit && !form.codeType) errs.codeType = "Please select a code type."
+    if (!isEdit && !form.codeType) errs.codeType = "Please select a code type.";
 
     if (!isEdit) {
       if (form.codeType === "single-use") {
         if (!form.codePrefix.trim())
-          errs.codePrefix = "Code Prefix is required."
+          errs.codePrefix = "Code Prefix is required.";
         else if (existingPrefixes.has(form.codePrefix.trim().toUpperCase())) {
-          errs.codePrefix = "This Code Prefix already exists on the platform."
+          errs.codePrefix = "This Code Prefix already exists on the platform.";
         }
       } else if (form.codeType === "multi-use") {
-        if (!form.multiUseCode.trim()) errs.multiUseCode = "Code is required."
+        if (!form.multiUseCode.trim()) errs.multiUseCode = "Code is required.";
         else if (
           existingMultiUseCodes.has(form.multiUseCode.trim().toUpperCase())
         ) {
-          errs.multiUseCode = "This code already exists on the platform."
+          errs.multiUseCode = "This code already exists on the platform.";
         }
       }
     }
 
-    if (!form.name.trim()) errs.name = "Name is required."
+    if (!form.name.trim()) errs.name = "Name is required.";
     if (!isEdit && !form.applicableTo)
-      errs.applicableTo = "Please select a scope."
-    if (!isEdit && !form.targetId) errs.targetId = "Please select a target."
-    if (!form.validFrom) errs.validFrom = "Valid From is required."
-    if (!form.validUntil) errs.validUntil = "Valid Until is required."
+      errs.applicableTo = "Please select a scope.";
+    if (!isEdit && !form.targetId) errs.targetId = "Please select a target.";
+    if (!form.validFrom) errs.validFrom = "Valid From is required.";
+    if (!form.validUntil) errs.validUntil = "Valid Until is required.";
     else if (form.validFrom && form.validUntil <= form.validFrom) {
-      errs.validUntil = "Valid Until must be after Valid From."
+      errs.validUntil = "Valid Until must be after Valid From.";
     }
 
     if (isEdit && editing) {
       if (form.validUntil < editing.validUntil) {
-        errs.validUntil = "Valid Until can only be extended, not shortened."
+        errs.validUntil = "Valid Until can only be extended, not shortened.";
       }
-      const newQty = Number(form.issuedQuantity)
+      const newQty = Number(form.issuedQuantity);
       if (newQty < editing.redeemedCount) {
-        errs.issuedQuantity = `Cannot reduce below number already redeemed (${editing.redeemedCount}).`
+        errs.issuedQuantity = `Cannot reduce below number already redeemed (${editing.redeemedCount}).`;
       }
       if (newQty < editing.issuedQuantity) {
-        errs.issuedQuantity = "Issued Quantity can only be increased."
+        errs.issuedQuantity = "Issued Quantity can only be increased.";
       }
     }
 
     if (!form.issuedQuantity || Number(form.issuedQuantity) < 1) {
-      errs.issuedQuantity = "Issued Quantity must be at least 1."
+      errs.issuedQuantity = "Issued Quantity must be at least 1.";
     }
 
-    if (!form.discountType) errs.discountType = "Please select a discount type."
-    const dv = Number(form.discountValue)
+    if (!form.discountType)
+      errs.discountType = "Please select a discount type.";
+    const dv = Number(form.discountValue);
     if (!form.discountValue || dv <= 0) {
-      errs.discountValue = "Discount Value must be greater than 0."
+      errs.discountValue = "Discount Value must be greater than 0.";
     } else if (form.discountType === "percentage" && (dv < 1 || dv > 100)) {
-      errs.discountValue = "Percentage must be between 1 and 100."
+      errs.discountValue = "Percentage must be between 1 and 100.";
     }
 
-    setErrors(errs)
-    return Object.keys(errs).length === 0
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
   }
 
   function handleSave() {
-    if (!validate()) return
-    const now = new Date().toISOString()
+    if (!validate()) return;
+    const now = new Date().toISOString();
 
     if (isEdit && editing) {
-      const newQty = Number(form.issuedQuantity)
-      const delta = newQty - editing.issuedQuantity
+      const newQty = Number(form.issuedQuantity);
+      const delta = newQty - editing.issuedQuantity;
       const updatedBatch: VoucherBatch = {
         ...editing,
         name: form.name.trim(),
@@ -413,8 +420,8 @@ function VoucherFormDialog({
           ? editing.discountValue
           : Number(form.discountValue),
         description: form.description,
-        updatedAt: now
-      }
+        updatedAt: now,
+      };
       // Single-use: generate delta codes. Multi-use: just raise counter (no new codes).
       const deltaCodes =
         editing.codeType === "single-use" && delta > 0
@@ -425,19 +432,19 @@ function VoucherFormDialog({
               new Set(
                 existingCodes
                   .filter((c) => c.batchId === editing.id)
-                  .map((c) => c.code)
-              )
+                  .map((c) => c.code),
+              ),
             )
-          : []
-      onSave(updatedBatch, deltaCodes)
+          : [];
+      onSave(updatedBatch, deltaCodes);
     } else {
-      const id = `batch-${Date.now()}`
-      const target = targets.find((t) => t.id === form.targetId)
-      const codeType = form.codeType as VoucherCodeType
+      const id = `batch-${Date.now()}`;
+      const target = targets.find((t) => t.id === form.targetId);
+      const codeType = form.codeType as VoucherCodeType;
       const prefix =
-        codeType === "single-use" ? form.codePrefix.trim().toUpperCase() : ""
+        codeType === "single-use" ? form.codePrefix.trim().toUpperCase() : "";
       const muCode =
-        codeType === "multi-use" ? form.multiUseCode.trim().toUpperCase() : ""
+        codeType === "multi-use" ? form.multiUseCode.trim().toUpperCase() : "";
 
       const newBatch: VoucherBatch = {
         id,
@@ -460,27 +467,27 @@ function VoucherFormDialog({
         description: form.description || undefined,
         isRevoked: false,
         createdAt: now,
-        updatedAt: now
-      }
+        updatedAt: now,
+      };
       const newCodes =
         codeType === "single-use"
           ? generateCodes(id, prefix, Number(form.issuedQuantity))
-          : [] // multi-use: no individual codes
-      onSave(newBatch, newCodes)
+          : []; // multi-use: no individual codes
+      onSave(newBatch, newCodes);
     }
   }
 
-  const fieldClass = "space-y-1"
-  const errClass = "text-destructive text-xs mt-1"
+  const fieldClass = "space-y-1";
+  const errClass = "text-destructive text-xs mt-1";
   const readonlyNote = (msg: string) => (
     <p className="text-muted-foreground text-xs">{msg}</p>
-  )
+  );
 
   return (
     <Dialog
       open={open}
       onOpenChange={(o) => {
-        if (!o) onClose()
+        if (!o) onClose();
       }}
     >
       <DialogContent className="h-[90vh] max-w-2xl! overflow-y-auto">
@@ -506,10 +513,10 @@ function VoucherFormDialog({
                 description="Generate unique codes. Each code can be redeemed once."
                 disabled={isEdit}
                 onClick={() => {
-                  if (isEdit) return
-                  set("codeType", "single-use")
-                  set("codePrefix", "")
-                  set("multiUseCode", "")
+                  if (isEdit) return;
+                  set("codeType", "single-use");
+                  set("codePrefix", "");
+                  set("multiUseCode", "");
                 }}
               />
               <CodeTypeCard
@@ -519,10 +526,10 @@ function VoucherFormDialog({
                 description="Create one shared code that can be redeemed up to the max uses."
                 disabled={isEdit}
                 onClick={() => {
-                  if (isEdit) return
-                  set("codeType", "multi-use")
-                  set("codePrefix", "")
-                  set("multiUseCode", "")
+                  if (isEdit) return;
+                  set("codeType", "multi-use");
+                  set("codePrefix", "");
+                  set("multiUseCode", "");
                 }}
               />
             </div>
@@ -538,7 +545,7 @@ function VoucherFormDialog({
                 display:
                   form.codeType === "single-use" || (!isEdit && !form.codeType)
                     ? undefined
-                    : "none"
+                    : "none",
               }}
             >
               {form.codeType === "single-use" && (
@@ -611,9 +618,9 @@ function VoucherFormDialog({
               <Select
                 value={form.applicableTo}
                 onValueChange={(v) => {
-                  set("applicableTo", v as VoucherScope)
-                  set("targetId", "")
-                  setTargetSearch("")
+                  set("applicableTo", v as VoucherScope);
+                  set("targetId", "");
+                  setTargetSearch("");
                 }}
                 disabled={isEdit}
               >
@@ -637,8 +644,8 @@ function VoucherFormDialog({
               <Popover
                 open={targetPickerOpen}
                 onOpenChange={(open) => {
-                  setTargetPickerOpen(open)
-                  if (!open) setTargetSearch("")
+                  setTargetPickerOpen(open);
+                  if (!open) setTargetSearch("");
                 }}
               >
                 <PopoverTrigger asChild>
@@ -671,21 +678,21 @@ function VoucherFormDialog({
                       <CommandEmpty>No target found.</CommandEmpty>
                       {filteredTargets
                         .filter((target) => {
-                          const q = targetSearch.trim().toLowerCase()
-                          if (!q) return true
+                          const q = targetSearch.trim().toLowerCase();
+                          if (!q) return true;
                           return (
                             target.name.toLowerCase().includes(q) ||
                             target.id.toLowerCase().includes(q)
-                          )
+                          );
                         })
                         .map((t) => (
                           <CommandItem
                             key={t.id}
                             value={t.name}
                             onSelect={() => {
-                              set("targetId", t.id)
-                              setTargetPickerOpen(false)
-                              setTargetSearch("")
+                              set("targetId", t.id);
+                              setTargetPickerOpen(false);
+                              setTargetSearch("");
                             }}
                           >
                             {t.name}
@@ -834,160 +841,160 @@ function VoucherFormDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-const PAGE_SIZE = 10
+const PAGE_SIZE = 10;
 
 interface EVoucherManagementProps {
-  initialBatches: VoucherBatch[]
-  initialCodes: VoucherCode[]
-  targets: VoucherTarget[]
+  initialBatches: VoucherBatch[];
+  initialCodes: VoucherCode[];
+  targets: VoucherTarget[];
 }
 
 export function EVoucherManagement({
   initialBatches,
   initialCodes,
-  targets
+  targets,
 }: EVoucherManagementProps) {
   const [batches, setBatches] = useState<VoucherBatch[]>(() =>
-    initialBatches.map((b) => ({ ...b }))
-  )
+    initialBatches.map((b) => ({ ...b })),
+  );
   const [codes, setCodes] = useState<VoucherCode[]>(() =>
-    initialCodes.map((c) => ({ ...c }))
-  )
+    initialCodes.map((c) => ({ ...c })),
+  );
 
   // Filters
   const [statusFilter, setStatusFilter] = useState<VoucherBatchStatus | "all">(
-    "all"
-  )
+    "all",
+  );
   const [codeTypeFilter, setCodeTypeFilter] = useState<VoucherCodeType | "all">(
-    "all"
-  )
-  const [scopeFilter, setScopeFilter] = useState<VoucherScope | "all">("all")
-  const [search, setSearch] = useState("")
+    "all",
+  );
+  const [scopeFilter, setScopeFilter] = useState<VoucherScope | "all">("all");
+  const [search, setSearch] = useState("");
 
-  const [page, setPage] = useState(1)
+  const [page, setPage] = useState(1);
 
-  const [formOpen, setFormOpen] = useState(false)
+  const [formOpen, setFormOpen] = useState(false);
   const [editingBatch, setEditingBatch] = useState<VoucherBatchView | null>(
-    null
-  )
+    null,
+  );
   const [revokeTarget, setRevokeTarget] = useState<VoucherBatchView | null>(
-    null
-  )
-  const [successMsg, setSuccessMsg] = useState<string | null>(null)
+    null,
+  );
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const views = useMemo<VoucherBatchView[]>(
     () => batches.map((b) => buildVoucherBatchView(b, codes)),
-    [batches, codes]
-  )
+    [batches, codes],
+  );
 
   const filtered = useMemo(() => {
     return views.filter((v) => {
       if (statusFilter !== "all" && v.derivedStatus !== statusFilter)
-        return false
+        return false;
       if (codeTypeFilter !== "all" && v.codeType !== codeTypeFilter)
-        return false
-      if (scopeFilter !== "all" && v.applicableTo !== scopeFilter) return false
+        return false;
+      if (scopeFilter !== "all" && v.applicableTo !== scopeFilter) return false;
       if (search) {
-        const q = search.toLowerCase()
+        const q = search.toLowerCase();
         const codeDisplay =
-          v.codeType === "multi-use" ? v.multiUseCode : v.codePrefix
+          v.codeType === "multi-use" ? v.multiUseCode : v.codePrefix;
         if (
           !v.name.toLowerCase().includes(q) &&
           !codeDisplay.toLowerCase().includes(q) &&
           !v.targetName.toLowerCase().includes(q)
         ) {
-          return false
+          return false;
         }
       }
-      return true
-    })
-  }, [views, statusFilter, codeTypeFilter, scopeFilter, search])
+      return true;
+    });
+  }, [views, statusFilter, codeTypeFilter, scopeFilter, search]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
-  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const existingPrefixes = useMemo(
     () =>
       new Set(
         batches
           .filter((b) => b.codeType === "single-use")
-          .map((b) => b.codePrefix.toUpperCase())
+          .map((b) => b.codePrefix.toUpperCase()),
       ),
-    [batches]
-  )
+    [batches],
+  );
 
   const existingMultiUseCodes = useMemo(
     () =>
       new Set(
         batches
           .filter((b) => b.codeType === "multi-use")
-          .map((b) => b.multiUseCode.toUpperCase())
+          .map((b) => b.multiUseCode.toUpperCase()),
       ),
-    [batches]
-  )
+    [batches],
+  );
 
   function handleSave(updatedBatch: VoucherBatch, deltaCodes: VoucherCode[]) {
     setBatches((prev) => {
-      const idx = prev.findIndex((b) => b.id === updatedBatch.id)
-      if (idx === -1) return [updatedBatch, ...prev]
-      const next = [...prev]
-      next[idx] = updatedBatch
-      return next
-    })
-    if (deltaCodes.length > 0) setCodes((prev) => [...prev, ...deltaCodes])
+      const idx = prev.findIndex((b) => b.id === updatedBatch.id);
+      if (idx === -1) return [updatedBatch, ...prev];
+      const next = [...prev];
+      next[idx] = updatedBatch;
+      return next;
+    });
+    if (deltaCodes.length > 0) setCodes((prev) => [...prev, ...deltaCodes]);
 
-    const isNew = !batches.find((b) => b.id === updatedBatch.id)
+    const isNew = !batches.find((b) => b.id === updatedBatch.id);
     const codeTypeLabel =
       updatedBatch.codeType === "multi-use"
         ? "multi-use code"
-        : "single-use batch"
+        : "single-use batch";
     setSuccessMsg(
       isNew
         ? `${updatedBatch.codeType === "multi-use" ? "Multi-use code" : "Batch"} "${updatedBatch.name}" created.${updatedBatch.codeType === "single-use" ? ` ${updatedBatch.issuedQuantity} codes generated.` : ""}`
-        : `"${updatedBatch.name}" updated.${deltaCodes.length > 0 ? ` ${deltaCodes.length} new codes generated.` : ""}`
-    )
-    setTimeout(() => setSuccessMsg(null), 4000)
-    setFormOpen(false)
-    setEditingBatch(null)
-    setPage(1)
-    void codeTypeLabel
+        : `"${updatedBatch.name}" updated.${deltaCodes.length > 0 ? ` ${deltaCodes.length} new codes generated.` : ""}`,
+    );
+    setTimeout(() => setSuccessMsg(null), 4000);
+    setFormOpen(false);
+    setEditingBatch(null);
+    setPage(1);
+    void codeTypeLabel;
   }
 
   function handleRevoke() {
-    if (!revokeTarget) return
+    if (!revokeTarget) return;
     setBatches((prev) =>
       prev.map((b) =>
         b.id === revokeTarget.id
           ? { ...b, isRevoked: true, updatedAt: new Date().toISOString() }
-          : b
-      )
-    )
-    setSuccessMsg(`"${revokeTarget.name}" has been revoked.`)
-    setTimeout(() => setSuccessMsg(null), 4000)
-    setRevokeTarget(null)
+          : b,
+      ),
+    );
+    setSuccessMsg(`"${revokeTarget.name}" has been revoked.`);
+    setTimeout(() => setSuccessMsg(null), 4000);
+    setRevokeTarget(null);
   }
 
   function clearFilters() {
-    setStatusFilter("all")
-    setCodeTypeFilter("all")
-    setScopeFilter("all")
-    setSearch("")
-    setPage(1)
+    setStatusFilter("all");
+    setCodeTypeFilter("all");
+    setScopeFilter("all");
+    setSearch("");
+    setPage(1);
   }
 
   const hasFilters =
     statusFilter !== "all" ||
     codeTypeFilter !== "all" ||
     scopeFilter !== "all" ||
-    search !== ""
+    search !== "";
 
   return (
-    <div className="space-y-4">
+    <div className="mt-6 space-y-4">
       {successMsg && (
         <div className="flex items-center gap-2 rounded-md border border-green-200 bg-green-50 px-4 py-3 text-green-800 text-sm dark:border-green-800 dark:bg-green-950 dark:text-green-300">
           <CheckCircle2Icon className="size-4 shrink-0" />
@@ -999,23 +1006,38 @@ export function EVoucherManagement({
       <div className="flex flex-wrap items-center gap-2">
         <InputGroup className="w-xs">
           <InputGroupInput
-            placeholder="Search name, code, target…"
+            placeholder="Name, code, target…"
             value={search}
             onChange={(e) => {
-              setSearch(e.target.value)
-              setPage(1)
+              setSearch(e.target.value);
+              setPage(1);
             }}
           />
-          <InputGroupAddon>
+          <InputGroupAddon align="inline-start">
             <SearchIcon />
           </InputGroupAddon>
+          {search && (
+            <InputGroupAddon align="inline-end">
+              <InputGroupButton
+                variant="ghost"
+                size="icon-xs"
+                className="rounded-full"
+                onClick={() => {
+                  setSearch("");
+                  setPage(1);
+                }}
+              >
+                <XIcon />
+              </InputGroupButton>
+            </InputGroupAddon>
+          )}
         </InputGroup>
 
         <Select
           value={statusFilter}
           onValueChange={(v) => {
-            setStatusFilter(v as VoucherBatchStatus | "all")
-            setPage(1)
+            setStatusFilter(v as VoucherBatchStatus | "all");
+            setPage(1);
           }}
         >
           <SelectTrigger className="w-36">
@@ -1033,8 +1055,8 @@ export function EVoucherManagement({
         <Select
           value={codeTypeFilter}
           onValueChange={(v) => {
-            setCodeTypeFilter(v as VoucherCodeType | "all")
-            setPage(1)
+            setCodeTypeFilter(v as VoucherCodeType | "all");
+            setPage(1);
           }}
         >
           <SelectTrigger className="w-36">
@@ -1050,8 +1072,8 @@ export function EVoucherManagement({
         <Select
           value={scopeFilter}
           onValueChange={(v) => {
-            setScopeFilter(v as VoucherScope | "all")
-            setPage(1)
+            setScopeFilter(v as VoucherScope | "all");
+            setPage(1);
           }}
         >
           <SelectTrigger className="w-44">
@@ -1072,13 +1094,13 @@ export function EVoucherManagement({
         )}
 
         <Button
+          size="lg"
           className="ml-auto"
           onClick={() => {
-            setEditingBatch(null)
-            setFormOpen(true)
+            setEditingBatch(null);
+            setFormOpen(true);
           }}
         >
-          <PlusIcon />
           Create New
         </Button>
       </div>
@@ -1166,8 +1188,8 @@ export function EVoucherManagement({
                         <DropdownMenuItem
                           disabled={v.derivedStatus === "Revoked"}
                           onClick={() => {
-                            setEditingBatch(v)
-                            setFormOpen(true)
+                            setEditingBatch(v);
+                            setFormOpen(true);
                           }}
                         >
                           Edit
@@ -1232,16 +1254,16 @@ export function EVoucherManagement({
         <VoucherFormDialog
           open={formOpen}
           onClose={() => {
-            setFormOpen(false)
-            setEditingBatch(null)
+            setFormOpen(false);
+            setEditingBatch(null);
           }}
           editing={editingBatch}
           existingPrefixes={
             editingBatch
               ? new Set(
                   [...existingPrefixes].filter(
-                    (p) => p !== editingBatch.codePrefix.toUpperCase()
-                  )
+                    (p) => p !== editingBatch.codePrefix.toUpperCase(),
+                  ),
                 )
               : existingPrefixes
           }
@@ -1249,8 +1271,8 @@ export function EVoucherManagement({
             editingBatch
               ? new Set(
                   [...existingMultiUseCodes].filter(
-                    (c) => c !== editingBatch.multiUseCode.toUpperCase()
-                  )
+                    (c) => c !== editingBatch.multiUseCode.toUpperCase(),
+                  ),
                 )
               : existingMultiUseCodes
           }
@@ -1264,7 +1286,7 @@ export function EVoucherManagement({
       <AlertDialog
         open={!!revokeTarget}
         onOpenChange={(o) => {
-          if (!o) setRevokeTarget(null)
+          if (!o) setRevokeTarget(null);
         }}
       >
         <AlertDialogContent>
@@ -1294,5 +1316,5 @@ export function EVoucherManagement({
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  )
+  );
 }

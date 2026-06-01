@@ -17,6 +17,7 @@ import {
   listExpoCategories,
   listExpos
 } from "@/lib/tradexpo/db/platform-data"
+import { formatExpoScheduleLabel } from "@/lib/tradexpo/schedule"
 import type { Expo } from "@/lib/tradexpo/types"
 import { listWishlistedTargetIds } from "@/lib/wishlist/db"
 
@@ -29,18 +30,29 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
 })
 
 function formatDateRange(expo: Expo) {
-  return `${dateFormatter.format(new Date(expo.startDate ?? ""))} - ${dateFormatter.format(new Date(expo.endDate ?? ""))}`
+  if (expo.startDate && expo.endDate) {
+    const start = new Date(expo.startDate)
+    const end = new Date(expo.endDate)
+
+    if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime())) {
+      return `${dateFormatter.format(start)} - ${dateFormatter.format(end)}`
+    }
+  }
+
+  return formatExpoScheduleLabel(expo)
 }
 
 function formatCount(value: number) {
   return new Intl.NumberFormat("en-US", { notation: "compact" }).format(value)
 }
 
-function formatDaysUntil(date: string) {
-  const days = Math.max(
-    0,
-    Math.ceil((new Date(date).getTime() - Date.now()) / 86_400_000)
-  )
+function formatDaysUntil(date?: string) {
+  if (!date) return "TBA"
+
+  const time = new Date(date).getTime()
+  if (Number.isNaN(time)) return "TBA"
+
+  const days = Math.max(0, Math.ceil((time - Date.now()) / 86_400_000))
   if (days === 0) return "Today"
   if (days === 1) return "1 day"
   return `${days} days`
@@ -108,7 +120,7 @@ export default async function TradeXpoPage() {
       detailHref: getDetailHref(expo),
       durationLabel: formatDateRange(expo),
       countdown:
-        status === "Archived" ? "Ended" : formatDaysUntil(expo.endDate ?? ""),
+        status === "Archived" ? "Ended" : formatDaysUntil(expo.endDate),
       segment,
       isWishlisted: wishlistedExpoIds.has(expo.id)
     }

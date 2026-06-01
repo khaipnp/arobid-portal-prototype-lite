@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   CheckIcon,
@@ -9,59 +9,67 @@ import {
   MonitorPlayIcon,
   RadioIcon,
   SquareIcon,
-  UsersIcon
-} from "lucide-react"
-import * as React from "react"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
+  UsersIcon,
+} from "lucide-react";
+import * as React from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle
-} from "@/components/ui/card"
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle
-} from "@/components/ui/dialog"
-import { Separator } from "@/components/ui/separator"
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
-} from "@/components/ui/table"
+  TableRow,
+} from "@/components/ui/table";
 import type {
   GoLIVEEvent,
   StreamSession,
-  StreamSessionStatus
-} from "@/lib/tradexpo/types"
-import { cn } from "@/lib/utils"
+  StreamSessionStatus,
+} from "@/lib/tradexpo/types";
+import { cn } from "@/lib/utils";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyMedia,
+  EmptyContent,
+} from "../ui/empty";
 
 const statusStyles: Record<StreamSessionStatus, string> = {
   Provisioned: "border-amber-300 bg-amber-50 text-amber-700",
   Active: "border-emerald-300 bg-emerald-50 text-emerald-700",
   Ended: "border-zinc-300 bg-zinc-100 text-zinc-600",
-  Canceled: "border-rose-300 bg-rose-50 text-rose-700"
-}
+  Canceled: "border-rose-300 bg-rose-50 text-rose-700",
+};
 
 function CredentialField({ label, value }: { label: string; value: string }) {
-  const [copied, setCopied] = React.useState(false)
-  const [revealed, setRevealed] = React.useState(false)
+  const [copied, setCopied] = React.useState(false);
+  const [revealed, setRevealed] = React.useState(false);
 
   function copy() {
-    navigator.clipboard.writeText(value).catch(() => {})
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    navigator.clipboard.writeText(value).catch(() => {});
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   }
 
-  const isKey = label === "Stream Key"
+  const isKey = label === "Stream Key";
 
   return (
     <div className="space-y-1.5">
@@ -96,68 +104,68 @@ function CredentialField({ label, value }: { label: string; value: string }) {
         </button>
       </div>
     </div>
-  )
+  );
 }
 
 function formatDuration(startIso: string | null, endIso: string | null) {
-  if (!startIso) return "—"
-  const start = new Date(startIso).getTime()
-  const end = endIso ? new Date(endIso).getTime() : Date.now()
-  const secs = Math.floor((end - start) / 1000)
-  const h = Math.floor(secs / 3600)
-  const m = Math.floor((secs % 3600) / 60)
-  const s = secs % 60
-  return h > 0 ? `${h}h ${m}m ${s}s` : m > 0 ? `${m}m ${s}s` : `${s}s`
+  if (!startIso) return "—";
+  const start = new Date(startIso).getTime();
+  const end = endIso ? new Date(endIso).getTime() : Date.now();
+  const secs = Math.floor((end - start) / 1000);
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  return h > 0 ? `${h}h ${m}m ${s}s` : m > 0 ? `${m}m ${s}s` : `${s}s`;
 }
 
 interface SessionCardProps {
-  event: GoLIVEEvent
-  session: StreamSession
-  onSessionChange?: (session: StreamSession) => void
+  event: GoLIVEEvent;
+  session: StreamSession;
+  onSessionChange?: (session: StreamSession) => void;
 }
 
 function SessionCard({
   event,
   session: initialSession,
-  onSessionChange
+  onSessionChange,
 }: SessionCardProps) {
-  const [session, setSession] = React.useState<StreamSession>(initialSession)
+  const [session, setSession] = React.useState<StreamSession>(initialSession);
   const [viewerCount, setViewerCount] = React.useState(
-    session.peakViewerCount ?? 0
-  )
-  const [elapsedLabel, setElapsedLabel] = React.useState("")
-  const startedAtRef = React.useRef<string | null>(session.startedAt)
+    session.peakViewerCount ?? 0,
+  );
+  const [elapsedLabel, setElapsedLabel] = React.useState("");
+  const startedAtRef = React.useRef<string | null>(session.startedAt);
 
   React.useEffect(() => {
-    setSession(initialSession)
-    setViewerCount(initialSession.peakViewerCount ?? 0)
-    startedAtRef.current = initialSession.startedAt
-  }, [initialSession])
+    setSession(initialSession);
+    setViewerCount(initialSession.peakViewerCount ?? 0);
+    startedAtRef.current = initialSession.startedAt;
+  }, [initialSession]);
 
   React.useEffect(() => {
-    if (session.status !== "Active") return
+    if (session.status !== "Active") return;
     const interval = setInterval(() => {
       setViewerCount((prev) =>
-        Math.max(1, prev + Math.floor(Math.random() * 11) - 5)
-      )
+        Math.max(1, prev + Math.floor(Math.random() * 11) - 5),
+      );
       if (startedAtRef.current) {
-        setElapsedLabel(formatDuration(startedAtRef.current, null))
+        setElapsedLabel(formatDuration(startedAtRef.current, null));
       }
-    }, 3000)
+    }, 3000);
     // initial
     if (startedAtRef.current)
-      setElapsedLabel(formatDuration(startedAtRef.current, null))
-    return () => clearInterval(interval)
-  }, [session.status])
+      setElapsedLabel(formatDuration(startedAtRef.current, null));
+    return () => clearInterval(interval);
+  }, [session.status]);
 
   async function handleGoLive() {
-    const now = new Date().toISOString()
-    startedAtRef.current = now
+    const now = new Date().toISOString();
+    startedAtRef.current = now;
     const updatedSession = {
       ...session,
       status: "Active" as const,
-      startedAt: now
-    }
+      startedAt: now,
+    };
     try {
       const response = await fetch(
         `/api/stream/sessions/${session.streamSessionId}`,
@@ -170,28 +178,28 @@ function SessionCard({
             startedAt: now,
             endedAt: null,
             peakViewerCount: null,
-            updatedAt: now
-          })
-        }
-      )
-      if (!response.ok) return
-      setSession(updatedSession)
-      onSessionChange?.(updatedSession)
-      setViewerCount(1)
-      setElapsedLabel("0s")
+            updatedAt: now,
+          }),
+        },
+      );
+      if (!response.ok) return;
+      setSession(updatedSession);
+      onSessionChange?.(updatedSession);
+      setViewerCount(1);
+      setElapsedLabel("0s");
     } catch {
       // no-op
     }
   }
 
   async function handleEndBroadcast() {
-    const now = new Date().toISOString()
+    const now = new Date().toISOString();
     const updatedSession = {
       ...session,
       status: "Ended" as const,
       endedAt: now,
-      peakViewerCount: viewerCount
-    }
+      peakViewerCount: viewerCount,
+    };
     try {
       const response = await fetch(
         `/api/stream/sessions/${session.streamSessionId}`,
@@ -204,13 +212,13 @@ function SessionCard({
             startedAt: session.startedAt,
             endedAt: now,
             peakViewerCount: viewerCount,
-            updatedAt: now
-          })
-        }
-      )
-      if (!response.ok) return
-      setSession(updatedSession)
-      onSessionChange?.(updatedSession)
+            updatedAt: now,
+          }),
+        },
+      );
+      if (!response.ok) return;
+      setSession(updatedSession);
+      onSessionChange?.(updatedSession);
     } catch {
       // no-op
     }
@@ -362,108 +370,115 @@ function SessionCard({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 export function HostDashboard({
   initialStreamSessions,
   initialGoLIVEEvents,
-  currentUserId = "user-khai"
+  currentUserId = "user-khai",
 }: {
-  initialStreamSessions: StreamSession[]
-  initialGoLIVEEvents: GoLIVEEvent[]
-  currentUserId?: string
+  initialStreamSessions: StreamSession[];
+  initialGoLIVEEvents: GoLIVEEvent[];
+  currentUserId?: string;
 }) {
-  const baseSessionData = initialStreamSessions
-  const events = initialGoLIVEEvents
+  const baseSessionData = initialStreamSessions;
+  const events = initialGoLIVEEvents;
 
-  const myEvents = events.filter((e) => e.broadcasterUserId === currentUserId)
+  const myEvents = events.filter((e) => e.broadcasterUserId === currentUserId);
 
   const initialPairs = myEvents
     .map((event) => {
       const session = baseSessionData.find(
-        (s) => s.streamSessionId === event.streamSessionId
-      )
-      return session ? { event, session } : null
+        (s) => s.streamSessionId === event.streamSessionId,
+      );
+      return session ? { event, session } : null;
     })
-    .filter(Boolean) as { event: GoLIVEEvent; session: StreamSession }[]
+    .filter(Boolean) as { event: GoLIVEEvent; session: StreamSession }[];
 
   const [selectedSessionId, setSelectedSessionId] = React.useState<
     string | null
-  >(null)
+  >(null);
   const [sessionStates, setSessionStates] = React.useState<
     Record<string, StreamSession>
   >(() => {
-    const initial: Record<string, StreamSession> = {}
+    const initial: Record<string, StreamSession> = {};
     initialPairs.forEach(({ session }) => {
-      initial[session.streamSessionId] = session
-    })
-    return initial
-  })
+      initial[session.streamSessionId] = session;
+    });
+    return initial;
+  });
 
   React.useEffect(() => {
-    const controller = new AbortController()
+    const controller = new AbortController();
     const syncSessions = async () => {
       try {
         const response = await fetch("/api/stream/sessions", {
           signal: controller.signal,
-          cache: "no-store"
-        })
-        if (!response.ok) return
+          cache: "no-store",
+        });
+        if (!response.ok) return;
         const payload = (await response.json()) as {
-          sessions?: StreamSession[]
-        }
-        if (!payload.sessions) return
-        const sessions = payload.sessions
+          sessions?: StreamSession[];
+        };
+        if (!payload.sessions) return;
+        const sessions = payload.sessions;
         setSessionStates((prev) => {
-          const next = { ...prev }
+          const next = { ...prev };
           for (const s of sessions) {
             if (next[s.streamSessionId]) {
-              next[s.streamSessionId] = s
+              next[s.streamSessionId] = s;
             }
           }
-          return next
-        })
+          return next;
+        });
       } catch {
         // no-op
       }
-    }
-    const interval = setInterval(syncSessions, 5000)
-    void syncSessions()
+    };
+    const interval = setInterval(syncSessions, 5000);
+    void syncSessions();
     return () => {
-      controller.abort()
-      clearInterval(interval)
-    }
-  }, [])
+      controller.abort();
+      clearInterval(interval);
+    };
+  }, []);
 
   const myPairs = initialPairs.map(({ event, session }) => ({
     event,
-    session: sessionStates[session.streamSessionId] || session
-  }))
+    session: sessionStates[session.streamSessionId] || session,
+  }));
 
   const selectedSession = selectedSessionId
     ? myPairs.find((p) => p.event.goLiveEventId === selectedSessionId) || null
-    : null
+    : null;
 
   const handleSessionChange = (updatedSession: StreamSession) => {
     setSessionStates((prev) => ({
       ...prev,
-      [updatedSession.streamSessionId]: updatedSession
-    }))
-  }
+      [updatedSession.streamSessionId]: updatedSession,
+    }));
+  };
 
   if (myPairs.length === 0) {
     return (
-      <div className="py-16 text-center text-muted-foreground">
-        <MonitorPlayIcon className="mx-auto mb-3 h-8 w-8 opacity-40" />
-        <p className="text-sm">No sessions assigned to you.</p>
-      </div>
-    )
+      <Empty>
+        <EmptyHeader>
+          <EmptyMedia variant="icon">
+            <MonitorPlayIcon />
+          </EmptyMedia>
+          <EmptyTitle>No sessions</EmptyTitle>
+          <EmptyDescription>
+            <p className="text-sm">No sessions assigned to you.</p>
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
+    );
   }
 
   return (
     <>
-      <div className="rounded-lg border">
+      <div className="overflow-hidden rounded-2xl border">
         <Table>
           <TableHeader>
             <TableRow>
@@ -515,7 +530,7 @@ export function HostDashboard({
       <Dialog
         open={!!selectedSession}
         onOpenChange={(open) => {
-          if (!open) setSelectedSessionId(null)
+          if (!open) setSelectedSessionId(null);
         }}
       >
         <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
@@ -538,5 +553,5 @@ export function HostDashboard({
         </DialogContent>
       </Dialog>
     </>
-  )
+  );
 }

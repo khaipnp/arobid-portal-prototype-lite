@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import {
   CalendarIcon,
@@ -11,13 +11,13 @@ import {
   MessageSquareIcon,
   RadioIcon,
   SearchIcon,
-  XIcon
-} from "lucide-react"
-import Image from "next/image"
-import Link from "next/link"
-import * as React from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardDescription, CardTitle } from "@/components/ui/card"
+  XIcon,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import * as React from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import {
   Pagination,
   PaginationContent,
@@ -25,38 +25,38 @@ import {
   PaginationItem,
   PaginationLink,
   PaginationNext,
-  PaginationPrevious
-} from "@/components/ui/pagination"
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
-} from "@/components/ui/select"
-import type { PartnerAccess } from "@/lib/partner/access"
+  SelectValue,
+} from "@/components/ui/select";
+import type { PartnerAccess } from "@/lib/partner/access";
 import type {
   PartnerAssignedExpo,
   PartnerCapability,
   PartnerMembershipRole,
-  PartnerModel
-} from "@/lib/partner/db"
-import type { ExpoStatus } from "@/lib/tradexpo/types"
-import { cn } from "@/lib/utils"
-import { ExpoStatusBadge } from "../tradexpo/status-badge"
+  PartnerModel,
+} from "@/lib/partner/db";
+import type { ExpoStatus } from "@/lib/tradexpo/types";
+import { cn } from "@/lib/utils";
+import { ExpoStatusBadge } from "../tradexpo/status-badge";
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
-  InputGroupInput
-} from "../ui/input-group"
+  InputGroupInput,
+} from "../ui/input-group";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", {
     day: "2-digit",
     month: "short",
-    year: "numeric"
-  })
+    year: "numeric",
+  });
 }
 
 const EXPO_STATUSES: { label: string; value: ExpoStatus | "All" }[] = [
@@ -65,14 +65,14 @@ const EXPO_STATUSES: { label: string; value: ExpoStatus | "All" }[] = [
   { label: "Pending Review", value: "Pending Review" },
   { label: "Live", value: "Live" },
   { label: "Archived", value: "Archived" },
-  { label: "Canceled", value: "Canceled" }
-]
+  { label: "Canceled", value: "Canceled" },
+];
 
 const PARTNERSHIP_MODEL_LABELS: Record<PartnerModel, string> = {
   co_host: "Co-host",
   turnkey: "Turnkey",
-  tenant: "Tenant"
-}
+  tenant: "Tenant",
+};
 
 const MEMBERSHIP_ROLE_LABELS: Record<PartnerMembershipRole, string> = {
   primary_representative: "Primary representative",
@@ -85,8 +85,8 @@ const MEMBERSHIP_ROLE_LABELS: Record<PartnerMembershipRole, string> = {
   business_manager: "Business manager",
   operations: "Operations",
   finance: "Finance",
-  viewer: "Viewer"
-}
+  viewer: "Viewer",
+};
 
 const _CAPABILITY_LABELS: Record<PartnerCapability, string> = {
   view_dashboard: "View Dashboard",
@@ -96,57 +96,57 @@ const _CAPABILITY_LABELS: Record<PartnerCapability, string> = {
   configure_operations: "Configure Operations",
   manage_branding: "Manage Branding",
   manage_tenant_settings: "Manage Tenant Settings",
-  manage_partner_users: "Manage Partner Users"
-}
+  manage_partner_users: "Manage Partner Users",
+};
 
-const PAGE_SIZE = 10
+const PAGE_SIZE = 10;
 
 export function PartnerExpoList({
   access,
-  assignedExpos
+  assignedExpos,
 }: {
-  access: PartnerAccess
-  assignedExpos: PartnerAssignedExpo[]
+  access: PartnerAccess;
+  assignedExpos: PartnerAssignedExpo[];
 }) {
-  const [searchQuery, setSearchQuery] = React.useState("")
+  const [searchQuery, setSearchQuery] = React.useState("");
   const [statusFilter, setStatusFilter] = React.useState<ExpoStatus | "All">(
-    "All"
-  )
-  const [expandedId, setExpandedId] = React.useState<string | null>(null)
-  const [currentPage, setCurrentPage] = React.useState(1)
+    "All",
+  );
+  const [expandedId, setExpandedId] = React.useState<string | null>(null);
+  const [currentPage, setCurrentPage] = React.useState(1);
 
   const filteredExpos = React.useMemo(() => {
     return assignedExpos.filter(({ expo }) => {
       const matchesSearch = expo.name
         .toLowerCase()
-        .includes(searchQuery.toLowerCase())
+        .includes(searchQuery.toLowerCase());
       const matchesStatus =
-        statusFilter === "All" || expo.status === statusFilter
-      return matchesSearch && matchesStatus
-    })
-  }, [assignedExpos, searchQuery, statusFilter])
+        statusFilter === "All" || expo.status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [assignedExpos, searchQuery, statusFilter]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredExpos.length / PAGE_SIZE))
+  const totalPages = Math.max(1, Math.ceil(filteredExpos.length / PAGE_SIZE));
   const pagedExpos = React.useMemo(() => {
     return filteredExpos.slice(
       (currentPage - 1) * PAGE_SIZE,
-      currentPage * PAGE_SIZE
-    )
-  }, [filteredExpos, currentPage])
+      currentPage * PAGE_SIZE,
+    );
+  }, [filteredExpos, currentPage]);
 
   React.useEffect(() => {
-    setCurrentPage((page) => Math.min(page, totalPages))
-  }, [totalPages])
+    setCurrentPage((page) => Math.min(page, totalPages));
+  }, [totalPages]);
 
   const toggleExpand = (id: string) => {
-    setExpandedId(expandedId === id ? null : id)
-  }
+    setExpandedId(expandedId === id ? null : id);
+  };
 
   return (
-    <div className="space-y-6 px-4">
+    <div className="space-y-6">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
-          <InputGroup className="max-w-xs rounded-full">
+          <InputGroup className="max-w-xs">
             <InputGroupAddon align="inline-start">
               <SearchIcon />
             </InputGroupAddon>
@@ -154,19 +154,19 @@ export function PartnerExpoList({
               placeholder="Search expos..."
               value={searchQuery}
               onChange={(event) => {
-                setSearchQuery(event.target.value)
-                setCurrentPage(1)
+                setSearchQuery(event.target.value);
+                setCurrentPage(1);
               }}
             />
             {searchQuery && (
               <InputGroupAddon align="inline-end">
                 <InputGroupButton
-                  variant="secondary"
+                  variant="ghost"
                   size="icon-xs"
                   className="rounded-full"
                   onClick={() => setSearchQuery("")}
                 >
-                  <XIcon className="size-3.5" />
+                  <XIcon />
                 </InputGroupButton>
               </InputGroupAddon>
             )}
@@ -176,11 +176,11 @@ export function PartnerExpoList({
           <Select
             value={statusFilter}
             onValueChange={(value) => {
-              setStatusFilter(value as ExpoStatus | "All")
-              setCurrentPage(1)
+              setStatusFilter(value as ExpoStatus | "All");
+              setCurrentPage(1);
             }}
           >
-            <SelectTrigger className="w-40 rounded-full">
+            <SelectTrigger className="w-40">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -205,22 +205,22 @@ export function PartnerExpoList({
               soldBooths,
               visitors,
               rfqCount,
-              chatCount
+              chatCount,
             }) => {
-              const isExpanded = expandedId === expo.id
-              const isTurnkey = assignment.partnershipModel === "turnkey"
+              const isExpanded = expandedId === expo.id;
+              const isTurnkey = assignment.partnershipModel === "turnkey";
               const showMetrics = [
                 "Live",
                 "Archived",
-                "Pending Review"
-              ].includes(expo.status)
+                "Pending Review",
+              ].includes(expo.status);
 
               return (
                 <div
                   key={expo.id}
                   className={cn(
                     "overflow-hidden rounded-2xl border transition-all duration-200",
-                    isExpanded ? "ring-1 ring-primary/50" : "hover:shadow-sm"
+                    isExpanded ? "ring-1 ring-primary/50" : "hover:shadow-sm",
                   )}
                 >
                   <div className="flex flex-col items-stretch md:flex-row">
@@ -278,7 +278,7 @@ export function PartnerExpoList({
                           aria-expanded={isExpanded}
                           className={cn(
                             "h-7 w-7 transition-transform",
-                            isExpanded && "rotate-180 bg-accent"
+                            isExpanded && "rotate-180 bg-accent",
                           )}
                           onClick={() => toggleExpand(expo.id)}
                         >
@@ -396,8 +396,8 @@ export function PartnerExpoList({
                     </div>
                   )}
                 </div>
-              )
-            }
+              );
+            },
           )}
 
           {/* Pagination Controls */}
@@ -410,18 +410,18 @@ export function PartnerExpoList({
                       href="#"
                       text="Previous"
                       onClick={(e) => {
-                        e.preventDefault()
-                        if (currentPage > 1) setCurrentPage(currentPage - 1)
+                        e.preventDefault();
+                        if (currentPage > 1) setCurrentPage(currentPage - 1);
                       }}
                       className={cn(
                         "h-8 text-xs",
-                        currentPage === 1 && "pointer-events-none opacity-50"
+                        currentPage === 1 && "pointer-events-none opacity-50",
                       )}
                     />
                   </PaginationItem>
 
                   {Array.from({ length: totalPages }).map((_, i) => {
-                    const page = i + 1
+                    const page = i + 1;
                     if (
                       totalPages > 5 &&
                       page !== 1 &&
@@ -433,9 +433,9 @@ export function PartnerExpoList({
                           <PaginationItem key={page}>
                             <PaginationEllipsis />
                           </PaginationItem>
-                        )
+                        );
                       }
-                      return null
+                      return null;
                     }
 
                     return (
@@ -444,15 +444,15 @@ export function PartnerExpoList({
                           href="#"
                           isActive={page === currentPage}
                           onClick={(e) => {
-                            e.preventDefault()
-                            setCurrentPage(page)
+                            e.preventDefault();
+                            setCurrentPage(page);
                           }}
                           className="h-8 w-8 text-xs"
                         >
                           {page}
                         </PaginationLink>
                       </PaginationItem>
-                    )
+                    );
                   })}
 
                   <PaginationItem>
@@ -460,14 +460,14 @@ export function PartnerExpoList({
                       href="#"
                       text="Next"
                       onClick={(e) => {
-                        e.preventDefault()
+                        e.preventDefault();
                         if (currentPage < totalPages)
-                          setCurrentPage(currentPage + 1)
+                          setCurrentPage(currentPage + 1);
                       }}
                       className={cn(
                         "h-8 text-xs",
                         currentPage === totalPages &&
-                          "pointer-events-none opacity-50"
+                          "pointer-events-none opacity-50",
                       )}
                     />
                   </PaginationItem>
@@ -513,8 +513,8 @@ export function PartnerExpoList({
             variant="outline"
             size="sm"
             onClick={() => {
-              setSearchQuery("")
-              setStatusFilter("All")
+              setSearchQuery("");
+              setStatusFilter("All");
             }}
             className="mt-4 h-8 text-xs"
           >
@@ -523,5 +523,5 @@ export function PartnerExpoList({
         </Card>
       )}
     </div>
-  )
+  );
 }
