@@ -3,7 +3,7 @@ import { ensureTradeCreditSchema } from "@/lib/tradecredit/db"
 import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
 let platformSchemaReady = false
-const LATEST_PLATFORM_MIGRATION = "deal_room_partner_org_v1"
+const LATEST_PLATFORM_MIGRATION = "admin_flexible_expo_schedule_v1"
 
 type SqlClient = typeof sql
 

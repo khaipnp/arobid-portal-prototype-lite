@@ -186,7 +186,18 @@ export function getExpoTimelinePhase(
   return "Live"
 }
 
-export function formatExpoScheduleLabel(expo: Expo) {
+export type ExpoScheduleDisplay = Pick<
+  Expo,
+  | "schedulePrecision"
+  | "scheduleMonth"
+  | "scheduleYear"
+  | "startDate"
+  | "endDate"
+  | "startAt"
+  | "endAt"
+>
+
+export function formatExpoScheduleLabel(expo: ExpoScheduleDisplay) {
   const precision = getExpoSchedulePrecision(expo)
   if (precision === "exact_date_range") {
     if (expo.startDate && expo.endDate) {
