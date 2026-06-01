@@ -4,53 +4,53 @@ import {
   HistoryIcon,
   MailIcon,
   ShieldCheckIcon,
-  SparklesIcon,
-} from "lucide-react";
-import { notFound } from "next/navigation";
-import { DashboardShell } from "@/components/tradexpo/dashboard-shell";
-import { Badge } from "@/components/ui/badge";
+  SparklesIcon
+} from "lucide-react"
+import { notFound } from "next/navigation"
+import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
+import { Badge } from "@/components/ui/badge"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { requireRole } from "@/lib/auth/rbac";
-import { getPartnerEnterpriseMemberDetail } from "@/lib/partner/db";
-import { ensurePlatformSchema } from "@/lib/platform/ensure-schema";
-import { UserAvatar } from "@/components/user-avatar";
+  CardTitle
+} from "@/components/ui/card"
+import { UserAvatar } from "@/components/user-avatar"
+import { requireRole } from "@/lib/auth/rbac"
+import { getPartnerEnterpriseMemberDetail } from "@/lib/partner/db"
+import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 
-const numberFormat = new Intl.NumberFormat("en");
+const numberFormat = new Intl.NumberFormat("en")
 const dateFormat = new Intl.DateTimeFormat("en", {
   day: "2-digit",
   month: "short",
-  year: "numeric",
-});
+  year: "numeric"
+})
 
 function formatDate(value: string | null) {
-  if (!value) return "—";
-  return dateFormat.format(new Date(value));
+  if (!value) return "—"
+  return dateFormat.format(new Date(value))
 }
 
 function getEnterpriseInitial(name: string) {
-  return name.trim().charAt(0).toUpperCase() || "?";
+  return name.trim().charAt(0).toUpperCase() || "?"
 }
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"
 
 export default async function PartnerEnterpriseDetailPage({
-  params,
+  params
 }: {
-  params: Promise<{ memberId: string }>;
+  params: Promise<{ memberId: string }>
 }) {
-  const { memberId } = await params;
-  await ensurePlatformSchema();
-  const userId = await requireRole("partner");
-  const detail = await getPartnerEnterpriseMemberDetail(userId, memberId);
-  if (!detail) notFound();
+  const { memberId } = await params
+  await ensurePlatformSchema()
+  const userId = await requireRole("partner")
+  const detail = await getPartnerEnterpriseMemberDetail(userId, memberId)
+  if (!detail) notFound()
 
-  const { member, activities } = detail;
+  const { member, activities } = detail
 
   return (
     <DashboardShell
@@ -59,7 +59,7 @@ export default async function PartnerEnterpriseDetailPage({
         { label: "Dashboard", href: "/partner" },
         { label: "Partner Site Management" },
         { label: "Members", href: "/partner/partner-site/enterprises" },
-        { label: member.enterpriseName },
+        { label: member.enterpriseName }
       ]}
       showBackButton
     >
@@ -237,7 +237,7 @@ export default async function PartnerEnterpriseDetailPage({
         </section>
       </div>
     </DashboardShell>
-  );
+  )
 }
 
 function HeroStat({ label, value }: { label: string; value: string }) {
@@ -248,7 +248,7 @@ function HeroStat({ label, value }: { label: string; value: string }) {
       </p>
       <p className="mt-2 font-semibold text-2xl tabular-nums">{value}</p>
     </div>
-  );
+  )
 }
 
 function DetailItem({ label, value }: { label: string; value: string }) {
@@ -259,17 +259,17 @@ function DetailItem({ label, value }: { label: string; value: string }) {
       </p>
       <p className="mt-2 font-medium text-sm capitalize">{value}</p>
     </div>
-  );
+  )
 }
 
 function MetricCard({
   title,
   value,
-  note,
+  note
 }: {
-  title: string;
-  value: string;
-  note?: string;
+  title: string
+  value: string
+  note?: string
 }) {
   return (
     <div className="rounded-xl border bg-background p-4">
@@ -283,5 +283,5 @@ function MetricCard({
         <p className="mt-1 text-muted-foreground text-xs">{note}</p>
       ) : null}
     </div>
-  );
+  )
 }

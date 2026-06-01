@@ -19,6 +19,7 @@ import {
 } from "@/lib/tradexpo/db/platform-data"
 import type { ExpoStatus } from "@/lib/tradexpo/types"
 import { formatDateTime, getExpoTimelinePhase } from "@/lib/tradexpo/utils"
+import { formatExpoScheduleLabel } from "@/lib/tradexpo/schedule"
 import {
   resetExpoPaymentConfigToDefault,
   saveExpoPaymentConfig
@@ -94,10 +95,12 @@ export default async function ExpoDetailPage({
   const hallTemplateName = (id: string) =>
     hallTemplates.find((h) => h.id === id)?.name ?? id
 
-  const timelinePhase =
-    expo.startAt && expo.endAt
-      ? getExpoTimelinePhase(Date.now(), expo.startAt, expo.endAt)
-      : null
+  const timelinePhase = getExpoTimelinePhase(
+    Date.now(),
+    expo.schedulePrecision,
+    expo.startAt,
+    expo.endAt
+  )
 
   return (
     <DashboardShell
@@ -116,14 +119,9 @@ export default async function ExpoDetailPage({
             <Badge variant="outline" className={statusStyles[expo.status]}>
               {expo.status}
             </Badge>
-            {timelinePhase ? (
-              <Badge
-                variant="outline"
-                className={timelineStyles[timelinePhase]}
-              >
-                Timeline: {timelinePhase}
-              </Badge>
-            ) : null}
+            <Badge variant="outline" className={timelineStyles[timelinePhase]}>
+              Timeline: {timelinePhase}
+            </Badge>
           </div>
           <ExpoDetailActions
             expoId={expoId}
@@ -178,19 +176,28 @@ export default async function ExpoDetailPage({
                 <span className="text-muted-foreground">Owner</span>
                 <span>{expo.ownerEmail}</span>
 
-                <span className="text-muted-foreground">Start</span>
-                <span>
-                  {expo.startAt
-                    ? formatDateTime(expo.startAt)
-                    : formatDate(expo.startDate)}
-                </span>
+                {expo.schedulePrecision === "exact_date_range" ? (
+                  <>
+                    <span className="text-muted-foreground">Start</span>
+                    <span>
+                      {expo.startAt
+                        ? formatDateTime(expo.startAt)
+                        : formatDate(expo.startDate ?? "")}
+                    </span>
 
-                <span className="text-muted-foreground">End</span>
-                <span>
-                  {expo.endAt
-                    ? formatDateTime(expo.endAt)
-                    : formatDate(expo.endDate)}
-                </span>
+                    <span className="text-muted-foreground">End</span>
+                    <span>
+                      {expo.endAt
+                        ? formatDateTime(expo.endAt)
+                        : formatDate(expo.endDate ?? "")}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-muted-foreground">Schedule</span>
+                    <span>{formatExpoScheduleLabel(expo)}</span>
+                  </>
+                )}
 
                 {expo.timezone ? (
                   <>

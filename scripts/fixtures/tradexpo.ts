@@ -392,6 +392,7 @@ export const mockExpos: Expo[] = [
     ownerEmail: "nguyen.van.a@viettech.vn",
     startDate: isoDate(30),
     endDate: isoDate(33),
+    schedulePrecision: "exact_date_range",
     status: "Pending Review",
     categoryIds: ["cat-tech", "cat-ai"],
     createdAt: isoOffset(12)
@@ -403,6 +404,7 @@ export const mockExpos: Expo[] = [
     ownerEmail: "admin@medworld.asia",
     startDate: isoDate(60),
     endDate: isoDate(63),
+    schedulePrecision: "exact_date_range",
     status: "Draft",
     categoryIds: ["cat-health", "cat-pharma"],
     createdAt: isoOffset(24)
@@ -414,6 +416,7 @@ export const mockExpos: Expo[] = [
     ownerEmail: "contact@foodfarminc.com",
     startDate: isoDate(-10),
     endDate: isoDate(5),
+    schedulePrecision: "exact_date_range",
     status: "Live",
     categoryIds: ["cat-food", "cat-organic"],
     createdAt: isoOffset(72)
@@ -425,6 +428,7 @@ export const mockExpos: Expo[] = [
     ownerEmail: "info@autodrivesea.com",
     startDate: isoDate(-90),
     endDate: isoDate(-85),
+    schedulePrecision: "exact_date_range",
     status: "Archived",
     categoryIds: ["cat-manufacturing", "cat-auto"],
     createdAt: isoOffset(200)
@@ -436,6 +440,7 @@ export const mockExpos: Expo[] = [
     ownerEmail: "press@fashionforward.vn",
     startDate: isoDate(-120),
     endDate: isoDate(-115),
+    schedulePrecision: "exact_date_range",
     status: "Archived",
     categoryIds: ["cat-retail", "cat-fashion"],
     createdAt: isoOffset(300)
@@ -447,6 +452,7 @@ export const mockExpos: Expo[] = [
     ownerEmail: "ceo@greenenergy.vn",
     startDate: isoDate(45),
     endDate: isoDate(47),
+    schedulePrecision: "exact_date_range",
     status: "Pending Review",
     categoryIds: ["cat-energy"],
     createdAt: isoOffset(6)
@@ -458,6 +464,7 @@ export const mockExpos: Expo[] = [
     ownerEmail: "dev@cloudconnect.io",
     startDate: isoDate(15),
     endDate: isoDate(17),
+    schedulePrecision: "exact_date_range",
     status: "Draft",
     categoryIds: ["cat-tech", "cat-cloud"],
     createdAt: isoOffset(3)
@@ -469,6 +476,7 @@ export const mockExpos: Expo[] = [
     ownerEmail: "info@retailforum.org",
     startDate: isoDate(-180),
     endDate: isoDate(-177),
+    schedulePrecision: "exact_date_range",
     status: "Canceled",
     categoryIds: ["cat-retail"],
     createdAt: isoOffset(400)
@@ -480,6 +488,7 @@ export const mockExpos: Expo[] = [
     ownerEmail: "showcase@airobotics.tech",
     startDate: isoDate(-5),
     endDate: isoDate(2),
+    schedulePrecision: "exact_date_range",
     status: "Live",
     categoryIds: ["cat-tech", "cat-ai"],
     createdAt: isoOffset(48)
@@ -491,6 +500,7 @@ export const mockExpos: Expo[] = [
     ownerEmail: "hello@pharmabiotech.com",
     startDate: isoDate(90),
     endDate: isoDate(93),
+    schedulePrecision: "exact_date_range",
     status: "Draft",
     categoryIds: ["cat-health", "cat-pharma"],
     createdAt: isoOffset(1)
@@ -502,6 +512,7 @@ export const mockExpos: Expo[] = [
     ownerEmail: "ops@smartmfg.vn",
     startDate: isoDate(-60),
     endDate: isoDate(-57),
+    schedulePrecision: "exact_date_range",
     status: "Archived",
     categoryIds: ["cat-manufacturing"],
     createdAt: isoOffset(150)
@@ -513,6 +524,7 @@ export const mockExpos: Expo[] = [
     ownerEmail: "team@organicliving.vn",
     startDate: isoDate(20),
     endDate: isoDate(22),
+    schedulePrecision: "exact_date_range",
     status: "Pending Review",
     categoryIds: ["cat-food", "cat-organic"],
     createdAt: isoOffset(2)
@@ -524,6 +536,7 @@ export const mockExpos: Expo[] = [
     ownerEmail: "summit@digitalhealth.io",
     startDate: isoDate(-200),
     endDate: isoDate(-197),
+    schedulePrecision: "exact_date_range",
     status: "Archived",
     categoryIds: ["cat-health", "cat-tech"],
     createdAt: isoOffset(500)
@@ -535,6 +548,7 @@ export const mockExpos: Expo[] = [
     ownerEmail: "mobility@evshow.com",
     startDate: isoDate(75),
     endDate: isoDate(78),
+    schedulePrecision: "exact_date_range",
     status: "Draft",
     categoryIds: ["cat-manufacturing", "cat-auto", "cat-energy"],
     createdAt: isoOffset(4)
@@ -546,6 +560,7 @@ export const mockExpos: Expo[] = [
     ownerEmail: "admin@b2bsummit.apac",
     startDate: isoDate(-3),
     endDate: isoDate(4),
+    schedulePrecision: "exact_date_range",
     status: "Live",
     categoryIds: ["cat-retail", "cat-tech"],
     createdAt: isoOffset(96)

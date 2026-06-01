@@ -46,6 +46,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import type { PartnerDashboardMetrics } from "@/lib/partner/db";
+import { formatExpoScheduleLabel } from "@/lib/tradexpo/schedule";
 import { ExpoStatusBadge } from "../tradexpo/status-badge";
 import {
   Tooltip,
@@ -100,13 +101,6 @@ const rfqTrendConfig = {
 
 function formatPercent(value: number) {
   return `${Math.round(value)}%`;
-}
-
-function formatDate(value: string) {
-  return new Date(value).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-  });
 }
 
 function formatRatio(value: number, total: number) {
@@ -577,7 +571,7 @@ function ExpoInventorySection({
           Expo inventory board
         </h2>
         {hasExpoData ? (
-          <div className="overflow-x-auto rounded-3xl border">
+          <div className="overflow-x-auto rounded-2xl border">
             <Table className="min-w-2/3">
               <TableHeader>
                 <TableRow>
@@ -600,8 +594,7 @@ function ExpoInventorySection({
                         {item.expoName}
                       </Link>
                       <div className="text-muted-foreground text-xs">
-                        {formatDate(item.startDate)} -{" "}
-                        {formatDate(item.endDate)}
+                        {formatExpoScheduleLabel(item)}
                       </div>
                     </TableCell>
                     <TableCell>

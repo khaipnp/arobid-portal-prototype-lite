@@ -258,7 +258,7 @@ export function SellerExpoDetail({
           <SummaryTile
             icon={<CalendarDaysIcon className="size-4" />}
             label="Expo timeline"
-            value={`${formatDate(expo.startDate)} - ${formatDate(expo.endDate)}`}
+            value={`${formatDate(expo.startDate ?? "")} - ${formatDate(expo.endDate ?? "")}`}
           />
           <SummaryTile
             icon={<Building2Icon className="size-4" />}

@@ -29,7 +29,7 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", {
 })
 
 function formatDateRange(expo: Expo) {
-  return `${dateFormatter.format(new Date(expo.startDate))} - ${dateFormatter.format(new Date(expo.endDate))}`
+  return `${dateFormatter.format(new Date(expo.startDate ?? ""))} - ${dateFormatter.format(new Date(expo.endDate ?? ""))}`
 }
 
 function formatCount(value: number) {
@@ -108,7 +108,7 @@ export default async function TradeXpoPage() {
       detailHref: getDetailHref(expo),
       durationLabel: formatDateRange(expo),
       countdown:
-        status === "Archived" ? "Ended" : formatDaysUntil(expo.endDate),
+        status === "Archived" ? "Ended" : formatDaysUntil(expo.endDate ?? ""),
       segment,
       isWishlisted: wishlistedExpoIds.has(expo.id)
     }

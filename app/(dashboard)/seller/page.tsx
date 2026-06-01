@@ -1,19 +1,19 @@
-import Link from "next/link";
-import { DashboardShell } from "@/components/tradexpo/dashboard-shell";
-import { requireAnyRole, userHasRole } from "@/lib/auth/rbac";
-import { listSellerBoothRegistrations } from "@/lib/tradexpo/db/platform-data";
+import Link from "next/link"
+import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
+import { requireAnyRole, userHasRole } from "@/lib/auth/rbac"
+import { listSellerBoothRegistrations } from "@/lib/tradexpo/db/platform-data"
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"
 
 export default async function SellerDashboardPage() {
-  const userId = await requireAnyRole(["seller", "buyer"]);
-  const isSeller = await userHasRole(userId, "seller");
-  const registrations = await listSellerBoothRegistrations(userId);
-  const myExpoIds = [...new Set(registrations.map((r) => r.expoId))];
-  const liveCount = registrations.filter((r) => r.status === "Live").length;
+  const userId = await requireAnyRole(["seller", "buyer"])
+  const isSeller = await userHasRole(userId, "seller")
+  const registrations = await listSellerBoothRegistrations(userId)
+  const myExpoIds = [...new Set(registrations.map((r) => r.expoId))]
+  const liveCount = registrations.filter((r) => r.status === "Live").length
   const pendingCount = registrations.filter(
-    (r) => r.status === "Pending Setup",
-  ).length;
+    (r) => r.status === "Pending Setup"
+  ).length
 
   return (
     <DashboardShell
@@ -69,5 +69,5 @@ export default async function SellerDashboardPage() {
         ) : null}
       </div>
     </DashboardShell>
-  );
+  )
 }

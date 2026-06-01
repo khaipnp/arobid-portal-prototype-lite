@@ -16,7 +16,11 @@ import {
   canTransitionMiniSiteStatus,
   normalizePartnerRole
 } from "@/lib/partner/core"
-import type { Expo, ExpoStatus } from "@/lib/tradexpo/types"
+import type {
+  Expo,
+  ExpoSchedulePrecision,
+  ExpoStatus
+} from "@/lib/tradexpo/types"
 
 export type PartnerModel = "co_host" | "turnkey" | "tenant"
 
@@ -532,8 +536,11 @@ export type PartnerDashboardExpoMetric = {
   expoId: string
   expoName: string
   status: ExpoStatus
-  startDate: string
-  endDate: string
+  schedulePrecision: ExpoSchedulePrecision
+  scheduleMonth?: number | null
+  scheduleYear?: number | null
+  startDate?: string
+  endDate?: string
   totalBooths: number
   soldBooths: number
   unsoldBooths: number
@@ -726,8 +733,8 @@ type PartnerExpoRow = {
   name: string
   thumbnail_url: string
   owner_email: string
-  start_date: string | Date
-  end_date: string | Date
+  start_date: string | Date | null
+  end_date: string | Date | null
   status: string
   category_ids: string[]
   created_at: string | Date
@@ -737,6 +744,9 @@ type PartnerExpoRow = {
   owner_user_id?: string | null
   start_at?: string | Date | null
   end_at?: string | Date | null
+  schedule_precision?: ExpoSchedulePrecision | null
+  schedule_month?: number | null
+  schedule_year?: number | null
   partner_org_id: string
   partner_org_name: string
   partner_org_model: PartnerModel
@@ -772,6 +782,9 @@ function normalizePartnerExpoStatus(status: string): ExpoStatus {
 function rowToExpo(row: PartnerExpoRow): Expo {
   const startAt = row.start_at ? toIso(row.start_at) : undefined
   const endAt = row.end_at ? toIso(row.end_at) : undefined
+  const schedulePrecision =
+    row.schedule_precision ??
+    (startAt && endAt ? "exact_date_range" : "unscheduled")
 
   return {
     id: row.id,
@@ -781,12 +794,19 @@ function rowToExpo(row: PartnerExpoRow): Expo {
     ownerEmail: row.owner_email,
     startDate: startAt
       ? toDateOnly(row.start_at as string | Date)
-      : toDateOnly(row.start_date),
+      : row.start_date
+        ? toDateOnly(row.start_date)
+        : undefined,
     endDate: endAt
       ? toDateOnly(row.end_at as string | Date)
-      : toDateOnly(row.end_date),
+      : row.end_date
+        ? toDateOnly(row.end_date)
+        : undefined,
     startAt,
     endAt,
+    schedulePrecision,
+    scheduleMonth: row.schedule_month ?? null,
+    scheduleYear: row.schedule_year ?? null,
     status: normalizePartnerExpoStatus(row.status),
     categoryIds: row.category_ids,
     createdAt: toIso(row.created_at),
@@ -5703,7 +5723,15 @@ export async function getPartnerDashboardMetrics(
 ): Promise<PartnerDashboardMetrics> {
   const expoRows = (await sql`
     with assigned as (
-      select distinct e.id, e.name, e.status, e.start_date, e.end_date
+      select distinct
+        e.id,
+        e.name,
+        e.status,
+        e.schedule_precision,
+        e.schedule_month,
+        e.schedule_year,
+        e.start_date,
+        e.end_date
       from partner_memberships pm
       inner join partner_organizations po on po.id = pm.partner_org_id
       inner join partner_expo_assignments pea on pea.partner_org_id = po.id
@@ -5764,6 +5792,9 @@ export async function getPartnerDashboardMetrics(
       a.id,
       a.name,
       a.status,
+      a.schedule_precision,
+      a.schedule_month,
+      a.schedule_year,
       a.start_date,
       a.end_date,
       coalesce(hc.total_booths, bs.sold_booths, 0)::int as total_booths,
@@ -5786,8 +5817,11 @@ export async function getPartnerDashboardMetrics(
     id: string
     name: string
     status: string
-    start_date: string | Date
-    end_date: string | Date
+    schedule_precision: ExpoSchedulePrecision | null
+    schedule_month: number | null
+    schedule_year: number | null
+    start_date: string | Date | null
+    end_date: string | Date | null
     total_booths: number | string
     sold_booths: number | string
     unsold_booths: number | string
@@ -5972,8 +6006,11 @@ export async function getPartnerDashboardMetrics(
       expoId: row.id,
       expoName: row.name,
       status: normalizePartnerExpoStatus(row.status),
-      startDate: toDateOnly(row.start_date),
-      endDate: toDateOnly(row.end_date),
+      schedulePrecision: row.schedule_precision ?? "unscheduled",
+      scheduleMonth: row.schedule_month,
+      scheduleYear: row.schedule_year,
+      startDate: row.start_date ? toDateOnly(row.start_date) : undefined,
+      endDate: row.end_date ? toDateOnly(row.end_date) : undefined,
       totalBooths,
       soldBooths,
       unsoldBooths: toNumber(row.unsold_booths),

@@ -2,6 +2,7 @@ import type {
   AssetKind,
   AssetStatus,
   BoothTemplate,
+  ExpoSchedulePrecision,
   ExpoTimelinePhase,
   HallTemplate,
   ModelAsset,
@@ -167,14 +168,20 @@ export function formatDateTime(value: string) {
   }).format(new Date(value))
 }
 
-/** Lazy-evaluated timeline phase from start/end vs current time (US-02). */
+/** Lazy-evaluated timeline phase from schedule precision and timestamps. */
 export function getExpoTimelinePhase(
   nowMs: number,
-  startAtIso: string,
-  endAtIso: string
+  schedulePrecision: ExpoSchedulePrecision,
+  startAtIso?: string | null,
+  endAtIso?: string | null
 ): ExpoTimelinePhase {
+  if (schedulePrecision !== "exact_date_range" || !startAtIso || !endAtIso) {
+    return "Upcoming"
+  }
+
   const start = new Date(startAtIso).getTime()
   const end = new Date(endAtIso).getTime()
+  if (Number.isNaN(start) || Number.isNaN(end)) return "Upcoming"
   if (nowMs < start) return "Upcoming"
   if (nowMs > end) return "Archived"
   return "Live"

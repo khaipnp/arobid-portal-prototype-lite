@@ -3,7 +3,7 @@ import { ensureTradeCreditSchema } from "@/lib/tradecredit/db"
 import { CURRENT_USER_ID } from "@/lib/user/current-user"
 
 let platformSchemaReady = false
-const LATEST_PLATFORM_MIGRATION = "deal_room_partner_org_v1"
+const LATEST_PLATFORM_MIGRATION = "admin_flexible_expo_schedule_v1"
 
 type SqlClient = typeof sql
 
@@ -170,8 +170,8 @@ export async function ensurePlatformSchema() {
       name text not null,
       thumbnail_url text not null,
       owner_email text not null,
-      start_date date not null,
-      end_date date not null,
+      start_date date,
+      end_date date,
       status text not null,
       category_ids jsonb not null,
       created_at timestamptz not null
@@ -2418,6 +2418,22 @@ async function migrateExpoManagementSchema() {
         (end_date::timestamp + time '23:59:59')::timestamptz
       )
     where end_at is null
+  `
+
+  await sql`
+    alter table expos add column if not exists schedule_precision text not null default 'exact_date_range'
+  `
+  await sql`
+    alter table expos add column if not exists schedule_month int
+  `
+  await sql`
+    alter table expos add column if not exists schedule_year int
+  `
+  await sql`
+    alter table expos alter column start_date drop not null
+  `
+  await sql`
+    alter table expos alter column end_date drop not null
   `
 
   await sql`

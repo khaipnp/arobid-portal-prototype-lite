@@ -248,8 +248,8 @@ export function PartnerExpoList({
                             <div className="flex items-center gap-1">
                               <CalendarIcon className="h-3 w-3" />
                               <span>
-                                {formatDate(expo.startDate)} –{" "}
-                                {formatDate(expo.endDate)}
+                                {formatDate(expo.startDate ?? "")} –{" "}
+                                {formatDate(expo.endDate ?? "")}
                               </span>
                             </div>
                             {goLiveCount > 0 && (

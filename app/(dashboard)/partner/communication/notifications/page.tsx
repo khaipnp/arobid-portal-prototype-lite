@@ -1,5 +1,5 @@
-import { NotificationsPageContent } from "@/components/notifications/notifications-page-content";
-import { DashboardShell } from "@/components/tradexpo/dashboard-shell";
+import { NotificationsPageContent } from "@/components/notifications/notifications-page-content"
+import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 
 export default function PartnerNotificationsPage() {
   return (
@@ -9,5 +9,5 @@ export default function PartnerNotificationsPage() {
     >
       <NotificationsPageContent />
     </DashboardShell>
-  );
+  )
 }

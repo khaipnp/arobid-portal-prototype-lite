@@ -165,11 +165,15 @@ export function ExpoListManager({
       : ""
 
     if (startDateFilter) {
-      result = result.filter((expo) => expo.startDate >= startDateFilter)
+      result = result.filter(
+        (expo) => expo.startDate && expo.startDate >= startDateFilter
+      )
     }
 
     if (endDateFilter) {
-      result = result.filter((expo) => expo.endDate <= endDateFilter)
+      result = result.filter(
+        (expo) => expo.endDate && expo.endDate <= endDateFilter
+      )
     }
 
     return result
@@ -300,11 +304,11 @@ export function ExpoListManager({
   }, [confirmAction])
 
   return (
-    <div className="grid gap-4">
+    <div className="mt-6 grid gap-4">
       <section>
         <div className="flex items-center justify-between gap-3">
           <div className="flex w-full flex-col gap-3 md:flex-row md:items-center">
-            <InputGroup className="max-w-xs rounded-full">
+            <InputGroup className="max-w-xs">
               <InputGroupInput
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
@@ -335,7 +339,7 @@ export function ExpoListManager({
                 setPage(1)
               }}
             >
-              <SelectTrigger className="w-44 rounded-full">
+              <SelectTrigger className="w-44">
                 <SelectValue placeholder="All Statuses" />
               </SelectTrigger>
               <SelectContent>
@@ -352,7 +356,7 @@ export function ExpoListManager({
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
-                  className="w-44 justify-between rounded-full font-normal"
+                  className="w-44 h-10 justify-between font-normal"
                 >
                   {categoryFilter.length > 0
                     ? `${categoryFilter.length} categor${categoryFilter.length === 1 ? "y" : "ies"}`
@@ -402,12 +406,12 @@ export function ExpoListManager({
                   setDateRangeFilter(range)
                   setPage(1)
                 }}
-                className="w-76 rounded-full"
+                className="h-10 max-w-xs"
               />
               {(dateRangeFilter?.from || dateRangeFilter?.to) && (
                 <Button
                   variant="ghost"
-                  size="xs"
+                  size="lg"
                   onClick={() => {
                     setDateRangeFilter(undefined)
                     setPage(1)
@@ -418,7 +422,7 @@ export function ExpoListManager({
               )}
             </div>
           </div>
-          <Button asChild className="w-fit">
+          <Button asChild className="w-fit" size="lg">
             <Link href="/admin/tradexpo/expos/new">Create new</Link>
           </Button>
         </div>
@@ -438,7 +442,7 @@ export function ExpoListManager({
           </p>
         )}
 
-        <div className="mt-4 overflow-hidden rounded-2xl border">
+        <div className="mt-5 overflow-hidden rounded-2xl border">
           <Table>
             <TableHeader>
               <TableRow>
@@ -486,7 +490,8 @@ export function ExpoListManager({
                       {expo.ownerEmail}
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-sm">
-                      {formatDate(expo.startDate)} – {formatDate(expo.endDate)}
+                      {formatDate(expo.startDate ?? "")} –{" "}
+                      {formatDate(expo.endDate ?? "")}
                     </TableCell>
                     <TableCell>
                       <Badge
