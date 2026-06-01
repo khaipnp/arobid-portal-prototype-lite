@@ -1,77 +1,62 @@
-"use client"
+"use client";
 
-import { EyeIcon, LockKeyholeIcon, MailIcon } from "lucide-react"
-import Link from "next/link"
-import { useRouter, useSearchParams } from "next/navigation"
-import { Suspense, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { cn } from "@/lib/utils"
+import { EyeIcon, LockKeyholeIcon, MailIcon } from "lucide-react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupAddon,
+} from "@/components/ui/input-group";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
+import { Spinner } from "../ui/spinner";
 
-const FIGMA_EXPO_BACKGROUND = "/auth/login-bg.jpg"
+const FIGMA_EXPO_BACKGROUND = "/auth/login-bg.jpg";
 
 const DEMO_ACCOUNTS: {
-  label: string
-  email: string
-  password: string
+  label: string;
+  email: string;
+  password: string;
 }[] = [
   {
     label: "Admin",
     email: "khaipham@arobid.com",
-    password: "Admin@Arobid123"
+    password: "Admin@Arobid123",
   },
   {
     label: "Tenant Owner",
     email: "partner.tenant.owner@arobid.com",
-    password: "Partner@Arobid123"
+    password: "Partner@Arobid123",
   },
   {
     label: "Tenant Admin",
     email: "partner.tenant.admin@arobid.com",
-    password: "Partner@Arobid123"
+    password: "Partner@Arobid123",
   },
   {
     label: "Tenant Viewer",
     email: "partner.tenant.viewer@arobid.com",
-    password: "Partner@Arobid123"
-  },
-  {
-    label: "Expo Partner Owner",
-    email: "partner.demo@arobid.com",
-    password: "Partner@Arobid123"
-  },
-  {
-    label: "Alliance Manager",
-    email: "partner.alliance.business@arobid.com",
-    password: "Partner@Arobid123"
-  },
-  {
-    label: "Government Program",
-    email: "partner.gov.program@arobid.com",
-    password: "Partner@Arobid123"
-  },
-  {
-    label: "Partner Finance",
-    email: "partner.alliance.finance@arobid.com",
-    password: "Partner@Arobid123"
+    password: "Partner@Arobid123",
   },
   {
     label: "Seller",
     email: "seller.demo@arobid.com",
-    password: "Seller@Arobid123"
+    password: "Seller@Arobid123",
   },
   {
     label: "Buyer",
     email: "buyer.demo@arobid.com",
-    password: "Buyer@Arobid123"
-  }
-]
+    password: "Buyer@Arobid123",
+  },
+];
 
 type LoginResponse = {
-  error?: string
-  redirectPath?: string
-}
+  error?: string;
+  redirectPath?: string;
+};
 
 function LoginTextField({
   id,
@@ -83,35 +68,30 @@ function LoginTextField({
   icon,
   action,
   trailing,
-  onChange
+  onChange,
 }: {
-  id: string
-  label: string
-  type: string
-  value: string
-  placeholder: string
-  autoComplete: string
-  icon: React.ReactNode
-  action?: React.ReactNode
-  trailing?: React.ReactNode
-  onChange: (value: string) => void
+  id: string;
+  label: string;
+  type: string;
+  value: string;
+  placeholder: string;
+  autoComplete: string;
+  icon: React.ReactNode;
+  action?: React.ReactNode;
+  trailing?: React.ReactNode;
+  onChange: (value: string) => void;
 }) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-1">
       <div className="flex items-center justify-between">
-        <Label
-          htmlFor={id}
-          className="font-medium text-[#000933] text-xs leading-5"
-        >
+        <Label htmlFor={id} className="font-medium text-foreground text-xs">
           {label}
         </Label>
         {action}
       </div>
-      <div className="flex h-12 items-center gap-2 rounded-lg border border-[#e5e7eb] bg-white px-4 text-muted-foreground">
-        <span className="grid size-5 place-items-center text-[#64748b]">
-          {icon}
-        </span>
-        <Input
+      <InputGroup>
+        <InputGroupAddon align="inline-start">{icon}</InputGroupAddon>
+        <InputGroupInput
           id={id}
           type={type}
           autoComplete={autoComplete}
@@ -119,12 +99,11 @@ function LoginTextField({
           onChange={(event) => onChange(event.target.value)}
           placeholder={placeholder}
           required
-          className="h-full border-0 bg-transparent px-0 text-[#000933] text-sm shadow-none placeholder:text-muted-foreground focus-visible:ring-0"
         />
-        {trailing}
-      </div>
+        <InputGroupAddon align="inline-end">{trailing}</InputGroupAddon>
+      </InputGroup>
     </div>
-  )
+  );
 }
 
 function TermsRow() {
@@ -138,15 +117,15 @@ function TermsRow() {
         </span>
       </span>
     </label>
-  )
+  );
 }
 
 function DemoAccountPicker({
   disabled,
-  onSelect
+  onSelect,
 }: {
-  disabled: boolean
-  onSelect: (account: (typeof DEMO_ACCOUNTS)[number]) => void
+  disabled: boolean;
+  onSelect: (account: (typeof DEMO_ACCOUNTS)[number]) => void;
 }) {
   return (
     <div className="space-y-2">
@@ -166,63 +145,63 @@ function DemoAccountPicker({
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 function LoginPanel() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get("callbackUrl")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   async function navigateFromResponse(response: Response): Promise<boolean> {
     const payload = (await response
       .json()
-      .catch(() => null)) as LoginResponse | null
+      .catch(() => null)) as LoginResponse | null;
 
     if (!response.ok) {
-      setError(payload?.error ?? "Sign-in failed.")
-      return false
+      setError(payload?.error ?? "Sign-in failed.");
+      return false;
     }
 
-    const redirectPath = callbackUrl ?? payload?.redirectPath ?? "/seller"
-    router.replace(redirectPath)
-    router.refresh()
-    return true
+    const redirectPath = callbackUrl ?? payload?.redirectPath ?? "/seller";
+    router.replace(redirectPath);
+    router.refresh();
+    return true;
   }
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setError("")
-    setIsSubmitting(true)
+    event.preventDefault();
+    setError("");
+    setIsSubmitting(true);
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email, password })
-      })
-      const success = await navigateFromResponse(response)
+        body: JSON.stringify({ email, password }),
+      });
+      const success = await navigateFromResponse(response);
       if (!success) {
-        setIsSubmitting(false)
+        setIsSubmitting(false);
       }
     } catch {
-      setError("An unexpected error occurred.")
-      setIsSubmitting(false)
+      setError("An unexpected error occurred.");
+      setIsSubmitting(false);
     }
   }
 
   function useDemoAccount(account: (typeof DEMO_ACCOUNTS)[number]) {
-    setError("")
-    setEmail(account.email)
-    setPassword(account.password)
+    setError("");
+    setEmail(account.email);
+    setPassword(account.password);
   }
 
   return (
-    <section className="relative w-full max-w-lg overflow-hidden rounded-[20px] bg-white px-6 py-8 shadow-[0_0_10px_rgba(0,55,67,0.1)] backdrop-blur md:px-10 md:py-14">
+    <section className="relative w-full max-w-lg overflow-hidden rounded-3xl bg-white px-6 py-8 shadow-[0_0_10px_rgba(0,55,67,0.1)] backdrop-blur md:px-10 md:py-14">
       <p className="absolute top-0 right-0 select-none rounded-bl-xl bg-legend px-3 py-1 font-medium text-white">
         Demo
       </p>
@@ -283,9 +262,15 @@ function LoginPanel() {
           type="submit"
           size="lg"
           disabled={isSubmitting}
-          className="w-full"
+          className="h-10 w-full rounded-full font-semibold"
         >
-          {isSubmitting ? "Signing in..." : "Sign In"}
+          {isSubmitting ? (
+            <span className="flex items-center gap-2">
+              <Spinner /> Signing in...
+            </span>
+          ) : (
+            "Sign In"
+          )}
         </Button>
       </form>
 
@@ -302,7 +287,7 @@ function LoginPanel() {
         <DemoAccountPicker disabled={isSubmitting} onSelect={useDemoAccount} />
       </div>
     </section>
-  )
+  );
 }
 
 export function LoginForm({ className }: { className?: string }) {
@@ -310,7 +295,7 @@ export function LoginForm({ className }: { className?: string }) {
     <main
       className={cn(
         "relative min-h-screen overflow-hidden bg-white [font-family:var(--font-tight)]",
-        className
+        className,
       )}
     >
       <div
@@ -338,5 +323,5 @@ export function LoginForm({ className }: { className?: string }) {
         </Suspense>
       </div>
     </main>
-  )
+  );
 }
