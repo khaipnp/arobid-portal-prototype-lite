@@ -1,9 +1,18 @@
-import { PlusIcon, Trash2Icon } from "lucide-react"
+import { InfoIcon, PlusIcon, Trash2Icon } from "lucide-react"
 import type * as React from "react"
 import { Button } from "@/components/ui/button"
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import {
   Select,
   SelectContent,
@@ -12,6 +21,11 @@ import {
   SelectValue
 } from "@/components/ui/select"
 import { Textarea } from "@/components/ui/textarea"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger
+} from "@/components/ui/tooltip"
 import type { ExpoPackageFormWorkspace } from "@/lib/tradexpo/types"
 import { newExpoPackageRow } from "./row-helpers"
 import type { ExpoPackageFormRow } from "./types"
@@ -62,45 +76,66 @@ export function PackagesStep({
 
   return (
     <div className="space-y-6">
-      <div className="space-y-1">
-        <h2 className="font-semibold text-xl leading-none">Seller packages</h2>
-        <p className="text-muted-foreground text-sm">
-          Configure exhibitor packages shown on Expo Detail. Each package links
-          to subscription package data for future checkout flows.
-        </p>
+      <div className="flex justify-between">
+        <div className="space-y-1">
+          <h2 className="font-semibold text-xl capitalize leading-none">
+            Packages management
+          </h2>
+          <p className="text-muted-foreground text-sm">
+            Configure exhibitor packages shown on Expo Detail. Each package
+            links to subscription package data for future checkout flows.
+          </p>
+        </div>
+        <Button
+          size="sm"
+          disabled={packages.length >= 6}
+          onClick={() =>
+            onPackagesChange((prev) => [...prev, newExpoPackageRow()])
+          }
+        >
+          Add package
+        </Button>
       </div>
-
       <div className="space-y-3">
         {packages.map((pkg, packageIndex) => (
-          <section key={pkg.key} className="space-y-4 rounded-lg border p-4">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <div>
-                <h3 className="font-medium text-sm">
-                  Package {packageIndex + 1}
-                </h3>
-                <p className="text-muted-foreground text-xs">
-                  Link an existing package or create a new event-bound seller
-                  package for this expo.
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-sm"
-                onClick={() =>
-                  onPackagesChange((prev) =>
-                    prev.filter((_, index) => index !== packageIndex)
-                  )
-                }
-              >
-                <Trash2Icon />
-              </Button>
-            </div>
+          <Card key={pkg.key}>
+            <CardHeader>
+              <CardTitle> Package {packageIndex + 1}</CardTitle>
+              <CardDescription>
+                Link an existing package or create a new event-bound seller
+                package for this expo.
+              </CardDescription>
+              <CardAction>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() =>
+                    onPackagesChange((prev) =>
+                      prev.filter((_, index) => index !== packageIndex)
+                    )
+                  }
+                >
+                  <Trash2Icon />
+                </Button>
+              </CardAction>
+            </CardHeader>
 
-            <div className="grid gap-3 sm:grid-cols-2">
+            <CardContent className="space-y-5">
               <div className="grid gap-2">
-                <Label>Mode</Label>
-                <Select
+                <Label>
+                  Mode
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <InfoIcon size="16" className="text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      Link an existing package or create a new event-bound
+                      seller package for this expo.
+                    </TooltipContent>
+                  </Tooltip>
+                </Label>
+                <RadioGroup
                   value={pkg.mode}
                   onValueChange={(value) =>
                     onUpdatePackage(packageIndex, {
@@ -111,19 +146,33 @@ export function PackagesStep({
                           : pkg.packageDefinitionId
                     })
                   }
+                  className="grid gap-2 sm:grid-cols-2"
                 >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="link_existing">
+                  <div className="flex items-center gap-3 rounded-md border px-4 py-3">
+                    <RadioGroupItem
+                      id={`${pkg.key}-mode-link-existing`}
+                      value="link_existing"
+                    />
+                    <Label
+                      htmlFor={`${pkg.key}-mode-link-existing`}
+                      className="font-normal"
+                    >
                       Link existing package
-                    </SelectItem>
-                    <SelectItem value="create_new">
+                    </Label>
+                  </div>
+                  <div className="flex items-center gap-3 rounded-md border px-4 py-3">
+                    <RadioGroupItem
+                      id={`${pkg.key}-mode-create-new`}
+                      value="create_new"
+                    />
+                    <Label
+                      htmlFor={`${pkg.key}-mode-create-new`}
+                      className="font-normal"
+                    >
                       Create new package
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                    </Label>
+                  </div>
+                </RadioGroup>
               </div>
 
               {pkg.mode === "link_existing" ? (
@@ -148,209 +197,197 @@ export function PackagesStep({
                   </Select>
                 </div>
               ) : null}
-            </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="grid gap-2">
+                  <Label>Package name</Label>
+                  <Input
+                    value={pkg.name}
+                    onChange={(event) =>
+                      onUpdatePackage(packageIndex, {
+                        name: event.target.value
+                      })
+                    }
+                    placeholder="Premium Exhibitor Package"
+                  />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-[1fr_120px]">
+                  <div className="grid gap-2">
+                    <Label>Price</Label>
+                    <Input
+                      min={0}
+                      type="number"
+                      value={pkg.price}
+                      onChange={(event) =>
+                        onUpdatePackage(packageIndex, {
+                          price: event.target.value
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Currency</Label>
+                    <Input
+                      value={pkg.priceUnit}
+                      onChange={(event) =>
+                        onUpdatePackage(packageIndex, {
+                          priceUnit: event.target.value
+                        })
+                      }
+                      placeholder="VND"
+                    />
+                  </div>
+                </div>
+              </div>
 
-            <div className="grid gap-3 sm:grid-cols-2">
               <div className="grid gap-2">
-                <Label>Package name</Label>
-                <Input
-                  value={pkg.name}
+                <Label>Description</Label>
+                <Textarea
+                  value={pkg.description}
                   onChange={(event) =>
-                    onUpdatePackage(packageIndex, { name: event.target.value })
+                    onUpdatePackage(packageIndex, {
+                      description: event.target.value
+                    })
                   }
-                  placeholder="Premium Exhibitor Package"
+                  rows={2}
+                  placeholder="Short package description shown on Expo Detail."
                 />
               </div>
-              <div className="grid gap-3 sm:grid-cols-[1fr_120px]">
-                <div className="grid gap-2">
-                  <Label>Price</Label>
-                  <Input
-                    min={0}
-                    type="number"
-                    value={pkg.price}
-                    onChange={(event) =>
-                      onUpdatePackage(packageIndex, {
-                        price: event.target.value
-                      })
-                    }
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Currency</Label>
-                  <Input
-                    value={pkg.priceUnit}
-                    onChange={(event) =>
-                      onUpdatePackage(packageIndex, {
-                        priceUnit: event.target.value
-                      })
-                    }
-                    placeholder="VND"
-                  />
-                </div>
-              </div>
-            </div>
 
-            <div className="grid gap-2">
-              <Label>Description</Label>
-              <Textarea
-                value={pkg.description}
-                onChange={(event) =>
-                  onUpdatePackage(packageIndex, {
-                    description: event.target.value
-                  })
-                }
-                rows={2}
-                placeholder="Short package description shown on Expo Detail."
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Benefits</Label>
-              {pkg.benefits.map((benefit, benefitIndex) => (
-                <div
-                  key={`${pkg.key}-benefit-${benefit}`}
-                  className="flex gap-2"
-                >
-                  <Input
-                    value={benefit}
-                    onChange={(event) =>
-                      onUpdatePackageBenefit(
-                        packageIndex,
-                        benefitIndex,
-                        event.target.value
-                      )
-                    }
-                    placeholder="Benefit item"
-                  />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon-sm"
-                    disabled={pkg.benefits.length <= 1}
-                    onClick={() =>
-                      onUpdatePackage(packageIndex, {
-                        benefits: pkg.benefits.filter(
-                          (_, index) => index !== benefitIndex
+              <div className="space-y-2">
+                <Label>Benefits</Label>
+                {pkg.benefits.map((benefit, benefitIndex) => (
+                  <div
+                    key={`${pkg.key}-benefit-${benefit}`}
+                    className="flex gap-2"
+                  >
+                    <Input
+                      value={benefit}
+                      onChange={(event) =>
+                        onUpdatePackageBenefit(
+                          packageIndex,
+                          benefitIndex,
+                          event.target.value
                         )
+                      }
+                      placeholder="Benefit item"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      disabled={pkg.benefits.length <= 1}
+                      onClick={() =>
+                        onUpdatePackage(packageIndex, {
+                          benefits: pkg.benefits.filter(
+                            (_, index) => index !== benefitIndex
+                          )
+                        })
+                      }
+                    >
+                      <Trash2Icon />
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={pkg.benefits.length >= 10}
+                  onClick={() =>
+                    onUpdatePackage(packageIndex, {
+                      benefits: [...pkg.benefits, ""]
+                    })
+                  }
+                >
+                  <PlusIcon className="mr-1 size-4" />
+                  Add benefit
+                </Button>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="flex items-center gap-2 text-sm">
+                  <Checkbox
+                    checked={pkg.isFeatured}
+                    onCheckedChange={(value) =>
+                      onUpdatePackage(packageIndex, {
+                        isFeatured: Boolean(value)
+                      })
+                    }
+                  />
+                  Featured package
+                </label>
+                <label className="flex items-center gap-2 text-sm">
+                  <Checkbox
+                    checked={pkg.isPublic}
+                    onCheckedChange={(value) =>
+                      onUpdatePackage(packageIndex, {
+                        isPublic: Boolean(value)
+                      })
+                    }
+                  />
+                  Show on public Expo Detail
+                </label>
+              </div>
+
+              <div className="grid gap-3 rounded-md bg-muted/40 p-3 sm:grid-cols-2">
+                <div className="grid gap-2">
+                  <Label>Advanced EXPO plan</Label>
+                  <Select
+                    value={pkg.advanced.planId || AUTO_VALUE}
+                    onValueChange={(value) =>
+                      onUpdatePackage(packageIndex, {
+                        advanced: {
+                          ...pkg.advanced,
+                          planId: value === AUTO_VALUE ? "" : value
+                        }
                       })
                     }
                   >
-                    <Trash2Icon />
-                  </Button>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Auto default" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={AUTO_VALUE}>Auto default</SelectItem>
+                      {expoPlans.map((plan) => (
+                        <SelectItem key={plan.id} value={plan.id}>
+                          {plan.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-              ))}
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                disabled={pkg.benefits.length >= 10}
-                onClick={() =>
-                  onUpdatePackage(packageIndex, {
-                    benefits: [...pkg.benefits, ""]
-                  })
-                }
-              >
-                <PlusIcon className="mr-1 size-4" />
-                Add benefit
-              </Button>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="flex items-center gap-2 text-sm">
-                <Checkbox
-                  checked={pkg.isFeatured}
-                  onCheckedChange={(value) =>
-                    onUpdatePackage(packageIndex, {
-                      isFeatured: Boolean(value)
-                    })
-                  }
-                />
-                Featured package
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <Checkbox
-                  checked={pkg.isPublic}
-                  onCheckedChange={(value) =>
-                    onUpdatePackage(packageIndex, {
-                      isPublic: Boolean(value)
-                    })
-                  }
-                />
-                Show on public Expo Detail
-              </label>
-            </div>
-
-            <div className="grid gap-3 rounded-md bg-muted/40 p-3 sm:grid-cols-2">
-              <div className="grid gap-2">
-                <Label>Advanced EXPO plan</Label>
-                <Select
-                  value={pkg.advanced.planId || AUTO_VALUE}
-                  onValueChange={(value) =>
-                    onUpdatePackage(packageIndex, {
-                      advanced: {
-                        ...pkg.advanced,
-                        planId: value === AUTO_VALUE ? "" : value
-                      }
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Auto default" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={AUTO_VALUE}>Auto default</SelectItem>
-                    {expoPlans.map((plan) => (
-                      <SelectItem key={plan.id} value={plan.id}>
-                        {plan.name}
+                <div className="grid gap-2">
+                  <Label>Advanced role</Label>
+                  <Select
+                    value={pkg.advanced.roleCode || AUTO_VALUE}
+                    onValueChange={(value) =>
+                      onUpdatePackage(packageIndex, {
+                        advanced: {
+                          ...pkg.advanced,
+                          roleCode: value === AUTO_VALUE ? "" : value
+                        }
+                      })
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Auto seller/exhibitor" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={AUTO_VALUE}>
+                        Auto seller/exhibitor
                       </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                      {roles.map((role) => (
+                        <SelectItem key={role.id} value={role.id}>
+                          {role.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
-              <div className="grid gap-2">
-                <Label>Advanced role</Label>
-                <Select
-                  value={pkg.advanced.roleCode || AUTO_VALUE}
-                  onValueChange={(value) =>
-                    onUpdatePackage(packageIndex, {
-                      advanced: {
-                        ...pkg.advanced,
-                        roleCode: value === AUTO_VALUE ? "" : value
-                      }
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Auto seller/exhibitor" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={AUTO_VALUE}>
-                      Auto seller/exhibitor
-                    </SelectItem>
-                    {roles.map((role) => (
-                      <SelectItem key={role.id} value={role.id}>
-                        {role.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </section>
+            </CardContent>
+          </Card>
         ))}
-
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={packages.length >= 6}
-          onClick={() =>
-            onPackagesChange((prev) => [...prev, newExpoPackageRow()])
-          }
-        >
-          <PlusIcon className="mr-1 size-4" />
-          Add seller package
-        </Button>
       </div>
     </div>
   )

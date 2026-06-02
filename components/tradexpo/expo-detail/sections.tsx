@@ -531,7 +531,7 @@ export function SellerPackages({
       <div className="container mx-auto">
         <div className="mx-auto max-w-2xl text-center">
           <h2 className="font-semibold text-[32px] leading-10">
-            Seller packages
+            Packages management
           </h2>
           <p className="mt-2 text-foreground">
             Choose an exhibitor package tailored to your expo participation

@@ -60,7 +60,7 @@ export const ADMIN_EXPO_FORM_STEPS: ExpoFormStep[] = [
   },
   {
     id: "packages",
-    title: "Seller packages",
+    title: "Packages management",
     description: "Pricing and benefits for exhibitor packages"
   },
   {
