@@ -12,6 +12,8 @@ import { EXPO_FORM_TIMEZONES } from "@/lib/tradexpo/expo-form-utils";
 import { EXPO_MONTH_OPTIONS } from "@/lib/tradexpo/schedule";
 import type { ExpoSchedulePrecision } from "@/lib/tradexpo/types";
 import { SCHEDULE_PRECISION_OPTIONS } from "./constants";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { CheckCircle2Icon } from "lucide-react";
 
 type ScheduleStepProps = {
   schedulePrecision: ExpoSchedulePrecision;
@@ -55,7 +57,7 @@ export function ScheduleStep({
         </p>
       </div>
 
-      <section className="space-y-4">
+      <section className="space-y-6">
         <RadioGroup
           value={schedulePrecision}
           onValueChange={(value) => {
@@ -69,13 +71,13 @@ export function ScheduleStep({
               key={option.value}
               className="flex cursor-pointer gap-3 rounded-2xl border p-3 text-sm transition-colors hover:bg-muted/60 has-data-[state=checked]:border-legend has-data-[state=checked]:bg-legend/5"
             >
-              <RadioGroupItem value={option.value} className="mt-0.5" />
-              <span className="grid gap-1">
-                <span className="font-medium">{option.label}</span>
-                <span className="text-muted-foreground text-xs">
+              <RadioGroupItem value={option.value} />
+              <div className="flex flex-col gap-0.5">
+                <span className="font-medium text-base">{option.label}</span>
+                <span className="text-muted-foreground text-sm">
                   {option.description}
                 </span>
-              </span>
+              </div>
             </label>
           ))}
         </RadioGroup>
@@ -156,10 +158,14 @@ export function ScheduleStep({
         ) : null}
 
         {schedulePrecision === "unscheduled" ? (
-          <p className="rounded-md bg-muted/50 px-3 py-2 text-muted-foreground text-sm">
-            Schedule to be announced. You can add exact dates later from Edit
-            Expo.
-          </p>
+          <Alert>
+            <CheckCircle2Icon />
+            <AlertTitle>TBA Information</AlertTitle>
+            <AlertDescription>
+              Schedule to be announced. You can add exact dates later from Edit
+              Expo.
+            </AlertDescription>
+          </Alert>
         ) : null}
 
         {scheduleError ? (

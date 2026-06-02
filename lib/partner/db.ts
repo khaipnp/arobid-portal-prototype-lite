@@ -16,6 +16,10 @@ import {
   canTransitionMiniSiteStatus,
   normalizePartnerRole
 } from "@/lib/partner/core"
+import {
+  AROBID_DISPLAY_TARGET_ID,
+  normalizeDisplayTargetIds
+} from "@/lib/tradexpo/tenant-display"
 import type {
   Expo,
   ExpoSchedulePrecision,
@@ -737,6 +741,8 @@ type PartnerExpoRow = {
   end_date: string | Date | null
   status: string
   category_ids: string[]
+  tenant_partner_org_id?: string | null
+  display_target_ids?: string[] | null
   created_at: string | Date
   description?: string
   timezone?: string
@@ -809,6 +815,12 @@ function rowToExpo(row: PartnerExpoRow): Expo {
     scheduleYear: row.schedule_year ?? null,
     status: normalizePartnerExpoStatus(row.status),
     categoryIds: row.category_ids,
+    tenantPartnerOrgId: row.tenant_partner_org_id ?? null,
+    displayTargetIds: normalizeDisplayTargetIds(
+      row.display_target_ids?.length
+        ? row.display_target_ids
+        : [AROBID_DISPLAY_TARGET_ID]
+    ),
     createdAt: toIso(row.created_at),
     description: row.description,
     timezone: row.timezone,

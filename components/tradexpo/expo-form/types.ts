@@ -4,6 +4,7 @@ import type {
   ExpoHall,
   ExpoLayoutTemplate,
   ExpoMarketingContent,
+  ExpoTenantOption,
   HallTemplate
 } from "@/lib/tradexpo/types"
 
@@ -16,9 +17,18 @@ export type HallFormRow = {
   premiumQty: number
 }
 
-export type OwnerPick = { id: string; email: string; name: string }
+export type OwnerPick = {
+  id: string
+  email: string
+  name: string
+  imageUrl?: string | null
+}
 
-export type OwnerDisplay = { label: string; email: string }
+export type OwnerDisplay = {
+  label: string
+  email: string
+  imageUrl?: string | null
+}
 
 export type AudienceCardFormRow =
   ExpoMarketingContent["whoShouldJoin"]["audienceCards"][number] & {
@@ -47,6 +57,7 @@ export type ExpoFormProps = {
   categories: ExpoCategory[]
   layoutTemplates: ExpoLayoutTemplate[]
   hallTemplates: HallTemplate[]
+  tenantOptions?: ExpoTenantOption[]
   cancelHref?: string
   successHref?: string
   submitEndpoint?: string

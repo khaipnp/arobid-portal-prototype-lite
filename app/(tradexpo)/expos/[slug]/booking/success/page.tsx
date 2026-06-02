@@ -3,6 +3,7 @@ import { TxFooter } from "@/components/landing/tx-footer"
 import { TxHeader } from "@/components/landing/tx-header"
 import { BookingSuccessContent } from "@/components/tradexpo/expo-detail/booking-success-content"
 import { getExpoBySlug } from "@/lib/tradexpo/db/platform-data"
+import { AROBID_DISPLAY_TARGET_ID } from "@/lib/tradexpo/tenant-display"
 
 export default async function Page({
   params
@@ -11,7 +12,9 @@ export default async function Page({
 }) {
   const { slug } = await params
   const expo = await getExpoBySlug(slug)
-  if (!expo) notFound()
+  if (!expo?.displayTargetIds.includes(AROBID_DISPLAY_TARGET_ID)) {
+    notFound()
+  }
 
   return (
     <main className="min-h-screen bg-[#f9fafb] text-foreground [font-family:var(--font-tight)]">

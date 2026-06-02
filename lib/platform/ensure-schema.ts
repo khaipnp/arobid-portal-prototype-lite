@@ -2430,6 +2430,12 @@ async function migrateExpoManagementSchema() {
     alter table expos add column if not exists schedule_year int
   `
   await sql`
+    alter table expos add column if not exists tenant_partner_org_id text
+  `
+  await sql`
+    alter table expos add column if not exists display_target_ids jsonb not null default '["arobid"]'::jsonb
+  `
+  await sql`
     alter table expos alter column start_date drop not null
   `
   await sql`

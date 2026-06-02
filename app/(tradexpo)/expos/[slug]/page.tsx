@@ -26,6 +26,7 @@ import {
   listExpoDetailProducts
 } from "@/lib/tradexpo/db/platform-data"
 import { getExpoMarketingContentForRender } from "@/lib/tradexpo/expo-marketing-content"
+import { AROBID_DISPLAY_TARGET_ID } from "@/lib/tradexpo/tenant-display"
 import { listWishlistedTargetIds } from "@/lib/wishlist/db"
 
 const VIRTUAL_LOBBY_URL_BY_EXPO_SLUG: Record<string, string> = {
@@ -53,7 +54,9 @@ export default async function Page({
   const { slug } = await params
   await ensurePlatformSchema()
   const expo = await getExpoBySlug(slug)
-  if (!expo) notFound()
+  if (!expo?.displayTargetIds.includes(AROBID_DISPLAY_TARGET_ID)) {
+    notFound()
+  }
 
   const userId = await getCurrentSessionUserId()
   const [

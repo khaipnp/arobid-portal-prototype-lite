@@ -3,6 +3,10 @@ import { sql } from "@/lib/db/neon"
 import { getAssetUrl } from "@/lib/image-utils"
 import { ensureCoHostPartnerAssignment } from "@/lib/partner/db"
 import { normalizeExpoMarketingContent } from "@/lib/tradexpo/expo-marketing-content"
+import {
+  AROBID_DISPLAY_TARGET_ID,
+  normalizeDisplayTargetIds
+} from "@/lib/tradexpo/tenant-display"
 import type {
   AdminNotification,
   BoothCustomization,
@@ -20,6 +24,7 @@ import type {
   ExpoMarketingSourceRole,
   ExpoSchedulePrecision,
   ExpoStatus,
+  ExpoTenantOption,
   GoLIVEEvent,
   GoLIVEEventStatus,
   LiveComment,
@@ -79,6 +84,8 @@ type ExpoRow = {
   end_date: string | Date | null
   status: Expo["status"]
   category_ids: string[]
+  tenant_partner_org_id?: string | null
+  display_target_ids?: string[] | null
   created_at: string | Date
   description?: string
   timezone?: string
@@ -198,6 +205,19 @@ export async function listExpoCategories(): Promise<ExpoCategory[]> {
   }))
 }
 
+export async function listActiveExpoTenantOptions(): Promise<
+  ExpoTenantOption[]
+> {
+  const rows = (await sql`
+    select id, name
+    from partner_organizations
+    where model = 'tenant'
+      and status = 'active'
+    order by name asc
+  `) as ExpoTenantOption[]
+  return rows
+}
+
 export function rowToExpo(r: ExpoRow): Expo {
   const startAt = r.start_at ? toIso(r.start_at) : undefined
   const endAt = r.end_at ? toIso(r.end_at) : undefined
@@ -228,6 +248,12 @@ export function rowToExpo(r: ExpoRow): Expo {
     scheduleYear: r.schedule_year ?? null,
     status: r.status,
     categoryIds: r.category_ids,
+    tenantPartnerOrgId: r.tenant_partner_org_id ?? null,
+    displayTargetIds: normalizeDisplayTargetIds(
+      r.display_target_ids?.length
+        ? r.display_target_ids
+        : [AROBID_DISPLAY_TARGET_ID]
+    ),
     createdAt: toIso(r.created_at),
     description: r.description,
     timezone: r.timezone,
@@ -236,11 +262,23 @@ export function rowToExpo(r: ExpoRow): Expo {
   }
 }
 
-export async function listExpos(options?: { limit?: number }): Promise<Expo[]> {
+export async function listExpos(options?: {
+  limit?: number
+  displayTargetId?: string
+}): Promise<Expo[]> {
   const limit = normalizeLimit(options?.limit)
-  const rows = (await sql`
-    select * from expos order by created_at desc limit ${limit}
-  `) as ExpoRow[]
+  const displayTargetId = options?.displayTargetId?.trim()
+  const rows = displayTargetId
+    ? ((await sql`
+        select *
+        from expos
+        where display_target_ids @> ${JSON.stringify([displayTargetId])}::jsonb
+        order by created_at desc
+        limit ${limit}
+      `) as ExpoRow[])
+    : ((await sql`
+        select * from expos order by created_at desc limit ${limit}
+      `) as ExpoRow[])
   return rows.map(rowToExpo)
 }
 
@@ -425,19 +463,21 @@ export async function listExpoHalls(expoId: string): Promise<ExpoHall[]> {
 
 export async function searchExpoOwnersByEmail(
   query: string
-): Promise<{ id: string; email: string; name: string }[]> {
+): Promise<
+  { id: string; email: string; name: string; imageUrl: string | null }[]
+> {
   const q = query.trim()
   if (q.length < 2) {
     return []
   }
   const pattern = `%${q}%`
   const rows = (await sql`
-    select id, email, name
+    select id, email, name, avatar_url as "imageUrl"
     from users
     where email ilike ${pattern}
     order by email asc
     limit 15
-  `) as { id: string; email: string; name: string }[]
+  `) as { id: string; email: string; name: string; imageUrl: string | null }[]
   return rows
 }
 
@@ -456,6 +496,8 @@ export type CreateExpoWithHallsInput = {
   scheduleYear: number | null
   ownerUserId: string
   ownerEmail: string
+  tenantPartnerOrgId?: string | null
+  displayTargetIds?: string[]
   halls: ExpoHallDraft[]
 }
 
@@ -538,7 +580,9 @@ export async function createExpoWithHalls(
         end_at,
         schedule_precision,
         schedule_month,
-        schedule_year
+        schedule_year,
+        tenant_partner_org_id,
+        display_target_ids
       )
       values (
         ${expoId},
@@ -559,7 +603,13 @@ export async function createExpoWithHalls(
         ${schedule.endAt},
         ${input.schedulePrecision},
         ${schedule.scheduleMonth},
-        ${schedule.scheduleYear}
+        ${schedule.scheduleYear},
+        ${input.tenantPartnerOrgId ?? null},
+        ${JSON.stringify(
+          normalizeDisplayTargetIds(
+            input.displayTargetIds ?? [AROBID_DISPLAY_TARGET_ID]
+          )
+        )}::jsonb
       )
     `
 
@@ -620,12 +670,18 @@ export async function getExpoById(expoId: string): Promise<Expo | null> {
   return r ? rowToExpo(r) : null
 }
 
-export async function getUserById(
-  userId: string
-): Promise<{ id: string; email: string; name: string } | null> {
+export async function getUserById(userId: string): Promise<{
+  id: string
+  email: string
+  name: string
+  imageUrl: string | null
+} | null> {
   const rows = (await sql`
-    select id, email, name from users where id = ${userId} limit 1
-  `) as { id: string; email: string; name: string }[]
+    select id, email, name, avatar_url as "imageUrl"
+    from users
+    where id = ${userId}
+    limit 1
+  `) as { id: string; email: string; name: string; imageUrl: string | null }[]
   return rows[0] ?? null
 }
 
@@ -683,7 +739,13 @@ export async function updateExpoWithHalls(
         end_at = ${schedule.endAt},
         schedule_precision = ${input.schedulePrecision},
         schedule_month = ${schedule.scheduleMonth},
-        schedule_year = ${schedule.scheduleYear}
+        schedule_year = ${schedule.scheduleYear},
+        tenant_partner_org_id = ${input.tenantPartnerOrgId ?? null},
+        display_target_ids = ${JSON.stringify(
+          normalizeDisplayTargetIds(
+            input.displayTargetIds ?? [AROBID_DISPLAY_TARGET_ID]
+          )
+        )}::jsonb
       where id = ${expoId}
     `
 

@@ -19,6 +19,7 @@ import {
   getExpoSchedulePrecision,
   normalizeExpoScheduleInput
 } from "@/lib/tradexpo/schedule"
+import { AROBID_DISPLAY_TARGET_ID } from "@/lib/tradexpo/tenant-display"
 import type {
   ExpoMarketingContent,
   ExpoSchedulePrecision
@@ -61,6 +62,11 @@ export function ExpoForm(props: ExpoFormProps) {
   const visibleSteps = isPartnerContentEdit
     ? PARTNER_EXPO_FORM_STEPS
     : ADMIN_EXPO_FORM_STEPS
+  const tenantOptions = props.tenantOptions ?? []
+  const displayTargetOptionIds = new Set([
+    AROBID_DISPLAY_TARGET_ID,
+    ...tenantOptions.map((tenant) => tenant.id)
+  ])
   const [activeStepId, setActiveStepId] =
     React.useState<ExpoFormStepId>("general")
 
@@ -149,6 +155,19 @@ export function ExpoForm(props: ExpoFormProps) {
   const [isChangingOwner, setIsChangingOwner] = React.useState(!isEdit)
   const [showOwnerChangeConfirm, setShowOwnerChangeConfirm] =
     React.useState(false)
+  const [tenantPartnerOrgId, setTenantPartnerOrgId] = React.useState(() =>
+    isEdit ? (props.initialExpo.tenantPartnerOrgId ?? "") : ""
+  )
+  const [displayTargetIds, setDisplayTargetIds] = React.useState<string[]>(
+    () => {
+      if (isEdit && props.initialExpo.displayTargetIds.length > 0) {
+        return props.initialExpo.displayTargetIds.filter((id) =>
+          displayTargetOptionIds.has(id)
+        )
+      }
+      return [AROBID_DISPLAY_TARGET_ID]
+    }
+  )
 
   const initialMarketingContent = normalizeExpoMarketingContent(
     props.initialMarketingContent ?? DEFAULT_EXPO_MARKETING_CONTENT
@@ -223,6 +242,12 @@ export function ExpoForm(props: ExpoFormProps) {
 
   function toggleCategory(id: string) {
     setCategoryIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    )
+  }
+
+  function toggleDisplayTarget(id: string) {
+    setDisplayTargetIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     )
   }
@@ -317,6 +342,14 @@ export function ExpoForm(props: ExpoFormProps) {
       setError("Search and select an expo owner by email.")
       return
     }
+    if (!isPartnerContentEdit && !tenantPartnerOrgId) {
+      setError("Select a tenant for this expo.")
+      return
+    }
+    if (!isPartnerContentEdit && displayTargetIds.length === 0) {
+      setError("Select at least one display position.")
+      return
+    }
 
     const scheduleResult = normalizeExpoScheduleInput({
       schedulePrecision,
@@ -354,6 +387,8 @@ export function ExpoForm(props: ExpoFormProps) {
       scheduleYear: schedule.scheduleYear,
       ownerUserId: ownerPick.id,
       ownerEmail: ownerPick.email,
+      tenantPartnerOrgId,
+      displayTargetIds,
       marketingContent,
       halls: halls.map((h) => ({
         hallName: h.hallName,
@@ -420,6 +455,8 @@ export function ExpoForm(props: ExpoFormProps) {
     expoTemplateId &&
     categoryIds.length > 0 &&
     ownerPick !== null &&
+    (isPartnerContentEdit || tenantPartnerOrgId.length > 0) &&
+    (isPartnerContentEdit || displayTargetIds.length > 0) &&
     hasScheduleInput
 
   const cancelHref =
@@ -530,6 +567,11 @@ export function ExpoForm(props: ExpoFormProps) {
               ownerPick={ownerPick}
               onOwnerPickChange={setOwnerPick}
               ownerLoading={ownerLoading}
+              tenantOptions={tenantOptions}
+              tenantPartnerOrgId={tenantPartnerOrgId}
+              onTenantPartnerOrgIdChange={setTenantPartnerOrgId}
+              displayTargetIds={displayTargetIds}
+              onToggleDisplayTarget={toggleDisplayTarget}
               onRequestOwnerChange={() => setShowOwnerChangeConfirm(true)}
             />
           ) : null}
