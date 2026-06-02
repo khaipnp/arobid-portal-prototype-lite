@@ -1,57 +1,57 @@
-import { ImagePlusIcon, InfoIcon, SearchIcon, Trash2Icon } from "lucide-react"
-import Image from "next/image"
-import type * as React from "react"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@/components/ui/input"
+import { ImagePlusIcon, InfoIcon, SearchIcon, Trash2Icon } from "lucide-react";
+import Image from "next/image";
+import type * as React from "react";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import {
   InputGroup,
   InputGroupAddon,
-  InputGroupInput
-} from "@/components/ui/input-group"
-import { Label } from "@/components/ui/label"
+  InputGroupInput,
+} from "@/components/ui/input-group";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
-} from "@/components/ui/select"
-import { Spinner } from "@/components/ui/spinner"
-import { Textarea } from "@/components/ui/textarea"
+  SelectValue,
+} from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
   TooltipContent,
-  TooltipTrigger
-} from "@/components/ui/tooltip"
-import type { ExpoCategory, ExpoLayoutTemplate } from "@/lib/tradexpo/types"
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import type { ExpoCategory, ExpoLayoutTemplate } from "@/lib/tradexpo/types";
 
 type GeneralStepProps = {
-  title: string
-  stepDescription: string
-  name: string
-  onNameChange: (value: string) => void
-  isSuper: boolean
-  isEdit: boolean
-  slug: string
-  onSlugChange: (value: string) => void
-  expoDescription: string
-  onExpoDescriptionChange: (value: string) => void
-  thumbnailUrl: string
-  onThumbnailUrlChange: (value: string) => void
-  isUploading: boolean
-  fileInputRef: React.RefObject<HTMLInputElement | null>
-  onFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void
-  isPartnerContentEdit: boolean
-  expoTemplateId: string
-  onExpoTemplateIdChange: (value: string) => void
-  layoutTemplates: ExpoLayoutTemplate[]
-  categoryQuery: string
-  onCategoryQueryChange: (value: string) => void
-  filteredCategories: ExpoCategory[]
-  categoryIds: string[]
-  onToggleCategory: (id: string) => void
-}
+  title: string;
+  stepDescription: string;
+  name: string;
+  onNameChange: (value: string) => void;
+  isSuper: boolean;
+  isEdit: boolean;
+  slug: string;
+  onSlugChange: (value: string) => void;
+  expoDescription: string;
+  onExpoDescriptionChange: (value: string) => void;
+  thumbnailUrl: string;
+  onThumbnailUrlChange: (value: string) => void;
+  isUploading: boolean;
+  fileInputRef: React.RefObject<HTMLInputElement | null>;
+  onFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  isPartnerContentEdit: boolean;
+  expoTemplateId: string;
+  onExpoTemplateIdChange: (value: string) => void;
+  layoutTemplates: ExpoLayoutTemplate[];
+  categoryQuery: string;
+  onCategoryQueryChange: (value: string) => void;
+  filteredCategories: ExpoCategory[];
+  categoryIds: string[];
+  onToggleCategory: (id: string) => void;
+};
 
 export function GeneralStep({
   title,
@@ -77,16 +77,16 @@ export function GeneralStep({
   onCategoryQueryChange,
   filteredCategories,
   categoryIds,
-  onToggleCategory
+  onToggleCategory,
 }: GeneralStepProps) {
   function openFilePicker() {
-    fileInputRef.current?.click()
+    fileInputRef.current?.click();
   }
 
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h2 className="font-semibold text-lg leading-none">{title}</h2>
+        <h2 className="font-semibold text-xl leading-none">{title}</h2>
         <p className="text-muted-foreground text-sm">{stepDescription}</p>
       </div>
 
@@ -165,8 +165,8 @@ export function GeneralStep({
                 onClick={openFilePicker}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault()
-                    openFilePicker()
+                    e.preventDefault();
+                    openFilePicker();
                   }
                 }}
               >
@@ -253,5 +253,5 @@ export function GeneralStep({
         </div>
       </div>
     </div>
-  )
+  );
 }

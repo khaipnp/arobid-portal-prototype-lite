@@ -1,34 +1,36 @@
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
-} from "@/components/ui/select"
-import { EXPO_FORM_TIMEZONES } from "@/lib/tradexpo/expo-form-utils"
-import { EXPO_MONTH_OPTIONS } from "@/lib/tradexpo/schedule"
-import type { ExpoSchedulePrecision } from "@/lib/tradexpo/types"
-import { SCHEDULE_PRECISION_OPTIONS } from "./constants"
+  SelectValue,
+} from "@/components/ui/select";
+import { EXPO_FORM_TIMEZONES } from "@/lib/tradexpo/expo-form-utils";
+import { EXPO_MONTH_OPTIONS } from "@/lib/tradexpo/schedule";
+import type { ExpoSchedulePrecision } from "@/lib/tradexpo/types";
+import { SCHEDULE_PRECISION_OPTIONS } from "./constants";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { CheckCircle2Icon } from "lucide-react";
 
 type ScheduleStepProps = {
-  schedulePrecision: ExpoSchedulePrecision
-  onSchedulePrecisionChange: (value: ExpoSchedulePrecision) => void
-  startLocal: string
-  onStartLocalChange: (value: string) => void
-  endLocal: string
-  onEndLocalChange: (value: string) => void
-  timezone: string
-  onTimezoneChange: (value: string) => void
-  scheduleMonth: string
-  onScheduleMonthChange: (value: string) => void
-  scheduleYear: string
-  onScheduleYearChange: (value: string) => void
-  scheduleError: string | null
-  onScheduleErrorChange: (value: string | null) => void
-}
+  schedulePrecision: ExpoSchedulePrecision;
+  onSchedulePrecisionChange: (value: ExpoSchedulePrecision) => void;
+  startLocal: string;
+  onStartLocalChange: (value: string) => void;
+  endLocal: string;
+  onEndLocalChange: (value: string) => void;
+  timezone: string;
+  onTimezoneChange: (value: string) => void;
+  scheduleMonth: string;
+  onScheduleMonthChange: (value: string) => void;
+  scheduleYear: string;
+  onScheduleYearChange: (value: string) => void;
+  scheduleError: string | null;
+  onScheduleErrorChange: (value: string | null) => void;
+};
 
 export function ScheduleStep({
   schedulePrecision,
@@ -44,38 +46,38 @@ export function ScheduleStep({
   scheduleYear,
   onScheduleYearChange,
   scheduleError,
-  onScheduleErrorChange
+  onScheduleErrorChange,
 }: ScheduleStepProps) {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h2 className="font-semibold text-lg leading-none">Schedule</h2>
+        <h2 className="font-semibold text-xl leading-none">Schedule</h2>
         <p className="text-muted-foreground text-sm">
           Choose how precise the Expo schedule is right now.
         </p>
       </div>
 
-      <section className="space-y-4">
+      <section className="space-y-6">
         <RadioGroup
           value={schedulePrecision}
           onValueChange={(value) => {
-            onSchedulePrecisionChange(value as ExpoSchedulePrecision)
-            onScheduleErrorChange(null)
+            onSchedulePrecisionChange(value as ExpoSchedulePrecision);
+            onScheduleErrorChange(null);
           }}
           className="grid gap-3 md:grid-cols-3"
         >
           {SCHEDULE_PRECISION_OPTIONS.map((option) => (
             <label
               key={option.value}
-              className="flex cursor-pointer gap-3 rounded-2xl border p-3 text-sm transition-colors hover:bg-muted/60 has-[[data-state=checked]]:border-legend has-[[data-state=checked]]:bg-legend/5"
+              className="flex cursor-pointer gap-3 rounded-2xl border p-3 text-sm transition-colors hover:bg-muted/60 has-data-[state=checked]:border-legend has-data-[state=checked]:bg-legend/5"
             >
-              <RadioGroupItem value={option.value} className="mt-0.5" />
-              <span className="grid gap-1">
-                <span className="font-medium">{option.label}</span>
-                <span className="text-muted-foreground text-xs">
+              <RadioGroupItem value={option.value} />
+              <div className="flex flex-col gap-0.5">
+                <span className="font-medium text-base">{option.label}</span>
+                <span className="text-muted-foreground text-sm">
                   {option.description}
                 </span>
-              </span>
+              </div>
             </label>
           ))}
         </RadioGroup>
@@ -156,10 +158,14 @@ export function ScheduleStep({
         ) : null}
 
         {schedulePrecision === "unscheduled" ? (
-          <p className="rounded-md bg-muted/50 px-3 py-2 text-muted-foreground text-sm">
-            Schedule to be announced. You can add exact dates later from Edit
-            Expo.
-          </p>
+          <Alert>
+            <CheckCircle2Icon />
+            <AlertTitle>TBA Information</AlertTitle>
+            <AlertDescription>
+              Schedule to be announced. You can add exact dates later from Edit
+              Expo.
+            </AlertDescription>
+          </Alert>
         ) : null}
 
         {scheduleError ? (
@@ -167,5 +173,5 @@ export function ScheduleStep({
         ) : null}
       </section>
     </div>
-  )
+  );
 }

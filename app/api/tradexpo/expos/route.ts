@@ -2,12 +2,14 @@ import { NextResponse } from "next/server"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 import {
   createExpoWithHalls,
+  listActiveExpoTenantOptions,
   listExpoLayoutTemplates,
   publishAdminExpoMarketingContent
 } from "@/lib/tradexpo/db/platform-data"
 import { validateHallBlocks } from "@/lib/tradexpo/expo-create-validation"
 import { validateExpoMarketingContent } from "@/lib/tradexpo/expo-marketing-content"
 import { normalizeExpoScheduleInput } from "@/lib/tradexpo/schedule"
+import { validateExpoTenantConfig } from "@/lib/tradexpo/tenant-display"
 import type { ExpoHallDraft } from "@/lib/tradexpo/types"
 
 export async function POST(request: Request) {
@@ -27,6 +29,8 @@ export async function POST(request: Request) {
     scheduleYear?: number | string | null
     ownerUserId?: string
     ownerEmail?: string
+    tenantPartnerOrgId?: string | null
+    displayTargetIds?: unknown
     halls?: ExpoHallDraft[]
     marketingContent?: unknown
   }
@@ -87,6 +91,12 @@ export async function POST(request: Request) {
     )
   }
 
+  const tenantOptions = await listActiveExpoTenantOptions()
+  const tenantResult = validateExpoTenantConfig(body, tenantOptions)
+  if (!tenantResult.ok) {
+    return NextResponse.json({ error: tenantResult.error }, { status: 400 })
+  }
+
   const halls = Array.isArray(body.halls) ? body.halls : []
   const hallErr = validateHallBlocks(halls)
   if (hallErr) {
@@ -113,6 +123,8 @@ export async function POST(request: Request) {
       scheduleYear: schedule.scheduleYear,
       ownerUserId,
       ownerEmail,
+      tenantPartnerOrgId: tenantResult.tenantPartnerOrgId,
+      displayTargetIds: tenantResult.displayTargetIds,
       halls
     })
     await publishAdminExpoMarketingContent(

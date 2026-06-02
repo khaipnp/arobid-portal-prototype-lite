@@ -49,8 +49,8 @@ export const ADMIN_EXPO_FORM_STEPS: ExpoFormStep[] = [
     description: "Schedule precision and event dates"
   },
   {
-    id: "owner",
-    title: "Expo owner",
+    id: "management",
+    title: "Management",
     description: "Expo owner and operator information"
   },
   {
@@ -66,5 +66,5 @@ export const ADMIN_EXPO_FORM_STEPS: ExpoFormStep[] = [
 ]
 
 export const PARTNER_EXPO_FORM_STEPS = ADMIN_EXPO_FORM_STEPS.filter(
-  (step) => step.id !== "owner" && step.id !== "halls"
+  (step) => step.id !== "management" && step.id !== "halls"
 )

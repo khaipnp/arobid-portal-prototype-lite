@@ -2,8 +2,6 @@
 
 import {
   CalendarIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
   EyeIcon,
   FileTextIcon,
   LayoutDashboardIcon,
@@ -112,7 +110,6 @@ export function PartnerExpoList({
   const [statusFilter, setStatusFilter] = React.useState<ExpoStatus | "All">(
     "All",
   );
-  const [expandedId, setExpandedId] = React.useState<string | null>(null);
   const [currentPage, setCurrentPage] = React.useState(1);
 
   const filteredExpos = React.useMemo(() => {
@@ -138,20 +135,16 @@ export function PartnerExpoList({
     setCurrentPage((page) => Math.min(page, totalPages));
   }, [totalPages]);
 
-  const toggleExpand = (id: string) => {
-    setExpandedId(expandedId === id ? null : id);
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
-          <InputGroup className="max-w-xs">
+          <InputGroup className="max-w-3xs">
             <InputGroupAddon align="inline-start">
               <SearchIcon />
             </InputGroupAddon>
             <InputGroupInput
-              placeholder="Search expos..."
+              placeholder="Expo name..."
               value={searchQuery}
               onChange={(event) => {
                 setSearchQuery(event.target.value);
@@ -164,7 +157,10 @@ export function PartnerExpoList({
                   variant="ghost"
                   size="icon-xs"
                   className="rounded-full"
-                  onClick={() => setSearchQuery("")}
+                  onClick={() => {
+                    setSearchQuery("");
+                    setCurrentPage(1);
+                  }}
                 >
                   <XIcon />
                 </InputGroupButton>
@@ -207,7 +203,6 @@ export function PartnerExpoList({
               rfqCount,
               chatCount,
             }) => {
-              const isExpanded = expandedId === expo.id;
               const isTurnkey = assignment.partnershipModel === "turnkey";
               const showMetrics = [
                 "Live",
@@ -218,32 +213,34 @@ export function PartnerExpoList({
               return (
                 <div
                   key={expo.id}
-                  className={cn(
-                    "overflow-hidden rounded-2xl border transition-all duration-200",
-                    isExpanded ? "ring-1 ring-primary/50" : "hover:shadow-sm",
-                  )}
+                  className="overflow-hidden rounded-2xl border"
                 >
                   <div className="flex flex-col items-stretch md:flex-row">
                     {/* Thumbnail */}
-                    <div className="relative aspect-video h-32 shrink-0 overflow-hidden border-b bg-muted md:h-auto md:w-96 md:border-r md:border-b-0">
+
+                    <Link
+                      href={`/partner/expo-program/expos/${expo.id}`}
+                      className="font-medium text-lg leading-tight transition-colors group-hover:text-primary"
+                    >
                       <Image
                         src={expo.thumbnailUrl}
                         alt={expo.name}
-                        fill
-                        className="object-cover"
+                        width={1600}
+                        height={900}
+                        className="aspect-video max-w-md object-cover"
                       />
-                      <div className="absolute top-2 left-2">
-                        <ExpoStatusBadge status={expo.status} />
-                      </div>
-                    </div>
+                    </Link>
 
                     {/* Main Info */}
-                    <div className="flex flex-1 flex-col p-4">
+                    <div className="flex flex-1 flex-col p-4 lg:px-6 lg:py-5">
                       <div className="flex items-start justify-between gap-4">
-                        <div className="space-y-1">
-                          <h3 className="font-medium text-lg leading-tight transition-colors group-hover:text-primary">
+                        <div className="space-y-2">
+                          <Link
+                            href={`/partner/expo-program/expos/${expo.id}`}
+                            className="line-clamp-2 font-semibold text-xl leading-none"
+                          >
                             {expo.name}
-                          </h3>
+                          </Link>
                           <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground text-sm">
                             <div className="flex items-center gap-1">
                               <CalendarIcon className="h-3 w-3" />
@@ -266,135 +263,55 @@ export function PartnerExpoList({
                             ) : null}
                           </div>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          type="button"
-                          aria-label={
-                            isExpanded
-                              ? `Collapse details for ${expo.name}`
-                              : `Expand details for ${expo.name}`
-                          }
-                          aria-expanded={isExpanded}
-                          className={cn(
-                            "h-7 w-7 transition-transform",
-                            isExpanded && "rotate-180 bg-accent",
-                          )}
-                          onClick={() => toggleExpand(expo.id)}
-                        >
-                          <ChevronDownIcon className="h-4 w-4" />
-                        </Button>
+                        <ExpoStatusBadge status={expo.status} />
                       </div>
 
-                      <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
-                        <div className="flex items-center gap-6">
-                          <div className="flex flex-col">
-                            <span className="font-bold text-muted-foreground/70 text-xs uppercase">
-                              Role
-                            </span>
-                            <span className="font-medium text-xs">
-                              {
-                                MEMBERSHIP_ROLE_LABELS[
-                                  assignment.membershipRole
-                                ]
-                              }
-                            </span>
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="font-bold text-muted-foreground/70 text-xs uppercase">
-                              Model
-                            </span>
-                            <span className="font-medium text-xs capitalize">
-                              {
-                                PARTNERSHIP_MODEL_LABELS[
-                                  assignment.partnershipModel
-                                ]
-                              }
-                            </span>
-                          </div>
-                        </div>
-
-                        {access.actions["expo.view"] ? (
-                          <Button
-                            asChild
-                            variant="outline"
-                            size="sm"
-                            className="rounded-full"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Link href={`/partner/expos/${expo.id}`}>
-                              Go to Detail
-                              <ChevronRightIcon />
-                            </Link>
-                          </Button>
-                        ) : null}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Expanded Details */}
-                  {isExpanded && (
-                    <div className="fade-in slide-in-from-top-1 animate-in px-4 py-4 duration-200 md:px-6 md:py-6">
-                      <div className="space-y-8">
+                      <div className="mt-5 space-y-8">
                         {/* Metrics Section */}
                         {showMetrics && (
-                          <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-                              <div className="flex flex-col gap-1 rounded-xl border border-sidebar-border bg-card p-3 shadow-xs">
-                                <div className="flex items-center gap-2 text-muted-foreground">
-                                  <EyeIcon className="h-3.5 w-3.5" />
-                                  <span className="font-semibold text-xs uppercase">
-                                    Total Views
-                                  </span>
-                                </div>
-                                <span className="font-bold text-lg tabular-nums">
-                                  {new Intl.NumberFormat().format(visitors)}
-                                </span>
-                              </div>
-                              <div className="flex flex-col gap-1 rounded-xl border border-sidebar-border bg-card p-3 shadow-xs">
-                                <div className="flex items-center gap-2 text-muted-foreground">
-                                  <LayoutDashboardIcon className="h-3.5 w-3.5" />
-                                  <span className="font-semibold text-xs uppercase">
-                                    Booths
-                                  </span>
-                                </div>
-                                <div className="flex items-baseline gap-1">
-                                  <span className="font-bold text-lg tabular-nums">
-                                    {soldBooths}
-                                  </span>
-                                  <span className="font-medium text-muted-foreground text-xs">
-                                    / {totalBooths}
-                                  </span>
-                                </div>
-                              </div>
-                              <div className="flex flex-col gap-1 rounded-xl border border-sidebar-border bg-card p-3 shadow-xs">
-                                <div className="flex items-center gap-2 text-muted-foreground">
-                                  <FileTextIcon className="h-3.5 w-3.5" />
-                                  <span className="font-semibold text-xs uppercase">
-                                    RFQs Created
-                                  </span>
-                                </div>
-                                <span className="font-bold text-lg tabular-nums">
-                                  {new Intl.NumberFormat().format(rfqCount)}
-                                </span>
-                              </div>
-                              <div className="flex flex-col gap-1 rounded-xl border border-sidebar-border bg-card p-3 shadow-xs">
-                                <div className="flex items-center gap-2 text-muted-foreground">
-                                  <MessageSquareIcon className="h-3.5 w-3.5" />
-                                  <span className="font-semibold text-xs uppercase">
-                                    Chat Now
-                                  </span>
-                                </div>
-                                <span className="font-bold text-lg tabular-nums">
-                                  {new Intl.NumberFormat().format(chatCount)}
-                                </span>
-                              </div>
-                            </div>
+                          <div className="grid grid-cols-2 gap-x-10 gap-y-6">
+                            <MetricComp
+                              label="Total Views"
+                              value={new Intl.NumberFormat().format(visitors)}
+                              icon={
+                                <EyeIcon className="size-4" strokeWidth="2" />
+                              }
+                            />
+                            <MetricComp
+                              label="Booths"
+                              value={`${soldBooths} / ${totalBooths}`}
+                              icon={
+                                <LayoutDashboardIcon
+                                  className="size-4"
+                                  strokeWidth="2"
+                                />
+                              }
+                            />
+                            <MetricComp
+                              label="RFQs Created"
+                              value={new Intl.NumberFormat().format(rfqCount)}
+                              icon={
+                                <FileTextIcon
+                                  className="size-4"
+                                  strokeWidth="2"
+                                />
+                              }
+                            />
+                            <MetricComp
+                              label="Chat Now"
+                              value={new Intl.NumberFormat().format(chatCount)}
+                              icon={
+                                <MessageSquareIcon
+                                  className="size-4"
+                                  strokeWidth="2"
+                                />
+                              }
+                            />
                           </div>
                         )}
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               );
             },
@@ -522,6 +439,26 @@ export function PartnerExpoList({
           </Button>
         </Card>
       )}
+    </div>
+  );
+}
+
+function MetricComp({
+  label,
+  value,
+  icon,
+}: {
+  label: string;
+  value: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-1 items-center justify-between">
+      <div className="flex items-center gap-2">
+        <div className="p-2 text-legend bg-legend-100 rounded-lg">{icon}</div>
+        <span className="font-medium text-sm capitalize">{label}</span>
+      </div>
+      <span className="font-semibold text-base tabular-nums">{value}</span>
     </div>
   );
 }

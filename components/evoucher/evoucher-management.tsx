@@ -6,7 +6,6 @@ import {
   ChevronDownIcon,
   EllipsisVerticalIcon,
   FilterXIcon,
-  PlusIcon,
   SearchIcon,
   XIcon,
 } from "lucide-react";

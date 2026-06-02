@@ -9,6 +9,7 @@ import {
   getExpoById,
   getLatestExpoMarketingContentForEdit,
   getUserById,
+  listActiveExpoTenantOptions,
   listExpoCategories,
   listExpoHalls,
   listExpoLayoutTemplates
@@ -30,14 +31,21 @@ export default async function EditExpoPage({
   const expo = await getExpoById(expoId)
   if (!expo) notFound()
 
-  const [categories, layoutTemplates, hallTemplates, halls, marketingVersion] =
-    await Promise.all([
-      listExpoCategories(),
-      listExpoLayoutTemplates(),
-      listHallTemplates(),
-      listExpoHalls(expoId),
-      getLatestExpoMarketingContentForEdit(expoId)
-    ])
+  const [
+    categories,
+    layoutTemplates,
+    hallTemplates,
+    halls,
+    marketingVersion,
+    tenantOptions
+  ] = await Promise.all([
+    listExpoCategories(),
+    listExpoLayoutTemplates(),
+    listHallTemplates(),
+    listExpoHalls(expoId),
+    getLatestExpoMarketingContentForEdit(expoId),
+    listActiveExpoTenantOptions()
+  ])
 
   const initialOwner =
     expo.ownerUserId != null ? await getUserById(expo.ownerUserId) : null
@@ -64,6 +72,7 @@ export default async function EditExpoPage({
         categories={categories}
         layoutTemplates={layoutTemplates}
         hallTemplates={hallTemplates}
+        tenantOptions={tenantOptions}
         initialMarketingContent={marketingVersion?.content}
       />
     </DashboardShell>

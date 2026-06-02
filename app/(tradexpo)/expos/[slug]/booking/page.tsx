@@ -5,6 +5,7 @@ import { getCurrentUserIdFromRequest } from "@/lib/auth/rbac"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 import { getTradeCreditWallet } from "@/lib/tradecredit/db"
 import { getExpoBySlug } from "@/lib/tradexpo/db/platform-data"
+import { AROBID_DISPLAY_TARGET_ID } from "@/lib/tradexpo/tenant-display"
 import { CURRENT_USER_ID } from "@/lib/user/current-user"
 import { BookingContent } from "./booking-content"
 
@@ -24,7 +25,9 @@ export default async function Page({
   await ensurePlatformSchema()
   const { slug } = await params
   const expo = await getExpoBySlug(slug)
-  if (!expo) notFound()
+  if (!expo?.displayTargetIds.includes(AROBID_DISPLAY_TARGET_ID)) {
+    notFound()
+  }
   const userId = await getBookingUserId()
   const wallet = await getTradeCreditWallet(userId)
 

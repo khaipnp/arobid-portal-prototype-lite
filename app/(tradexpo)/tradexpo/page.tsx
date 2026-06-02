@@ -18,6 +18,7 @@ import {
   listExpos
 } from "@/lib/tradexpo/db/platform-data"
 import { formatExpoScheduleLabel } from "@/lib/tradexpo/schedule"
+import { AROBID_DISPLAY_TARGET_ID } from "@/lib/tradexpo/tenant-display"
 import type { Expo } from "@/lib/tradexpo/types"
 import { listWishlistedTargetIds } from "@/lib/wishlist/db"
 
@@ -73,7 +74,7 @@ export default async function TradeXpoPage() {
 
   const userId = await getCurrentSessionUserId()
   const [expos, categories, cardStats, wishlistedExpoIds] = await Promise.all([
-    listExpos({ limit: 12 }),
+    listExpos({ limit: 12, displayTargetId: AROBID_DISPLAY_TARGET_ID }),
     listExpoCategories(),
     listExpoCardStats(),
     userId ? listWishlistedTargetIds(userId, "expo") : new Set<string>()

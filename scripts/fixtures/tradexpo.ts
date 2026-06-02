@@ -395,6 +395,7 @@ export const mockExpos: Expo[] = [
     schedulePrecision: "exact_date_range",
     status: "Pending Review",
     categoryIds: ["cat-tech", "cat-ai"],
+    displayTargetIds: ["arobid"],
     createdAt: isoOffset(12)
   },
   {
@@ -407,6 +408,7 @@ export const mockExpos: Expo[] = [
     schedulePrecision: "exact_date_range",
     status: "Draft",
     categoryIds: ["cat-health", "cat-pharma"],
+    displayTargetIds: ["arobid"],
     createdAt: isoOffset(24)
   },
   {
@@ -419,6 +421,7 @@ export const mockExpos: Expo[] = [
     schedulePrecision: "exact_date_range",
     status: "Live",
     categoryIds: ["cat-food", "cat-organic"],
+    displayTargetIds: ["arobid"],
     createdAt: isoOffset(72)
   },
   {
@@ -431,6 +434,7 @@ export const mockExpos: Expo[] = [
     schedulePrecision: "exact_date_range",
     status: "Archived",
     categoryIds: ["cat-manufacturing", "cat-auto"],
+    displayTargetIds: ["arobid"],
     createdAt: isoOffset(200)
   },
   {
@@ -443,6 +447,7 @@ export const mockExpos: Expo[] = [
     schedulePrecision: "exact_date_range",
     status: "Archived",
     categoryIds: ["cat-retail", "cat-fashion"],
+    displayTargetIds: ["arobid"],
     createdAt: isoOffset(300)
   },
   {
@@ -455,6 +460,7 @@ export const mockExpos: Expo[] = [
     schedulePrecision: "exact_date_range",
     status: "Pending Review",
     categoryIds: ["cat-energy"],
+    displayTargetIds: ["arobid"],
     createdAt: isoOffset(6)
   },
   {
@@ -467,6 +473,7 @@ export const mockExpos: Expo[] = [
     schedulePrecision: "exact_date_range",
     status: "Draft",
     categoryIds: ["cat-tech", "cat-cloud"],
+    displayTargetIds: ["arobid"],
     createdAt: isoOffset(3)
   },
   {
@@ -479,6 +486,7 @@ export const mockExpos: Expo[] = [
     schedulePrecision: "exact_date_range",
     status: "Canceled",
     categoryIds: ["cat-retail"],
+    displayTargetIds: ["arobid"],
     createdAt: isoOffset(400)
   },
   {
@@ -491,6 +499,7 @@ export const mockExpos: Expo[] = [
     schedulePrecision: "exact_date_range",
     status: "Live",
     categoryIds: ["cat-tech", "cat-ai"],
+    displayTargetIds: ["arobid"],
     createdAt: isoOffset(48)
   },
   {
@@ -503,6 +512,7 @@ export const mockExpos: Expo[] = [
     schedulePrecision: "exact_date_range",
     status: "Draft",
     categoryIds: ["cat-health", "cat-pharma"],
+    displayTargetIds: ["arobid"],
     createdAt: isoOffset(1)
   },
   {
@@ -515,6 +525,7 @@ export const mockExpos: Expo[] = [
     schedulePrecision: "exact_date_range",
     status: "Archived",
     categoryIds: ["cat-manufacturing"],
+    displayTargetIds: ["arobid"],
     createdAt: isoOffset(150)
   },
   {
@@ -527,6 +538,7 @@ export const mockExpos: Expo[] = [
     schedulePrecision: "exact_date_range",
     status: "Pending Review",
     categoryIds: ["cat-food", "cat-organic"],
+    displayTargetIds: ["arobid"],
     createdAt: isoOffset(2)
   },
   {
@@ -539,6 +551,7 @@ export const mockExpos: Expo[] = [
     schedulePrecision: "exact_date_range",
     status: "Archived",
     categoryIds: ["cat-health", "cat-tech"],
+    displayTargetIds: ["arobid"],
     createdAt: isoOffset(500)
   },
   {
@@ -551,6 +564,7 @@ export const mockExpos: Expo[] = [
     schedulePrecision: "exact_date_range",
     status: "Draft",
     categoryIds: ["cat-manufacturing", "cat-auto", "cat-energy"],
+    displayTargetIds: ["arobid"],
     createdAt: isoOffset(4)
   },
   {
@@ -563,10 +577,10 @@ export const mockExpos: Expo[] = [
     schedulePrecision: "exact_date_range",
     status: "Live",
     categoryIds: ["cat-retail", "cat-tech"],
+    displayTargetIds: ["arobid"],
     createdAt: isoOffset(96)
   }
 ]
-
 // ─── Seller Mock Data ────────────────────────────────────────────────────────
 
 /** Which booth templates the admin has made available for each expo. */

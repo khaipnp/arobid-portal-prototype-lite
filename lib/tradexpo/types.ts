@@ -110,6 +110,11 @@ export interface ExpoCategory {
   level: 1
 }
 
+export interface ExpoTenantOption {
+  id: string
+  name: string
+}
+
 export type ExpoSchedulePrecision =
   | "exact_date_range"
   | "month_year"
@@ -133,6 +138,8 @@ export interface Expo {
   scheduleYear?: number | null
   status: ExpoStatus
   categoryIds: string[]
+  tenantPartnerOrgId?: string | null
+  displayTargetIds: string[]
   createdAt: string
   description?: string
   timezone?: string

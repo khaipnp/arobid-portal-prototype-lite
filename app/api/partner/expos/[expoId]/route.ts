@@ -114,6 +114,8 @@ export async function PUT(request: Request, { params }: Props) {
       scheduleYear: expo.scheduleYear ?? null,
       ownerUserId: expo.ownerUserId,
       ownerEmail: expo.ownerEmail,
+      tenantPartnerOrgId: expo.tenantPartnerOrgId,
+      displayTargetIds: expo.displayTargetIds,
       halls
     })
     const marketingVersion = await submitPartnerExpoMarketingContent(

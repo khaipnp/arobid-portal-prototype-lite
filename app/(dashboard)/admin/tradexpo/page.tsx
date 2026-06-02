@@ -25,7 +25,6 @@ export default async function TradeXpoDashboardPage() {
   return (
     <DashboardShell
       title="TradeXpo Module Dashboard"
-      description="Manage hall templates, booth templates, and 3D slot configurations in one place."
       breadcrumbs={[
         { label: "Dashboard", href: "/dashboard" },
         { label: "TradeXpo" }

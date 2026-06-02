@@ -34,7 +34,6 @@ type PartnerNavItem = {
   module: PartnerModule
   icon: React.ReactNode
   items?: { title: string; url: string }[]
-  isActive?: boolean
 }
 
 const siteManagementLinks = {
@@ -43,7 +42,6 @@ const siteManagementLinks = {
       name: "Communication",
       module: "communication",
       icon: HandshakeIcon,
-      isActive: true,
       items: [
         {
           name: "Notifications",
@@ -59,7 +57,6 @@ const siteManagementLinks = {
       name: "Partner Site Management",
       module: "site_settings",
       icon: NetworkIcon,
-      isActive: true,
       items: [
         {
           name: "Site Setting",
@@ -76,7 +73,6 @@ const siteManagementLinks = {
       name: "Expo Programs",
       module: "expo_programs",
       icon: ApertureIcon,
-      isActive: true,
       items: [
         {
           name: "Dashboard",
@@ -93,7 +89,6 @@ const siteManagementLinks = {
       name: "Package Management",
       module: "package_management",
       icon: WalletCardsIcon,
-      isActive: true,
       items: [
         {
           name: "Bundle Creation",
@@ -109,7 +104,6 @@ const siteManagementLinks = {
       name: "Data Center",
       module: "data_center",
       icon: FileChartPieIcon,
-      isActive: true,
       items: [
         {
           name: "Enterprise Reports",
@@ -202,12 +196,7 @@ export function NavPartner({ access }: { access?: PartnerAccess }) {
       </SidebarMenu>
       <SidebarMenu>
         {siteManagementLinks.navMain.map((item) => (
-          <Collapsible
-            key={item.name}
-            asChild
-            defaultOpen={item.isActive}
-            className="group/collapsible"
-          >
+          <Collapsible key={item.name} asChild className="group/collapsible">
             <SidebarMenuItem>
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton tooltip={item.name}>
