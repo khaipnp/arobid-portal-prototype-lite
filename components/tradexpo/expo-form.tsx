@@ -15,6 +15,7 @@ import {
   confirmOwnerChange,
   getOwnerDisplay
 } from "@/lib/tradexpo/expo-owner-flow"
+import { validateExpoPackageInputs } from "@/lib/tradexpo/expo-package-displays"
 import {
   getExpoSchedulePrecision,
   normalizeExpoScheduleInput
@@ -33,11 +34,13 @@ import { HallsStep } from "./expo-form/halls-step"
 import { ManagementStep } from "./expo-form/management-step"
 import { MarketingStep } from "./expo-form/marketing-step"
 import { OwnerChangeDialog } from "./expo-form/owner-change-dialog"
+import { PackagesStep } from "./expo-form/packages-step"
 import {
   audienceRowsFromContent,
   benefitRowsFromContent,
   hallsToRows,
-  newHallRow
+  newHallRow,
+  packageDisplaysToRows
 } from "./expo-form/row-helpers"
 import { ScheduleStep } from "./expo-form/schedule-step"
 import { StepNavigation } from "./expo-form/step-navigation"
@@ -47,6 +50,7 @@ import type {
   ExpoFormProps,
   ExpoFormStep,
   ExpoFormStepId,
+  ExpoPackageFormRow,
   HallFormRow,
   OwnerPick
 } from "./expo-form/types"
@@ -200,6 +204,9 @@ export function ExpoForm(props: ExpoFormProps) {
   const [halls, setHalls] = React.useState<HallFormRow[]>(() =>
     isEdit ? hallsToRows(props.initialHalls) : [newHallRow(0)]
   )
+  const [expoPackages, setExpoPackages] = React.useState<ExpoPackageFormRow[]>(
+    () => (isEdit ? packageDisplaysToRows(props.initialPackages) : [])
+  )
 
   const { uploadFile, isUploading } = useUpload()
   const fileInputRef = React.useRef<HTMLInputElement>(null)
@@ -308,6 +315,59 @@ export function ExpoForm(props: ExpoFormProps) {
     )
   }
 
+  function updateExpoPackage(
+    index: number,
+    patch: Partial<ExpoPackageFormRow>
+  ) {
+    setExpoPackages((prev) =>
+      prev.map((pkg, i) => {
+        if (i !== index) {
+          return patch.isFeatured ? { ...pkg, isFeatured: false } : pkg
+        }
+        return { ...pkg, ...patch }
+      })
+    )
+  }
+
+  function updateExpoPackageBenefit(
+    packageIndex: number,
+    benefitIndex: number,
+    value: string
+  ) {
+    setExpoPackages((prev) =>
+      prev.map((pkg, i) =>
+        i === packageIndex
+          ? {
+              ...pkg,
+              benefits: pkg.benefits.map((benefit, j) =>
+                j === benefitIndex ? value : benefit
+              )
+            }
+          : pkg
+      )
+    )
+  }
+
+  function buildExpoPackages() {
+    return expoPackages.map((pkg, index) => ({
+      id: pkg.id,
+      mode: pkg.mode,
+      packageDefinitionId: pkg.packageDefinitionId,
+      name: pkg.name,
+      description: pkg.description,
+      price: Number(pkg.price),
+      priceUnit: pkg.priceUnit,
+      benefits: pkg.benefits,
+      isFeatured: pkg.isFeatured,
+      isPublic: pkg.isPublic,
+      sortOrder: index,
+      advanced: {
+        planId: pkg.advanced.planId || undefined,
+        roleCode: pkg.advanced.roleCode || undefined
+      }
+    }))
+  }
+
   function buildMarketingContent(): ExpoMarketingContent {
     return normalizeExpoMarketingContent({
       whoShouldJoin: {
@@ -372,6 +432,13 @@ export function ExpoForm(props: ExpoFormProps) {
       return
     }
 
+    const packages = isPartnerContentEdit ? [] : buildExpoPackages()
+    const packageResult = validateExpoPackageInputs(packages)
+    if (!packageResult.ok) {
+      setError(packageResult.error)
+      return
+    }
+
     const payload = {
       name,
       ...(isSuper ? { slug } : {}),
@@ -390,6 +457,7 @@ export function ExpoForm(props: ExpoFormProps) {
       tenantPartnerOrgId,
       displayTargetIds,
       marketingContent,
+      packages: packageResult.packages,
       halls: halls.map((h) => ({
         hallName: h.hallName,
         hallTemplateId: h.hallTemplateId,
@@ -583,6 +651,16 @@ export function ExpoForm(props: ExpoFormProps) {
               onAddHall={addHall}
               onRemoveHall={removeHall}
               onUpdateHall={updateHall}
+            />
+          ) : null}
+
+          {!isPartnerContentEdit && activeStep.id === "packages" ? (
+            <PackagesStep
+              packages={expoPackages}
+              packageWorkspace={props.packageWorkspace}
+              onPackagesChange={setExpoPackages}
+              onUpdatePackage={updateExpoPackage}
+              onUpdatePackageBenefit={updateExpoPackageBenefit}
             />
           ) : null}
 

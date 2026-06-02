@@ -6,6 +6,7 @@ import {
   GaugeIcon,
   InfoIcon,
   RadioTowerIcon,
+  TrendingDownIcon,
   TrendingUpIcon,
   UsersIcon
 } from "lucide-react"
@@ -20,7 +21,6 @@ import {
   XAxis,
   YAxis
 } from "recharts"
-import { Button } from "@/components/ui/button"
 import {
   Card,
   CardAction,
@@ -45,9 +45,11 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { PartnerDashboardMetrics } from "@/lib/partner/db"
 import { formatExpoScheduleLabel } from "@/lib/tradexpo/schedule"
 import { ExpoStatusBadge } from "../tradexpo/status-badge"
+import { Badge } from "../ui/badge"
 import {
   Tooltip,
   TooltipContent,
@@ -62,7 +64,7 @@ const compactNumber = new Intl.NumberFormat("en", {
 
 const numberFormat = new Intl.NumberFormat("en")
 
-const dashboardDurations = ["3D", "7D", "15D", "30D"] as const
+const dashboardDurations = ["1D", "3D", "7D", "15D", "30D"] as const
 
 const inventoryChartConfig = {
   soldBooths: {
@@ -107,6 +109,39 @@ function formatRatio(value: number, total: number) {
   return total > 0 ? Math.round((value / total) * 100) : 0
 }
 
+type MetricComparison = {
+  value: string
+  tone: "positive" | "negative" | "neutral"
+}
+
+function buildPeriodComparison(
+  value: number,
+  previousValue: number
+): MetricComparison {
+  if (previousValue === 0) {
+    return {
+      value: value > 0 ? "New" : "0%",
+      tone: value > 0 ? "positive" : "neutral"
+    }
+  }
+
+  const deltaPercent = Math.round(
+    ((value - previousValue) / previousValue) * 100
+  )
+
+  return {
+    value: `${deltaPercent > 0 ? "+" : ""}${formatPercent(deltaPercent)}`,
+    tone:
+      deltaPercent > 0 ? "positive" : deltaPercent < 0 ? "negative" : "neutral"
+  }
+}
+
+function getComparisonToneClass(tone: MetricComparison["tone"]) {
+  if (tone === "positive") return "bg-green-200/70 text-green-700"
+  if (tone === "negative") return "bg-red-200/70 text-red-700"
+  return "bg-muted text-muted-foreground"
+}
+
 function toTrendKey(value: string, index: number) {
   return `tier_${index}_${value.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`
 }
@@ -115,12 +150,14 @@ function MetricWidget({
   label,
   value,
   description,
-  icon
+  icon,
+  comparison
 }: {
   label: string
   value: number
   description: string
   icon: ReactNode
+  comparison?: MetricComparison
 }) {
   return (
     <TooltipProvider>
@@ -137,8 +174,22 @@ function MetricWidget({
           </div>
           <CardAction className="text-legend">{icon}</CardAction>
         </CardHeader>
-        <CardContent className="font-semibold text-3xl tabular-nums tracking-tight">
-          {numberFormat.format(value)}
+        <CardContent className="flex items-end gap-2">
+          <div className="font-semibold text-3xl tabular-nums leading-none tracking-tight">
+            {numberFormat.format(value)}
+          </div>
+          {comparison ? (
+            <Badge
+              className={`mb-0.75 rounded-md px-1.5 tabular-nums ${getComparisonToneClass(comparison.tone)}`}
+            >
+              {comparison.value}{" "}
+              {comparison.tone === "positive" ? (
+                <TrendingUpIcon strokeWidth="2.5" />
+              ) : comparison.tone === "negative" ? (
+                <TrendingDownIcon strokeWidth="2.5" />
+              ) : null}
+            </Badge>
+          ) : null}
         </CardContent>
       </Card>
     </TooltipProvider>
@@ -151,8 +202,10 @@ export function PartnerDashboard({
   metrics: PartnerDashboardMetrics
 }) {
   const [selectedDuration, setSelectedDuration] =
-    useState<(typeof dashboardDurations)[number]>("3D")
+    useState<(typeof dashboardDurations)[number]>("1D")
   const operationsSummary = metrics.operationsByDuration[selectedDuration]
+  const previousOperationsSummary =
+    metrics.previousOperationsByDuration[selectedDuration]
 
   return (
     <div className="space-y-6 px-4 py-4">
@@ -178,19 +231,26 @@ export function PartnerDashboard({
         <div className="space-y-5 xl:col-span-3">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold text-2xl">Operations Summary</h2>
-            <div className="flex rounded-xl bg-muted p-1">
-              {dashboardDurations.map((duration) => (
-                <Button
-                  key={duration}
-                  size="sm"
-                  variant={selectedDuration === duration ? "default" : "ghost"}
-                  className="rounded-lg"
-                  onClick={() => setSelectedDuration(duration)}
-                >
-                  {duration}
-                </Button>
-              ))}
-            </div>
+            <Tabs
+              value={selectedDuration}
+              onValueChange={(value) =>
+                setSelectedDuration(
+                  value as (typeof dashboardDurations)[number]
+                )
+              }
+            >
+              <TabsList className="rounded-xl p-1">
+                {dashboardDurations.map((duration) => (
+                  <TabsTrigger
+                    key={duration}
+                    value={duration}
+                    className="rounded-lg px-3"
+                  >
+                    {duration}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -199,24 +259,40 @@ export function PartnerDashboard({
               value={operationsSummary.views}
               description="Visitor activity in the selected duration"
               icon={<EyeIcon className="size-4" />}
+              comparison={buildPeriodComparison(
+                operationsSummary.views,
+                previousOperationsSummary.views
+              )}
             />
             <MetricWidget
               label="Activated Members"
               value={operationsSummary.activatedEnterprises}
               description="Member activity in the selected duration"
               icon={<UsersIcon className="size-4" />}
+              comparison={buildPeriodComparison(
+                operationsSummary.activatedEnterprises,
+                previousOperationsSummary.activatedEnterprises
+              )}
             />
             <MetricWidget
               label="Sold Booth"
               value={operationsSummary.soldBooths}
               description="Booth sold in the selected duration"
               icon={<ActivityIcon className="size-4" />}
+              comparison={buildPeriodComparison(
+                operationsSummary.soldBooths,
+                previousOperationsSummary.soldBooths
+              )}
             />
             <MetricWidget
               label="RFQs"
               value={operationsSummary.rfqs}
               description="RFQs created in the selected duration"
               icon={<RadioTowerIcon className="size-4" />}
+              comparison={buildPeriodComparison(
+                operationsSummary.rfqs,
+                previousOperationsSummary.rfqs
+              )}
             />
           </div>
         </div>

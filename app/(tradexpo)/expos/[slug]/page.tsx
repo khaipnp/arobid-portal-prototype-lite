@@ -12,10 +12,12 @@ import {
   Categories,
   Hero,
   ParticipantValues,
+  SellerPackages,
   Sponsors
 } from "@/components/tradexpo/expo-detail/sections"
 import { getCurrentSessionUserId } from "@/lib/auth/session"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
+import { listPublicExpoPackageDisplays } from "@/lib/tradexpo/db/expo-package-displays"
 import {
   countExpoDetailProducts,
   getExpoBySlug,
@@ -65,14 +67,16 @@ export default async function Page({
     wishlistedExpoIds,
     productCount,
     publishedMarketing,
-    expoCategories
+    expoCategories,
+    sellerPackages
   ] = await Promise.all([
     listExpoDetailExhibitorsByName(expo.name, { userId }),
     getExpoHeroStatsByExpo({ id: expo.id, name: expo.name }),
     userId ? listWishlistedTargetIds(userId, "expo") : new Set<string>(),
     countExpoDetailProducts(expo.id),
     getPublishedExpoMarketingContent(expo.id),
-    listExpoCategoriesByIds(expo.categoryIds)
+    listExpoCategoriesByIds(expo.categoryIds),
+    listPublicExpoPackageDisplays(expo.id)
   ])
   const marketingContent = getExpoMarketingContentForRender(
     publishedMarketing?.content
@@ -133,6 +137,7 @@ export default async function Page({
       <Audience content={marketingContent.whoShouldJoin} />
       <Categories categories={expoCategories} />
       <ParticipantValues content={marketingContent.audienceBenefits} />
+      <SellerPackages packages={sellerPackages} isAuthenticated={!!userId} />
       <BoothTier slug={slug} isAuthenticated={!!userId} />
       <BroadcastBFM items={bfmBroadcastItems} />
       <TxFooter />

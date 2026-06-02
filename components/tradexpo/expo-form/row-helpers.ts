@@ -1,7 +1,12 @@
-import type { ExpoHall, ExpoMarketingContent } from "@/lib/tradexpo/types"
+import type {
+  ExpoHall,
+  ExpoMarketingContent,
+  ExpoPackageDisplay
+} from "@/lib/tradexpo/types"
 import type {
   AudienceCardFormRow,
   BenefitCardFormRow,
+  ExpoPackageFormRow,
   HallFormRow
 } from "./types"
 
@@ -68,5 +73,46 @@ export function newBenefitCard(): BenefitCardFormRow {
     benefitItems: [""],
     isFeatured: false,
     displayOrder: 0
+  }
+}
+
+export function packageDisplaysToRows(
+  packages: ExpoPackageDisplay[] = []
+): ExpoPackageFormRow[] {
+  return packages.map((pkg) => ({
+    key: pkg.id,
+    id: pkg.id,
+    mode: "link_existing",
+    packageDefinitionId: pkg.packageDefinitionId,
+    name: pkg.name,
+    description: pkg.description,
+    price: String(pkg.price),
+    priceUnit: pkg.priceUnit,
+    benefits: pkg.benefits.length > 0 ? pkg.benefits : [""],
+    isFeatured: pkg.isFeatured,
+    isPublic: pkg.isPublic,
+    advanced: {
+      planId: "",
+      roleCode: ""
+    }
+  }))
+}
+
+export function newExpoPackageRow(): ExpoPackageFormRow {
+  return {
+    key: rowKey("expo-package"),
+    mode: "create_new",
+    packageDefinitionId: undefined,
+    name: "",
+    description: "",
+    price: "0",
+    priceUnit: "VND",
+    benefits: [""],
+    isFeatured: false,
+    isPublic: true,
+    advanced: {
+      planId: "",
+      roleCode: ""
+    }
   }
 }

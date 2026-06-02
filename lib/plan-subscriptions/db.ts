@@ -272,7 +272,7 @@ function composePackages(rows: PackageRow[], planRows: PackagePlanRow[]) {
   })
 }
 
-async function getPackageDefinitionOptions() {
+export async function getPackageDefinitionOptions() {
   const plans = (await sql`
     select
       id,
@@ -425,68 +425,131 @@ export async function createPackageDefinition(
   input: PackageDefinitionInput
 ) {
   await ensurePlatformSchema()
-  const basics = validatePackageBasics(input)
-  const plans = await validatePackagePlans(input.plans)
-  const packageId = randomUUID()
-
   await sql`begin`
   try {
-    await sql`
-      insert into packages (
-        id,
-        code,
-        name,
-        description,
-        price,
-        price_unit,
-        image_url,
-        is_public,
-        is_active,
-        created_by
-      )
-      values (
-        ${packageId},
-        ${basics.code},
-        ${basics.name},
-        ${basics.description},
-        ${basics.price},
-        ${basics.priceUnit},
-        ${basics.imageUrl || null},
-        ${basics.isPublic},
-        ${input.isActive !== false},
-        ${userId}
-      )
-    `
-
-    for (const plan of plans) {
-      await sql`
-        insert into package_plans (
-          id,
-          package_id,
-          plan_id,
-          role_code,
-          validity_type,
-          duration_months,
-          expo_id
-        )
-        values (
-          ${randomUUID()},
-          ${packageId},
-          ${plan.planId},
-          ${plan.roleCode},
-          ${plan.validityType},
-          ${plan.durationMonths},
-          ${plan.expoId}
-        )
-      `
-    }
+    await createPackageDefinitionInCurrentTransaction(userId, input)
     await sql`commit`
   } catch (error) {
     await sql`rollback`
     throw error
   }
-
   return getPackageDefinitionWorkspace()
+}
+
+export async function createPackageDefinitionInCurrentTransaction(
+  userId: string,
+  input: PackageDefinitionInput
+) {
+  const basics = validatePackageBasics(input)
+  const plans = await validatePackagePlans(input.plans)
+  const packageId = randomUUID()
+
+  await sql`
+    insert into packages (
+      id,
+      code,
+      name,
+      description,
+      price,
+      price_unit,
+      image_url,
+      is_public,
+      is_active,
+      created_by
+    )
+    values (
+      ${packageId},
+      ${basics.code},
+      ${basics.name},
+      ${basics.description},
+      ${basics.price},
+      ${basics.priceUnit},
+      ${basics.imageUrl || null},
+      ${basics.isPublic},
+      ${input.isActive !== false},
+      ${userId}
+    )
+  `
+
+  for (const plan of plans) {
+    await sql`
+      insert into package_plans (
+        id,
+        package_id,
+        plan_id,
+        role_code,
+        validity_type,
+        duration_months,
+        expo_id
+      )
+      values (
+        ${randomUUID()},
+        ${packageId},
+        ${plan.planId},
+        ${plan.roleCode},
+        ${plan.validityType},
+        ${plan.durationMonths},
+        ${plan.expoId}
+      )
+    `
+  }
+
+  return packageId
+}
+
+export async function ensurePackageExpoPlanInCurrentTransaction(
+  packageId: string,
+  input: {
+    planId: string
+    roleCode: string
+    expoId: string
+  }
+) {
+  const [plan] = await validatePackagePlans([
+    {
+      planId: input.planId,
+      roleCode: input.roleCode,
+      validityType: "EVENT_BOUND",
+      expoId: input.expoId,
+      durationMonths: null
+    }
+  ])
+
+  await sql`
+    insert into package_plans (
+      id,
+      package_id,
+      plan_id,
+      role_code,
+      validity_type,
+      duration_months,
+      expo_id
+    )
+    values (
+      ${randomUUID()},
+      ${packageId},
+      ${plan.planId},
+      ${plan.roleCode},
+      ${plan.validityType},
+      ${plan.durationMonths},
+      ${plan.expoId}
+    )
+    on conflict (package_id, plan_id, role_code) do nothing
+  `
+
+  const rows = (await sql`
+    select 1
+    from package_plans
+    where package_id = ${packageId}
+      and plan_id = ${input.planId}
+      and role_code = ${input.roleCode}
+      and expo_id = ${input.expoId}
+    limit 1
+  `) as { "?column?": number }[]
+
+  if (rows.length === 0) {
+    throw new Error("Selected package plan is already bound to another expo.")
+  }
 }
 
 export async function updatePackageDefinition(

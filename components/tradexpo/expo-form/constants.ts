@@ -59,6 +59,11 @@ export const ADMIN_EXPO_FORM_STEPS: ExpoFormStep[] = [
     description: "Hall, template and booth quantity configuration"
   },
   {
+    id: "packages",
+    title: "Packages management",
+    description: "Pricing and benefits for exhibitor packages"
+  },
+  {
     id: "marketing",
     title: "Marketing content",
     description: "Marketing content for the Expo landing page"
@@ -66,5 +71,6 @@ export const ADMIN_EXPO_FORM_STEPS: ExpoFormStep[] = [
 ]
 
 export const PARTNER_EXPO_FORM_STEPS = ADMIN_EXPO_FORM_STEPS.filter(
-  (step) => step.id !== "management" && step.id !== "halls"
+  (step) =>
+    step.id !== "management" && step.id !== "halls" && step.id !== "packages"
 )

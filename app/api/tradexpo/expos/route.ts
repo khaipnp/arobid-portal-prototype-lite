@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server"
+import { getCurrentUserIdFromRequest } from "@/lib/auth/rbac"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
+import { saveExpoPackageDisplays } from "@/lib/tradexpo/db/expo-package-displays"
 import {
   createExpoWithHalls,
   listActiveExpoTenantOptions,
@@ -8,6 +10,7 @@ import {
 } from "@/lib/tradexpo/db/platform-data"
 import { validateHallBlocks } from "@/lib/tradexpo/expo-create-validation"
 import { validateExpoMarketingContent } from "@/lib/tradexpo/expo-marketing-content"
+import { validateExpoPackageInputs } from "@/lib/tradexpo/expo-package-displays"
 import { normalizeExpoScheduleInput } from "@/lib/tradexpo/schedule"
 import { validateExpoTenantConfig } from "@/lib/tradexpo/tenant-display"
 import type { ExpoHallDraft } from "@/lib/tradexpo/types"
@@ -33,6 +36,7 @@ export async function POST(request: Request) {
     displayTargetIds?: unknown
     halls?: ExpoHallDraft[]
     marketingContent?: unknown
+    packages?: unknown
   }
 
   const name = body.name?.trim() ?? ""
@@ -108,6 +112,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: marketingResult.error }, { status: 400 })
   }
 
+  const packageResult = validateExpoPackageInputs(body.packages)
+  if (!packageResult.ok) {
+    return NextResponse.json({ error: packageResult.error }, { status: 400 })
+  }
+
+  let userId: string
+  try {
+    userId = await getCurrentUserIdFromRequest()
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
+  }
+
   try {
     const result = await createExpoWithHalls({
       name,
@@ -125,13 +141,20 @@ export async function POST(request: Request) {
       ownerEmail,
       tenantPartnerOrgId: tenantResult.tenantPartnerOrgId,
       displayTargetIds: tenantResult.displayTargetIds,
-      halls
+      halls,
+      afterWrite: async (createdExpoId) => {
+        await saveExpoPackageDisplays(
+          createdExpoId,
+          packageResult.packages,
+          userId
+        )
+        await publishAdminExpoMarketingContent(
+          createdExpoId,
+          marketingResult.content,
+          userId
+        )
+      }
     })
-    await publishAdminExpoMarketingContent(
-      result.id,
-      marketingResult.content,
-      null
-    )
     return NextResponse.json({ id: result.id })
   } catch (e) {
     const message = e instanceof Error ? e.message : "Failed to create expo."

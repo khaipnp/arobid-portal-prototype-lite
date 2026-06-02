@@ -134,7 +134,7 @@ export function PackageDefinitionManager({
   }
 
   return (
-    <div className="space-y-4 px-4">
+    <div className="mt-6 space-y-4">
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <PackageStatCard
           title="Active"
@@ -168,133 +168,117 @@ export function PackageDefinitionManager({
         </div>
       ) : null}
 
-      <Card>
-        <CardHeader>
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <CardTitle>Package Catalog</CardTitle>
-              <CardDescription>
-                Commercial bundles with plan validity and role assignments.
-              </CardDescription>
-            </div>
-            <Button size="sm" onClick={openAdd}>
-              <PlusIcon />
-              Create package
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {workspace.packages.length === 0 ? (
-            <EmptyState label="No packages defined yet." />
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Package</TableHead>
-                  <TableHead>Price</TableHead>
-                  <TableHead>Plans</TableHead>
-                  <TableHead>Warnings</TableHead>
-                  <TableHead className="text-right">Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {workspace.packages.map((pkg) => (
-                  <TableRow key={pkg.id}>
-                    <TableCell>
-                      <Link
-                        className="font-medium hover:underline"
-                        href={`/admin/plan-subscriptions/packages/${pkg.id}`}
-                      >
-                        {pkg.name}
-                      </Link>
-                      <p className="font-mono text-muted-foreground text-xs">
-                        {pkg.code}
-                      </p>
-                      <p className="line-clamp-1 text-muted-foreground text-xs">
-                        {pkg.description || "No description"}
-                      </p>
-                    </TableCell>
-                    <TableCell>
-                      <p className="font-semibold text-sm tabular-nums">
-                        {formatPrice(pkg.price, pkg.priceUnit)}
-                      </p>
-                      <p className="text-muted-foreground text-xs">
-                        {pkg.isPublic ? "Public catalog" : "Internal only"}
-                      </p>
-                    </TableCell>
-                    <TableCell>
+      {workspace.packages.length === 0 ? (
+        <EmptyState label="No packages defined yet." />
+      ) : (
+        <div className="overflow-hidden rounded-2xl border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Package</TableHead>
+                <TableHead>Price</TableHead>
+                <TableHead>Plans</TableHead>
+                <TableHead>Warnings</TableHead>
+                <TableHead className="text-right">Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {workspace.packages.map((pkg) => (
+                <TableRow key={pkg.id}>
+                  <TableCell>
+                    <Link
+                      className="font-medium hover:underline"
+                      href={`/admin/plan-subscriptions/packages/${pkg.id}`}
+                    >
+                      {pkg.name}
+                    </Link>
+                    <p className="font-mono text-muted-foreground text-xs">
+                      {pkg.code}
+                    </p>
+                    <p className="line-clamp-1 text-muted-foreground text-xs">
+                      {pkg.description || "No description"}
+                    </p>
+                  </TableCell>
+                  <TableCell>
+                    <p className="font-semibold text-sm tabular-nums">
+                      {formatPrice(pkg.price, pkg.priceUnit)}
+                    </p>
+                    <p className="text-muted-foreground text-xs">
+                      {pkg.isPublic ? "Public catalog" : "Internal only"}
+                    </p>
+                  </TableCell>
+                  <TableCell>
+                    <div className="space-y-1">
+                      {pkg.plans.map((plan) => (
+                        <div key={plan.id}>
+                          <p className="font-medium text-sm">
+                            {plan.planName} → {plan.roleName}
+                          </p>
+                          <p className="text-muted-foreground text-xs">
+                            {formatValidity(plan)}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {pkg.warnings.length === 0 ? (
+                      <span className="text-muted-foreground text-sm">
+                        None
+                      </span>
+                    ) : (
                       <div className="space-y-1">
-                        {pkg.plans.map((plan) => (
-                          <div key={plan.id}>
-                            <p className="font-medium text-sm">
-                              {plan.planName} → {plan.roleName}
-                            </p>
-                            <p className="text-muted-foreground text-xs">
-                              {formatValidity(plan)}
-                            </p>
-                          </div>
+                        {pkg.warnings.map((warning) => (
+                          <p
+                            className="flex items-center gap-1 text-amber-600 text-xs"
+                            key={warning}
+                          >
+                            <AlertTriangleIcon className="size-3" />
+                            {warning}
+                          </p>
                         ))}
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      {pkg.warnings.length === 0 ? (
-                        <span className="text-muted-foreground text-sm">
-                          None
-                        </span>
-                      ) : (
-                        <div className="space-y-1">
-                          {pkg.warnings.map((warning) => (
-                            <p
-                              className="flex items-center gap-1 text-amber-600 text-xs"
-                              key={warning}
-                            >
-                              <AlertTriangleIcon className="size-3" />
-                              {warning}
-                            </p>
-                          ))}
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Badge variant={pkg.isActive ? "default" : "outline"}>
-                        {pkg.isActive ? "Active" : "Inactive"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex justify-end gap-2">
-                        <Button asChild size="sm" variant="outline">
-                          <Link
-                            href={`/admin/plan-subscriptions/packages/${pkg.id}`}
-                          >
-                            <EyeIcon />
-                            View
-                          </Link>
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => openEdit(pkg)}
+                    )}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Badge variant={pkg.isActive ? "default" : "outline"}>
+                      {pkg.isActive ? "Active" : "Inactive"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex justify-end gap-2">
+                      <Button asChild size="sm" variant="outline">
+                        <Link
+                          href={`/admin/plan-subscriptions/packages/${pkg.id}`}
                         >
-                          <PencilIcon />
-                          Edit
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setPackageStatus(pkg, !pkg.isActive)}
-                        >
-                          {pkg.isActive ? "Deactivate" : "Activate"}
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                          <EyeIcon />
+                          View
+                        </Link>
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => openEdit(pkg)}
+                      >
+                        <PencilIcon />
+                        Edit
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setPackageStatus(pkg, !pkg.isActive)}
+                      >
+                        {pkg.isActive ? "Deactivate" : "Activate"}
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       <Dialog
         open={formMode !== null}

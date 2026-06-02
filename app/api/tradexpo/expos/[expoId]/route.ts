@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { getCurrentUserIdFromRequest, userHasRole } from "@/lib/auth/rbac"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
+import { saveExpoPackageDisplays } from "@/lib/tradexpo/db/expo-package-displays"
 import {
   deleteExpo,
   getExpoById,
@@ -12,6 +13,7 @@ import {
 } from "@/lib/tradexpo/db/platform-data"
 import { validateHallBlocks } from "@/lib/tradexpo/expo-create-validation"
 import { validateExpoMarketingContent } from "@/lib/tradexpo/expo-marketing-content"
+import { validateExpoPackageInputs } from "@/lib/tradexpo/expo-package-displays"
 import { normalizeExpoScheduleInput } from "@/lib/tradexpo/schedule"
 import { validateExpoTenantConfig } from "@/lib/tradexpo/tenant-display"
 import type { ExpoHallDraft, ExpoStatus } from "@/lib/tradexpo/types"
@@ -58,6 +60,7 @@ export async function PUT(request: Request, { params }: Props) {
     displayTargetIds?: unknown
     halls?: ExpoHallDraft[]
     marketingContent?: unknown
+    packages?: unknown
   }
   try {
     body = (await request.json()) as typeof body
@@ -157,6 +160,14 @@ export async function PUT(request: Request, { params }: Props) {
     return NextResponse.json({ error: marketingResult.error }, { status: 400 })
   }
 
+  const packageResult =
+    body.packages === undefined
+      ? null
+      : validateExpoPackageInputs(body.packages)
+  if (packageResult && !packageResult.ok) {
+    return NextResponse.json({ error: packageResult.error }, { status: 400 })
+  }
+
   let userId: string | null = null
   try {
     userId = await getCurrentUserIdFromRequest()
@@ -182,13 +193,22 @@ export async function PUT(request: Request, { params }: Props) {
       ownerEmail,
       tenantPartnerOrgId: tenantResult.tenantPartnerOrgId,
       displayTargetIds: tenantResult.displayTargetIds,
-      halls
+      halls,
+      afterWrite: async (savedExpoId) => {
+        if (packageResult?.ok) {
+          await saveExpoPackageDisplays(
+            savedExpoId,
+            packageResult.packages,
+            userId ?? ownerUserId
+          )
+        }
+        await publishAdminExpoMarketingContent(
+          savedExpoId,
+          marketingResult.content,
+          userId
+        )
+      }
     })
-    await publishAdminExpoMarketingContent(
-      expoId,
-      marketingResult.content,
-      userId
-    )
     return NextResponse.json({ ok: true })
   } catch (e) {
     const message = e instanceof Error ? e.message : "Failed to update expo."

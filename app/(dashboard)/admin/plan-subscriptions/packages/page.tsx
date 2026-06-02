@@ -10,7 +10,6 @@ export default async function AdminPackageDefinitionsPage() {
   return (
     <DashboardShell
       title="Plan Packages"
-      description="Define commercial bundles that combine plans, roles, and validity rules."
       breadcrumbs={[
         { label: "Admin", href: "/admin" },
         { label: "Plan & Subscriptions" },

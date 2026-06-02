@@ -219,6 +219,92 @@ export interface ExpoMarketingContentVersion {
   updatedAt: string
 }
 
+export type ExpoPackageDisplaySource = "linked" | "inline_created"
+
+export type ExpoPackageInputMode = "link_existing" | "create_new"
+
+export interface ExpoPackageDisplay {
+  id: string
+  expoId: string
+  packageDefinitionId: string
+  source: ExpoPackageDisplaySource
+  name: string
+  description: string
+  price: number
+  priceUnit: string
+  benefits: string[]
+  isFeatured: boolean
+  isPublic: boolean
+  sortOrder: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ExpoPackageInput {
+  id?: string
+  mode: ExpoPackageInputMode
+  packageDefinitionId?: string
+  name: string
+  description?: string
+  price: number
+  priceUnit: string
+  benefits: string[]
+  isFeatured: boolean
+  isPublic: boolean
+  sortOrder: number
+  advanced?: {
+    planId?: string
+    roleCode?: string
+  }
+}
+
+export interface ExpoPackagePlanOption {
+  id: string
+  code: string
+  name: string
+  targetType: "ORGANIZATION" | "EXPO"
+  tierRank: number
+  isActive: boolean
+}
+
+export interface ExpoPackageRoleOption {
+  id: string
+  name: string
+}
+
+export interface ExpoPackageDefinitionOption {
+  id: string
+  code: string
+  name: string
+  description: string
+  price: number
+  priceUnit: string
+  imageUrl: string
+  isPublic: boolean
+  isActive: boolean
+  plans: Array<{
+    id: string
+    planId: string
+    planCode: string
+    planName: string
+    planTargetType: "ORGANIZATION" | "EXPO"
+    planIsActive: boolean
+    roleCode: string
+    roleName: string
+    validityType: "DURATION" | "EVENT_BOUND"
+    durationMonths: number | null
+    expoId: string | null
+    expoName: string | null
+    expoStatus: string | null
+  }>
+}
+
+export interface ExpoPackageFormWorkspace {
+  packages: ExpoPackageDefinitionOption[]
+  plans: ExpoPackagePlanOption[]
+  roles: ExpoPackageRoleOption[]
+}
+
 export interface ExpoCategoryDisplay {
   id: string
   name: string

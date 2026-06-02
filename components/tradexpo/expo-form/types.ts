@@ -4,6 +4,8 @@ import type {
   ExpoHall,
   ExpoLayoutTemplate,
   ExpoMarketingContent,
+  ExpoPackageDisplay,
+  ExpoPackageFormWorkspace,
   ExpoTenantOption,
   HallTemplate
 } from "@/lib/tradexpo/types"
@@ -40,11 +42,30 @@ export type BenefitCardFormRow =
     key: string
   }
 
+export type ExpoPackageFormRow = {
+  key: string
+  id?: string
+  mode: "link_existing" | "create_new"
+  packageDefinitionId?: string
+  name: string
+  description: string
+  price: string
+  priceUnit: string
+  benefits: string[]
+  isFeatured: boolean
+  isPublic: boolean
+  advanced: {
+    planId: string
+    roleCode: string
+  }
+}
+
 export type ExpoFormStepId =
   | "general"
   | "schedule"
   | "management"
   | "halls"
+  | "packages"
   | "marketing"
 
 export type ExpoFormStep = {
@@ -58,6 +79,8 @@ export type ExpoFormProps = {
   layoutTemplates: ExpoLayoutTemplate[]
   hallTemplates: HallTemplate[]
   tenantOptions?: ExpoTenantOption[]
+  packageWorkspace?: ExpoPackageFormWorkspace
+  initialPackages?: ExpoPackageDisplay[]
   cancelHref?: string
   successHref?: string
   submitEndpoint?: string
