@@ -43,7 +43,7 @@ export type BenefitCardFormRow =
 export type ExpoFormStepId =
   | "general"
   | "schedule"
-  | "owner"
+  | "management"
   | "halls"
   | "marketing"
 

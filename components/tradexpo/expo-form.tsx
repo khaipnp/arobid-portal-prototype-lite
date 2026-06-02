@@ -30,9 +30,9 @@ import {
 } from "./expo-form/constants"
 import { GeneralStep } from "./expo-form/general-step"
 import { HallsStep } from "./expo-form/halls-step"
+import { ManagementStep } from "./expo-form/management-step"
 import { MarketingStep } from "./expo-form/marketing-step"
 import { OwnerChangeDialog } from "./expo-form/owner-change-dialog"
-import { OwnerStep } from "./expo-form/owner-step"
 import {
   audienceRowsFromContent,
   benefitRowsFromContent,
@@ -556,8 +556,8 @@ export function ExpoForm(props: ExpoFormProps) {
             />
           ) : null}
 
-          {!isPartnerContentEdit && activeStep.id === "owner" ? (
-            <OwnerStep
+          {!isPartnerContentEdit && activeStep.id === "management" ? (
+            <ManagementStep
               isEdit={isEdit}
               isChangingOwner={isChangingOwner}
               currentOwnerDisplay={currentOwnerDisplay}
