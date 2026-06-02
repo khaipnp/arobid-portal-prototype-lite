@@ -42,8 +42,13 @@ const dateFormat = new Intl.DateTimeFormat("en-GB", {
   timeZone: "UTC"
 })
 
-function formatDate(iso: string) {
-  return dateFormat.format(new Date(iso))
+function formatDate(iso?: string | null) {
+  if (!iso) return "TBA"
+
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return "TBA"
+
+  return dateFormat.format(date)
 }
 
 function buildSummary(assignedExpos: PartnerAssignedExpo[]) {
@@ -149,7 +154,7 @@ export default async function PartnerExpoProgramDashboardPage() {
                   <TableCell className="text-right tabular-nums">
                     {numberFormat.format(soldBooths)}
                   </TableCell>
-                  <TableCell>{formatDate(expo.startDate ?? "")}</TableCell>
+                  <TableCell>{formatDate(expo.startDate)}</TableCell>
                   <TableCell className="text-right">
                     <Button
                       asChild
