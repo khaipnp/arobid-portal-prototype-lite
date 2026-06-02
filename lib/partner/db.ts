@@ -569,7 +569,7 @@ export type PartnerDashboardBoothTierMonthlyTrendItem = {
   soldBooths: number
 }
 
-export type PartnerDashboardDuration = "3D" | "7D" | "15D" | "30D"
+export type PartnerDashboardDuration = "1D" | "3D" | "7D" | "15D" | "30D"
 
 export type PartnerDashboardOperationsSummary = {
   views: number
@@ -593,6 +593,10 @@ export type PartnerDashboardMetrics = {
     revenue: number
   }
   operationsByDuration: Record<
+    PartnerDashboardDuration,
+    PartnerDashboardOperationsSummary
+  >
+  previousOperationsByDuration: Record<
     PartnerDashboardDuration,
     PartnerDashboardOperationsSummary
   >
@@ -5935,7 +5939,7 @@ export async function getPartnerDashboardMetrics(
   const operationRows = (await sql`
     with
       durations(label, days) as (
-        values ('3D', 3), ('7D', 7), ('15D', 15), ('30D', 30)
+        values ('1D', 1), ('3D', 3), ('7D', 7), ('15D', 15), ('30D', 30)
       ),
       assigned_orgs as (
         select distinct po.id
@@ -5961,7 +5965,7 @@ export async function getPartnerDashboardMetrics(
           epv.created_at
         from expo_exhibitor_profile_visits epv
         inner join assigned a on a.id = epv.expo_id
-        where epv.created_at >= now() - interval '30 days'
+        where epv.created_at >= now() - interval '60 days'
         union all
         select
           case
@@ -5972,7 +5976,7 @@ export async function getPartnerDashboardMetrics(
           epv.created_at
         from expo_exhibitor_product_views epv
         inner join assigned a on a.id = epv.expo_id
-        where epv.created_at >= now() - interval '30 days'
+        where epv.created_at >= now() - interval '60 days'
       )
     select
       d.label,
@@ -5982,12 +5986,26 @@ export async function getPartnerDashboardMetrics(
         where ve.created_at >= now() - d.days * interval '1 day'
       ), 0)::int as views,
       coalesce((
+        select count(distinct ve.visitor_id)::int
+        from visit_events ve
+        where ve.created_at >= now() - d.days * 2 * interval '1 day'
+          and ve.created_at < now() - d.days * interval '1 day'
+      ), 0)::int as previous_views,
+      coalesce((
         select count(distinct coalesce(pem.enterprise_id, pem.id))::int
         from partner_enterprise_members pem
         inner join assigned_orgs ao on ao.id = pem.partner_org_id
         where pem.activation_status = 'active'
           and coalesce(pem.accepted_at, pem.updated_at, pem.created_at) >= now() - d.days * interval '1 day'
       ), 0)::int as activated_enterprises,
+      coalesce((
+        select count(distinct coalesce(pem.enterprise_id, pem.id))::int
+        from partner_enterprise_members pem
+        inner join assigned_orgs ao on ao.id = pem.partner_org_id
+        where pem.activation_status = 'active'
+          and coalesce(pem.accepted_at, pem.updated_at, pem.created_at) >= now() - d.days * 2 * interval '1 day'
+          and coalesce(pem.accepted_at, pem.updated_at, pem.created_at) < now() - d.days * interval '1 day'
+      ), 0)::int as previous_activated_enterprises,
       coalesce((
         select count(*)::int
         from seller_booth_registrations sbr
@@ -5996,18 +6014,36 @@ export async function getPartnerDashboardMetrics(
       ), 0)::int as sold_booths,
       coalesce((
         select count(*)::int
+        from seller_booth_registrations sbr
+        inner join assigned a on a.id = sbr.expo_id
+        where sbr.purchased_at >= now() - d.days * 2 * interval '1 day'
+          and sbr.purchased_at < now() - d.days * interval '1 day'
+      ), 0)::int as previous_sold_booths,
+      coalesce((
+        select count(*)::int
         from expo_exhibitor_rfq_events rfq
         inner join assigned a on a.id = rfq.expo_id
         where rfq.created_at >= now() - d.days * interval '1 day'
-      ), 0)::int as rfqs
+      ), 0)::int as rfqs,
+      coalesce((
+        select count(*)::int
+        from expo_exhibitor_rfq_events rfq
+        inner join assigned a on a.id = rfq.expo_id
+        where rfq.created_at >= now() - d.days * 2 * interval '1 day'
+          and rfq.created_at < now() - d.days * interval '1 day'
+      ), 0)::int as previous_rfqs
     from durations d
     order by d.days asc
   `) as {
     label: PartnerDashboardDuration
     views: number | string
+    previous_views: number | string
     activated_enterprises: number | string
+    previous_activated_enterprises: number | string
     sold_booths: number | string
+    previous_sold_booths: number | string
     rfqs: number | string
+    previous_rfqs: number | string
   }[]
 
   const expoMetrics = expoRows.map((row) => {
@@ -6070,6 +6106,17 @@ export async function getPartnerDashboardMetrics(
       ? Math.round((totals.soldBooths / totals.totalBooths) * 100)
       : 0
 
+  const emptyOperationsByDuration = {
+    "1D": { views: 0, activatedEnterprises: 0, soldBooths: 0, rfqs: 0 },
+    "3D": { views: 0, activatedEnterprises: 0, soldBooths: 0, rfqs: 0 },
+    "7D": { views: 0, activatedEnterprises: 0, soldBooths: 0, rfqs: 0 },
+    "15D": { views: 0, activatedEnterprises: 0, soldBooths: 0, rfqs: 0 },
+    "30D": { views: 0, activatedEnterprises: 0, soldBooths: 0, rfqs: 0 }
+  } satisfies Record<
+    PartnerDashboardDuration,
+    PartnerDashboardOperationsSummary
+  >
+
   const operationsByDuration = operationRows.reduce(
     (acc, row) => {
       acc[row.label] = {
@@ -6080,15 +6127,20 @@ export async function getPartnerDashboardMetrics(
       }
       return acc
     },
-    {
-      "3D": { views: 0, activatedEnterprises: 0, soldBooths: 0, rfqs: 0 },
-      "7D": { views: 0, activatedEnterprises: 0, soldBooths: 0, rfqs: 0 },
-      "15D": { views: 0, activatedEnterprises: 0, soldBooths: 0, rfqs: 0 },
-      "30D": { views: 0, activatedEnterprises: 0, soldBooths: 0, rfqs: 0 }
-    } satisfies Record<
-      PartnerDashboardDuration,
-      PartnerDashboardOperationsSummary
-    >
+    { ...emptyOperationsByDuration }
+  )
+
+  const previousOperationsByDuration = operationRows.reduce(
+    (acc, row) => {
+      acc[row.label] = {
+        views: toNumber(row.previous_views),
+        activatedEnterprises: toNumber(row.previous_activated_enterprises),
+        soldBooths: toNumber(row.previous_sold_booths),
+        rfqs: toNumber(row.previous_rfqs)
+      }
+      return acc
+    },
+    { ...emptyOperationsByDuration }
   )
 
   const statusMap = new Map<string, number>()
@@ -6099,6 +6151,7 @@ export async function getPartnerDashboardMetrics(
   return {
     totals,
     operationsByDuration,
+    previousOperationsByDuration,
     expoMetrics,
     statusBreakdown: Array.from(statusMap, ([name, value]) => ({
       name,
