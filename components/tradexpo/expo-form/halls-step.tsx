@@ -1,37 +1,37 @@
-import { PlusIcon, Trash2Icon } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { PlusIcon, Trash2Icon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
-} from "@/components/ui/select"
-import type { HallTemplate } from "@/lib/tradexpo/types"
-import type { HallFormRow } from "./types"
+  SelectValue,
+} from "@/components/ui/select";
+import type { HallTemplate } from "@/lib/tradexpo/types";
+import type { HallFormRow } from "./types";
 
 type HallsStepProps = {
-  halls: HallFormRow[]
-  hallTemplates: HallTemplate[]
-  onAddHall: () => void
-  onRemoveHall: (index: number) => void
-  onUpdateHall: (index: number, patch: Partial<HallFormRow>) => void
-}
+  halls: HallFormRow[];
+  hallTemplates: HallTemplate[];
+  onAddHall: () => void;
+  onRemoveHall: (index: number) => void;
+  onUpdateHall: (index: number, patch: Partial<HallFormRow>) => void;
+};
 
 export function HallsStep({
   halls,
   hallTemplates,
   onAddHall,
   onRemoveHall,
-  onUpdateHall
+  onUpdateHall,
 }: HallsStepProps) {
   return (
     <div className="space-y-6">
       <div className="flex flex-row items-start justify-between gap-2">
         <div className="space-y-1">
-          <h2 className="font-semibold text-lg leading-none">
+          <h2 className="font-semibold text-xl leading-none">
             Hall configuration
           </h2>
           <p className="text-muted-foreground text-sm">
@@ -125,19 +125,19 @@ export function HallsStep({
         ))}
       </div>
     </div>
-  )
+  );
 }
 
 type BoothQuantityFieldProps = {
-  label: string
-  value: number
-  onChange: (value: number) => void
-}
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+};
 
 function BoothQuantityField({
   label,
   value,
-  onChange
+  onChange,
 }: BoothQuantityFieldProps) {
   return (
     <div className="grid gap-1">
@@ -149,5 +149,5 @@ function BoothQuantityField({
         onChange={(e) => onChange(Number.parseInt(e.target.value, 10) || 0)}
       />
     </div>
-  )
+  );
 }

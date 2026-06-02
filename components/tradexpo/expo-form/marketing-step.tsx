@@ -1,57 +1,57 @@
-import { PlusIcon, Trash2Icon } from "lucide-react"
-import type * as React from "react"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { PlusIcon, Trash2Icon } from "lucide-react";
+import type * as React from "react";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue
-} from "@/components/ui/select"
-import { Textarea } from "@/components/ui/textarea"
-import type { ExpoMarketingIconKey } from "@/lib/tradexpo/types"
-import { MARKETING_ICON_OPTIONS } from "./constants"
-import { newAudienceCard, newBenefitCard } from "./row-helpers"
-import type { AudienceCardFormRow, BenefitCardFormRow } from "./types"
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import type { ExpoMarketingIconKey } from "@/lib/tradexpo/types";
+import { MARKETING_ICON_OPTIONS } from "./constants";
+import { newAudienceCard, newBenefitCard } from "./row-helpers";
+import type { AudienceCardFormRow, BenefitCardFormRow } from "./types";
 
 type MarketingStepProps = {
-  whoEnabled: boolean
-  onWhoEnabledChange: (value: boolean) => void
-  whoTitle: string
-  onWhoTitleChange: (value: string) => void
-  whoSubtitle: string
-  onWhoSubtitleChange: (value: string) => void
-  audienceCards: AudienceCardFormRow[]
+  whoEnabled: boolean;
+  onWhoEnabledChange: (value: boolean) => void;
+  whoTitle: string;
+  onWhoTitleChange: (value: string) => void;
+  whoSubtitle: string;
+  onWhoSubtitleChange: (value: string) => void;
+  audienceCards: AudienceCardFormRow[];
   onAudienceCardsChange: React.Dispatch<
     React.SetStateAction<AudienceCardFormRow[]>
-  >
+  >;
   onUpdateAudienceCard: (
     index: number,
-    patch: Partial<AudienceCardFormRow>
-  ) => void
-  benefitsEnabled: boolean
-  onBenefitsEnabledChange: (value: boolean) => void
-  benefitsTitle: string
-  onBenefitsTitleChange: (value: string) => void
-  benefitsSubtitle: string
-  onBenefitsSubtitleChange: (value: string) => void
-  benefitCards: BenefitCardFormRow[]
+    patch: Partial<AudienceCardFormRow>,
+  ) => void;
+  benefitsEnabled: boolean;
+  onBenefitsEnabledChange: (value: boolean) => void;
+  benefitsTitle: string;
+  onBenefitsTitleChange: (value: string) => void;
+  benefitsSubtitle: string;
+  onBenefitsSubtitleChange: (value: string) => void;
+  benefitCards: BenefitCardFormRow[];
   onBenefitCardsChange: React.Dispatch<
     React.SetStateAction<BenefitCardFormRow[]>
-  >
+  >;
   onUpdateBenefitCard: (
     index: number,
-    patch: Partial<BenefitCardFormRow>
-  ) => void
+    patch: Partial<BenefitCardFormRow>,
+  ) => void;
   onUpdateBenefitItem: (
     cardIndex: number,
     itemIndex: number,
-    value: string
-  ) => void
-}
+    value: string,
+  ) => void;
+};
 
 export function MarketingStep({
   whoEnabled,
@@ -72,12 +72,12 @@ export function MarketingStep({
   benefitCards,
   onBenefitCardsChange,
   onUpdateBenefitCard,
-  onUpdateBenefitItem
+  onUpdateBenefitItem,
 }: MarketingStepProps) {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h2 className="font-semibold text-lg leading-none">Marketing</h2>
+        <h2 className="font-semibold text-xl leading-none">Marketing</h2>
         <p className="text-muted-foreground text-sm">
           Configure public Expo Detail content. Exhibited Categories still come
           from selected Expo categories.
@@ -110,20 +110,20 @@ export function MarketingStep({
         />
       </div>
     </div>
-  )
+  );
 }
 
 type AudienceCardsSectionProps = {
-  enabled: boolean
-  onEnabledChange: (value: boolean) => void
-  title: string
-  onTitleChange: (value: string) => void
-  subtitle: string
-  onSubtitleChange: (value: string) => void
-  cards: AudienceCardFormRow[]
-  onCardsChange: React.Dispatch<React.SetStateAction<AudienceCardFormRow[]>>
-  onUpdateCard: (index: number, patch: Partial<AudienceCardFormRow>) => void
-}
+  enabled: boolean;
+  onEnabledChange: (value: boolean) => void;
+  title: string;
+  onTitleChange: (value: string) => void;
+  subtitle: string;
+  onSubtitleChange: (value: string) => void;
+  cards: AudienceCardFormRow[];
+  onCardsChange: React.Dispatch<React.SetStateAction<AudienceCardFormRow[]>>;
+  onUpdateCard: (index: number, patch: Partial<AudienceCardFormRow>) => void;
+};
 
 function AudienceCardsSection({
   enabled,
@@ -134,7 +134,7 @@ function AudienceCardsSection({
   onSubtitleChange,
   cards,
   onCardsChange,
-  onUpdateCard
+  onUpdateCard,
 }: AudienceCardsSectionProps) {
   return (
     <section className="space-y-4 rounded-2xl border p-4">
@@ -191,7 +191,7 @@ function AudienceCardsSection({
                 value={card.title}
                 onChange={(e) =>
                   onUpdateCard(index, {
-                    title: e.target.value
+                    title: e.target.value,
                   })
                 }
                 placeholder="The Buyers"
@@ -203,7 +203,7 @@ function AudienceCardsSection({
                     tags: e.target.value
                       .split(",")
                       .map((tag) => tag.trim())
-                      .filter(Boolean)
+                      .filter(Boolean),
                   })
                 }
                 placeholder="Retailers, Distributors"
@@ -213,7 +213,7 @@ function AudienceCardsSection({
               value={card.description}
               onChange={(e) =>
                 onUpdateCard(index, {
-                  description: e.target.value
+                  description: e.target.value,
                 })
               }
               rows={2}
@@ -233,25 +233,25 @@ function AudienceCardsSection({
         </Button>
       </div>
     </section>
-  )
+  );
 }
 
 type BenefitCardsSectionProps = {
-  enabled: boolean
-  onEnabledChange: (value: boolean) => void
-  title: string
-  onTitleChange: (value: string) => void
-  subtitle: string
-  onSubtitleChange: (value: string) => void
-  cards: BenefitCardFormRow[]
-  onCardsChange: React.Dispatch<React.SetStateAction<BenefitCardFormRow[]>>
-  onUpdateCard: (index: number, patch: Partial<BenefitCardFormRow>) => void
+  enabled: boolean;
+  onEnabledChange: (value: boolean) => void;
+  title: string;
+  onTitleChange: (value: string) => void;
+  subtitle: string;
+  onSubtitleChange: (value: string) => void;
+  cards: BenefitCardFormRow[];
+  onCardsChange: React.Dispatch<React.SetStateAction<BenefitCardFormRow[]>>;
+  onUpdateCard: (index: number, patch: Partial<BenefitCardFormRow>) => void;
   onUpdateBenefitItem: (
     cardIndex: number,
     itemIndex: number,
-    value: string
-  ) => void
-}
+    value: string,
+  ) => void;
+};
 
 function BenefitCardsSection({
   enabled,
@@ -263,7 +263,7 @@ function BenefitCardsSection({
   cards,
   onCardsChange,
   onUpdateCard,
-  onUpdateBenefitItem
+  onUpdateBenefitItem,
 }: BenefitCardsSectionProps) {
   return (
     <section className="space-y-4 rounded-lg border p-4">
@@ -312,7 +312,7 @@ function BenefitCardsSection({
                 disabled={cards.length <= 1}
                 onClick={() =>
                   onCardsChange((prev) =>
-                    prev.filter((_, i) => i !== cardIndex)
+                    prev.filter((_, i) => i !== cardIndex),
                   )
                 }
               >
@@ -324,7 +324,7 @@ function BenefitCardsSection({
                 value={card.audienceName}
                 onChange={(e) =>
                   onUpdateCard(cardIndex, {
-                    audienceName: e.target.value
+                    audienceName: e.target.value,
                   })
                 }
                 placeholder="Dành cho Buyers"
@@ -333,7 +333,7 @@ function BenefitCardsSection({
                 value={card.icon}
                 onValueChange={(value) =>
                   onUpdateCard(cardIndex, {
-                    icon: value as ExpoMarketingIconKey
+                    icon: value as ExpoMarketingIconKey,
                   })
                 }
               >
@@ -356,7 +356,7 @@ function BenefitCardsSection({
                   checked={card.isFeatured}
                   onCheckedChange={(v) =>
                     onUpdateCard(cardIndex, {
-                      isFeatured: Boolean(v)
+                      isFeatured: Boolean(v),
                     })
                   }
                 />
@@ -381,8 +381,8 @@ function BenefitCardsSection({
                     onClick={() =>
                       onUpdateCard(cardIndex, {
                         benefitItems: card.benefitItems.filter(
-                          (_, i) => i !== itemIndex
-                        )
+                          (_, i) => i !== itemIndex,
+                        ),
                       })
                     }
                   >
@@ -397,7 +397,7 @@ function BenefitCardsSection({
                 disabled={card.benefitItems.length >= 8}
                 onClick={() =>
                   onUpdateCard(cardIndex, {
-                    benefitItems: [...card.benefitItems, ""]
+                    benefitItems: [...card.benefitItems, ""],
                   })
                 }
               >
@@ -419,5 +419,5 @@ function BenefitCardsSection({
         </Button>
       </div>
     </section>
-  )
+  );
 }

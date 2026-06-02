@@ -1,20 +1,20 @@
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import type { OwnerDisplay, OwnerPick } from "./types"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import type { OwnerDisplay, OwnerPick } from "./types";
 
 type OwnerStepProps = {
-  isEdit: boolean
-  isChangingOwner: boolean
-  currentOwnerDisplay: OwnerDisplay | null
-  ownerQuery: string
-  onOwnerQueryChange: (value: string) => void
-  ownerResults: OwnerPick[]
-  ownerPick: OwnerPick | null
-  onOwnerPickChange: (owner: OwnerPick | null) => void
-  ownerLoading: boolean
-  onRequestOwnerChange: () => void
-}
+  isEdit: boolean;
+  isChangingOwner: boolean;
+  currentOwnerDisplay: OwnerDisplay | null;
+  ownerQuery: string;
+  onOwnerQueryChange: (value: string) => void;
+  ownerResults: OwnerPick[];
+  ownerPick: OwnerPick | null;
+  onOwnerPickChange: (owner: OwnerPick | null) => void;
+  ownerLoading: boolean;
+  onRequestOwnerChange: () => void;
+};
 
 export function OwnerStep({
   isEdit,
@@ -26,12 +26,12 @@ export function OwnerStep({
   ownerPick,
   onOwnerPickChange,
   ownerLoading,
-  onRequestOwnerChange
+  onRequestOwnerChange,
 }: OwnerStepProps) {
   return (
     <div className="space-y-6">
       <div className="space-y-1">
-        <h2 className="font-semibold text-lg leading-none">Expo owner</h2>
+        <h2 className="font-semibold text-xl leading-none">Expo owner</h2>
         <p className="text-muted-foreground text-sm">
           Changing owner requires confirmation, then selecting a new user from
           search results.
@@ -72,8 +72,8 @@ export function OwnerStep({
                 id="owner-q"
                 value={ownerQuery}
                 onChange={(e) => {
-                  onOwnerQueryChange(e.target.value)
-                  onOwnerPickChange(null)
+                  onOwnerQueryChange(e.target.value);
+                  onOwnerPickChange(null);
                 }}
                 placeholder="Type at least 2 characters…"
                 autoComplete="off"
@@ -89,8 +89,8 @@ export function OwnerStep({
                     <button
                       type="button"
                       onClick={() => {
-                        onOwnerPickChange(u)
-                        onOwnerQueryChange(u.email)
+                        onOwnerPickChange(u);
+                        onOwnerQueryChange(u.email);
                       }}
                       className="w-full rounded-lg border bg-card px-3 py-2 text-left text-sm hover:bg-muted/50"
                     >
@@ -120,8 +120,8 @@ export function OwnerStep({
                   size="sm"
                   className="ml-2 h-7"
                   onClick={() => {
-                    onOwnerPickChange(null)
-                    onOwnerQueryChange("")
+                    onOwnerPickChange(null);
+                    onOwnerQueryChange("");
                   }}
                 >
                   Change
@@ -132,5 +132,5 @@ export function OwnerStep({
         ) : null}
       </div>
     </div>
-  )
+  );
 }

@@ -49,7 +49,6 @@ import {
   EmptyTitle,
   EmptyDescription,
   EmptyMedia,
-  EmptyContent,
 } from "../ui/empty";
 
 const statusStyles: Record<StreamSessionStatus, string> = {
