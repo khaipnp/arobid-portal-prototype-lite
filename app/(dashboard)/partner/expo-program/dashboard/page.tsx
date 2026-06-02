@@ -3,86 +3,90 @@ import {
   CalendarDaysIcon,
   FileTextIcon,
   RadioTowerIcon,
-  WalletCardsIcon
-} from "lucide-react"
-import Link from "next/link"
-import type { ReactNode } from "react"
-import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
-import { ExpoStatusBadge } from "@/components/tradexpo/status-badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+  WalletCardsIcon,
+} from "lucide-react";
+import Link from "next/link";
+import type { ReactNode } from "react";
+import { DashboardShell } from "@/components/tradexpo/dashboard-shell";
+import { ExpoStatusBadge } from "@/components/tradexpo/status-badge";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+} from "@/components/ui/card";
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
-} from "@/components/ui/table"
-import { requireRole } from "@/lib/auth/rbac"
-import { requirePartnerTab } from "@/lib/partner/access"
-import type { PartnerAssignedExpo } from "@/lib/partner/db"
+  TableRow,
+} from "@/components/ui/table";
+import { requireRole } from "@/lib/auth/rbac";
+import { requirePartnerTab } from "@/lib/partner/access";
+import type { PartnerAssignedExpo } from "@/lib/partner/db";
 import {
   getPartnerDashboardMetrics,
-  getPartnerExpoProgramsWorkspace
-} from "@/lib/partner/db"
-import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
+  getPartnerExpoProgramsWorkspace,
+} from "@/lib/partner/db";
+import { ensurePlatformSchema } from "@/lib/platform/ensure-schema";
 
-const numberFormat = new Intl.NumberFormat("en")
+const numberFormat = new Intl.NumberFormat("en");
 const currencyFormat = new Intl.NumberFormat("vi-VN", {
   style: "currency",
   currency: "VND",
   notation: "compact",
-  maximumFractionDigits: 1
-})
+  maximumFractionDigits: 1,
+});
 const dateFormat = new Intl.DateTimeFormat("en-GB", {
   day: "2-digit",
   month: "short",
   year: "numeric",
-  timeZone: "UTC"
-})
+  timeZone: "UTC",
+});
 
 function formatDate(iso?: string | null) {
-  if (!iso) return "TBA"
+  if (!iso) return "TBA";
 
-  const date = new Date(iso)
-  if (Number.isNaN(date.getTime())) return "TBA"
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "TBA";
 
-  return dateFormat.format(date)
+  return dateFormat.format(date);
 }
 
 function buildSummary(assignedExpos: PartnerAssignedExpo[]) {
   return assignedExpos.reduce(
     (summary, item) => {
-      summary.totalExpos += 1
-      summary.totalBooths += item.totalBooths
+      summary.totalExpos += 1;
+      summary.totalBooths += item.totalBooths;
 
-      if (item.expo.status === "Live") summary.liveExpos += 1
-      if (item.expo.status === "Draft") summary.draftExpos += 1
+      if (item.expo.status === "Live") summary.liveExpos += 1;
+      if (item.expo.status === "Draft") summary.draftExpos += 1;
 
-      return summary
+      return summary;
     },
     {
       totalExpos: 0,
       liveExpos: 0,
       draftExpos: 0,
-      totalBooths: 0
-    }
-  )
+      totalBooths: 0,
+    },
+  );
 }
 
-export const dynamic = "force-dynamic"
+export const dynamic = "force-dynamic";
 
 export default async function PartnerExpoProgramDashboardPage() {
-  await ensurePlatformSchema()
-  const userId = await requireRole("partner")
-  await requirePartnerTab(userId, "expo")
+  await ensurePlatformSchema();
+  const userId = await requireRole("partner");
+  await requirePartnerTab(userId, "expo");
   const [workspace, metrics] = await Promise.all([
     getPartnerExpoProgramsWorkspace(userId),
-    getPartnerDashboardMetrics(userId)
-  ])
-  const assignedExpos = workspace.assignedExpos
-  const summary = buildSummary(assignedExpos)
+    getPartnerDashboardMetrics(userId),
+  ]);
+  const assignedExpos = workspace.assignedExpos;
+  const summary = buildSummary(assignedExpos);
 
   return (
     <DashboardShell
@@ -90,7 +94,7 @@ export default async function PartnerExpoProgramDashboardPage() {
       breadcrumbs={[
         { label: "Dashboard", href: "/partner" },
         { label: "Expo Programs" },
-        { label: "Dashboard" }
+        { label: "Dashboard" },
       ]}
     >
       <div className="mt-5 space-y-6">
@@ -155,18 +159,6 @@ export default async function PartnerExpoProgramDashboardPage() {
                     {numberFormat.format(soldBooths)}
                   </TableCell>
                   <TableCell>{formatDate(expo.startDate)}</TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      asChild
-                      size="sm"
-                      variant="ghost"
-                      className="rounded-full"
-                    >
-                      <Link href={`/partner/expo-program/expos/${expo.id}`}>
-                        Detail
-                      </Link>
-                    </Button>
-                  </TableCell>
                 </TableRow>
               ))}
               {assignedExpos.length === 0 ? (
@@ -186,29 +178,25 @@ export default async function PartnerExpoProgramDashboardPage() {
         </div>
       </div>
     </DashboardShell>
-  )
+  );
 }
 
 function MetricCard({
   title,
   value,
-  icon
+  icon,
 }: {
-  title: string
-  value: string
-  icon: ReactNode
+  title: string;
+  value: string;
+  icon: ReactNode;
 }) {
   return (
     <Card>
-      <CardContent className="flex items-start justify-between gap-3">
-        <div className="space-y-1">
-          <div className="text-muted-foreground text-sm">{title}</div>
-          <div className="font-semibold text-3xl tabular-nums tracking-tight">
-            {value}
-          </div>
-        </div>
-        <div className="rounded-2xl bg-muted p-3 text-primary">{icon}</div>
-      </CardContent>
+      <CardHeader>
+        {title}
+        <CardAction className="text-legend">{icon}</CardAction>
+      </CardHeader>
+      <CardContent className="font-semibold text-3xl">{value}</CardContent>
     </Card>
-  )
+  );
 }
