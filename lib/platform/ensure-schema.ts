@@ -64,6 +64,42 @@ async function ensureExpoMarketingContentSchema() {
   `
 }
 
+async function ensureExpoPackageDisplaySchema() {
+  // migratePlanSubscriptionsSchema must run first because expo_package_displays FK references packages
+  await migratePlanSubscriptionsSchema()
+  await sql`
+    create table if not exists expo_package_displays (
+      id text primary key,
+      expo_id text not null references expos(id) on delete cascade,
+      package_definition_id text not null references packages(id) on delete restrict,
+      source text not null check (source in ('linked', 'inline_created')),
+      name text not null,
+      description text not null default '',
+      price numeric(15, 2) not null default 0,
+      price_unit text not null default 'VND',
+      benefits jsonb not null default '[]'::jsonb,
+      is_featured boolean not null default false,
+      is_public boolean not null default true,
+      sort_order int not null default 0,
+      created_at timestamptz not null default now(),
+      updated_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    create index if not exists idx_expo_package_displays_expo
+    on expo_package_displays (expo_id, sort_order)
+  `
+  await sql`
+    create index if not exists idx_expo_package_displays_package
+    on expo_package_displays (package_definition_id)
+  `
+  await sql`
+    insert into platform_schema_migrations (name)
+    values ('expo_package_displays_v1')
+    on conflict (name) do update set applied_at = now()
+  `
+}
+
 async function ensureCompanyRepresentativeSchema() {
   await sql`
     alter table companies
@@ -135,6 +171,7 @@ export async function ensurePlatformSchema() {
       await ensureCompanyRepresentativeSchema()
       await backfillCompanyRepresentatives()
       await ensureExpoMarketingContentSchema()
+      await ensureExpoPackageDisplaySchema()
       await ensureTradeCreditSchema()
       await ensureAccountProfileSchema()
       platformSchemaReady = true
@@ -2471,6 +2508,7 @@ async function migrateExpoManagementSchema() {
   `
 
   await ensureExpoMarketingContentSchema()
+  await ensureExpoPackageDisplaySchema()
 
   await sql`
     create index if not exists expos_name_lower_uq on expos (lower(name))

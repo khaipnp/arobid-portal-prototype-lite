@@ -25,7 +25,8 @@ import type { ExpoDetailExhibitor } from "@/lib/tradexpo/db/platform-data"
 import type {
   ExpoBenefitCardContent,
   ExpoCategoryDisplay,
-  ExpoMarketingContent
+  ExpoMarketingContent,
+  ExpoPackageDisplay
 } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
 import {
@@ -482,6 +483,102 @@ export function ParticipantValues({
                 </article>
               )
             })}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function formatPackagePrice(price: number, currency: string) {
+  const safeCurrency = (currency || "VND").trim().toUpperCase()
+  try {
+    return new Intl.NumberFormat("vi-VN", {
+      style: "currency",
+      currency: safeCurrency,
+      maximumFractionDigits: safeCurrency === "VND" ? 0 : 2
+    }).format(price)
+  } catch {
+    return `${new Intl.NumberFormat("vi-VN").format(price)} ${safeCurrency}`
+  }
+}
+
+export function SellerPackages({
+  packages,
+  isAuthenticated
+}: {
+  packages: ExpoPackageDisplay[]
+  isAuthenticated: boolean
+}) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const visiblePackages = packages
+    .filter((pkg) => pkg.isPublic)
+    .slice()
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+
+  if (visiblePackages.length === 0) return null
+
+  function handleChoosePackage(packageDefinitionId: string) {
+    if (!isAuthenticated) {
+      router.push(`/login?callbackUrl=${encodeURIComponent(pathname)}`)
+      return
+    }
+    router.push(`/plan-subscriptions/packages/${packageDefinitionId}`)
+  }
+
+  return (
+    <section className="bg-white px-4 py-16 md:px-20">
+      <div className="container mx-auto">
+        <div className="mx-auto max-w-2xl text-center">
+          <h2 className="font-semibold text-[32px] leading-10">
+            Seller packages
+          </h2>
+          <p className="mt-2 text-foreground">
+            Choose an exhibitor package tailored to your expo participation
+            goals.
+          </p>
+        </div>
+        <div className="mt-10 grid gap-6 lg:grid-cols-3">
+          {visiblePackages.map((pkg) => (
+            <article
+              key={pkg.id}
+              className={cn(
+                "flex flex-col rounded-2xl border border-[#e5e7eb] bg-white p-6 shadow-sm",
+                pkg.isFeatured &&
+                  "border-legend shadow-lg ring-2 ring-legend/15"
+              )}
+            >
+              {pkg.isFeatured ? (
+                <span className="mb-4 w-fit rounded-full bg-legend/10 px-3 py-1 font-medium text-legend text-xs">
+                  Featured
+                </span>
+              ) : null}
+              <h3 className="font-semibold text-xl leading-7">{pkg.name}</h3>
+              {pkg.description ? (
+                <p className="mt-2 text-muted-foreground text-sm leading-5">
+                  {pkg.description}
+                </p>
+              ) : null}
+              <p className="mt-6 font-semibold text-3xl leading-9">
+                {formatPackagePrice(pkg.price, pkg.priceUnit)}
+              </p>
+              <ul className="mt-6 flex-1 space-y-3 border-[#e5e7eb] border-t pt-5">
+                {pkg.benefits.map((benefit) => (
+                  <li key={benefit} className="flex gap-3 text-sm leading-5">
+                    <CheckIcon className="mt-0.5 size-4 shrink-0 text-[#16a34a]" />
+                    <span>{benefit}</span>
+                  </li>
+                ))}
+              </ul>
+              <Button
+                type="button"
+                className="mt-6"
+                onClick={() => handleChoosePackage(pkg.packageDefinitionId)}
+              >
+                Choose package
+              </Button>
+            </article>
+          ))}
         </div>
       </div>
     </section>

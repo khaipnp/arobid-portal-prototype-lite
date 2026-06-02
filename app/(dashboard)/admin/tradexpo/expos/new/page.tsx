@@ -1,6 +1,7 @@
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import { ExpoForm } from "@/components/tradexpo/expo-form"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
+import { getExpoPackageFormWorkspace } from "@/lib/tradexpo/db/expo-package-displays"
 import { listHallTemplates } from "@/lib/tradexpo/db/hall-templates"
 import {
   listActiveExpoTenantOptions,
@@ -12,13 +13,19 @@ export const dynamic = "force-dynamic"
 
 export default async function CreateExpoPage() {
   await ensurePlatformSchema()
-  const [categories, layoutTemplates, hallTemplates, tenantOptions] =
-    await Promise.all([
-      listExpoCategories(),
-      listExpoLayoutTemplates(),
-      listHallTemplates(),
-      listActiveExpoTenantOptions()
-    ])
+  const [
+    categories,
+    layoutTemplates,
+    hallTemplates,
+    tenantOptions,
+    packageWorkspace
+  ] = await Promise.all([
+    listExpoCategories(),
+    listExpoLayoutTemplates(),
+    listHallTemplates(),
+    listActiveExpoTenantOptions(),
+    getExpoPackageFormWorkspace()
+  ])
 
   return (
     <DashboardShell
@@ -38,6 +45,7 @@ export default async function CreateExpoPage() {
         layoutTemplates={layoutTemplates}
         hallTemplates={hallTemplates}
         tenantOptions={tenantOptions}
+        packageWorkspace={packageWorkspace}
       />
     </DashboardShell>
   )

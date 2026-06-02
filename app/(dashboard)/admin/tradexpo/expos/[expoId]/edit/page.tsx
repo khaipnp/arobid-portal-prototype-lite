@@ -4,6 +4,10 @@ import { ExpoForm } from "@/components/tradexpo/expo-form"
 import { requireRole } from "@/lib/auth/rbac"
 import { getAuthenticatedUserById } from "@/lib/auth/service"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
+import {
+  getExpoPackageFormWorkspace,
+  listExpoPackageDisplays
+} from "@/lib/tradexpo/db/expo-package-displays"
 import { listHallTemplates } from "@/lib/tradexpo/db/hall-templates"
 import {
   getExpoById,
@@ -37,14 +41,18 @@ export default async function EditExpoPage({
     hallTemplates,
     halls,
     marketingVersion,
-    tenantOptions
+    tenantOptions,
+    packageWorkspace,
+    initialPackages
   ] = await Promise.all([
     listExpoCategories(),
     listExpoLayoutTemplates(),
     listHallTemplates(),
     listExpoHalls(expoId),
     getLatestExpoMarketingContentForEdit(expoId),
-    listActiveExpoTenantOptions()
+    listActiveExpoTenantOptions(),
+    getExpoPackageFormWorkspace(),
+    listExpoPackageDisplays(expoId)
   ])
 
   const initialOwner =
@@ -73,6 +81,8 @@ export default async function EditExpoPage({
         layoutTemplates={layoutTemplates}
         hallTemplates={hallTemplates}
         tenantOptions={tenantOptions}
+        packageWorkspace={packageWorkspace}
+        initialPackages={initialPackages}
         initialMarketingContent={marketingVersion?.content}
       />
     </DashboardShell>

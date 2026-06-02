@@ -499,6 +499,7 @@ export type CreateExpoWithHallsInput = {
   tenantPartnerOrgId?: string | null
   displayTargetIds?: string[]
   halls: ExpoHallDraft[]
+  afterWrite?: (expoId: string) => Promise<void>
 }
 
 /**
@@ -653,6 +654,10 @@ export async function createExpoWithHalls(
       order += 1
     }
 
+    if (input.afterWrite) {
+      await input.afterWrite(expoId)
+    }
+
     await sql`commit`
   } catch (e) {
     await sql`rollback`
@@ -792,6 +797,10 @@ export async function updateExpoWithHalls(
         )
       `
       order += 1
+    }
+
+    if (input.afterWrite) {
+      await input.afterWrite(expoId)
     }
 
     await sql`commit`
