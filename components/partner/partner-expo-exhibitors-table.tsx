@@ -108,10 +108,10 @@ export function PartnerExpoExhibitorsTable({
         />
       </div>
 
-      <h2 className="font-medium text-lg">Exhibitors List</h2>
+      <h2 className="font-semibold text-2xl">Exhibitors</h2>
       <div className="flex gap-2">
         {/* Search */}
-        <InputGroup className="max-w-xs rounded-full">
+        <InputGroup className="max-w-xs">
           <InputGroupAddon align="inline-start">
             <SearchIcon />
           </InputGroupAddon>
@@ -123,7 +123,7 @@ export function PartnerExpoExhibitorsTable({
           {query && (
             <InputGroupAddon align="inline-end">
               <InputGroupButton
-                variant="secondary"
+                variant="ghost"
                 size="icon-xs"
                 className="rounded-full"
                 onClick={() => setQuery("")}
@@ -136,7 +136,7 @@ export function PartnerExpoExhibitorsTable({
 
         {/* Filter Tier */}
         <Select value={tier} onValueChange={setTier}>
-          <SelectTrigger className="rounded-full">
+          <SelectTrigger>
             <SelectValue placeholder="Tier" />
           </SelectTrigger>
           <SelectContent>
@@ -149,7 +149,7 @@ export function PartnerExpoExhibitorsTable({
 
         {/* Filter Payment Status */}
         <Select value={paymentStatus} onValueChange={setPaymentStatus}>
-          <SelectTrigger className="rounded-full">
+          <SelectTrigger>
             <SelectValue placeholder="Payment" />
           </SelectTrigger>
           <SelectContent>
@@ -166,70 +166,70 @@ export function PartnerExpoExhibitorsTable({
           No booth registrations for this expo yet.
         </div>
       ) : (
-        <Table className="border">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Company</TableHead>
-              <TableHead>Contact</TableHead>
-              <TableHead>Booths</TableHead>
-              <TableHead>Slot</TableHead>
-              <TableHead>Publish</TableHead>
-              <TableHead>Payment</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filtered.map((exhibitor) => (
-              <TableRow key={exhibitor.id}>
-                <TableCell className="font-medium">
-                  <Link
-                    href={`/partner/expos/${expoId}/exhibitors/${exhibitor.id}`}
-                    className="flex items-center gap-2 hover:underline"
-                  >
-                    {exhibitor.logoUrl ? (
-                      <Image
-                        src={exhibitor.logoUrl}
-                        alt={exhibitor.displayName}
-                        width={256}
-                        height={256}
-                        className="size-10 rounded-lg border bg-white object-contain p-0.5"
-                      />
-                    ) : null}
-                    {exhibitor.displayName}
-                  </Link>
-                </TableCell>
-                <TableCell>
-                  <div className="text-sm">{exhibitor.contactName}</div>
-                  <div className="text-muted-foreground text-xs">
-                    {exhibitor.contactEmail}
-                  </div>
-                </TableCell>
-                <TableCell className="tabular-nums">
-                  {numberFormat.format(exhibitor.boothCount)}
-                </TableCell>
-                <TableCell className="max-w-44 truncate">
-                  {exhibitor.boothRefs.join(", ")}
-                </TableCell>
-                <TableCell>
-                  <Badge variant="secondary">
-                    {numberFormat.format(exhibitor.publishedBoothCount)} /{" "}
-                    {numberFormat.format(exhibitor.boothCount)}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <Badge
-                    variant={
-                      exhibitor.paymentStatus === "Paid"
-                        ? "default"
-                        : "secondary"
-                    }
-                  >
-                    {exhibitor.paymentStatus}
-                  </Badge>
-                </TableCell>
+        <div className="overflow-hidden rounded-2xl border">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Company</TableHead>
+                <TableHead>Contact</TableHead>
+                <TableHead>Booths</TableHead>
+                <TableHead>Slot</TableHead>
+
+                <TableHead>Payment</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {filtered.map((exhibitor) => (
+                <TableRow key={exhibitor.id}>
+                  <TableCell className="font-medium">
+                    <Link
+                      href={`/partner/expos/${expoId}/exhibitors/${exhibitor.id}`}
+                      className="flex items-center gap-2 hover:underline"
+                    >
+                      {exhibitor.logoUrl ? (
+                        <Image
+                          src={exhibitor.logoUrl}
+                          alt={exhibitor.displayName}
+                          width={256}
+                          height={256}
+                          className="size-10 rounded-lg border bg-white object-contain p-0.5"
+                        />
+                      ) : null}
+                      {exhibitor.displayName}
+                    </Link>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm">{exhibitor.contactName}</div>
+                    <div className="text-muted-foreground text-xs">
+                      {exhibitor.contactEmail}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">
+                      {numberFormat.format(exhibitor.publishedBoothCount)} /{" "}
+                      {numberFormat.format(exhibitor.boothCount)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="max-w-44 truncate">
+                    {exhibitor.boothRefs.join(", ")}
+                  </TableCell>
+
+                  <TableCell>
+                    <Badge
+                      variant={
+                        exhibitor.paymentStatus === "Paid"
+                          ? "default"
+                          : "secondary"
+                      }
+                    >
+                      {exhibitor.paymentStatus}
+                    </Badge>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       )}
     </div>
   )

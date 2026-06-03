@@ -60,6 +60,13 @@ import type {
   StreamSession
 } from "@/lib/tradexpo/types"
 import { cn } from "@/lib/utils"
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle
+} from "../ui/empty"
 
 const SESSION_TYPES: GoLIVESessionType[] = [
   "Workshop",
@@ -352,14 +359,8 @@ export function GoLIVEManager({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="font-semibold text-base">GoLIVE Events</h2>
-          <p className="text-muted-foreground text-sm">
-            {events.length} session{events.length !== 1 ? "s" : ""} in this Expo
-          </p>
-        </div>
+        <h2 className="font-semibold text-2xl">Events</h2>
         <Button size="lg" onClick={openCreate}>
-          <PlusIcon />
           Create New
         </Button>
       </div>
@@ -369,13 +370,17 @@ export function GoLIVEManager({
       )}
 
       {events.length === 0 ? (
-        <div className="rounded-lg border border-dashed py-12 text-center text-muted-foreground">
-          <RadioIcon className="mx-auto mb-3 h-8 w-8 opacity-30" />
-          <p className="text-sm">No GoLIVE Events yet.</p>
-          <p className="text-xs">
-            Create the first live session for this Expo.
-          </p>
-        </div>
+        <Empty className="border">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <RadioIcon />
+            </EmptyMedia>
+            <EmptyTitle>No GoLIVE Events yet.</EmptyTitle>
+            <EmptyDescription>
+              Create the first live session for this Expo.
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       ) : (
         <div className="divide-y rounded-lg border">
           {events.map((event) => {
