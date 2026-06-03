@@ -1,0 +1,38 @@
+{
+  "name": "PartnerExpoPackageOverviewCard",
+  "created_at": "2026-06-03T00:00:00.000Z",
+  "purpose": "Displays expo package pricing, visibility, featured state, benefits, and edit entry point for assigned partner expo managers.",
+  "complexity": "Simple",
+  "props": [
+    {
+      "name": "packages",
+      "type": "ExpoPackageDisplay[]",
+      "required": true,
+      "default": null,
+      "description": "Expo package display rows to render in overview order."
+    },
+    {
+      "name": "canEdit",
+      "type": "boolean",
+      "required": true,
+      "default": null,
+      "description": "Whether to show the edit packages action."
+    },
+    {
+      "name": "editHref",
+      "type": "string",
+      "required": true,
+      "default": null,
+      "description": "Partner edit URL for package updates."
+    }
+  ],
+  "state_pattern": "Stateless",
+  "composition": "No children",
+  "accessibility_level": "Basic",
+  "styling": "Tailwind CSS",
+  "files_created": [
+    "components/partner/partner-expo-package-overview-card.tsx"
+  ],
+  "status": "complete",
+  "completed_at": "2026-06-03T00:00:00.000Z"
+}

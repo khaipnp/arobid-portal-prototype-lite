@@ -3,6 +3,7 @@
 import { ChevronLeftIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { Fragment } from "react"
+import { NotificationTrigger } from "@/components/notifications/notification-trigger"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -68,6 +69,8 @@ export function DashboardShell({
               </BreadcrumbList>
             </Breadcrumb>
           </div>
+          {/* Notification Trigger */}
+          <NotificationTrigger className="rounded-full" />
         </div>
       </nav>
 

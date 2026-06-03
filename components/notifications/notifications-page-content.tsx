@@ -1,21 +1,29 @@
 "use client"
 
-import { BellIcon, CheckCheckIcon } from "lucide-react"
+import { BellIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useState } from "react"
 import { NotificationItemRow } from "@/components/notifications/notification-item-row"
-import { Button } from "@/components/ui/button"
-import type { NotificationRecord } from "@/lib/notifications/types"
 import {
   Empty,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
   EmptyTitle
-} from "../ui/empty"
+} from "@/components/ui/empty"
+import type { NotificationRecord } from "@/lib/notifications/types"
+import { cn } from "@/lib/utils"
 
 const POLL_MS = 5_000
 const LIST_LIMIT = 50
+
+interface NotificationsPageContentProps {
+  className?: string
+  listLimit?: number
+  pollMs?: number
+  onNavigate?: () => void
+  onUnreadCountChange?: (unreadCount: number) => void
+}
 
 async function readJson<T>(response: Response): Promise<T | null> {
   if (!response.ok) {
@@ -25,16 +33,29 @@ async function readJson<T>(response: Response): Promise<T | null> {
   return payload
 }
 
-export function NotificationsPageContent() {
+export function NotificationsPageContent({
+  className,
+  listLimit = LIST_LIMIT,
+  pollMs = POLL_MS,
+  onNavigate,
+  onUnreadCountChange
+}: NotificationsPageContentProps) {
   const router = useRouter()
   const [notifications, setNotifications] = useState<NotificationRecord[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [busyNotificationId, setBusyNotificationId] = useState<string | null>(
     null
   )
-  const [isMarkAllBusy, setIsMarkAllBusy] = useState(false)
 
   const hasUnread = unreadCount > 0
+
+  const updateUnreadCount = useCallback(
+    (nextUnreadCount: number) => {
+      setUnreadCount(nextUnreadCount)
+      onUnreadCountChange?.(nextUnreadCount)
+    },
+    [onUnreadCountChange]
+  )
 
   const fetchUnreadCount = useCallback(async () => {
     try {
@@ -43,16 +64,16 @@ export function NotificationsPageContent() {
       })
       const payload = await readJson<{ unreadCount: number }>(response)
       if (payload) {
-        setUnreadCount(payload.unreadCount)
+        updateUnreadCount(payload.unreadCount)
       }
     } catch {
       // Keep last known unread count; polling will retry.
     }
-  }, [])
+  }, [updateUnreadCount])
 
   const fetchNotificationList = useCallback(async () => {
     try {
-      const response = await fetch(`/api/notifications?limit=${LIST_LIMIT}`, {
+      const response = await fetch(`/api/notifications?limit=${listLimit}`, {
         cache: "no-store"
       })
       const payload = await readJson<{ notifications: NotificationRecord[] }>(
@@ -64,7 +85,7 @@ export function NotificationsPageContent() {
     } catch {
       // Keep last known list; polling will retry.
     }
-  }, [])
+  }, [listLimit])
 
   const refreshListAndCount = useCallback(async () => {
     await Promise.all([fetchNotificationList(), fetchUnreadCount()])
@@ -82,14 +103,20 @@ export function NotificationsPageContent() {
 
   useEffect(() => {
     void refreshListAndCount()
+    if (pollMs <= 0) {
+      return
+    }
     const timer = window.setInterval(() => {
       void refreshListAndCount()
-    }, POLL_MS)
+    }, pollMs)
     return () => window.clearInterval(timer)
-  }, [refreshListAndCount])
+  }, [pollMs, refreshListAndCount])
 
   const handleOpenNotification = useCallback(
     async (notification: NotificationRecord) => {
+      if (busyNotificationId) {
+        return
+      }
       setBusyNotificationId(notification.notificationId)
       try {
         if (!notification.isRead) {
@@ -100,12 +127,17 @@ export function NotificationsPageContent() {
                 : item
             )
           )
-          setUnreadCount((current) => Math.max(0, current - 1))
+          setUnreadCount((current) => {
+            const nextUnreadCount = Math.max(0, current - 1)
+            onUnreadCountChange?.(nextUnreadCount)
+            return nextUnreadCount
+          })
         }
         const shouldNavigate =
           notification.isRead ||
           (await markNotificationRead(notification.notificationId))
         if (shouldNavigate) {
+          onNavigate?.()
           router.push(notification.deepLinkPath)
         }
       } finally {
@@ -113,52 +145,20 @@ export function NotificationsPageContent() {
         await refreshListAndCount()
       }
     },
-    [markNotificationRead, refreshListAndCount, router]
+    [
+      busyNotificationId,
+      markNotificationRead,
+      onNavigate,
+      onUnreadCountChange,
+      refreshListAndCount,
+      router
+    ]
   )
 
-  const handleMarkAll = useCallback(async () => {
-    if (!hasUnread || isMarkAllBusy) {
-      return
-    }
-    setIsMarkAllBusy(true)
-    try {
-      const optimisticReadAt = new Date().toISOString()
-      setNotifications((current) =>
-        current.map((item) =>
-          item.isRead
-            ? item
-            : { ...item, isRead: true, readAt: optimisticReadAt }
-        )
-      )
-      setUnreadCount(0)
-      const response = await fetch(`/api/notifications/read-all`, {
-        method: "POST"
-      })
-      if (!response.ok) {
-        // Server rejected mark-all; refresh below reconciles optimistic state.
-      }
-    } finally {
-      await refreshListAndCount()
-      setIsMarkAllBusy(false)
-    }
-  }, [hasUnread, isMarkAllBusy, refreshListAndCount])
-
   return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-end gap-2">
-        <Button
-          type="button"
-          variant="ghost"
-          disabled={!hasUnread || isMarkAllBusy}
-          onClick={handleMarkAll}
-        >
-          <CheckCheckIcon />
-          Mark all as read
-        </Button>
-      </div>
-
+    <div className={cn("space-y-4", className)}>
       {notifications.length === 0 ? (
-        <Empty className="border border-dashed">
+        <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon">
               <BellIcon />

@@ -1,4 +1,4 @@
-import { NotificationsPageContent } from "@/components/notifications/notifications-page-content"
+import { NotificationsSheetEntry } from "@/components/notifications/notifications-sheet-entry"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 
 export default function UserNotificationsPage() {
@@ -11,7 +11,7 @@ export default function UserNotificationsPage() {
         { label: "Notifications" }
       ]}
     >
-      <NotificationsPageContent />
+      <NotificationsSheetEntry description="Notifications now open in a right-side sheet from the header bell, so you can keep context while checking updates." />
     </DashboardShell>
   )
 }

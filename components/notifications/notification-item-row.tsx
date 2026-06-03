@@ -37,6 +37,7 @@ function getRelativeTimeLabel(timestamp: string) {
 
 export function NotificationItemRow({
   notification,
+  isBusy = false,
   onRowClick
 }: NotificationItemRowProps) {
   const SourceIcon = getNotificationSourceIcon(notification.source)
@@ -46,9 +47,11 @@ export function NotificationItemRow({
     <Item
       size="sm"
       variant="outline"
+      aria-disabled={isBusy}
       className={cn(
         "cursor-pointer",
-        notification.isRead ? "bg-background" : "bg-muted/40"
+        notification.isRead ? "bg-background" : "bg-muted/40",
+        isBusy ? "pointer-events-none opacity-70" : null
       )}
       onClick={() => onRowClick(notification)}
     >

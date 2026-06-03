@@ -4,6 +4,10 @@ import { ExpoForm } from "@/components/tradexpo/expo-form"
 import { requireRole } from "@/lib/auth/rbac"
 import { getPartnerAssignedExpo } from "@/lib/partner/db"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
+import {
+  getExpoPackageFormWorkspace,
+  listExpoPackageDisplays
+} from "@/lib/tradexpo/db/expo-package-displays"
 import { listHallTemplates } from "@/lib/tradexpo/db/hall-templates"
 import {
   getLatestExpoMarketingContentForEdit,
@@ -34,14 +38,23 @@ export default async function PartnerEditExpoPage({
     assignment.capabilities.includes("edit_expo_content")
   if (!canEditDraft) notFound()
 
-  const [categories, layoutTemplates, hallTemplates, halls, marketingVersion] =
-    await Promise.all([
-      listExpoCategories(),
-      listExpoLayoutTemplates(),
-      listHallTemplates(),
-      listExpoHalls(expoId),
-      getLatestExpoMarketingContentForEdit(expoId)
-    ])
+  const [
+    categories,
+    layoutTemplates,
+    hallTemplates,
+    halls,
+    marketingVersion,
+    packageWorkspace,
+    initialPackages
+  ] = await Promise.all([
+    listExpoCategories(),
+    listExpoLayoutTemplates(),
+    listHallTemplates(),
+    listExpoHalls(expoId),
+    getLatestExpoMarketingContentForEdit(expoId),
+    getExpoPackageFormWorkspace(),
+    listExpoPackageDisplays(expoId)
+  ])
 
   const initialOwner =
     expo.ownerUserId != null ? await getUserById(expo.ownerUserId) : null
@@ -68,7 +81,10 @@ export default async function PartnerEditExpoPage({
         categories={categories}
         layoutTemplates={layoutTemplates}
         hallTemplates={hallTemplates}
+        packageWorkspace={packageWorkspace}
+        initialPackages={initialPackages}
         initialMarketingContent={marketingVersion?.content}
+        allowPackageEdit
         submitEndpoint={`/api/partner/expos/${expoId}`}
         successHref={`/partner/expos/${expoId}`}
         cancelHref={`/partner/expos/${expoId}`}

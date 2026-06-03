@@ -74,3 +74,7 @@ export const PARTNER_EXPO_FORM_STEPS = ADMIN_EXPO_FORM_STEPS.filter(
   (step) =>
     step.id !== "management" && step.id !== "halls" && step.id !== "packages"
 )
+
+export const PARTNER_EXPO_PACKAGE_FORM_STEPS = ADMIN_EXPO_FORM_STEPS.filter(
+  (step) => step.id !== "management" && step.id !== "halls"
+)
