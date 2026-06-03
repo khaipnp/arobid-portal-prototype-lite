@@ -183,7 +183,7 @@ function MetricWidget({
 }) {
   return (
     <TooltipProvider>
-      <Card>
+      <Card size="sm">
         <CardHeader>
           <div className="flex items-center gap-1.5">
             <CardTitle>{label}</CardTitle>
@@ -275,7 +275,7 @@ export function PartnerDashboard({
             </Tabs>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             <MetricWidget
               label="Visitor Traffic"
               value={operationsSummary.views}
@@ -383,13 +383,13 @@ function TradeActivitySection({
       </div>
 
       <div className="grid gap-4 xl:grid-cols-3">
-        <Card>
+        <Card size="sm">
           <CardHeader className="border-b">
             <CardTitle>Deal Contexts Trend</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <div className="font-semibold text-3xl text-legend tabular-nums tracking-tight">
+              <div className="font-semibold text-2xl text-legend tabular-nums tracking-tight">
                 {numberFormat.format(dealContextTotal)}
               </div>
               <p className="text-muted-foreground text-sm">Deal Contexts</p>
@@ -423,13 +423,13 @@ function TradeActivitySection({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card size="sm">
           <CardHeader className="border-b">
             <CardTitle>TradeCredits Allocated</CardTitle>
           </CardHeader>
           <CardContent className="space-y-5">
             <div>
-              <div className="font-semibold text-3xl text-legend tabular-nums tracking-tight">
+              <div className="font-semibold text-2xl text-legend tabular-nums tracking-tight">
                 {compactNumber.format(allocatedCredits)}
               </div>
               <p className="text-muted-foreground text-sm capitalize">
@@ -482,13 +482,13 @@ function TradeActivitySection({
           </CardContent>
         </Card>
 
-        <Card>
+        <Card size="sm">
           <CardHeader className="border-b">
             <CardTitle>RFQ Received</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <div className="font-semibold text-3xl text-legend tabular-nums tracking-tight">
+              <div className="font-semibold text-2xl text-legend tabular-nums tracking-tight">
                 {numberFormat.format(rfqTotal)}
               </div>
               <p className="text-muted-foreground text-sm capitalize">
@@ -581,8 +581,8 @@ function ExpoInventorySection({
         <h2 className="font-semibold text-2xl">Expo and Inventory</h2>
       </div>
       <div className="grid gap-4 xl:grid-cols-2">
-        <Card>
-          <CardHeader>
+        <Card size="sm">
+          <CardHeader className="border-b">
             <CardTitle className="capitalize">Booth sold vs unsold</CardTitle>
             <CardDescription>Capacity allocation by Expo</CardDescription>
           </CardHeader>
@@ -630,9 +630,9 @@ function ExpoInventorySection({
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="capitalize">Purchased booth trend</CardTitle>
+        <Card size="sm">
+          <CardHeader className="border-b">
+            <CardTitle>Purchased booth trend</CardTitle>
             <CardDescription>Last 6 months by booth tier</CardDescription>
           </CardHeader>
           <CardContent>
@@ -672,77 +672,72 @@ function ExpoInventorySection({
         </Card>
       </div>
 
-      <div className="mt-10 space-y-5">
-        <h2 className="font-semibold text-2xl capitalize">
-          Expo inventory board
-        </h2>
-        {hasExpoData ? (
-          <div className="overflow-x-auto rounded-2xl border">
-            <Table className="min-w-2/3">
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Expo Program</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Total booth</TableHead>
-                  <TableHead>Sold</TableHead>
-                  <TableHead>Unsold</TableHead>
-                  <TableHead>Utilization</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {inventoryData.map((item) => (
-                  <TableRow key={item.expoId}>
-                    <TableCell className="max-w-96 whitespace-normal py-4 font-medium">
-                      <div className="flex items-center gap-3">
+      {hasExpoData ? (
+        <div className="overflow-x-auto rounded-2xl border">
+          <Table className="min-w-2/3">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Expo Program</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Total booth</TableHead>
+                <TableHead>Sold</TableHead>
+                <TableHead>Unsold</TableHead>
+                <TableHead>Utilization</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {inventoryData.map((item) => (
+                <TableRow key={item.expoId}>
+                  <TableCell className="max-w-96 whitespace-normal py-4 font-medium">
+                    <div className="flex items-center gap-3">
+                      <Link
+                        href={`/partner/expo-program/expos/${item.expoId}`}
+                        className="group block w-24 shrink-0 overflow-hidden rounded-lg border bg-muted"
+                        aria-label={`View ${item.expoName} details`}
+                      >
+                        <Image
+                          src={item.thumbnailUrl}
+                          alt={item.expoName}
+                          width={1600}
+                          height={900}
+                          className="aspect-video w-full object-cover transition-transform group-hover:scale-105"
+                        />
+                      </Link>
+                      <div className="min-w-0">
                         <Link
                           href={`/partner/expo-program/expos/${item.expoId}`}
-                          className="group block w-24 shrink-0 overflow-hidden rounded-lg border bg-muted"
-                          aria-label={`View ${item.expoName} details`}
                         >
-                          <Image
-                            src={item.thumbnailUrl}
-                            alt={item.expoName}
-                            width={1600}
-                            height={900}
-                            className="aspect-video w-full object-cover transition-transform group-hover:scale-105"
-                          />
+                          {item.expoName}
                         </Link>
-                        <div className="min-w-0">
-                          <Link
-                            href={`/partner/expo-program/expos/${item.expoId}`}
-                          >
-                            {item.expoName}
-                          </Link>
-                          <div className="text-muted-foreground text-xs">
-                            {formatExpoScheduleLabel(item)}
-                          </div>
+                        <div className="text-muted-foreground text-xs">
+                          {formatExpoScheduleLabel(item)}
                         </div>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <ExpoStatusBadge status={item.status} />
-                    </TableCell>
-                    <TableCell className="tabular-nums">
-                      {numberFormat.format(item.totalBooths)}
-                    </TableCell>
-                    <TableCell className="tabular-nums">
-                      {numberFormat.format(item.soldBooths)}
-                    </TableCell>
-                    <TableCell className="tabular-nums">
-                      {numberFormat.format(item.unsoldBooths)}
-                    </TableCell>
-                    <TableCell className="font-medium tabular-nums">
-                      {formatPercent(item.boothUtilization)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        ) : (
-          <EmptyInventoryState />
-        )}
-      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <ExpoStatusBadge status={item.status} />
+                  </TableCell>
+                  <TableCell className="tabular-nums">
+                    {numberFormat.format(item.totalBooths)}
+                  </TableCell>
+                  <TableCell className="tabular-nums">
+                    {numberFormat.format(item.soldBooths)}
+                  </TableCell>
+                  <TableCell className="tabular-nums">
+                    {numberFormat.format(item.unsoldBooths)}
+                  </TableCell>
+                  <TableCell className="font-medium tabular-nums">
+                    {formatPercent(item.boothUtilization)}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      ) : (
+        <EmptyInventoryState />
+      )}
     </section>
   )
 }
