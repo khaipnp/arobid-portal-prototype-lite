@@ -539,6 +539,7 @@ export type PartnerAssignedExpo = {
 export type PartnerDashboardExpoMetric = {
   expoId: string
   expoName: string
+  thumbnailUrl: string
   status: ExpoStatus
   schedulePrecision: ExpoSchedulePrecision
   scheduleMonth?: number | null
@@ -5742,6 +5743,7 @@ export async function getPartnerDashboardMetrics(
       select distinct
         e.id,
         e.name,
+        e.thumbnail_url,
         e.status,
         e.schedule_precision,
         e.schedule_month,
@@ -5807,6 +5809,7 @@ export async function getPartnerDashboardMetrics(
     select
       a.id,
       a.name,
+      a.thumbnail_url,
       a.status,
       a.schedule_precision,
       a.schedule_month,
@@ -5832,6 +5835,7 @@ export async function getPartnerDashboardMetrics(
   `) as {
     id: string
     name: string
+    thumbnail_url: string
     status: string
     schedule_precision: ExpoSchedulePrecision | null
     schedule_month: number | null
@@ -6053,6 +6057,7 @@ export async function getPartnerDashboardMetrics(
     return {
       expoId: row.id,
       expoName: row.name,
+      thumbnailUrl: row.thumbnail_url,
       status: normalizePartnerExpoStatus(row.status),
       schedulePrecision: row.schedule_precision ?? "unscheduled",
       scheduleMonth: row.schedule_month,

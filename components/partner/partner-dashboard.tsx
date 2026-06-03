@@ -10,6 +10,7 @@ import {
   TrendingUpIcon,
   UsersIcon
 } from "lucide-react"
+import Image from "next/image"
 import Link from "next/link"
 import { type ReactNode, useState } from "react"
 import {
@@ -18,6 +19,12 @@ import {
   CartesianGrid,
   Line,
   LineChart,
+  Pie,
+  PieChart,
+  PolarAngleAxis,
+  PolarGrid,
+  Radar,
+  RadarChart,
   XAxis,
   YAxis
 } from "recharts"
@@ -101,6 +108,21 @@ const rfqTrendConfig = {
   }
 } satisfies ChartConfig
 
+const tradeCreditChartConfig = {
+  used: {
+    label: "Used",
+    color: "var(--chart-1)"
+  },
+  expired: {
+    label: "Expired",
+    color: "var(--chart-3)"
+  },
+  balance: {
+    label: "Balance",
+    color: "var(--chart-5)"
+  }
+} satisfies ChartConfig
+
 function formatPercent(value: number) {
   return `${Math.round(value)}%`
 }
@@ -174,13 +196,13 @@ function MetricWidget({
           </div>
           <CardAction className="text-legend">{icon}</CardAction>
         </CardHeader>
-        <CardContent className="flex items-end gap-2">
+        <CardContent className="flex flex-1 items-end justify-between gap-2">
           <div className="font-semibold text-3xl tabular-nums leading-none tracking-tight">
             {numberFormat.format(value)}
           </div>
           {comparison ? (
             <Badge
-              className={`mb-0.75 rounded-md px-1.5 tabular-nums ${getComparisonToneClass(comparison.tone)}`}
+              className={`px-1.5 tabular-nums ${getComparisonToneClass(comparison.tone)}`}
             >
               {comparison.value}{" "}
               {comparison.tone === "positive" ? (
@@ -333,30 +355,24 @@ function TradeActivitySection({
     "rfqs",
     [0.48, 0.54, 0.65, 0.77, 0.91, 1]
   )
-  const creditRows = [
+  const creditDistribution = [
     {
-      label: "Allocated",
-      value: allocatedCredits,
-      tone: "bg-primary",
-      ratio: 100
-    },
-    {
-      label: "Used",
+      status: "used",
       value: usedCredits,
-      tone: "bg-primary",
-      ratio: formatRatio(usedCredits, allocatedCredits)
+      ratio: formatRatio(usedCredits, allocatedCredits),
+      fill: "var(--color-used)"
     },
     {
-      label: "Expired",
+      status: "expired",
       value: expiredCredits,
-      tone: "bg-muted-foreground/60",
-      ratio: formatRatio(expiredCredits, allocatedCredits)
+      ratio: formatRatio(expiredCredits, allocatedCredits),
+      fill: "var(--color-expired)"
     },
     {
-      label: "Balance",
+      status: "balance",
       value: balanceCredits,
-      tone: "bg-legend",
-      ratio: formatRatio(balanceCredits, allocatedCredits)
+      ratio: formatRatio(balanceCredits, allocatedCredits),
+      fill: "var(--color-balance)"
     }
   ]
 
@@ -368,11 +384,8 @@ function TradeActivitySection({
 
       <div className="grid gap-4 xl:grid-cols-3">
         <Card>
-          <CardHeader>
+          <CardHeader className="border-b">
             <CardTitle>Deal Contexts Trend</CardTitle>
-            <CardDescription>
-              Chat + RFQ + BFM from Partner Site / Expo Entry
-            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -385,7 +398,7 @@ function TradeActivitySection({
               config={dealContextsTrendConfig}
               className="h-56 w-full"
             >
-              <LineChart
+              <BarChart
                 accessibilityLayer
                 data={dealContextsTrend}
                 margin={{ left: 8, right: 16 }}
@@ -398,92 +411,109 @@ function TradeActivitySection({
                   tickMargin={8}
                 />
                 <YAxis tickLine={false} axisLine={false} width={32} />
-                <ChartTooltip content={<ChartTooltipContent />} />
-                <ChartLegend content={<ChartLegendContent />} />
-                <Line
+                <ChartTooltip content={<ChartTooltipContent hideIndicator />} />
+                {/*<ChartLegend content={<ChartLegendContent />} />*/}
+                <Bar
                   dataKey="dealContexts"
-                  type="monotone"
-                  stroke="var(--color-dealContexts)"
-                  strokeWidth={2}
-                  dot={{ r: 3 }}
+                  fill="var(--color-dealContexts)"
+                  radius={[6, 6, 0, 0]}
                 />
-              </LineChart>
+              </BarChart>
             </ChartContainer>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>TradeCredits allocated</CardTitle>
-            <CardDescription>
-              Credit status breakdown by Partner
-            </CardDescription>
+          <CardHeader className="border-b">
+            <CardTitle>TradeCredits Allocated</CardTitle>
           </CardHeader>
           <CardContent className="space-y-5">
             <div>
               <div className="font-semibold text-3xl text-legend tabular-nums tracking-tight">
                 {compactNumber.format(allocatedCredits)}
               </div>
-              <p className="text-muted-foreground text-sm">allocated credits</p>
+              <p className="text-muted-foreground text-sm capitalize">
+                allocated credits
+              </p>
             </div>
-            <div className="space-y-4">
-              {creditRows.map((item) => (
-                <div key={item.label} className="space-y-1.5">
-                  <div className="flex items-center justify-between gap-3 text-sm">
-                    <span className="font-medium">{item.label}</span>
-                    <span className="font-mono text-muted-foreground text-xs tabular-nums">
-                      {numberFormat.format(item.value)} ·{" "}
-                      {formatPercent(item.ratio)}
-                    </span>
-                  </div>
-                  <div className="h-2.5 overflow-hidden rounded-full bg-muted">
-                    <div
-                      className={`h-full rounded-full ${item.tone}`}
-                      style={{ width: `${Math.min(item.ratio, 100)}%` }}
+            <ChartContainer
+              config={tradeCreditChartConfig}
+              className="h-56 w-full"
+            >
+              <PieChart accessibilityLayer>
+                <ChartTooltip
+                  content={
+                    <ChartTooltipContent
+                      hideLabel
+                      nameKey="status"
+                      formatter={(value, name, item) => {
+                        const ratio = item.payload?.ratio
+                        return (
+                          <div className="flex min-w-32 items-center justify-between gap-4">
+                            <span className="text-muted-foreground">
+                              {tradeCreditChartConfig[
+                                name as keyof typeof tradeCreditChartConfig
+                              ]?.label ?? name}
+                            </span>
+                            <span className="font-medium font-mono text-foreground tabular-nums">
+                              {numberFormat.format(Number(value))} ·{" "}
+                              {formatPercent(Number(ratio))}
+                            </span>
+                          </div>
+                        )
+                      }}
                     />
-                  </div>
-                </div>
-              ))}
-            </div>
+                  }
+                />
+                <ChartLegend
+                  content={<ChartLegendContent nameKey="status" />}
+                />
+                <Pie
+                  data={creditDistribution}
+                  dataKey="value"
+                  innerRadius={52}
+                  nameKey="status"
+                  outerRadius={82}
+                  paddingAngle={2}
+                  strokeWidth={2}
+                />
+              </PieChart>
+            </ChartContainer>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
+          <CardHeader className="border-b">
             <CardTitle>RFQ Received</CardTitle>
-            <CardDescription>Partner-member RFQs by month</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
               <div className="font-semibold text-3xl text-legend tabular-nums tracking-tight">
                 {numberFormat.format(rfqTotal)}
               </div>
-              <p className="text-muted-foreground text-sm">received RFQs</p>
+              <p className="text-muted-foreground text-sm capitalize">
+                received RFQs
+              </p>
             </div>
-            <ChartContainer config={rfqTrendConfig} className="h-56 w-full">
-              <LineChart
-                accessibilityLayer
-                data={rfqTrend}
-                margin={{ left: 8, right: 16 }}
-              >
-                <CartesianGrid vertical={false} />
-                <XAxis
-                  dataKey="month"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                />
-                <YAxis tickLine={false} axisLine={false} width={32} />
+
+            <ChartContainer
+              config={rfqTrendConfig}
+              className="h-full max-h-64 w-full"
+            >
+              <RadarChart accessibilityLayer data={rfqTrend}>
                 <ChartTooltip content={<ChartTooltipContent />} />
-                <ChartLegend content={<ChartLegendContent />} />
-                <Line
+                {/*<ChartLegend content={<ChartLegendContent />} />*/}
+                <PolarAngleAxis dataKey="month" tickLine={false} />
+                <PolarGrid />
+                <Radar
                   dataKey="rfqs"
-                  type="monotone"
+                  fill="var(--color-rfqs)"
+                  fillOpacity={0.24}
                   stroke="var(--color-rfqs)"
                   strokeWidth={2}
-                  dot={{ r: 3 }}
+                  dot={{ r: 3, fillOpacity: 1 }}
                 />
-              </LineChart>
+              </RadarChart>
             </ChartContainer>
           </CardContent>
         </Card>
@@ -653,39 +683,55 @@ function ExpoInventorySection({
                 <TableRow>
                   <TableHead>Expo Program</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Total booth</TableHead>
-                  <TableHead className="text-right">Sold</TableHead>
-                  <TableHead className="text-right">Unsold</TableHead>
-                  <TableHead className="text-right">Utilization</TableHead>
+                  <TableHead>Total booth</TableHead>
+                  <TableHead>Sold</TableHead>
+                  <TableHead>Unsold</TableHead>
+                  <TableHead>Utilization</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {inventoryData.map((item) => (
                   <TableRow key={item.expoId}>
-                    <TableCell className="max-w-80 whitespace-normal py-4 font-medium">
-                      <Link
-                        href={`/partner/expo-program/expos/${item.expoId}`}
-                        className="underline-offset-4 hover:underline"
-                      >
-                        {item.expoName}
-                      </Link>
-                      <div className="text-muted-foreground text-xs">
-                        {formatExpoScheduleLabel(item)}
+                    <TableCell className="max-w-96 whitespace-normal py-4 font-medium">
+                      <div className="flex items-center gap-3">
+                        <Link
+                          href={`/partner/expo-program/expos/${item.expoId}`}
+                          className="group block w-24 shrink-0 overflow-hidden rounded-lg border bg-muted"
+                          aria-label={`View ${item.expoName} details`}
+                        >
+                          <Image
+                            src={item.thumbnailUrl}
+                            alt={item.expoName}
+                            width={1600}
+                            height={900}
+                            className="aspect-video w-full object-cover transition-transform group-hover:scale-105"
+                          />
+                        </Link>
+                        <div className="min-w-0">
+                          <Link
+                            href={`/partner/expo-program/expos/${item.expoId}`}
+                          >
+                            {item.expoName}
+                          </Link>
+                          <div className="text-muted-foreground text-xs">
+                            {formatExpoScheduleLabel(item)}
+                          </div>
+                        </div>
                       </div>
                     </TableCell>
                     <TableCell>
                       <ExpoStatusBadge status={item.status} />
                     </TableCell>
-                    <TableCell className="text-right tabular-nums">
+                    <TableCell className="tabular-nums">
                       {numberFormat.format(item.totalBooths)}
                     </TableCell>
-                    <TableCell className="text-right tabular-nums">
+                    <TableCell className="tabular-nums">
                       {numberFormat.format(item.soldBooths)}
                     </TableCell>
-                    <TableCell className="text-right tabular-nums">
+                    <TableCell className="tabular-nums">
                       {numberFormat.format(item.unsoldBooths)}
                     </TableCell>
-                    <TableCell className="text-right font-medium tabular-nums">
+                    <TableCell className="font-medium tabular-nums">
                       {formatPercent(item.boothUtilization)}
                     </TableCell>
                   </TableRow>
