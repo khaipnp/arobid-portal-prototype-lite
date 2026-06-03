@@ -27,7 +27,8 @@ import type {
 } from "@/lib/tradexpo/types"
 import {
   ADMIN_EXPO_FORM_STEPS,
-  PARTNER_EXPO_FORM_STEPS
+  PARTNER_EXPO_FORM_STEPS,
+  PARTNER_EXPO_PACKAGE_FORM_STEPS
 } from "./expo-form/constants"
 import { GeneralStep } from "./expo-form/general-step"
 import { HallsStep } from "./expo-form/halls-step"
@@ -62,9 +63,13 @@ export function ExpoForm(props: ExpoFormProps) {
   const isEdit = props.mode === "edit"
   const editableScope = props.editableScope ?? "admin"
   const isPartnerContentEdit = isEdit && editableScope === "partner-content"
+  const canManagePackages =
+    !isPartnerContentEdit || props.allowPackageEdit === true
   const isSuper = props.isSuper ?? false
   const visibleSteps = isPartnerContentEdit
-    ? PARTNER_EXPO_FORM_STEPS
+    ? canManagePackages
+      ? PARTNER_EXPO_PACKAGE_FORM_STEPS
+      : PARTNER_EXPO_FORM_STEPS
     : ADMIN_EXPO_FORM_STEPS
   const tenantOptions = props.tenantOptions ?? []
   const displayTargetOptionIds = new Set([
@@ -432,7 +437,7 @@ export function ExpoForm(props: ExpoFormProps) {
       return
     }
 
-    const packages = isPartnerContentEdit ? [] : buildExpoPackages()
+    const packages = canManagePackages ? buildExpoPackages() : []
     const packageResult = validateExpoPackageInputs(packages)
     if (!packageResult.ok) {
       setError(packageResult.error)
@@ -654,7 +659,7 @@ export function ExpoForm(props: ExpoFormProps) {
             />
           ) : null}
 
-          {!isPartnerContentEdit && activeStep.id === "packages" ? (
+          {canManagePackages && activeStep.id === "packages" ? (
             <PackagesStep
               packages={expoPackages}
               packageWorkspace={props.packageWorkspace}

@@ -1,0 +1,39 @@
+{
+  "name": "NotificationTrigger",
+  "created_at": "2026-06-03T00:00:00.000Z",
+  "purpose": "Open a right-side notification sheet from dashboard header and legacy notification routes.",
+  "complexity": "compound",
+  "props": [
+    {
+      "name": "sheetTitle",
+      "type": "string",
+      "required": false,
+      "default": "Notifications",
+      "description": "Title rendered in the sheet header."
+    },
+    {
+      "name": "sheetDescription",
+      "type": "string",
+      "required": false,
+      "default": null,
+      "description": "Optional custom sheet description."
+    },
+    {
+      "name": "children",
+      "type": "ReactNode",
+      "required": false,
+      "default": "BellIcon",
+      "description": "Custom trigger content; defaults to icon-only bell trigger."
+    }
+  ],
+  "state_pattern": "local state",
+  "composition": "simple children",
+  "accessibility_level": "keyboard navigation",
+  "styling": "Tailwind CSS with shadcn/ui primitives",
+  "files_created": [
+    "components/notifications/notification-trigger.tsx",
+    "components/notifications/notifications-sheet-entry.tsx"
+  ],
+  "status": "complete",
+  "completed_at": "2026-06-03T00:00:00.000Z"
+}

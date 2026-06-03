@@ -4,8 +4,8 @@ import {
   ApertureIcon,
   ChevronRightIcon,
   FileChartPieIcon,
-  HandshakeIcon,
   LayoutDashboardIcon,
+  MessageCircleIcon,
   NetworkIcon,
   WalletCardsIcon
 } from "lucide-react"
@@ -38,21 +38,6 @@ type PartnerNavItem = {
 
 const siteManagementLinks = {
   navMain: [
-    {
-      name: "Communication",
-      module: "communication",
-      icon: HandshakeIcon,
-      items: [
-        {
-          name: "Notifications",
-          url: "/partner/communication/notifications"
-        },
-        {
-          name: "Deal Room",
-          url: "/partner/communication/deal-room"
-        }
-      ]
-    },
     {
       name: "Partner Site Management",
       module: "site_settings",
@@ -130,6 +115,8 @@ const siteManagementLinks = {
   ]
 }
 
+const DEAL_ROOM_HREF = "/partner/communication/deal-room"
+
 const activityLinks = [
   {
     name: "TradeCredit Wallet",
@@ -160,6 +147,7 @@ export function NavPartner({ access }: { access?: PartnerAccess }) {
   const visibleActivityLinks = filterVisibleLinks(activityLinks, access)
   const activeLinks = [
     ...(showDashboard ? [{ url: "/partner" }] : []),
+    { url: DEAL_ROOM_HREF },
     { url: "/partner/notifications" },
     ...siteManagementLinks.navMain.flatMap((item) => item.items ?? []),
     ...visibleActivityLinks
@@ -193,6 +181,27 @@ export function NavPartner({ access }: { access?: PartnerAccess }) {
             </SidebarMenuButton>
           </SidebarMenuItem>
         ) : null}
+      </SidebarMenu>
+      {/* Deal Room */}
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            asChild
+            isActive={isActiveHref(pathname, DEAL_ROOM_HREF, activeHref)}
+          >
+            <Link
+              href={DEAL_ROOM_HREF}
+              aria-current={
+                isActiveHref(pathname, DEAL_ROOM_HREF, activeHref)
+                  ? "page"
+                  : undefined
+              }
+            >
+              <MessageCircleIcon />
+              <span>Deal Room</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
       </SidebarMenu>
       <SidebarMenu>
         {siteManagementLinks.navMain.map((item) => (

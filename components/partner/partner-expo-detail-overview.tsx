@@ -25,8 +25,10 @@ import type {
   PartnerExpoExhibitorsWorkspace,
   PartnerExpoOperationsDetail
 } from "@/lib/partner/db"
+import type { ExpoPackageDisplay } from "@/lib/tradexpo/types"
 import { ExpoStatusBadge } from "../tradexpo/status-badge"
 import { PartnerExpoExhibitorsOverviewCard } from "./partner-expo-exhibitors-overview-card"
+import { PartnerExpoPackageOverviewCard } from "./partner-expo-package-overview-card"
 
 const numberFormat = new Intl.NumberFormat("en")
 
@@ -145,11 +147,13 @@ export function PartnerExpoDetailOverview({
   assignedExpo,
   operations,
   exhibitorsWorkspace,
+  packages,
   onViewAllExhibitors
 }: {
   assignedExpo: PartnerAssignedExpo
   operations: PartnerExpoOperationsDetail
   exhibitorsWorkspace: PartnerExpoExhibitorsWorkspace
+  packages: ExpoPackageDisplay[]
   onViewAllExhibitors?: () => void
 }) {
   const { expo, assignment, goLiveCount } = assignedExpo
@@ -169,14 +173,14 @@ export function PartnerExpoDetailOverview({
   return (
     <div className="space-y-4">
       <div className="overflow-hidden rounded-3xl border bg-card">
-        <div className="grid min-h-75 lg:grid-cols-2">
+        <div className="grid lg:grid-cols-2">
           <div className="relative min-h-65 overflow-hidden bg-muted">
             <Image
               src={expo.thumbnailUrl}
               alt={expo.name}
-              fill
-              className="object-cover"
-              sizes="(min-width: 1280px) 48vw, 100vw"
+              className="aspect-video object-cover"
+              width="1600"
+              height="900"
               priority
             />
             <div className="absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-black/45 to-transparent" />
@@ -191,13 +195,13 @@ export function PartnerExpoDetailOverview({
             </div>
           </div>
 
-          <div className="flex flex-col justify-between gap-6 p-5">
+          <div className="flex flex-1 flex-col justify-between gap-6 p-5">
             <div className="space-y-4">
               <div className="space-y-2">
                 <div className="flex flex-wrap items-center gap-2 text-muted-foreground text-xs">
                   <span>{expo.timezone ?? "Asia/Bangkok"}</span>
                 </div>
-                <h2 className="font-semibold text-2xl leading-tight">
+                <h2 className="font-semibold text-xl leading-tight">
                   {expo.name}
                 </h2>
                 {expo.description ? (
@@ -295,8 +299,14 @@ export function PartnerExpoDetailOverview({
         />
       </section>
 
-      <section className="flex gap-4">
-        <Card className="w-1/2">
+      <PartnerExpoPackageOverviewCard
+        packages={packages}
+        canEdit={canEditDraft}
+        editHref={`/partner/expos/${expo.id}/edit`}
+      />
+
+      <section className="grid gap-4 xl:grid-cols-2">
+        <Card>
           <CardHeader>
             <CardTitle>Booth Tier</CardTitle>
             <CardDescription>

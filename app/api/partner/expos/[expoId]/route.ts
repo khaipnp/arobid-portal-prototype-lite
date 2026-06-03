@@ -3,6 +3,7 @@ import { getCurrentUserIdFromRequest } from "@/lib/auth/rbac"
 import { requirePartnerAction } from "@/lib/partner/access"
 import { getPartnerAssignedExpo } from "@/lib/partner/db"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
+import { saveExpoPackageDisplays } from "@/lib/tradexpo/db/expo-package-displays"
 import {
   listExpoHalls,
   submitPartnerExpoMarketingContent,
@@ -10,6 +11,7 @@ import {
 } from "@/lib/tradexpo/db/platform-data"
 import { validateHallBlocks } from "@/lib/tradexpo/expo-create-validation"
 import { validateExpoMarketingContent } from "@/lib/tradexpo/expo-marketing-content"
+import { validateExpoPackageInputs } from "@/lib/tradexpo/expo-package-displays"
 
 interface Props {
   params: Promise<{ expoId: string }>
@@ -55,6 +57,7 @@ export async function PUT(request: Request, { params }: Props) {
     thumbnailUrl?: string
     categoryIds?: string[]
     marketingContent?: unknown
+    packages?: unknown
   }
 
   const name = body.name?.trim() ?? ""
@@ -99,6 +102,14 @@ export async function PUT(request: Request, { params }: Props) {
     return NextResponse.json({ error: marketingResult.error }, { status: 400 })
   }
 
+  const packageResult =
+    body.packages === undefined
+      ? null
+      : validateExpoPackageInputs(body.packages)
+  if (packageResult && !packageResult.ok) {
+    return NextResponse.json({ error: packageResult.error }, { status: 400 })
+  }
+
   try {
     await updateExpoWithHalls(expoId, {
       name,
@@ -116,7 +127,16 @@ export async function PUT(request: Request, { params }: Props) {
       ownerEmail: expo.ownerEmail,
       tenantPartnerOrgId: expo.tenantPartnerOrgId,
       displayTargetIds: expo.displayTargetIds,
-      halls
+      halls,
+      afterWrite: async (savedExpoId) => {
+        if (packageResult?.ok) {
+          await saveExpoPackageDisplays(
+            savedExpoId,
+            packageResult.packages,
+            userId
+          )
+        }
+      }
     })
     const marketingVersion = await submitPartnerExpoMarketingContent(
       expoId,

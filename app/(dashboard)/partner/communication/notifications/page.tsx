@@ -1,4 +1,4 @@
-import { NotificationsPageContent } from "@/components/notifications/notifications-page-content"
+import { NotificationsSheetEntry } from "@/components/notifications/notifications-sheet-entry"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 
 export default function PartnerNotificationsPage() {
@@ -7,7 +7,7 @@ export default function PartnerNotificationsPage() {
       title="Notifications"
       breadcrumbs={[{ label: "Communication" }, { label: "Notifications" }]}
     >
-      <NotificationsPageContent />
+      <NotificationsSheetEntry />
     </DashboardShell>
   )
 }

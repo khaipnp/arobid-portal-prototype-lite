@@ -8,18 +8,11 @@ import {
   getPartnerExpoOperationsDetail
 } from "@/lib/partner/db"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
+import { listExpoPackageDisplays } from "@/lib/tradexpo/db/expo-package-displays"
 import {
   listGoLIVEEvents,
   listStreamSessions
 } from "@/lib/tradexpo/db/platform-data"
-
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric"
-  })
-}
 
 export const dynamic = "force-dynamic"
 
@@ -38,11 +31,13 @@ export default async function PartnerExpoDetailPage({
   const [
     operations,
     exhibitorsWorkspace,
+    packages,
     initialGoLIVEEvents,
     initialStreamSessions
   ] = await Promise.all([
     getPartnerExpoOperationsDetail(userId, expoId),
     getPartnerExpoExhibitors(userId, expoId),
+    listExpoPackageDisplays(expoId),
     listGoLIVEEvents(),
     listStreamSessions()
   ])
@@ -64,6 +59,7 @@ export default async function PartnerExpoDetailPage({
         assignedExpo={assignedExpo}
         operations={operations}
         exhibitorsWorkspace={exhibitorsWorkspace}
+        packages={packages}
         initialGoLIVEEvents={initialGoLIVEEvents}
         initialStreamSessions={initialStreamSessions}
       />

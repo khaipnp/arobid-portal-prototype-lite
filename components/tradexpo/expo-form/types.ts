@@ -85,6 +85,7 @@ export type ExpoFormProps = {
   successHref?: string
   submitEndpoint?: string
   editableScope?: "admin" | "partner-content"
+  allowPackageEdit?: boolean
   isSuper?: boolean
   initialMarketingContent?: ExpoMarketingContent
 } & (

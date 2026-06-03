@@ -8,7 +8,11 @@ import type {
   PartnerExpoExhibitorsWorkspace,
   PartnerExpoOperationsDetail
 } from "@/lib/partner/db"
-import type { GoLIVEEvent, StreamSession } from "@/lib/tradexpo/types"
+import type {
+  ExpoPackageDisplay,
+  GoLIVEEvent,
+  StreamSession
+} from "@/lib/tradexpo/types"
 import { PartnerExpoDetailOverview } from "./partner-expo-detail-overview"
 import { PartnerExpoExhibitorsTable } from "./partner-expo-exhibitors-table"
 
@@ -17,6 +21,7 @@ export function PartnerExpoDetailTabs({
   assignedExpo,
   operations,
   exhibitorsWorkspace,
+  packages,
   initialGoLIVEEvents,
   initialStreamSessions
 }: {
@@ -24,6 +29,7 @@ export function PartnerExpoDetailTabs({
   assignedExpo: PartnerAssignedExpo
   operations: PartnerExpoOperationsDetail
   exhibitorsWorkspace: PartnerExpoExhibitorsWorkspace
+  packages: ExpoPackageDisplay[]
   initialGoLIVEEvents: GoLIVEEvent[]
   initialStreamSessions: StreamSession[]
 }) {
@@ -44,6 +50,7 @@ export function PartnerExpoDetailTabs({
           assignedExpo={assignedExpo}
           operations={operations}
           exhibitorsWorkspace={exhibitorsWorkspace}
+          packages={packages}
           onViewAllExhibitors={() => setTab("exhibitors")}
         />
       </TabsContent>
