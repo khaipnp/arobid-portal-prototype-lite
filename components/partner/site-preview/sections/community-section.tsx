@@ -1,7 +1,8 @@
 import { ArrowUpRightIcon } from "lucide-react"
+import Image from "next/image"
 import { communityStats, featureNames } from "../constants"
 
-export function CommunitySection() {
+export function CommunitySection({ media = [] }: { media?: string[] }) {
   return (
     <section className="bg-slate-50 px-6 py-14">
       <div className="mx-auto max-w-6xl space-y-10">
@@ -31,30 +32,43 @@ export function CommunitySection() {
           ))}
         </div>
         <div className="grid gap-5 lg:grid-cols-3">
-          {featureNames.map(([title, text], index) => (
-            <div
-              className="group flex min-h-32 items-end justify-between rounded-3xl bg-white p-6 shadow-sm"
-              key={title}
-            >
-              <div>
-                <h3 className="font-semibold text-slate-950 text-xl">
-                  {title}
-                </h3>
-                <p className="text-slate-500 text-sm">{text}</p>
-              </div>
+          {featureNames.map(([title, text], index) => {
+            const imageUrl = media[index]
+
+            return (
               <div
-                className="flex size-10 items-center justify-center rounded-full text-white"
-                style={{
-                  backgroundColor:
-                    index % 2 === 0
-                      ? "var(--site-primary)"
-                      : "var(--site-accent)"
-                }}
+                className="group relative flex min-h-40 items-end justify-between overflow-hidden rounded-3xl bg-white p-6 shadow-sm"
+                key={title}
               >
-                <ArrowUpRightIcon className="size-4" />
+                {imageUrl ? (
+                  <Image
+                    alt=""
+                    className="object-cover opacity-20 transition-opacity group-hover:opacity-30"
+                    fill
+                    sizes="384px"
+                    src={imageUrl}
+                  />
+                ) : null}
+                <div className="relative">
+                  <h3 className="font-semibold text-slate-950 text-xl">
+                    {title}
+                  </h3>
+                  <p className="text-slate-500 text-sm">{text}</p>
+                </div>
+                <div
+                  className="relative flex size-10 items-center justify-center rounded-full text-white"
+                  style={{
+                    backgroundColor:
+                      index % 2 === 0
+                        ? "var(--site-primary)"
+                        : "var(--site-accent)"
+                  }}
+                >
+                  <ArrowUpRightIcon className="size-4" />
+                </div>
               </div>
-            </div>
-          ))}
+            )
+          })}
         </div>
       </div>
     </section>

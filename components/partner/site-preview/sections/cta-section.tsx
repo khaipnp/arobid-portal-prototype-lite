@@ -8,10 +8,28 @@ const ctaLabels: Record<CtaOption, string> = {
   contact_arobid: "Contact Arobid"
 }
 
-export function CtaSection({ branding }: { branding: SiteBranding }) {
+export function CtaSection({
+  branding,
+  media = []
+}: {
+  branding: SiteBranding
+  media?: string[]
+}) {
+  const imageUrl = media[0]
+
   return (
-    <section className="bg-slate-950 px-6 py-16 text-white">
-      <div className="mx-auto max-w-4xl space-y-6 text-center">
+    <section className="relative overflow-hidden bg-slate-950 px-6 py-16 text-white">
+      {imageUrl ? (
+        <Image
+          alt=""
+          className="object-cover opacity-25"
+          fill
+          sizes="1152px"
+          src={imageUrl}
+        />
+      ) : null}
+      <div className="absolute inset-0 bg-slate-950/60" />
+      <div className="relative mx-auto max-w-4xl space-y-6 text-center">
         {branding.logoUrl ? (
           <Image
             alt={`${branding.tenantName} logo`}

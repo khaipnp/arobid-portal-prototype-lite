@@ -1,7 +1,15 @@
 import Image from "next/image"
 import type { SiteBranding } from "../types"
 
-export function BannerSection({ branding }: { branding: SiteBranding }) {
+export function BannerSection({
+  branding,
+  media = []
+}: {
+  branding: SiteBranding
+  media?: string[]
+}) {
+  const bannerImage = media[0] || branding.bannerUrl
+
   return (
     <section className="relative overflow-hidden bg-slate-950 px-6 py-20 text-white">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(249,115,22,0.28),transparent_32%),radial-gradient(circle_at_80%_10%,rgba(37,99,235,0.26),transparent_30%)]" />
@@ -39,12 +47,13 @@ export function BannerSection({ branding }: { branding: SiteBranding }) {
         </div>
         <div className="rounded-[2rem] border border-white/10 bg-white/10 p-5 shadow-2xl backdrop-blur">
           <div className="relative aspect-[4/3] overflow-hidden rounded-[1.5rem] bg-[linear-gradient(135deg,rgba(255,255,255,0.9),rgba(255,255,255,0.2)),radial-gradient(circle_at_70%_30%,rgba(249,115,22,0.55),transparent_35%)]">
-            {branding.bannerUrl ? (
+            {bannerImage ? (
               <Image
                 alt={`${branding.tenantName} banner`}
                 className="object-cover"
                 fill
-                src={branding.bannerUrl}
+                sizes="420px"
+                src={bannerImage}
               />
             ) : null}
           </div>

@@ -7,30 +7,48 @@ import { Label } from "@/components/ui/label"
 import { NativeSelect } from "@/components/ui/native-select"
 import { Switch } from "@/components/ui/switch"
 import { Textarea } from "@/components/ui/textarea"
-import { sectionOptions } from "./constants"
-import type { EnabledSiteSections, SiteBranding, SiteSectionKey } from "./types"
+import { mediaSlotOptions, sectionOptions } from "./constants"
+import type {
+  EnabledSiteSections,
+  SiteBranding,
+  SiteMediaKey,
+  SiteSectionKey,
+  SiteSectionMedia
+} from "./types"
 
 export function SitePreviewControls({
   branding,
   isReadOnly,
   isUploadingLogo,
+  isUploadingMedia,
+  sectionMedia,
   sections,
   onBrandingChange,
   onRemoveLogo,
+  onSectionMediaChange,
   onSectionToggle,
-  onUploadLogo
+  onUploadLogo,
+  onUploadSectionMedia
 }: {
   branding: SiteBranding
   isReadOnly: boolean
   isUploadingLogo: boolean
+  isUploadingMedia: boolean
+  sectionMedia: SiteSectionMedia
   sections: EnabledSiteSections
   onBrandingChange: <Key extends keyof SiteBranding>(
     key: Key,
     value: SiteBranding[Key]
   ) => void
   onRemoveLogo: () => void
+  onSectionMediaChange: (
+    key: SiteMediaKey,
+    index: number,
+    value: string
+  ) => void
   onSectionToggle: (key: SiteSectionKey) => void
   onUploadLogo: (file: File) => void
+  onUploadSectionMedia: (key: SiteMediaKey, index: number, file: File) => void
 }) {
   return (
     <div className="space-y-4">
@@ -194,6 +212,42 @@ export function SitePreviewControls({
           })}
         </CardContent>
       </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Section media</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {mediaSlotOptions.map((section) => (
+            <div className="space-y-3" key={section.key}>
+              <div>
+                <h3 className="font-medium">{section.title}</h3>
+                <p className="text-muted-foreground text-sm">
+                  {section.description}
+                </p>
+              </div>
+              <div className="grid gap-3 lg:grid-cols-2">
+                {section.slots.map((slot, index) => (
+                  <MediaSlotField
+                    key={`${section.key}-${slot}`}
+                    inputId={`section-media-${section.key}-${index}`}
+                    isReadOnly={isReadOnly}
+                    isUploading={isUploadingMedia}
+                    label={slot}
+                    value={sectionMedia[section.key]?.[index] ?? ""}
+                    onChange={(value) =>
+                      onSectionMediaChange(section.key, index, value)
+                    }
+                    onUpload={(file) =>
+                      onUploadSectionMedia(section.key, index, file)
+                    }
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
     </div>
   )
 }
@@ -269,6 +323,93 @@ function LogoUploadField({
               Remove
             </Button>
           ) : null}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function MediaSlotField({
+  inputId,
+  isReadOnly,
+  isUploading,
+  label,
+  value,
+  onChange,
+  onUpload
+}: {
+  inputId: string
+  isReadOnly: boolean
+  isUploading: boolean
+  label: string
+  value: string
+  onChange: (value: string) => void
+  onUpload: (file: File) => void
+}) {
+  return (
+    <div className="space-y-2 rounded-lg border p-3">
+      <Label htmlFor={`${inputId}-url`}>{label}</Label>
+      <div className="flex gap-3">
+        <div className="relative flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border bg-muted">
+          {value ? (
+            <Image
+              alt=""
+              className="object-cover"
+              fill
+              sizes="80px"
+              src={value}
+            />
+          ) : (
+            <ImageIcon className="size-6 text-muted-foreground" />
+          )}
+        </div>
+        <div className="min-w-0 flex-1 space-y-2">
+          <Input
+            disabled={isReadOnly}
+            id={`${inputId}-url`}
+            placeholder="https://..."
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+          />
+          <div className="flex flex-wrap gap-2">
+            <Button
+              asChild
+              disabled={isReadOnly || isUploading}
+              size="sm"
+              variant="outline"
+            >
+              <Label className="cursor-pointer" htmlFor={inputId}>
+                {isUploading ? (
+                  <Loader2Icon className="size-4 animate-spin" />
+                ) : (
+                  <ImageIcon className="size-4" />
+                )}
+                {isUploading ? "Uploading" : "Upload"}
+                <Input
+                  accept="image/*"
+                  className="hidden"
+                  disabled={isReadOnly || isUploading}
+                  id={inputId}
+                  type="file"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0]
+                    if (file) onUpload(file)
+                    event.currentTarget.value = ""
+                  }}
+                />
+              </Label>
+            </Button>
+            {value ? (
+              <Button
+                disabled={isReadOnly || isUploading}
+                size="sm"
+                variant="ghost"
+                onClick={() => onChange("")}
+              >
+                Remove
+              </Button>
+            ) : null}
+          </div>
         </div>
       </div>
     </div>

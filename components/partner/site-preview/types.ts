@@ -34,7 +34,23 @@ export type SiteSectionKey =
   | "partners"
   | "cta"
 
+export type SiteMediaKey =
+  | "banner"
+  | "community"
+  | "categories"
+  | "bfm"
+  | "featuredSuppliers"
+  | "deals"
+  | "hotProducts"
+  | "expoCarousel"
+  | "newProducts"
+  | "recommendedSuppliers"
+  | "promo"
+  | "featureCards"
+  | "cta"
+
 export type EnabledSiteSections = Record<SiteSectionKey, boolean>
+export type SiteSectionMedia = Record<SiteMediaKey, string[]>
 
 export type TenantRelationType = "partner" | "sponsor"
 
@@ -54,4 +70,11 @@ export type SectionOption = {
   key: SiteSectionKey
   title: string
   description: string
+}
+
+export type MediaSlotOption = {
+  key: SiteMediaKey
+  title: string
+  description: string
+  slots: string[]
 }

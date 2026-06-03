@@ -1,9 +1,11 @@
 import type {
   AlwaysVisibleSiteSectionKey,
   EnabledSiteSections,
+  MediaSlotOption,
   RelationForm,
   SectionOption,
   SiteBranding,
+  SiteSectionMedia,
   TenantRelation
 } from "./types"
 
@@ -42,6 +44,22 @@ export const initialSections: EnabledSiteSections = {
   featureCards: true,
   partners: true,
   cta: true
+}
+
+export const initialSectionMedia: SiteSectionMedia = {
+  banner: [""],
+  community: ["", "", ""],
+  categories: ["", "", "", "", "", "", "", ""],
+  bfm: [""],
+  featuredSuppliers: ["", "", ""],
+  deals: ["", "", "", "", ""],
+  hotProducts: ["", "", "", "", ""],
+  expoCarousel: [""],
+  newProducts: ["", "", "", "", ""],
+  recommendedSuppliers: ["", "", ""],
+  promo: ["", "", ""],
+  featureCards: ["", "", ""],
+  cta: [""]
 }
 
 export const sectionOptions: SectionOption[] = [
@@ -104,6 +122,96 @@ export const sectionOptions: SectionOption[] = [
     key: "cta",
     title: "CTA",
     description: "Show final growth call-to-action."
+  }
+]
+
+export const mediaSlotOptions: MediaSlotOption[] = [
+  {
+    key: "banner",
+    title: "Banner hero media",
+    description: "Main visual used in the top hero banner.",
+    slots: ["Hero visual"]
+  },
+  {
+    key: "community",
+    title: "Community feature media",
+    description: "Images for the community/value feature cards.",
+    slots: ["Feature 1", "Feature 2", "Feature 3"]
+  },
+  {
+    key: "categories",
+    title: "Category media",
+    description: "Images for category shortcut tiles.",
+    slots: [
+      "Category 1",
+      "Category 2",
+      "Category 3",
+      "Category 4",
+      "Category 5",
+      "Category 6",
+      "Category 7",
+      "Category 8"
+    ]
+  },
+  {
+    key: "bfm",
+    title: "Buyer Find & Match media",
+    description: "Visual for the Buyer Find & Match content block.",
+    slots: ["Section visual"]
+  },
+  {
+    key: "featuredSuppliers",
+    title: "Featured supplier media",
+    description: "Images for highlighted supplier cards.",
+    slots: ["Supplier 1", "Supplier 2", "Supplier 3"]
+  },
+  {
+    key: "deals",
+    title: "Deal media",
+    description: "Background images for eVoucher deal cards.",
+    slots: ["Top deal", "Deal 2", "Deal 3", "Deal 4", "Deal 5"]
+  },
+  {
+    key: "hotProducts",
+    title: "Hot product media",
+    description: "Product images for the Hot Products section.",
+    slots: ["Product 1", "Product 2", "Product 3", "Product 4", "Product 5"]
+  },
+  {
+    key: "expoCarousel",
+    title: "Expo carousel media",
+    description: "Background visual for the expo carousel banner.",
+    slots: ["Carousel visual"]
+  },
+  {
+    key: "newProducts",
+    title: "New product media",
+    description: "Product images for the New Products section.",
+    slots: ["Product 1", "Product 2", "Product 3", "Product 4", "Product 5"]
+  },
+  {
+    key: "recommendedSuppliers",
+    title: "Recommended supplier media",
+    description: "Images for recommended supplier cards.",
+    slots: ["Supplier 1", "Supplier 2", "Supplier 3"]
+  },
+  {
+    key: "promo",
+    title: "Promo media",
+    description: "Images for the large promo cards.",
+    slots: ["Promo 1", "Promo 2", "Promo 3"]
+  },
+  {
+    key: "featureCards",
+    title: "Feature card media",
+    description: "Images for the three compact feature cards.",
+    slots: ["Feature 1", "Feature 2", "Feature 3"]
+  },
+  {
+    key: "cta",
+    title: "CTA background media",
+    description: "Optional background visual for the final call-to-action.",
+    slots: ["CTA background"]
   }
 ]
 

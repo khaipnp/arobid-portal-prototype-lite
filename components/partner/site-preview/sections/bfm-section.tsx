@@ -1,4 +1,8 @@
-export function BfmSection() {
+import Image from "next/image"
+
+export function BfmSection({ media = [] }: { media?: string[] }) {
+  const imageUrl = media[0]
+
   return (
     <section className="bg-white px-6 py-16">
       <div className="mx-auto grid max-w-6xl gap-10 lg:grid-cols-2 lg:items-center">
@@ -24,7 +28,17 @@ export function BfmSection() {
           </button>
         </div>
         <div className="rounded-[2rem] bg-slate-100 p-4">
-          <div className="aspect-[16/9] rounded-[1.5rem] bg-[radial-gradient(circle_at_30%_30%,rgba(37,99,235,0.24),transparent_32%),linear-gradient(135deg,#f8fafc,#e2e8f0)]" />
+          <div className="relative aspect-[16/9] overflow-hidden rounded-[1.5rem] bg-[radial-gradient(circle_at_30%_30%,rgba(37,99,235,0.24),transparent_32%),linear-gradient(135deg,#f8fafc,#e2e8f0)]">
+            {imageUrl ? (
+              <Image
+                alt=""
+                className="object-cover"
+                fill
+                sizes="576px"
+                src={imageUrl}
+              />
+            ) : null}
+          </div>
         </div>
       </div>
     </section>
