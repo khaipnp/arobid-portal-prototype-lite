@@ -498,7 +498,7 @@ export function GoLIVEManager({
         <DialogContent className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>
-              {editingEvent ? "Edit GoLIVE Event" : "Create GoLIVE Event"}
+              {editingEvent ? "Edit Event" : "Create Event"}
             </DialogTitle>
             <DialogDescription>
               {editingEvent
@@ -524,7 +524,7 @@ export function GoLIVEManager({
               {errors.title && (
                 <p className="text-destructive text-xs">{errors.title}</p>
               )}
-              <p className="text-right text-[11px] text-muted-foreground">
+              <p className="text-right text-muted-foreground text-xs">
                 {form.title.length}/256
               </p>
             </div>

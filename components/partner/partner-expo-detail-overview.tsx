@@ -9,7 +9,6 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -25,7 +24,6 @@ import type {
   PartnerExpoExhibitorsWorkspace,
   PartnerExpoOperationsDetail
 } from "@/lib/partner/db"
-import { ExpoStatusBadge } from "../tradexpo/status-badge"
 import { PartnerExpoExhibitorsOverviewCard } from "./partner-expo-exhibitors-overview-card"
 
 const numberFormat = new Intl.NumberFormat("en")
@@ -43,12 +41,18 @@ const _partnerModelLabel: Record<string, string> = {
   tenant: "Tenant"
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric"
-  })
+const dateTimeFormat = new Intl.DateTimeFormat("en-GB", {
+  dateStyle: "medium",
+  timeStyle: "short"
+})
+
+function formatDateTime(iso?: string | null) {
+  if (!iso) return "TBA"
+
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return "TBA"
+
+  return dateTimeFormat.format(date)
 }
 
 function getTimelineLabel(startDate: string, endDate: string) {
@@ -78,7 +82,7 @@ function getDaysLabel(startDate: string, endDate: string) {
 }
 
 function publicExpoHref(slug?: string) {
-  return slug ? `/expos/${slug}` : null
+  return slug ? `tradexpo/expos/${slug}` : null
 }
 
 function MetricCard({
@@ -148,7 +152,7 @@ export function PartnerExpoDetailOverview({
   exhibitorsWorkspace: PartnerExpoExhibitorsWorkspace
   onViewAllExhibitors?: () => void
 }) {
-  const { expo, assignment, goLiveCount } = assignedExpo
+  const { expo, assignment } = assignedExpo
   const publicHref = publicExpoHref(expo.slug)
   const isTurnkey = assignment.partnershipModel === "turnkey"
   const canEditDraft =
@@ -159,61 +163,78 @@ export function PartnerExpoDetailOverview({
     expo.startDate ?? "",
     expo.endDate ?? ""
   )
+  const canViewPublicExpo =
+    timelineLabel === "Upcoming" || expo.status === "Live"
   const daysLabel = getDaysLabel(expo.startDate ?? "", expo.endDate ?? "")
   const summary = operations.summary
 
   return (
     <div className="space-y-4">
-      <div className="overflow-hidden rounded-3xl border bg-card">
+      <div className="overflow-hidden rounded-4xl border">
         <div className="grid lg:grid-cols-2">
-          <div className="relative min-h-65 overflow-hidden bg-muted">
-            <Image
-              src={expo.thumbnailUrl}
-              alt={expo.name}
-              className="aspect-video object-cover"
-              width="1600"
-              height="900"
-              priority
-            />
-            <div className="absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-black/45 to-transparent" />
-            <div className="absolute top-3 left-3 flex flex-wrap gap-2">
-              <ExpoStatusBadge status={expo.status} />
-              <Badge
-                variant="outline"
-                className="border-white/30 bg-black/35 text-white"
-              >
-                {timelineLabel}
-              </Badge>
-            </div>
-          </div>
+          <Image
+            src={expo.thumbnailUrl}
+            alt={expo.name}
+            className="aspect-video max-h-72 object-cover"
+            width="1600"
+            height="900"
+            priority
+          />
 
           <div className="flex flex-1 flex-col justify-between gap-6 p-5">
             <div className="space-y-4">
               <div className="space-y-2">
-                <div className="flex flex-wrap items-center gap-2 text-muted-foreground text-xs">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-muted-foreground text-xs">
                   <span>{expo.timezone ?? "Asia/Bangkok"}</span>
+                  <div className="flex flex-wrap gap-2">
+                    {publicHref && canViewPublicExpo ? (
+                      <Button asChild size="sm" variant="link">
+                        <Link
+                          href={publicHref}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="rounded-full"
+                        >
+                          <ExternalLinkIcon className="size-3" />
+                          View Expo
+                        </Link>
+                      </Button>
+                    ) : null}
+                    {canEditDraft ? (
+                      <Button asChild size="sm" variant="outline">
+                        <Link href={`/partner/expos/${expo.id}/edit`}>
+                          <Edit3Icon />
+                          Edit draft
+                        </Link>
+                      </Button>
+                    ) : null}
+                  </div>
                 </div>
-                <h2 className="font-semibold text-xl leading-tight">
+                <h2 className="font-semibold text-lg leading-tight">
                   {expo.name}
                 </h2>
                 {expo.description ? (
-                  <p className="line-clamp-3 text-muted-foreground text-sm">
+                  <p className="line-clamp-4 text-muted-foreground text-sm">
                     {expo.description}
                   </p>
                 ) : null}
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-3">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <p className="text-muted-foreground text-xs">Status</p>
+                  <p className="font-medium text-sm">{expo.status}</p>
+                </div>
                 <div>
                   <p className="text-muted-foreground text-xs">Start</p>
                   <p className="font-medium text-sm">
-                    {formatDate(expo.startDate ?? "")}
+                    {formatDateTime(expo.startAt ?? expo.startDate)}
                   </p>
                 </div>
                 <div>
                   <p className="text-muted-foreground text-xs">End</p>
                   <p className="font-medium text-sm">
-                    {formatDate(expo.endDate ?? "")}
+                    {formatDateTime(expo.endAt ?? expo.endDate)}
                   </p>
                 </div>
                 <div>
@@ -221,12 +242,6 @@ export function PartnerExpoDetailOverview({
                   <p className="font-medium text-sm">{daysLabel}</p>
                 </div>
               </div>
-            </div>
-            <div>
-              <p className="text-muted-foreground text-xs">GoLIVE</p>
-              <p className="font-medium">
-                {numberFormat.format(goLiveCount)} sessions
-              </p>
             </div>
             {isTurnkey ? (
               <div className="flex items-start gap-2 rounded-2xl border border-blue-200 bg-blue-50 p-3 text-blue-900 text-sm">
@@ -240,30 +255,6 @@ export function PartnerExpoDetailOverview({
                 </div>
               </div>
             ) : null}
-
-            <div className="flex flex-wrap gap-2">
-              {publicHref ? (
-                <Button asChild size="sm">
-                  <Link
-                    href={publicHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="rounded-full"
-                  >
-                    <ExternalLinkIcon />
-                    View Expo
-                  </Link>
-                </Button>
-              ) : null}
-              {canEditDraft ? (
-                <Button asChild size="sm" variant="outline">
-                  <Link href={`/partner/expos/${expo.id}/edit`}>
-                    <Edit3Icon />
-                    Edit draft
-                  </Link>
-                </Button>
-              ) : null}
-            </div>
           </div>
         </div>
       </div>
