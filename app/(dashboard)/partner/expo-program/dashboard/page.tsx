@@ -127,9 +127,9 @@ export default async function PartnerExpoProgramDashboardPage() {
               <TableRow>
                 <TableHead>Expo Name</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-right">Booth Count</TableHead>
-                <TableHead className="text-right">Sold Booths</TableHead>
-                <TableHead className="text-right">Start Date</TableHead>
+                <TableHead>Booth Count</TableHead>
+                <TableHead>Sold Booths</TableHead>
+                <TableHead>Start Date</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -146,15 +146,13 @@ export default async function PartnerExpoProgramDashboardPage() {
                   <TableCell>
                     <ExpoStatusBadge status={expo.status} />
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
+                  <TableCell className="tabular-nums">
                     {numberFormat.format(totalBooths)}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
+                  <TableCell className="tabular-nums">
                     {numberFormat.format(soldBooths)}
                   </TableCell>
-                  <TableCell className="text-right">
-                    {formatDate(expo.startDate)}
-                  </TableCell>
+                  <TableCell>{formatDate(expo.startDate)}</TableCell>
                 </TableRow>
               ))}
               {assignedExpos.length === 0 ? (
@@ -187,12 +185,12 @@ function MetricCard({
   icon: ReactNode
 }) {
   return (
-    <Card>
-      <CardHeader>
+    <Card size="sm">
+      <CardHeader className="font-semibold">
         {title}
         <CardAction className="text-legend">{icon}</CardAction>
       </CardHeader>
-      <CardContent className="font-semibold text-3xl">{value}</CardContent>
+      <CardContent className="font-semibold text-2xl">{value}</CardContent>
     </Card>
   )
 }

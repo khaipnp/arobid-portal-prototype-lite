@@ -74,7 +74,7 @@ export function TenantLandingPage({
   }
 
   return (
-    <main className="min-h-screen bg-white text-[#030712] [font-family:var(--font-tight)]">
+    <main className="min-h-screen [font-family:var(--font-tight)]">
       <TenantHeader />
       <TenantHero />
       <CommunitySection />
