@@ -25,10 +25,8 @@ import type {
   PartnerExpoExhibitorsWorkspace,
   PartnerExpoOperationsDetail
 } from "@/lib/partner/db"
-import type { ExpoPackageDisplay } from "@/lib/tradexpo/types"
 import { ExpoStatusBadge } from "../tradexpo/status-badge"
 import { PartnerExpoExhibitorsOverviewCard } from "./partner-expo-exhibitors-overview-card"
-import { PartnerExpoPackageOverviewCard } from "./partner-expo-package-overview-card"
 
 const numberFormat = new Intl.NumberFormat("en")
 
@@ -143,13 +141,11 @@ export function PartnerExpoDetailOverview({
   assignedExpo,
   operations,
   exhibitorsWorkspace,
-  packages,
   onViewAllExhibitors
 }: {
   assignedExpo: PartnerAssignedExpo
   operations: PartnerExpoOperationsDetail
   exhibitorsWorkspace: PartnerExpoExhibitorsWorkspace
-  packages: ExpoPackageDisplay[]
   onViewAllExhibitors?: () => void
 }) {
   const { expo, assignment, goLiveCount } = assignedExpo
@@ -294,12 +290,6 @@ export function PartnerExpoDetailOverview({
           icon={<WalletCardsIcon />}
         />
       </section>
-
-      <PartnerExpoPackageOverviewCard
-        packages={packages}
-        canEdit={canEditDraft}
-        editHref={`/partner/expos/${expo.id}/edit`}
-      />
 
       <section className="grid gap-4 xl:grid-cols-2">
         <Card size="sm">
