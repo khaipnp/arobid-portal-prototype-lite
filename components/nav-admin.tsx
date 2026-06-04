@@ -8,6 +8,7 @@ import {
   LayoutDashboardIcon,
   LayoutTemplateIcon,
   MonitorPlayIcon,
+  NetworkIcon,
   PackageCheckIcon,
   ReceiptIcon,
   ShapesIcon,
@@ -85,6 +86,11 @@ const servicesLinks = [
 ]
 
 const administrationLinks = [
+  {
+    name: "Partners",
+    url: "/admin/partners",
+    icon: <NetworkIcon />
+  },
   {
     name: "Partner Audit",
     url: "/admin/partners/association-audit",

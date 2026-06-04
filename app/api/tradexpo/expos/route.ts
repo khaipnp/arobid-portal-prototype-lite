@@ -22,6 +22,7 @@ export async function POST(request: Request) {
     name?: string
     description?: string
     thumbnailUrl?: string
+    bannerUrl?: string
     expoTemplateId?: string
     categoryIds?: string[]
     schedulePrecision?: string
@@ -129,6 +130,7 @@ export async function POST(request: Request) {
       name,
       description,
       thumbnailUrl: body.thumbnailUrl?.trim() ?? "",
+      bannerUrl: body.bannerUrl?.trim() ?? "",
       expoTemplateId,
       categoryIds,
       schedulePrecision: schedule.schedulePrecision,

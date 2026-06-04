@@ -2,6 +2,7 @@ import type { CSSProperties } from "react"
 import {
   initialBranding,
   initialRelations,
+  initialSectionMedia,
   initialSections
 } from "@/components/partner/site-preview/constants"
 import { BannerSection as MiniSiteBannerSection } from "@/components/partner/site-preview/sections/banner-section"
@@ -21,7 +22,9 @@ import { SuppliersSection as MiniSiteSuppliersSection } from "@/components/partn
 import type {
   EnabledSiteSections,
   SiteBranding,
+  SiteMediaKey,
   SiteSectionKey,
+  SiteSectionMedia,
   TenantRelation,
   TenantRelationType
 } from "@/components/partner/site-preview/types"
@@ -47,6 +50,7 @@ type TenantLandingPageProps = {
 type NormalizedMiniSite = {
   branding: SiteBranding
   sections: EnabledSiteSections
+  sectionMedia: SiteSectionMedia
   relations: TenantRelation[]
 }
 
@@ -58,6 +62,7 @@ const ctaOptions = new Set<SiteBranding["ctaOption"]>([
   "contact_arobid"
 ])
 const relationTypes = new Set<TenantRelationType>(["partner", "sponsor"])
+const sectionMediaKeys = Object.keys(initialSectionMedia) as SiteMediaKey[]
 
 export function TenantLandingPage({
   miniSiteContent
@@ -93,6 +98,7 @@ export function TenantLandingPage({
 function PublishedMiniSiteLandingPage({
   branding,
   relations,
+  sectionMedia,
   sections
 }: NormalizedMiniSite) {
   return (
@@ -106,30 +112,56 @@ function PublishedMiniSiteLandingPage({
       }
     >
       <MiniSiteHeaderSection branding={branding} />
-      <MiniSiteBannerSection branding={branding} />
-      {sections.community ? <MiniSiteCommunitySection /> : null}
-      {sections.categories ? <MiniSiteCategoriesSection /> : null}
-      <MiniSiteBfmSection />
+      <MiniSiteBannerSection branding={branding} media={sectionMedia.banner} />
+      {sections.community ? (
+        <MiniSiteCommunitySection media={sectionMedia.community} />
+      ) : null}
+      {sections.categories ? (
+        <MiniSiteCategoriesSection media={sectionMedia.categories} />
+      ) : null}
+      <MiniSiteBfmSection media={sectionMedia.bfm} />
       {sections.featuredSuppliers ? (
-        <MiniSiteSuppliersSection title="Featured Suppliers" />
+        <MiniSiteSuppliersSection
+          title="Featured Suppliers"
+          media={sectionMedia.featuredSuppliers}
+        />
       ) : null}
-      {sections.deals ? <MiniSiteDealsSection /> : null}
+      {sections.deals ? (
+        <MiniSiteDealsSection media={sectionMedia.deals} />
+      ) : null}
       {sections.hotProducts ? (
-        <MiniSiteProductsSection title="Hot Products" />
+        <MiniSiteProductsSection
+          title="Hot Products"
+          media={sectionMedia.hotProducts}
+        />
       ) : null}
-      {sections.expoCarousel ? <MiniSiteExpoCarouselSection /> : null}
+      {sections.expoCarousel ? (
+        <MiniSiteExpoCarouselSection media={sectionMedia.expoCarousel} />
+      ) : null}
       {sections.newProducts ? (
-        <MiniSiteProductsSection title="New Products" />
+        <MiniSiteProductsSection
+          title="New Products"
+          media={sectionMedia.newProducts}
+        />
       ) : null}
       {sections.recommendedSuppliers ? (
-        <MiniSiteSuppliersSection title="Recommended Suppliers" />
+        <MiniSiteSuppliersSection
+          title="Recommended Suppliers"
+          media={sectionMedia.recommendedSuppliers}
+        />
       ) : null}
-      {sections.promo ? <MiniSitePromoSection /> : null}
-      {sections.featureCards ? <MiniSiteFeatureCardsSection /> : null}
+      {sections.promo ? (
+        <MiniSitePromoSection media={sectionMedia.promo} />
+      ) : null}
+      {sections.featureCards ? (
+        <MiniSiteFeatureCardsSection media={sectionMedia.featureCards} />
+      ) : null}
       {sections.partners ? (
         <MiniSitePartnersSection relations={relations} />
       ) : null}
-      {sections.cta ? <MiniSiteCtaSection branding={branding} /> : null}
+      {sections.cta ? (
+        <MiniSiteCtaSection branding={branding} media={sectionMedia.cta} />
+      ) : null}
       <MiniSiteFooterSection branding={branding} />
     </main>
   )
@@ -143,6 +175,7 @@ function normalizeMiniSiteContent(
   return {
     branding: normalizeBranding(content.branding),
     sections: normalizeSections(content.sections),
+    sectionMedia: normalizeSectionMedia(content.sectionMedia),
     relations: normalizeRelations(content.relations)
   }
 }
@@ -202,6 +235,24 @@ function normalizeSections(value: unknown): EnabledSiteSections {
   }
 
   return sections
+}
+
+function normalizeSectionMedia(value: unknown): SiteSectionMedia {
+  const record = isRecord(value) ? value : {}
+  const sectionMedia: SiteSectionMedia = { ...initialSectionMedia }
+
+  for (const key of sectionMediaKeys) {
+    const mediaValue = record[key]
+    const slotCount = initialSectionMedia[key].length
+
+    sectionMedia[key] = Array.from({ length: slotCount }, (_, index) => {
+      if (!Array.isArray(mediaValue)) return ""
+      const slotValue = mediaValue[index]
+      return typeof slotValue === "string" ? slotValue : ""
+    })
+  }
+
+  return sectionMedia
 }
 
 function normalizeRelations(value: unknown): TenantRelation[] {

@@ -1,6 +1,6 @@
 "use client"
 
-import { SearchIcon } from "lucide-react"
+import { SearchIcon, XIcon } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useMemo, useState } from "react"
@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input"
 import {
   InputGroup,
   InputGroupAddon,
+  InputGroupButton,
   InputGroupInput
 } from "@/components/ui/input-group"
 import { Label } from "@/components/ui/label"
@@ -36,6 +37,7 @@ import type {
   PartnerEnterpriseMember,
   PartnerEnterpriseWorkspace
 } from "@/lib/partner/db"
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "../ui/empty"
 
 const dateFormat = new Intl.DateTimeFormat("en", {
   day: "2-digit",
@@ -243,42 +245,54 @@ export function PartnerEnterpriseManager({
       ) : null}
 
       <section className="space-y-4">
-        <div className="flex flex-col justify-between gap-3 sm:flex-row">
-          <div className="flex gap-2">
-            <InputGroup className="max-w-sm rounded-full">
-              <InputGroupAddon>
-                <SearchIcon className="h-4 w-4 text-muted-foreground" />
+        <div className="flex gap-3">
+          <InputGroup className="max-w-xs">
+            <InputGroupAddon align="inline-start">
+              <SearchIcon />
+            </InputGroupAddon>
+            <InputGroupInput
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search company or email"
+            />
+            {query && (
+              <InputGroupAddon align="inline-end">
+                <InputGroupButton
+                  size="icon-xs"
+                  className="rounded-full"
+                  onClick={() => setQuery("")}
+                >
+                  <XIcon />
+                </InputGroupButton>
               </InputGroupAddon>
-              <InputGroupInput
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search company or email"
-              />
-            </InputGroup>
-            <NativeSelect
-              value={statusFilter}
-              onChange={(event) =>
-                setStatusFilter(
-                  event.target.value as
-                    | PartnerEnterpriseMember["activationStatus"]
-                    | "all"
-                )
-              }
-            >
-              <option value="all">All</option>
-              {statusOrder.map((status) => (
-                <option key={status} value={status}>
-                  {statusLabels[status]}
-                </option>
-              ))}
-            </NativeSelect>
-          </div>
+            )}
+          </InputGroup>
+          <NativeSelect
+            value={statusFilter}
+            onChange={(event) =>
+              setStatusFilter(
+                event.target.value as
+                  | PartnerEnterpriseMember["activationStatus"]
+                  | "all"
+              )
+            }
+          >
+            <option value="all">All</option>
+            {statusOrder.map((status) => (
+              <option key={status} value={status}>
+                {statusLabels[status]}
+              </option>
+            ))}
+          </NativeSelect>
         </div>
 
         {filteredMembers.length === 0 ? (
-          <div className="flex min-h-52 items-center justify-center rounded-md border border-dashed text-muted-foreground text-sm">
-            No companies found.
-          </div>
+          <Empty className="border">
+            <EmptyHeader>
+              <EmptyTitle>No companies found.</EmptyTitle>
+              <EmptyDescription>No companies found.</EmptyDescription>
+            </EmptyHeader>
+          </Empty>
         ) : (
           <div className="overflow-hidden rounded-2xl border">
             <Table>
@@ -323,7 +337,14 @@ export function PartnerEnterpriseManager({
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline" className="capitalize">
+                      <Badge
+                        variant={
+                          member.activationStatus === "active"
+                            ? "default"
+                            : "outline"
+                        }
+                        className="capitalize"
+                      >
                         {statusLabels[member.activationStatus]}
                       </Badge>
                     </TableCell>

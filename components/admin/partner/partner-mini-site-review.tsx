@@ -218,6 +218,11 @@ function buildReviewComparison(
     compareField("CTA", published.cta, submitted.cta),
     compareField("Company display", published.relations, submitted.relations),
     compareField("Expo display", published.sections, submitted.sections),
+    compareField(
+      "Section media",
+      published.sectionMedia,
+      submitted.sectionMedia
+    ),
     compareField("Contact info", published.contact, submitted.contact),
     compareField(
       "Service / bundle draft",
@@ -243,6 +248,9 @@ function compareField(
 function extractMiniSiteContent(content: Record<string, unknown> | undefined) {
   const branding = isRecord(content?.branding) ? content.branding : {}
   const sections = isRecord(content?.sections) ? content.sections : {}
+  const sectionMedia = isRecord(content?.sectionMedia)
+    ? content.sectionMedia
+    : {}
   const relations = Array.isArray(content?.relations) ? content.relations : []
 
   return {
@@ -271,6 +279,16 @@ function extractMiniSiteContent(content: Record<string, unknown> | undefined) {
       .map(([key]) => key)
       .sort()
       .join(", "),
+    sectionMedia: Object.entries(sectionMedia)
+      .flatMap(([key, value]) => {
+        if (!Array.isArray(value)) return []
+        return value.flatMap((item, index) => {
+          if (typeof item !== "string" || !item.trim()) return []
+          return [`${key}[${index + 1}]: ${item.trim()}`]
+        })
+      })
+      .sort()
+      .join("\n"),
     relations: relations
       .filter(isRecord)
       .map((relation) =>

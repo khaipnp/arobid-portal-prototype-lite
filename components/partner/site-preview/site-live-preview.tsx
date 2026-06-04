@@ -14,17 +14,24 @@ import { PartnersSection } from "./sections/partners-section"
 import { ProductsSection } from "./sections/products-section"
 import { PromoSection } from "./sections/promo-section"
 import { SuppliersSection } from "./sections/suppliers-section"
-import type { EnabledSiteSections, SiteBranding, TenantRelation } from "./types"
+import type {
+  EnabledSiteSections,
+  SiteBranding,
+  SiteSectionMedia,
+  TenantRelation
+} from "./types"
 
 const visibleCoreSections = new Set(alwaysVisibleSections)
 
 export function SiteLivePreview({
   branding,
   relations,
+  sectionMedia,
   sections
 }: {
   branding: SiteBranding
   relations: TenantRelation[]
+  sectionMedia: SiteSectionMedia
   sections: EnabledSiteSections
 }) {
   return (
@@ -42,25 +49,53 @@ export function SiteLivePreview({
           <HeaderSection branding={branding} />
         ) : null}
         {visibleCoreSections.has("banner") ? (
-          <BannerSection branding={branding} />
+          <BannerSection branding={branding} media={sectionMedia.banner} />
         ) : null}
-        {sections.community ? <CommunitySection /> : null}
-        {sections.categories ? <CategoriesSection /> : null}
-        {visibleCoreSections.has("bfm") ? <BfmSection /> : null}
+        {sections.community ? (
+          <CommunitySection media={sectionMedia.community} />
+        ) : null}
+        {sections.categories ? (
+          <CategoriesSection media={sectionMedia.categories} />
+        ) : null}
+        {visibleCoreSections.has("bfm") ? (
+          <BfmSection media={sectionMedia.bfm} />
+        ) : null}
         {sections.featuredSuppliers ? (
-          <SuppliersSection title="Featured Suppliers" />
+          <SuppliersSection
+            title="Featured Suppliers"
+            media={sectionMedia.featuredSuppliers}
+          />
         ) : null}
-        {sections.deals ? <DealsSection /> : null}
-        {sections.hotProducts ? <ProductsSection title="Hot Products" /> : null}
-        {sections.expoCarousel ? <ExpoCarouselSection /> : null}
-        {sections.newProducts ? <ProductsSection title="New Products" /> : null}
+        {sections.deals ? <DealsSection media={sectionMedia.deals} /> : null}
+        {sections.hotProducts ? (
+          <ProductsSection
+            title="Hot Products"
+            media={sectionMedia.hotProducts}
+          />
+        ) : null}
+        {sections.expoCarousel ? (
+          <ExpoCarouselSection media={sectionMedia.expoCarousel} />
+        ) : null}
+        {sections.newProducts ? (
+          <ProductsSection
+            title="New Products"
+            media={sectionMedia.newProducts}
+          />
+        ) : null}
         {sections.recommendedSuppliers ? (
-          <SuppliersSection title="Recommended Suppliers" />
+          <SuppliersSection
+            title="Recommended Suppliers"
+            media={sectionMedia.recommendedSuppliers}
+          />
         ) : null}
-        {sections.promo ? <PromoSection /> : null}
-        {sections.featureCards ? <FeatureCardsSection /> : null}
+        {sections.promo ? <PromoSection media={sectionMedia.promo} /> : null}
+        {sections.featureCards ? (
+          <FeatureCardsSection media={sectionMedia.featureCards} />
+        ) : null}
         {sections.partners ? <PartnersSection relations={relations} /> : null}
-        {sections.cta ? <CtaSection branding={branding} /> : null}
+        {sections.cta ? (
+          <CtaSection branding={branding} media={sectionMedia.cta} />
+        ) : null}
         {visibleCoreSections.has("footer") ? (
           <FooterSection branding={branding} />
         ) : null}

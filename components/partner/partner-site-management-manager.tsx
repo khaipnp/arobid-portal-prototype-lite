@@ -7,6 +7,7 @@ import {
   emptyRelationForm,
   initialBranding,
   initialRelations,
+  initialSectionMedia,
   initialSections
 } from "@/components/partner/site-preview/constants"
 import { SiteLivePreview } from "@/components/partner/site-preview/site-live-preview"
@@ -14,7 +15,9 @@ import { SitePreviewControls } from "@/components/partner/site-preview/site-prev
 import type {
   RelationForm,
   SiteBranding,
+  SiteMediaKey,
   SiteSectionKey,
+  SiteSectionMedia,
   TenantRelation,
   TenantRelationType
 } from "@/components/partner/site-preview/types"
@@ -57,6 +60,7 @@ import { cn } from "@/lib/utils"
 import { ButtonGroup } from "../ui/button-group"
 
 const logoMaxSizeBytes = 2 * 1024 * 1024
+const sectionMediaMaxSizeBytes = 2 * 1024 * 1024
 const hexColorPattern = /^#[0-9a-fA-F]{6}$/
 
 export function PartnerSiteManagementManager({
@@ -66,6 +70,7 @@ export function PartnerSiteManagementManager({
 }) {
   const [branding, setBranding] = useState(initialBranding)
   const [sections, setSections] = useState(initialSections)
+  const [sectionMedia, setSectionMedia] = useState(initialSectionMedia)
   const [relations, setRelations] = useState(initialRelations)
   const [editingRelation, setEditingRelation] = useState<TenantRelation | null>(
     null
@@ -100,6 +105,7 @@ export function PartnerSiteManagementManager({
           content?: {
             branding?: SiteBranding
             relations?: TenantRelation[]
+            sectionMedia?: SiteSectionMedia
             sections?: Record<SiteSectionKey, boolean>
           }
         } | null
@@ -112,6 +118,12 @@ export function PartnerSiteManagementManager({
       }
       if (payload.version.content?.relations) {
         setRelations(payload.version.content.relations)
+      }
+      if (payload.version.content?.sectionMedia) {
+        setSectionMedia({
+          ...initialSectionMedia,
+          ...payload.version.content.sectionMedia
+        })
       }
       if (payload.version.content?.sections) {
         setSections(payload.version.content.sections)
@@ -143,11 +155,35 @@ export function PartnerSiteManagementManager({
     setSections((current) => ({ ...current, [key]: !current[key] }))
   }
 
+  function updateSectionMedia(key: SiteMediaKey, index: number, value: string) {
+    setSectionMedia((current) => {
+      const nextValues = [...(current[key] ?? [])]
+      nextValues[index] = value
+      return { ...current, [key]: nextValues }
+    })
+  }
+
   async function uploadLogo(file: File) {
     if (!file.type.startsWith("image/") || file.size > logoMaxSizeBytes) return
 
     const result = await uploadFile(file, "image")
     if (result?.fileUrl) updateBranding("logoUrl", result.fileUrl)
+  }
+
+  async function uploadSectionMedia(
+    key: SiteMediaKey,
+    index: number,
+    file: File
+  ) {
+    if (
+      !file.type.startsWith("image/") ||
+      file.size > sectionMediaMaxSizeBytes
+    ) {
+      return
+    }
+
+    const result = await uploadFile(file, "image")
+    if (result?.fileUrl) updateSectionMedia(key, index, result.fileUrl)
   }
 
   function removeLogo() {
@@ -211,7 +247,9 @@ export function PartnerSiteManagementManager({
       const response = await fetch("/api/partner/mini-site", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: { branding, relations, sections } })
+        body: JSON.stringify({
+          content: { branding, relations, sectionMedia, sections }
+        })
       })
       if (!response.ok) {
         setStatusMessage("Could not save mini-site draft.")
@@ -250,12 +288,6 @@ export function PartnerSiteManagementManager({
     } finally {
       setIsSavingDraft(false)
     }
-  }
-
-  function resetDemo() {
-    setBranding(initialBranding)
-    setSections(initialSections)
-    setRelations(initialRelations)
   }
 
   return (
@@ -302,11 +334,15 @@ export function PartnerSiteManagementManager({
           branding={branding}
           isReadOnly={isReadOnly}
           isUploadingLogo={isUploading}
+          isUploadingMedia={isUploading}
+          sectionMedia={sectionMedia}
           sections={sections}
           onBrandingChange={updateBranding}
           onRemoveLogo={removeLogo}
+          onSectionMediaChange={updateSectionMedia}
           onSectionToggle={toggleSection}
           onUploadLogo={uploadLogo}
+          onUploadSectionMedia={uploadSectionMedia}
         />
         <RelationsCard
           relations={relations}
@@ -326,6 +362,7 @@ export function PartnerSiteManagementManager({
             <SiteLivePreview
               branding={branding}
               relations={relations}
+              sectionMedia={sectionMedia}
               sections={sections}
             />
           </div>

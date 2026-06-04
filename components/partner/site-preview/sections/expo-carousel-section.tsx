@@ -1,9 +1,23 @@
-export function ExpoCarouselSection() {
+import Image from "next/image"
+
+export function ExpoCarouselSection({ media = [] }: { media?: string[] }) {
+  const imageUrl = media[0]
+
   return (
     <section className="bg-white px-6 py-14">
       <div className="mx-auto max-w-6xl">
         <div className="relative overflow-hidden rounded-[2rem] bg-slate-950 px-10 py-16 text-white">
-          <div className="max-w-xl space-y-4">
+          {imageUrl ? (
+            <Image
+              alt=""
+              className="object-cover opacity-35"
+              fill
+              sizes="1152px"
+              src={imageUrl}
+            />
+          ) : null}
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-slate-950/20" />
+          <div className="relative max-w-xl space-y-4">
             <p
               className="font-semibold text-sm uppercase tracking-[0.2em]"
               style={{ color: "var(--site-accent)" }}
