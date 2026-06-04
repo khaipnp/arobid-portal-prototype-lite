@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/input-group"
 import { Label } from "@/components/ui/label"
 import { NativeSelect } from "@/components/ui/native-select"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import {
   Table,
   TableBody,
@@ -52,8 +53,8 @@ const invitationStatusLabels = {
 } as const
 
 const invitationTypeLabels = {
-  site_visit: "Site Visit Link",
-  join_partner_site: "Join Partner Site"
+  site_visit: "Visit Tenant",
+  join_partner_site: "Join Tenant"
 } as const
 
 const invitationTypeOptions = ["site_visit", "join_partner_site"] as const
@@ -97,21 +98,20 @@ export function PartnerSiteInvitationManager({
   const [query, setQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all")
   const [inviteOpen, setInviteOpen] = useState(false)
-  const [invitationType, setInvitationType] =
-    useState<InvitationType>("join_partner_site")
+  const [invitationType, setInvitationType] = useState<InvitationType | null>(
+    null
+  )
   const [recipientText, setRecipientText] = useState("")
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [resendingId, setResendingId] = useState<string | null>(null)
   const [isSending, setIsSending] = useState(false)
 
-  const invitationLink = useMemo(
-    () =>
-      partnerId
-        ? buildInvitationLink({ inviteBaseUrl, invitationType, partnerId })
-        : "",
-    [inviteBaseUrl, invitationType, partnerId]
-  )
+  const invitationLink = useMemo(() => {
+    if (!partnerId || !invitationType) return ""
+
+    return buildInvitationLink({ inviteBaseUrl, invitationType, partnerId })
+  }, [inviteBaseUrl, invitationType, partnerId])
   const parsedRecipients = useMemo(
     () => parseRecipientEmails(recipientText),
     [recipientText]
@@ -138,6 +138,11 @@ export function PartnerSiteInvitationManager({
     })
   }, [invitations, query, statusFilter])
 
+  function openInviteDialog() {
+    setInvitationType(null)
+    setInviteOpen(true)
+  }
+
   async function copyInvitationLink() {
     if (!invitationLink) return
 
@@ -156,6 +161,10 @@ export function PartnerSiteInvitationManager({
 
     if (!partnerId) {
       setError("Partner context is required before sending invitations.")
+      return
+    }
+    if (!invitationType) {
+      setError("Choose an invitation type before sending invitations.")
       return
     }
     if (parsedRecipients.invalid.length > 0) {
@@ -239,7 +248,7 @@ export function PartnerSiteInvitationManager({
     <div className="mt-5 space-y-4">
       <div className="flex flex-col justify-between gap-2 sm:flex-row">
         <div className="flex gap-2">
-          <InputGroup className="w-full rounded-full sm:w-80">
+          <InputGroup className="w-full max-w-xs">
             <InputGroupAddon align="inline-start">
               <SearchIcon className="h-4 w-4 text-muted-foreground" />
             </InputGroupAddon>
@@ -252,6 +261,7 @@ export function PartnerSiteInvitationManager({
               <InputGroupAddon align="inline-end">
                 <InputGroupButton
                   size="icon-xs"
+                  variant="ghost"
                   className="rounded-full"
                   onClick={() => setQuery("")}
                 >
@@ -273,10 +283,9 @@ export function PartnerSiteInvitationManager({
           </NativeSelect>
         </div>
         <Button
-          className="rounded-full"
           size="lg"
           disabled={!canManageInvitations}
-          onClick={() => setInviteOpen(true)}
+          onClick={openInviteDialog}
         >
           Create Invite
         </Button>
@@ -346,115 +355,134 @@ export function PartnerSiteInvitationManager({
           <DialogHeader>
             <DialogTitle>Create invitation</DialogTitle>
             <DialogDescription>
-              Invite through a shareable link or send a system email invitation.
+              Choose Visit Tenant or Join Tenant first, then share by link or
+              email.
             </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4">
-            <Field label="Destination">
-              <NativeSelect
-                className="w-full"
-                value={invitationType}
-                onChange={(event) =>
-                  setInvitationType(event.target.value as InvitationType)
+            <Field label="Invitation type">
+              <RadioGroup
+                aria-label="Invitation type"
+                className="grid gap-3 sm:grid-cols-2"
+                value={invitationType ?? undefined}
+                onValueChange={(value) =>
+                  setInvitationType(value as InvitationType)
                 }
               >
                 {invitationTypeOptions.map((type) => (
-                  <option key={type} value={type}>
-                    {invitationTypeLabels[type]}
-                  </option>
+                  <label
+                    key={type}
+                    className="flex cursor-pointer items-center gap-3 rounded-2xl border p-3 text-sm transition-colors hover:bg-muted/60 has-data-[state=checked]:border-legend has-data-[state=checked]:bg-legend/5"
+                  >
+                    <RadioGroupItem value={type} />
+                    <span className="font-medium">
+                      {invitationTypeLabels[type]}
+                    </span>
+                  </label>
                 ))}
-              </NativeSelect>
+              </RadioGroup>
             </Field>
 
-            <Tabs defaultValue="link">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="link">
-                  <LinkIcon className="h-4 w-4" />
-                  Link
-                </TabsTrigger>
-                <TabsTrigger value="email">
-                  <MailIcon className="h-4 w-4" />
-                  Email
-                </TabsTrigger>
-              </TabsList>
+            {invitationType ? (
+              <Tabs key={invitationType} defaultValue="link">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="link">
+                    <LinkIcon className="h-4 w-4" />
+                    Link
+                  </TabsTrigger>
+                  <TabsTrigger value="email">
+                    <MailIcon className="h-4 w-4" />
+                    Email
+                  </TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="link" className="space-y-4">
-                <Field label="Invitation link">
-                  <div className="flex gap-2">
-                    <Input readOnly value={invitationLink} />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={!invitationLink}
-                      onClick={copyInvitationLink}
-                    >
-                      <CopyIcon className="h-4 w-4" />
-                      Copy
-                    </Button>
+                <TabsContent value="link" className="space-y-4">
+                  <Field label="Invitation link">
+                    <div className="flex gap-2">
+                      <Input readOnly value={invitationLink} />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={!invitationLink}
+                        onClick={copyInvitationLink}
+                      >
+                        <CopyIcon className="h-4 w-4" />
+                        Copy
+                      </Button>
+                    </div>
+                  </Field>
+
+                  <div className="flex min-h-56 flex-col items-center justify-center gap-3 rounded-2xl border bg-muted/30 p-4">
+                    {qrCodeUrl ? (
+                      <Image
+                        alt="Invitation QR code"
+                        className="rounded-lg"
+                        height={180}
+                        src={qrCodeUrl}
+                        unoptimized
+                        width={180}
+                      />
+                    ) : (
+                      <QrCodeIcon className="h-16 w-16 text-muted-foreground" />
+                    )}
+                    <p className="text-center text-muted-foreground text-xs">
+                      Share QR code or copy invitation link.
+                    </p>
                   </div>
-                </Field>
+                </TabsContent>
 
-                <div className="flex min-h-56 flex-col items-center justify-center gap-3 rounded-2xl border bg-muted/30 p-4">
-                  {qrCodeUrl ? (
-                    <Image
-                      alt="Invitation QR code"
-                      className="rounded-lg"
-                      height={180}
-                      src={qrCodeUrl}
-                      unoptimized
-                      width={180}
+                <TabsContent value="email" className="space-y-4">
+                  <Field label="Recipient email list">
+                    <Textarea
+                      value={recipientText}
+                      onChange={(event) => setRecipientText(event.target.value)}
+                      placeholder="a@company.com, b@company.com"
+                      rows={8}
                     />
-                  ) : (
-                    <QrCodeIcon className="h-16 w-16 text-muted-foreground" />
-                  )}
-                  <p className="text-center text-muted-foreground text-xs">
-                    Share QR code or copy invitation link.
-                  </p>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="email" className="space-y-4">
-                <Field label="Recipient email list">
-                  <Textarea
-                    value={recipientText}
-                    onChange={(event) => setRecipientText(event.target.value)}
-                    placeholder="a@company.com, b@company.com"
-                    rows={8}
-                  />
-                </Field>
-                <div className="flex flex-wrap gap-2">
-                  <Badge variant="secondary">
-                    {parsedRecipients.valid.length} valid
-                  </Badge>
-                  {parsedRecipients.invalid.length > 0 ? (
-                    <Badge variant="destructive">
-                      {parsedRecipients.invalid.length} invalid
+                  </Field>
+                  <div className="flex flex-wrap gap-2">
+                    <Badge variant="secondary">
+                      {parsedRecipients.valid.length} valid
                     </Badge>
+                    {parsedRecipients.invalid.length > 0 ? (
+                      <Badge variant="destructive">
+                        {parsedRecipients.invalid.length} invalid
+                      </Badge>
+                    ) : null}
+                    <Badge variant="outline">
+                      {invitationTypeLabels[invitationType]}
+                    </Badge>
+                  </div>
+                  {parsedRecipients.invalid.length > 0 ? (
+                    <p className="text-destructive text-sm">
+                      Invalid email: {parsedRecipients.invalid.join(", ")}
+                    </p>
                   ) : null}
-                  <Badge variant="outline">
-                    {invitationTypeLabels[invitationType]}
-                  </Badge>
-                </div>
-                {parsedRecipients.invalid.length > 0 ? (
-                  <p className="text-destructive text-sm">
-                    Invalid email: {parsedRecipients.invalid.join(", ")}
+                  <p className="text-muted-foreground text-sm">
+                    System sends standard email template automatically. Partner
+                    users cannot edit sender or content.
                   </p>
-                ) : null}
-                <p className="text-muted-foreground text-sm">
-                  System sends standard email template automatically. Partner
-                  users cannot edit sender or content.
-                </p>
-                <Button
-                  className="w-full"
-                  disabled={!canManageInvitations || isSending || !partnerId}
-                  onClick={sendInvitationEmail}
-                >
-                  <SendIcon className="h-4 w-4" />
-                  {isSending ? "Sending..." : "Send email"}
-                </Button>
-              </TabsContent>
-            </Tabs>
+                  <Button
+                    className="w-full"
+                    disabled={
+                      !canManageInvitations ||
+                      isSending ||
+                      !partnerId ||
+                      !invitationType
+                    }
+                    onClick={sendInvitationEmail}
+                  >
+                    <SendIcon className="h-4 w-4" />
+                    {isSending ? "Sending..." : "Send email"}
+                  </Button>
+                </TabsContent>
+              </Tabs>
+            ) : (
+              <div className="rounded-2xl border border-dashed bg-muted/30 p-4 text-muted-foreground text-sm">
+                Select an invitation type to choose a sending method.
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>

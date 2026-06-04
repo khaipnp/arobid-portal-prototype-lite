@@ -259,7 +259,7 @@ export function PartnerExpoDetailOverview({
         </div>
       </div>
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         <MetricCard
           title="Published Booths"
           value={numberFormat.format(summary.publishedBooths)}
@@ -269,6 +269,11 @@ export function PartnerExpoDetailOverview({
           title="Product Display"
           value={`${summary.products}`}
           icon={<ActivityIcon />}
+        />
+        <MetricCard
+          title="Share"
+          value={numberFormat.format(summary.peakViewers)}
+          icon={<RadioIcon />}
         />
         <MetricCard
           title="GoLIVE Reach"
