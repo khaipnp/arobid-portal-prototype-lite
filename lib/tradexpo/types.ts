@@ -125,6 +125,7 @@ export interface Expo {
   slug?: string
   name: string
   thumbnailUrl: string
+  bannerUrl?: string
   ownerEmail: string
   /** ISO date (YYYY-MM-DD), present only when exact dates exist. */
   startDate?: string

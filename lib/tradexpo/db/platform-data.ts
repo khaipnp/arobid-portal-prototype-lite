@@ -79,6 +79,7 @@ type ExpoRow = {
   slug?: string | null
   name: string
   thumbnail_url: string
+  banner_url?: string | null
   owner_email: string
   start_date: string | Date | null
   end_date: string | Date | null
@@ -230,6 +231,9 @@ export function rowToExpo(r: ExpoRow): Expo {
     slug: r.slug ?? undefined,
     name: r.name,
     thumbnailUrl: getAssetUrl(r.thumbnail_url, r.id),
+    bannerUrl: r.banner_url?.trim()
+      ? getAssetUrl(r.banner_url, `${r.id}-banner`, 1920, 960)
+      : undefined,
     ownerEmail: r.owner_email,
     startDate: startAt
       ? toDateOnly(r.start_at as string | Date)
@@ -486,6 +490,7 @@ export type CreateExpoWithHallsInput = {
   slug?: string
   description: string
   thumbnailUrl: string
+  bannerUrl?: string
   expoTemplateId: string
   categoryIds: string[]
   schedulePrecision: ExpoSchedulePrecision
@@ -558,6 +563,7 @@ export async function createExpoWithHalls(
   const slug = await uniqueExpoSlug(slugifyExpoName(input.name))
   const createdAt = new Date().toISOString()
   const thumb = getAssetUrl(input.thumbnailUrl, expoId)
+  const banner = input.bannerUrl?.trim() || null
 
   await sql`begin`
   try {
@@ -567,6 +573,7 @@ export async function createExpoWithHalls(
         slug,
         name,
         thumbnail_url,
+        banner_url,
         owner_email,
         start_date,
         end_date,
@@ -590,6 +597,7 @@ export async function createExpoWithHalls(
         ${slug},
         ${input.name},
         ${thumb},
+        ${banner},
         ${input.ownerEmail},
         ${schedule.startDate},
         ${schedule.endDate},
@@ -722,6 +730,7 @@ export async function updateExpoWithHalls(
     : (currentSlug ??
       (await uniqueExpoSlug(slugifyExpoName(input.name), expoId)))
   const thumb = getAssetUrl(input.thumbnailUrl, expoId)
+  const banner = input.bannerUrl?.trim() || null
 
   await sql`begin`
   try {
@@ -731,6 +740,7 @@ export async function updateExpoWithHalls(
         name = ${input.name},
         slug = ${slug},
         thumbnail_url = ${thumb},
+        banner_url = ${banner},
         owner_email = ${input.ownerEmail},
         start_date = ${schedule.startDate},
         end_date = ${schedule.endDate},

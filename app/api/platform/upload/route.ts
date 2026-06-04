@@ -5,13 +5,17 @@ import { NextResponse } from "next/server"
 import { requireAnyRole } from "@/lib/auth/rbac"
 import { R2_BUCKET_NAME, r2Client } from "@/lib/platform/r2"
 
-const allowedKinds = new Set(["thumbnail", "avatar", "glb", "image"])
+const allowedKinds = new Set(["thumbnail", "avatar", "glb", "image", "video"])
 const allowedContentTypes = new Set([
   "image/jpeg",
   "image/png",
   "image/svg+xml",
   "image/webp",
-  "model/gltf-binary"
+  "model/gltf-binary",
+  "video/mp4",
+  "video/quicktime",
+  "video/webm",
+  "video/ogg"
 ])
 const safeFileNamePattern = /^[a-zA-Z0-9._ -]+$/
 

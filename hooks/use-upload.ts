@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { toast } from "sonner"
 
-export type UploadKind = "thumbnail" | "avatar" | "glb" | "image"
+export type UploadKind = "thumbnail" | "avatar" | "glb" | "image" | "video"
 
 export function useUpload() {
   const [isUploading, setIsUploading] = useState(false)

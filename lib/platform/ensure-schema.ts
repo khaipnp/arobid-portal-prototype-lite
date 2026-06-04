@@ -206,6 +206,7 @@ export async function ensurePlatformSchema() {
       slug text,
       name text not null,
       thumbnail_url text not null,
+      banner_url text,
       owner_email text not null,
       start_date date,
       end_date date,
@@ -2423,6 +2424,9 @@ async function migrateExpoManagementSchema() {
     end $$;
   `
 
+  await sql`
+    alter table expos add column if not exists banner_url text
+  `
   await sql`
     alter table expos add column if not exists description text not null default ''
   `

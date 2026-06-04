@@ -97,6 +97,9 @@ export function ExpoForm(props: ExpoFormProps) {
   const [thumbnailUrl, setThumbnailUrl] = React.useState(() =>
     isEdit ? props.initialExpo.thumbnailUrl : ""
   )
+  const [bannerUrl, setBannerUrl] = React.useState(() =>
+    isEdit ? (props.initialExpo.bannerUrl ?? "") : ""
+  )
   const [expoTemplateId, setExpoTemplateId] = React.useState(() =>
     isEdit ? (props.initialExpo.expoTemplateId ?? "") : ""
   )
@@ -213,20 +216,41 @@ export function ExpoForm(props: ExpoFormProps) {
     () => (isEdit ? packageDisplaysToRows(props.initialPackages) : [])
   )
 
-  const { uploadFile, isUploading } = useUpload()
-  const fileInputRef = React.useRef<HTMLInputElement>(null)
+  const { uploadFile: uploadThumbnailFile, isUploading: isThumbnailUploading } =
+    useUpload()
+  const { uploadFile: uploadBannerFile, isUploading: isBannerUploading } =
+    useUpload()
+  const thumbnailFileInputRef = React.useRef<HTMLInputElement>(null)
+  const bannerFileInputRef = React.useRef<HTMLInputElement>(null)
 
   const [submitting, setSubmitting] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleThumbnailFileChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = e.target.files?.[0]
     if (!file) return
 
-    const result = await uploadFile(file, "thumbnail")
+    const result = await uploadThumbnailFile(file, "thumbnail")
     if (result) {
       setThumbnailUrl(result.fileUrl)
     }
+    e.target.value = ""
+  }
+
+  const handleBannerFileChange = async (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const kind = file.type.startsWith("video/") ? "video" : "image"
+    const result = await uploadBannerFile(file, kind)
+    if (result) {
+      setBannerUrl(result.fileUrl)
+    }
+    e.target.value = ""
   }
 
   React.useEffect(() => {
@@ -449,6 +473,7 @@ export function ExpoForm(props: ExpoFormProps) {
       ...(isSuper ? { slug } : {}),
       description,
       thumbnailUrl,
+      bannerUrl,
       expoTemplateId,
       categoryIds,
       schedulePrecision: schedule.schedulePrecision,
@@ -595,9 +620,14 @@ export function ExpoForm(props: ExpoFormProps) {
               onExpoDescriptionChange={setDescription}
               thumbnailUrl={thumbnailUrl}
               onThumbnailUrlChange={setThumbnailUrl}
-              isUploading={isUploading}
-              fileInputRef={fileInputRef}
-              onFileChange={handleFileChange}
+              isThumbnailUploading={isThumbnailUploading}
+              thumbnailFileInputRef={thumbnailFileInputRef}
+              onThumbnailFileChange={handleThumbnailFileChange}
+              bannerUrl={bannerUrl}
+              onBannerUrlChange={setBannerUrl}
+              isBannerUploading={isBannerUploading}
+              bannerFileInputRef={bannerFileInputRef}
+              onBannerFileChange={handleBannerFileChange}
               isPartnerContentEdit={isPartnerContentEdit}
               expoTemplateId={expoTemplateId}
               onExpoTemplateIdChange={setExpoTemplateId}

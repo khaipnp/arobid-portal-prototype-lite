@@ -55,6 +55,7 @@ export async function PUT(request: Request, { params }: Props) {
     name?: string
     description?: string
     thumbnailUrl?: string
+    bannerUrl?: string
     categoryIds?: string[]
     marketingContent?: unknown
     packages?: unknown
@@ -115,6 +116,7 @@ export async function PUT(request: Request, { params }: Props) {
       name,
       description,
       thumbnailUrl: body.thumbnailUrl?.trim() ?? expo.thumbnailUrl,
+      bannerUrl: body.bannerUrl?.trim() ?? expo.bannerUrl,
       expoTemplateId: expo.expoTemplateId,
       categoryIds,
       schedulePrecision: expo.schedulePrecision,

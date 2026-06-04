@@ -46,6 +46,7 @@ export async function PUT(request: Request, { params }: Props) {
     slug?: string
     description?: string
     thumbnailUrl?: string
+    bannerUrl?: string
     expoTemplateId?: string
     categoryIds?: string[]
     schedulePrecision?: string
@@ -181,6 +182,7 @@ export async function PUT(request: Request, { params }: Props) {
       slug: slug || undefined,
       description,
       thumbnailUrl: body.thumbnailUrl?.trim() ?? "",
+      bannerUrl: body.bannerUrl?.trim() ?? "",
       expoTemplateId,
       categoryIds,
       schedulePrecision: schedule.schedulePrecision,
