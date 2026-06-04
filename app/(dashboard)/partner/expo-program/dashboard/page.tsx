@@ -5,6 +5,7 @@ import {
   RadioTowerIcon,
   WalletCardsIcon
 } from "lucide-react"
+import Image from "next/image"
 import Link from "next/link"
 import type { ReactNode } from "react"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
@@ -125,6 +126,7 @@ export default async function PartnerExpoProgramDashboardPage() {
           <Table className="min-w-3xl">
             <TableHeader>
               <TableRow>
+                <TableHead className="w-36">Thumbnail</TableHead>
                 <TableHead>Expo Name</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Booth Count</TableHead>
@@ -135,6 +137,20 @@ export default async function PartnerExpoProgramDashboardPage() {
             <TableBody>
               {assignedExpos.map(({ expo, totalBooths, soldBooths }) => (
                 <TableRow key={expo.id}>
+                  <TableCell className="py-4">
+                    <Link
+                      href={`/partner/expo-program/expos/${expo.id}`}
+                      className="block aspect-video w-32 overflow-hidden rounded-lg border bg-muted transition-opacity hover:opacity-80"
+                    >
+                      <Image
+                        src={expo.thumbnailUrl}
+                        alt={expo.name}
+                        width={1600}
+                        height={900}
+                        className="size-full object-cover"
+                      />
+                    </Link>
+                  </TableCell>
                   <TableCell className="max-w-80 whitespace-normal py-4 font-medium">
                     <Link
                       href={`/partner/expo-program/expos/${expo.id}`}
