@@ -5,7 +5,6 @@ import {
   CircleIcon,
   ClockIcon,
   MoreHorizontalIcon,
-  PlusIcon,
   RadioIcon
 } from "lucide-react"
 import Image from "next/image"

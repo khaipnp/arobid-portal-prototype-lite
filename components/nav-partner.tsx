@@ -71,17 +71,17 @@ const siteManagementLinks = {
       ]
     },
     {
-      name: "Package Management",
-      module: "package_management",
+      name: "Bundle Management",
+      module: "bundle_management",
       icon: WalletCardsIcon,
       items: [
         {
           name: "Bundle Creation",
-          url: "/partner/package-management/bundle-creation"
+          url: "/partner/bundle-management/bundle-creation"
         },
         {
           name: "Bundle Pricing",
-          url: "/partner/package-management/bundle-pricing"
+          url: "/partner/bundle-management/bundle-pricing"
         }
       ]
     },
