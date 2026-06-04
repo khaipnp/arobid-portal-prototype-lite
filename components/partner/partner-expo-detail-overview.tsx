@@ -95,16 +95,12 @@ function MetricCard({
   return (
     <Card size="sm">
       <CardHeader>
-        <CardDescription>{title}</CardDescription>
-        <CardTitle className="font-semibold text-2xl tabular-nums">
-          {value}
-        </CardTitle>
-        <CardAction
-          className={"rounded-full bg-muted p-2 text-muted-foreground"}
-        >
-          {icon}
-        </CardAction>
+        <CardTitle>{title}</CardTitle>
+        <CardAction className="text-legend">{icon}</CardAction>
       </CardHeader>
+      <CardContent className="font-semibold text-lg tabular-nums">
+        {value}
+      </CardContent>
     </Card>
   )
 }
@@ -306,8 +302,8 @@ export function PartnerExpoDetailOverview({
       />
 
       <section className="grid gap-4 xl:grid-cols-2">
-        <Card>
-          <CardHeader>
+        <Card size="sm">
+          <CardHeader className="border-b">
             <CardTitle>Booth Tier</CardTitle>
             <CardDescription>
               Capacity, sold booths, and published booth readiness.

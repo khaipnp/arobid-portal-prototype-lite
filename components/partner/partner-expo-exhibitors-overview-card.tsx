@@ -26,7 +26,7 @@ export function PartnerExpoExhibitorsOverviewCard({
   onViewAll?: () => void
 }) {
   return (
-    <Card>
+    <Card size="sm">
       <CardHeader>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>

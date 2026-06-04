@@ -57,12 +57,18 @@ import {
   InputGroupInput
 } from "../ui/input-group"
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric"
-  })
+const dateTimeFormat = new Intl.DateTimeFormat("en-GB", {
+  dateStyle: "medium",
+  timeStyle: "short"
+})
+
+function formatDateTime(iso?: string | null) {
+  if (!iso) return "TBA"
+
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return "TBA"
+
+  return dateTimeFormat.format(date)
 }
 
 const EXPO_STATUSES: { label: string; value: ExpoStatus | "All" }[] = [
@@ -245,7 +251,7 @@ export function PartnerExpoList({
                         <div className="space-y-2">
                           <Link
                             href={`/partner/expo-program/expos/${expo.id}`}
-                            className="line-clamp-2 font-semibold text-base leading-none"
+                            className="line-clamp-2 font-medium text-base leading-none"
                           >
                             {expo.name}
                           </Link>
@@ -253,8 +259,8 @@ export function PartnerExpoList({
                             <div className="flex items-center gap-1">
                               <CalendarIcon className="h-3 w-3" />
                               <span>
-                                {formatDate(expo.startDate ?? "")} –{" "}
-                                {formatDate(expo.endDate ?? "")}
+                                {formatDateTime(expo.startAt ?? expo.startDate)}{" "}
+                                – {formatDateTime(expo.endAt ?? expo.endDate)}
                               </span>
                             </div>
                             {goLiveCount > 0 && (
