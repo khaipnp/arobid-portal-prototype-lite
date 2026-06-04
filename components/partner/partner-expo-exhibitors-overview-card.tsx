@@ -27,7 +27,7 @@ export function PartnerExpoExhibitorsOverviewCard({
 }) {
   return (
     <Card size="sm">
-      <CardHeader>
+      <CardHeader className="border-b">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <CardTitle>Top Exhibitors</CardTitle>
@@ -47,17 +47,14 @@ export function PartnerExpoExhibitorsOverviewCard({
           </div>
         ) : (
           workspace.topExhibitors.map((exhibitor) => (
-            <Item key={exhibitor.id} variant="muted" size="default">
-              <ItemMedia
-                variant="image"
-                className="rounded-full border bg-muted/50"
-              >
+            <Item key={exhibitor.id} variant="muted" size="xs">
+              <ItemMedia variant="image" className="rounded-md border bg-white">
                 {exhibitor.logoUrl ? (
                   <Image
                     src={exhibitor.logoUrl}
                     alt=""
-                    width={256}
-                    height={256}
+                    width={1000}
+                    height={1000}
                   />
                 ) : (
                   <Building2Icon className="h-4 w-4 text-muted-foreground" />
