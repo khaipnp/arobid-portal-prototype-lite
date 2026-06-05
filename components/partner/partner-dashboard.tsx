@@ -232,18 +232,18 @@ export function PartnerDashboard({
   return (
     <div className="space-y-6 px-4 py-4">
       <section className="overflow-hidden rounded-4xl border bg-legend text-primary-foreground shadow-md">
-        <div className="relative flex gap-8 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.28),_transparent_34rem)] p-5 sm:p-10">
+        <div className="relative flex gap-8 bg-[radial-gradient(circle_at_top_right,_rgba(255,255,255,0.28),_transparent_34rem)] p-5 sm:p-8">
           <div className="flex max-w-1/2 flex-col gap-2">
-            <h1 className="select-none font-semibold text-2xl tracking-tight sm:text-3xl">
+            <h1 className="select-none font-semibold text-2xl tracking-tight sm:text-2xl">
               Partner Analytics Command Center
             </h1>
-            <p className="select-none text-primary-foreground/70 text-sm leading-relaxed sm:text-lg">
+            <p className="max-w-md select-none text-primary-foreground/70 text-sm leading-snug sm:text-base">
               Follow capacity, activation, revenue, and live engagement signals
               across assigned Expo Programs.
             </p>
           </div>
           <GaugeIcon
-            className="absolute -right-4 -bottom-7 size-48 text-primary-foreground/40"
+            className="absolute -right-3.5 -bottom-6 size-32 text-primary-foreground/40 sm:size-40"
             strokeWidth="2.5"
           />
         </div>
@@ -386,6 +386,7 @@ function TradeActivitySection({
         <Card size="sm">
           <CardHeader className="border-b">
             <CardTitle>Deal Contexts Trend</CardTitle>
+            <CardDescription>Last 6 months</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
@@ -426,6 +427,7 @@ function TradeActivitySection({
         <Card size="sm">
           <CardHeader className="border-b">
             <CardTitle>TradeCredits Allocated</CardTitle>
+            <CardDescription>Last 6 months</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
             <div>
@@ -485,6 +487,7 @@ function TradeActivitySection({
         <Card size="sm">
           <CardHeader className="border-b">
             <CardTitle>RFQ Received</CardTitle>
+            <CardDescription>Last 6 months</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>

@@ -17,7 +17,7 @@ export default function DeferredPartnerModulePage() {
     <DashboardShell
       breadcrumbs={[
         { label: "Dashboard", href: "/partner" },
-        { label: "Package Management" },
+        { label: "Bundle Management" },
         { label: "Bundle Creation" }
       ]}
     >

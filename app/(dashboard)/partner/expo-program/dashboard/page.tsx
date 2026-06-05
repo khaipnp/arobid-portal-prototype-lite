@@ -5,6 +5,7 @@ import {
   RadioTowerIcon,
   WalletCardsIcon
 } from "lucide-react"
+import Image from "next/image"
 import Link from "next/link"
 import type { ReactNode } from "react"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
@@ -125,16 +126,31 @@ export default async function PartnerExpoProgramDashboardPage() {
           <Table className="min-w-3xl">
             <TableHeader>
               <TableRow>
+                <TableHead className="w-36">Thumbnail</TableHead>
                 <TableHead>Expo Name</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-right">Booth Count</TableHead>
-                <TableHead className="text-right">Sold Booths</TableHead>
-                <TableHead className="text-right">Start Date</TableHead>
+                <TableHead>Booth Count</TableHead>
+                <TableHead>Sold Booths</TableHead>
+                <TableHead>Start Date</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {assignedExpos.map(({ expo, totalBooths, soldBooths }) => (
                 <TableRow key={expo.id}>
+                  <TableCell className="py-4">
+                    <Link
+                      href={`/partner/expo-program/expos/${expo.id}`}
+                      className="block aspect-video w-32 overflow-hidden rounded-lg border bg-muted transition-opacity hover:opacity-80"
+                    >
+                      <Image
+                        src={expo.thumbnailUrl}
+                        alt={expo.name}
+                        width={1600}
+                        height={900}
+                        className="size-full object-cover"
+                      />
+                    </Link>
+                  </TableCell>
                   <TableCell className="max-w-80 whitespace-normal py-4 font-medium">
                     <Link
                       href={`/partner/expo-program/expos/${expo.id}`}
@@ -146,15 +162,13 @@ export default async function PartnerExpoProgramDashboardPage() {
                   <TableCell>
                     <ExpoStatusBadge status={expo.status} />
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
+                  <TableCell className="tabular-nums">
                     {numberFormat.format(totalBooths)}
                   </TableCell>
-                  <TableCell className="text-right tabular-nums">
+                  <TableCell className="tabular-nums">
                     {numberFormat.format(soldBooths)}
                   </TableCell>
-                  <TableCell className="text-right">
-                    {formatDate(expo.startDate)}
-                  </TableCell>
+                  <TableCell>{formatDate(expo.startDate)}</TableCell>
                 </TableRow>
               ))}
               {assignedExpos.length === 0 ? (
@@ -187,12 +201,12 @@ function MetricCard({
   icon: ReactNode
 }) {
   return (
-    <Card>
-      <CardHeader>
+    <Card size="sm">
+      <CardHeader className="font-semibold">
         {title}
         <CardAction className="text-legend">{icon}</CardAction>
       </CardHeader>
-      <CardContent className="font-semibold text-3xl">{value}</CardContent>
+      <CardContent className="font-semibold text-2xl">{value}</CardContent>
     </Card>
   )
 }

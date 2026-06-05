@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   CalendarIcon,
@@ -9,13 +9,13 @@ import {
   MessageSquareIcon,
   RadioIcon,
   SearchIcon,
-  XIcon,
-} from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-import * as React from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+  XIcon
+} from "lucide-react"
+import Image from "next/image"
+import Link from "next/link"
+import * as React from "react"
+import { Button } from "@/components/ui/button"
+import { Card, CardDescription, CardTitle } from "@/components/ui/card"
 import {
   Pagination,
   PaginationContent,
@@ -23,38 +23,52 @@ import {
   PaginationItem,
   PaginationLink,
   PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
+  PaginationPrevious
+} from "@/components/ui/pagination"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import type { PartnerAccess } from "@/lib/partner/access";
+  SelectValue
+} from "@/components/ui/select"
+import type { PartnerAccess } from "@/lib/partner/access"
 import type {
   PartnerAssignedExpo,
   PartnerCapability,
   PartnerMembershipRole,
-  PartnerModel,
-} from "@/lib/partner/db";
-import type { ExpoStatus } from "@/lib/tradexpo/types";
-import { cn } from "@/lib/utils";
-import { ExpoStatusBadge } from "../tradexpo/status-badge";
+  PartnerModel
+} from "@/lib/partner/db"
+import type { ExpoStatus } from "@/lib/tradexpo/types"
+import { cn } from "@/lib/utils"
+import { ExpoStatusBadge } from "../tradexpo/status-badge"
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle
+} from "../ui/empty"
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
-  InputGroupInput,
-} from "../ui/input-group";
+  InputGroupInput
+} from "../ui/input-group"
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+const dateTimeFormat = new Intl.DateTimeFormat("en-GB", {
+  dateStyle: "medium",
+  timeStyle: "short"
+})
+
+function formatDateTime(iso?: string | null) {
+  if (!iso) return "TBA"
+
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return "TBA"
+
+  return dateTimeFormat.format(date)
 }
 
 const EXPO_STATUSES: { label: string; value: ExpoStatus | "All" }[] = [
@@ -63,14 +77,14 @@ const EXPO_STATUSES: { label: string; value: ExpoStatus | "All" }[] = [
   { label: "Pending Review", value: "Pending Review" },
   { label: "Live", value: "Live" },
   { label: "Archived", value: "Archived" },
-  { label: "Canceled", value: "Canceled" },
-];
+  { label: "Canceled", value: "Canceled" }
+]
 
 const PARTNERSHIP_MODEL_LABELS: Record<PartnerModel, string> = {
   co_host: "Co-host",
   turnkey: "Turnkey",
-  tenant: "Tenant",
-};
+  tenant: "Tenant"
+}
 
 const MEMBERSHIP_ROLE_LABELS: Record<PartnerMembershipRole, string> = {
   primary_representative: "Primary representative",
@@ -83,8 +97,8 @@ const MEMBERSHIP_ROLE_LABELS: Record<PartnerMembershipRole, string> = {
   business_manager: "Business manager",
   operations: "Operations",
   finance: "Finance",
-  viewer: "Viewer",
-};
+  viewer: "Viewer"
+}
 
 const _CAPABILITY_LABELS: Record<PartnerCapability, string> = {
   view_dashboard: "View Dashboard",
@@ -94,46 +108,46 @@ const _CAPABILITY_LABELS: Record<PartnerCapability, string> = {
   configure_operations: "Configure Operations",
   manage_branding: "Manage Branding",
   manage_tenant_settings: "Manage Tenant Settings",
-  manage_partner_users: "Manage Partner Users",
-};
+  manage_partner_users: "Manage Partner Users"
+}
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 10
 
 export function PartnerExpoList({
   access,
-  assignedExpos,
+  assignedExpos
 }: {
-  access: PartnerAccess;
-  assignedExpos: PartnerAssignedExpo[];
+  access: PartnerAccess
+  assignedExpos: PartnerAssignedExpo[]
 }) {
-  const [searchQuery, setSearchQuery] = React.useState("");
+  const [searchQuery, setSearchQuery] = React.useState("")
   const [statusFilter, setStatusFilter] = React.useState<ExpoStatus | "All">(
-    "All",
-  );
-  const [currentPage, setCurrentPage] = React.useState(1);
+    "All"
+  )
+  const [currentPage, setCurrentPage] = React.useState(1)
 
   const filteredExpos = React.useMemo(() => {
     return assignedExpos.filter(({ expo }) => {
       const matchesSearch = expo.name
         .toLowerCase()
-        .includes(searchQuery.toLowerCase());
+        .includes(searchQuery.toLowerCase())
       const matchesStatus =
-        statusFilter === "All" || expo.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    });
-  }, [assignedExpos, searchQuery, statusFilter]);
+        statusFilter === "All" || expo.status === statusFilter
+      return matchesSearch && matchesStatus
+    })
+  }, [assignedExpos, searchQuery, statusFilter])
 
-  const totalPages = Math.max(1, Math.ceil(filteredExpos.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(filteredExpos.length / PAGE_SIZE))
   const pagedExpos = React.useMemo(() => {
     return filteredExpos.slice(
       (currentPage - 1) * PAGE_SIZE,
-      currentPage * PAGE_SIZE,
-    );
-  }, [filteredExpos, currentPage]);
+      currentPage * PAGE_SIZE
+    )
+  }, [filteredExpos, currentPage])
 
   React.useEffect(() => {
-    setCurrentPage((page) => Math.min(page, totalPages));
-  }, [totalPages]);
+    setCurrentPage((page) => Math.min(page, totalPages))
+  }, [totalPages])
 
   return (
     <div className="space-y-6">
@@ -147,8 +161,8 @@ export function PartnerExpoList({
               placeholder="Expo name..."
               value={searchQuery}
               onChange={(event) => {
-                setSearchQuery(event.target.value);
-                setCurrentPage(1);
+                setSearchQuery(event.target.value)
+                setCurrentPage(1)
               }}
             />
             {searchQuery && (
@@ -158,8 +172,8 @@ export function PartnerExpoList({
                   size="icon-xs"
                   className="rounded-full"
                   onClick={() => {
-                    setSearchQuery("");
-                    setCurrentPage(1);
+                    setSearchQuery("")
+                    setCurrentPage(1)
                   }}
                 >
                   <XIcon />
@@ -172,8 +186,8 @@ export function PartnerExpoList({
           <Select
             value={statusFilter}
             onValueChange={(value) => {
-              setStatusFilter(value as ExpoStatus | "All");
-              setCurrentPage(1);
+              setStatusFilter(value as ExpoStatus | "All")
+              setCurrentPage(1)
             }}
           >
             <SelectTrigger className="w-40">
@@ -191,7 +205,7 @@ export function PartnerExpoList({
       </div>
 
       {pagedExpos.length > 0 ? (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {pagedExpos.map(
             ({
               expo,
@@ -201,19 +215,19 @@ export function PartnerExpoList({
               soldBooths,
               visitors,
               rfqCount,
-              chatCount,
+              chatCount
             }) => {
-              const isTurnkey = assignment.partnershipModel === "turnkey";
+              const isTurnkey = assignment.partnershipModel === "turnkey"
               const showMetrics = [
                 "Live",
                 "Archived",
-                "Pending Review",
-              ].includes(expo.status);
+                "Pending Review"
+              ].includes(expo.status)
 
               return (
                 <div
                   key={expo.id}
-                  className="overflow-hidden rounded-2xl border"
+                  className="overflow-hidden rounded-4xl border"
                 >
                   <div className="flex flex-col items-stretch md:flex-row">
                     {/* Thumbnail */}
@@ -227,7 +241,7 @@ export function PartnerExpoList({
                         alt={expo.name}
                         width={1600}
                         height={900}
-                        className="aspect-video max-w-md object-cover"
+                        className="aspect-video max-w-2xs object-cover"
                       />
                     </Link>
 
@@ -237,7 +251,7 @@ export function PartnerExpoList({
                         <div className="space-y-2">
                           <Link
                             href={`/partner/expo-program/expos/${expo.id}`}
-                            className="line-clamp-2 font-semibold text-xl leading-none"
+                            className="line-clamp-2 font-medium text-base leading-none"
                           >
                             {expo.name}
                           </Link>
@@ -245,8 +259,8 @@ export function PartnerExpoList({
                             <div className="flex items-center gap-1">
                               <CalendarIcon className="h-3 w-3" />
                               <span>
-                                {formatDate(expo.startDate ?? "")} –{" "}
-                                {formatDate(expo.endDate ?? "")}
+                                {formatDateTime(expo.startAt ?? expo.startDate)}{" "}
+                                – {formatDateTime(expo.endAt ?? expo.endDate)}
                               </span>
                             </div>
                             {goLiveCount > 0 && (
@@ -266,10 +280,10 @@ export function PartnerExpoList({
                         <ExpoStatusBadge status={expo.status} />
                       </div>
 
-                      <div className="mt-5 space-y-8">
+                      <div className="mt-2">
                         {/* Metrics Section */}
                         {showMetrics && (
-                          <div className="grid grid-cols-2 gap-x-10 gap-y-6">
+                          <div className="grid grid-cols-2 gap-x-20 gap-y-2.5">
                             <MetricComp
                               label="Total Views"
                               value={new Intl.NumberFormat().format(visitors)}
@@ -313,8 +327,8 @@ export function PartnerExpoList({
                     </div>
                   </div>
                 </div>
-              );
-            },
+              )
+            }
           )}
 
           {/* Pagination Controls */}
@@ -327,18 +341,18 @@ export function PartnerExpoList({
                       href="#"
                       text="Previous"
                       onClick={(e) => {
-                        e.preventDefault();
-                        if (currentPage > 1) setCurrentPage(currentPage - 1);
+                        e.preventDefault()
+                        if (currentPage > 1) setCurrentPage(currentPage - 1)
                       }}
                       className={cn(
                         "h-8 text-xs",
-                        currentPage === 1 && "pointer-events-none opacity-50",
+                        currentPage === 1 && "pointer-events-none opacity-50"
                       )}
                     />
                   </PaginationItem>
 
                   {Array.from({ length: totalPages }).map((_, i) => {
-                    const page = i + 1;
+                    const page = i + 1
                     if (
                       totalPages > 5 &&
                       page !== 1 &&
@@ -350,9 +364,9 @@ export function PartnerExpoList({
                           <PaginationItem key={page}>
                             <PaginationEllipsis />
                           </PaginationItem>
-                        );
+                        )
                       }
-                      return null;
+                      return null
                     }
 
                     return (
@@ -361,15 +375,15 @@ export function PartnerExpoList({
                           href="#"
                           isActive={page === currentPage}
                           onClick={(e) => {
-                            e.preventDefault();
-                            setCurrentPage(page);
+                            e.preventDefault()
+                            setCurrentPage(page)
                           }}
                           className="h-8 w-8 text-xs"
                         >
                           {page}
                         </PaginationLink>
                       </PaginationItem>
-                    );
+                    )
                   })}
 
                   <PaginationItem>
@@ -377,14 +391,14 @@ export function PartnerExpoList({
                       href="#"
                       text="Next"
                       onClick={(e) => {
-                        e.preventDefault();
+                        e.preventDefault()
                         if (currentPage < totalPages)
-                          setCurrentPage(currentPage + 1);
+                          setCurrentPage(currentPage + 1)
                       }}
                       className={cn(
                         "h-8 text-xs",
                         currentPage === totalPages &&
-                          "pointer-events-none opacity-50",
+                          "pointer-events-none opacity-50"
                       )}
                     />
                   </PaginationItem>
@@ -416,49 +430,50 @@ export function PartnerExpoList({
           </Button>
         </Card>
       ) : (
-        <Card className="flex min-h-75 flex-col items-center justify-center border-dashed bg-muted/20 p-8 text-center">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
-            <SearchIcon className="h-5 w-5 text-muted-foreground/60" />
-          </div>
-          <CardTitle className="mt-4 font-semibold text-sm">
-            No results found
-          </CardTitle>
-          <CardDescription className="mt-1 max-w-60 text-xs">
-            Try adjusting your search keywords or status filters.
-          </CardDescription>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setSearchQuery("");
-              setStatusFilter("All");
-            }}
-            className="mt-4 h-8 text-xs"
-          >
-            Reset Filters
-          </Button>
-        </Card>
+        <Empty className="border">
+          <EmptyMedia variant="icon">
+            <SearchIcon />
+          </EmptyMedia>
+          <EmptyHeader>
+            <EmptyTitle>No results found</EmptyTitle>
+            <EmptyDescription>
+              Try adjusting your search keywords or status filters.
+            </EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSearchQuery("")
+                setStatusFilter("All")
+              }}
+            >
+              Reset Filters
+            </Button>
+          </EmptyContent>
+        </Empty>
       )}
     </div>
-  );
+  )
 }
 
 function MetricComp({
   label,
   value,
-  icon,
+  icon
 }: {
-  label: string;
-  value: string;
-  icon: React.ReactNode;
+  label: string
+  value: string
+  icon: React.ReactNode
 }) {
   return (
     <div className="flex flex-1 items-center justify-between">
       <div className="flex items-center gap-2">
-        <div className="p-2 text-legend bg-legend-100 rounded-lg">{icon}</div>
-        <span className="font-medium text-sm capitalize">{label}</span>
+        <div className="rounded-lg bg-legend-100 p-1.5 text-legend">{icon}</div>
+        <span className="text-sm capitalize">{label}</span>
       </div>
-      <span className="font-semibold text-base tabular-nums">{value}</span>
+      <span className="text-sm tabular-nums">{value}</span>
     </div>
-  );
+  )
 }

@@ -15,10 +15,10 @@ export default async function PartnerExposPage() {
 
   return (
     <DashboardShell
-      title="Expo Programs"
+      title="Expo List"
       breadcrumbs={[
         { label: "Overview", href: "/partner" },
-        { label: "Expo Programs" }
+        { label: "Expo List" }
       ]}
     >
       <PartnerExpoPrograms access={access} workspace={workspace} />

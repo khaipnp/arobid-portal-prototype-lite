@@ -15,6 +15,7 @@ import type {
 } from "@/lib/tradexpo/types"
 import { PartnerExpoDetailOverview } from "./partner-expo-detail-overview"
 import { PartnerExpoExhibitorsTable } from "./partner-expo-exhibitors-table"
+import { PartnerExpoPackageOverviewCard } from "./partner-expo-package-overview-card"
 
 export function PartnerExpoDetailTabs({
   expoId,
@@ -36,13 +37,18 @@ export function PartnerExpoDetailTabs({
   const [tab, setTab] = useState("overview")
   const canUseGoLive =
     assignedExpo.assignment.capabilities.includes("manage_golive")
+  const canEditDraft =
+    assignedExpo.assignment.partnershipModel !== "turnkey" &&
+    assignedExpo.expo.status === "Draft" &&
+    assignedExpo.assignment.capabilities.includes("edit_expo_content")
 
   return (
     <Tabs value={tab} onValueChange={setTab} className="mt-5 gap-4">
       <TabsList>
         <TabsTrigger value="overview">Overview</TabsTrigger>
-        {canUseGoLive ? <TabsTrigger value="golive">GoLIVE</TabsTrigger> : null}
+        <TabsTrigger value="packages">Packages</TabsTrigger>
         <TabsTrigger value="exhibitors">Exhibitors</TabsTrigger>
+        {canUseGoLive ? <TabsTrigger value="golive">Events</TabsTrigger> : null}
       </TabsList>
 
       <TabsContent value="overview">
@@ -50,8 +56,15 @@ export function PartnerExpoDetailTabs({
           assignedExpo={assignedExpo}
           operations={operations}
           exhibitorsWorkspace={exhibitorsWorkspace}
-          packages={packages}
           onViewAllExhibitors={() => setTab("exhibitors")}
+        />
+      </TabsContent>
+
+      <TabsContent value="packages">
+        <PartnerExpoPackageOverviewCard
+          packages={packages}
+          canEdit={canEditDraft}
+          editHref={`/partner/expos/${assignedExpo.expo.id}/edit`}
         />
       </TabsContent>
 
