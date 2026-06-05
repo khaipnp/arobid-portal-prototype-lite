@@ -20,6 +20,14 @@ import { useState } from "react"
 import { toast } from "sonner"
 import type { BFMBroadcastItem } from "@/components/tradexpo/expo-detail/broadcast-bfm"
 import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from "@/components/ui/dialog"
 import { getAssetUrl } from "@/lib/image-utils"
 import type { ExpoDetailExhibitor } from "@/lib/tradexpo/db/platform-data"
 import type {
@@ -264,15 +272,33 @@ export function About({
   return (
     <section className="container relative mx-auto grid gap-8 px-4 py-16 md:grid-cols-[1fr_1.1fr] md:px-0">
       <h2 className="font-semibold text-[32px] leading-10">About {title}</h2>
-      <div>
-        <p className="text-foreground text-sm leading-6">{description}</p>
-        <Link
-          href="#booths"
-          className="mt-4 inline-flex items-center gap-1 font-medium text-legend text-sm"
-        >
-          View more
-          <ArrowRightIcon className="size-4" />
-        </Link>
+      <div className="space-y-5">
+        <p className="text-base">
+          Some info has been automatically translated.
+          <Button
+            variant="link"
+            className="text-foreground text-base font-normal px-1 underline"
+          >
+            Show original
+          </Button>
+        </p>
+        <p className="text-foreground text-base leading-relaxed line-clamp-4">
+          {description}
+        </p>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button size="md" variant="secondary" className="rounded-full">
+              View more
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-5xl">
+            <DialogHeader>
+              <DialogTitle>{title}</DialogTitle>
+              <DialogDescription />
+            </DialogHeader>
+            <p className="text-base">{description}</p>
+          </DialogContent>
+        </Dialog>
       </div>
     </section>
   )
@@ -281,7 +307,7 @@ export function About({
 export function Sponsors() {
   return (
     <section id="sponsors" className="container mx-auto px-4 pb-10 md:px-0">
-      <div className="border-[#e5e7eb] border-t pt-10 text-center">
+      <div className="border-muted border-t pt-10 text-center">
         <p className="font-medium text-foreground">
           Get sponsored by companies such as:
         </p>
