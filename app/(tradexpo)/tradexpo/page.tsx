@@ -131,7 +131,6 @@ export default async function TradeXpoPage() {
     <main className="min-h-screen bg-white text-foreground [font-family:var(--font-tight)]">
       <TxHeader />
       <Hero expos={heroExpos} />
-      <Introduction />
       <Exhibitions
         categories={[
           "All Categories",
@@ -140,6 +139,7 @@ export default async function TradeXpoPage() {
         expos={expoCards}
         isAuthenticated={!!userId}
       />
+      <Introduction />
       <Ecosystem />
       <BoothSteps />
       <Pricing />

@@ -1,5 +1,7 @@
+import { CalendarClockIcon, InfoIcon, Wallet2Icon } from "lucide-react"
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -19,6 +21,8 @@ import type {
   TradeCreditWallet
 } from "@/lib/tradecredit/types"
 import { Badge } from "../ui/badge"
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "../ui/empty"
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip"
 
 const numberFormat = new Intl.NumberFormat("en")
 
@@ -75,27 +79,31 @@ export function TradeCreditWalletView({
       : 0
 
   return (
-    <div className="space-y-4 px-4">
+    <div className="mt-6 space-y-4">
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           title="Available Credits"
           value={numberFormat.format(wallet.account.availableBalance)}
           note="Credits available to burn"
+          icon={<Wallet2Icon />}
         />
         <MetricCard
           title="Reserved Credits"
           value={numberFormat.format(wallet.account.reservedBalance)}
           note="Held for pending checkout"
+          icon={<Wallet2Icon />}
         />
         <MetricCard
           title="Expiring Soon"
           value={numberFormat.format(wallet.expiringSoon)}
           note="Earn lots within 30 days"
+          icon={<CalendarClockIcon />}
         />
         <MetricCard
           title="Burned Lifetime"
           value={numberFormat.format(wallet.account.burnedLifetime)}
           note="Total credits used"
+          icon={<Wallet2Icon />}
         />
       </section>
 
@@ -112,57 +120,53 @@ export function TradeCreditWalletView({
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Ledger History</CardTitle>
-          <CardDescription>
-            Credits are shown as points only. Monetary value is calculated only
-            at eligible checkout.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {wallet.ledger.length === 0 ? (
-            <div className="flex min-h-36 items-center justify-center rounded-md border border-dashed text-muted-foreground text-sm">
-              No TradeCredit activity yet.
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead className="text-right">Credits</TableHead>
-                  <TableHead>Source</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Expiry</TableHead>
+      <h2 className="mb-4 text-2xl font-bold">Ledger History</h2>
+
+      {wallet.ledger.length === 0 ? (
+        <Empty className="border">
+          <EmptyHeader>
+            <EmptyTitle>No TradeCredit activity yet.</EmptyTitle>
+            <EmptyDescription>
+              Your ledger is empty. Start earning credits by trading with us.
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      ) : (
+        <div className="border overflow-hidden rounded-2xl">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Type</TableHead>
+                <TableHead>Credits</TableHead>
+                <TableHead>Source</TableHead>
+                <TableHead>Description</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Expiry</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {wallet.ledger.map((entry) => (
+                <TableRow key={entry.ledgerEntryId}>
+                  <TableCell>
+                    <Badge variant="outline">{typeLabels[entry.type]}</Badge>
+                  </TableCell>
+                  <TableCell className="font-medium tabular-nums">
+                    {numberFormat.format(entry.creditAmount)}
+                  </TableCell>
+                  <TableCell>
+                    {sourceLabels[entry.sourceModule] ?? entry.sourceModule}
+                  </TableCell>
+                  <TableCell>{reasonLabel(entry)}</TableCell>
+                  <TableCell>{formatDateTime(entry.createdAt)}</TableCell>
+                  <TableCell>
+                    {entry.expiresAt ? formatDateTime(entry.expiresAt) : "-"}
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {wallet.ledger.map((entry) => (
-                  <TableRow key={entry.ledgerEntryId}>
-                    <TableCell className="whitespace-nowrap text-muted-foreground text-xs">
-                      {formatDateTime(entry.createdAt)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{typeLabels[entry.type]}</Badge>
-                    </TableCell>
-                    <TableCell className="text-right font-medium tabular-nums">
-                      {numberFormat.format(entry.creditAmount)}
-                    </TableCell>
-                    <TableCell>
-                      {sourceLabels[entry.sourceModule] ?? entry.sourceModule}
-                    </TableCell>
-                    <TableCell>{reasonLabel(entry)}</TableCell>
-                    <TableCell className="whitespace-nowrap text-muted-foreground text-xs">
-                      {entry.expiresAt ? formatDateTime(entry.expiresAt) : "-"}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      )}
     </div>
   )
 }
@@ -170,22 +174,30 @@ export function TradeCreditWalletView({
 function MetricCard({
   title,
   value,
-  note
+  note,
+  icon
 }: {
   title: string
   value: string
   note: string
+  icon?: React.ReactNode
 }) {
   return (
     <Card size="sm">
       <CardHeader>
-        <CardDescription>{title}</CardDescription>
-        <CardTitle className="font-semibold text-2xl tabular-nums">
-          {value}
+        <CardTitle>
+          {title}
+          <Tooltip>
+            <TooltipTrigger className="ml-1">
+              <InfoIcon size="12" className="text-muted-foreground" />
+            </TooltipTrigger>
+            <TooltipContent>{note}</TooltipContent>
+          </Tooltip>
         </CardTitle>
+        <CardAction className="text-legend">{icon}</CardAction>
       </CardHeader>
-      <CardContent className="text-muted-foreground text-xs">
-        {note}
+      <CardContent className="font-medium text-2xl text-foreground">
+        {value}
       </CardContent>
     </Card>
   )

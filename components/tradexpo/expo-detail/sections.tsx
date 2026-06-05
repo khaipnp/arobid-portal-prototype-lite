@@ -657,13 +657,16 @@ export function BoothTier({
           </div>
           <div className="mt-auto flex flex-wrap gap-3 pt-7">
             <Link href="#about">
-              <Button variant="secondary">Explore Exhibitions</Button>
+              <Button variant="secondary" size="lg" className="rounded-full">
+                View 3D Template
+              </Button>
             </Link>
 
             <Button
               variant="default"
+              size="lg"
               onClick={handleBookNow}
-              className="bg-legend hover:bg-legend-600"
+              className="rounded-full"
             >
               Book Now
             </Button>

@@ -20,7 +20,6 @@ export type HomeExpoCard = {
 export type Plan = {
   name: string
   image: string
-  price: string
   description: string
   features: string[]
   featured?: boolean
@@ -30,51 +29,40 @@ export const plans: Plan[] = [
   {
     name: "Basic",
     image: "booth-basic.jpg",
-    price: "VND 12.000.000",
     description:
       "Ideal for businesses establishing a professional digital presence to connect with global partners.",
     features: [
       "Standard Floor Area",
-      "2 Display Products",
-      "1 Advertising Banner",
-      "1 Standee",
-      "Brand Placement: Video",
-      "GoLive: Video & Chat",
-      "Product Listing: 10"
+      "3 Display Products",
+      "1 Logo Placement",
+      "1 Banner Placement",
+      "1 Video Placement"
     ]
   },
   {
     name: "Professional",
     image: "booth-pro.jpg",
-    price: "VND 20.000.000",
     description:
       "Designed for businesses transforming their virtual booth into a powerful marketing engine to attract high-value partners.",
     features: [
       "150% Standard Floor Area",
-      "8 Display Products",
-      "15 Advertising Banners",
-      "1 Video Display Screen (10s)",
-      "2 Standees",
-      "Brand Placement: 3D",
-      "GoLive: Video & Chat",
-      "Product Listing: 20"
+      "5 Display Products",
+      "1 Logo Placement",
+      "1 Banner Placement",
+      "1 Video Placement"
     ]
   },
   {
     name: "Premium",
     image: "booth-premium.jpg",
-    price: "VND 35.000.000",
     description:
       "The ultimate choice for industry leaders aiming to become the exhibition's centerpiece while asserting global prestige.",
     features: [
       "300% Standard Floor Area",
-      "16 Display Products",
-      "25 Advertising Banners",
-      "1 Video Screens (20s)",
-      "2 Standees",
-      "Brand Placement: 3D",
-      "GoLive: Video & Chat",
-      "Product Listing: 50"
+      "8 Display Products",
+      "1 Logo Placement",
+      "1 Banner Placement",
+      "1 Video Placement"
     ]
   }
 ] as const

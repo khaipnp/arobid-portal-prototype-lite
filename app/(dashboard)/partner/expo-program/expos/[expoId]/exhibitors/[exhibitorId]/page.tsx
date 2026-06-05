@@ -31,8 +31,11 @@ export default async function PartnerExpoExhibitorDetailPage({
       title="Exhibitor Details"
       breadcrumbs={[
         { label: "Overview", href: "/partner" },
-        { label: "Expo Programs", href: "/partner/expos" },
-        { label: assignedExpo.expo.name, href: `/partner/expos/${expoId}` },
+        { label: "Expo Programs", href: "/partner/expo-program/expos" },
+        {
+          label: assignedExpo.expo.name,
+          href: `/partner/expo-program/expos/${expoId}`
+        },
         { label: detail.exhibitor.displayName }
       ]}
       showBackButton
