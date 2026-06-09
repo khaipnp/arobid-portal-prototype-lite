@@ -2,6 +2,7 @@
 
 import { HeartIcon, MessageCircleIcon, Share2Icon } from "lucide-react"
 import Image from "next/image"
+import Link from "next/link"
 import { useState } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -80,7 +81,7 @@ export function ExhibitorCardActions({
 
   const shareItems = [
     {
-      label: "Link",
+      label: "Copy Link",
       logoUrl:
         "https://pub-f9f549362b7a4bc2ad361c7ca1858854.r2.dev/link-icon-free-vector.jpg",
       href: shareUrl
@@ -154,7 +155,7 @@ export function ExhibitorCardActions({
             Share
           </Button>
         </DialogTrigger>
-        <DialogContent className="rounded-4xl p-6 sm:max-w-sm">
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="sr-only">
               Share {exhibitorCompany}
@@ -162,14 +163,14 @@ export function ExhibitorCardActions({
           </DialogHeader>
           <div className="space-y-4">
             <div className="mx-auto flex w-fit flex-col items-center gap-2 rounded-xl p-3">
-              <p className="select-none font-semibold text-lg">
+              <p className="select-none font-semibold text-lg line-clamp-2 max-w-3xs text-center">
                 {exhibitorCompany}
               </p>
               <Image
                 src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(shareUrl)}`}
                 alt={`QR code for ${exhibitorCompany}`}
-                width={180}
-                height={180}
+                width={132}
+                height={132}
                 unoptimized
                 className="rounded-lg"
               />
@@ -179,21 +180,24 @@ export function ExhibitorCardActions({
             </div>
             <div className="grid grid-cols-6">
               {shareItems.map((item) => (
-                <a
+                <Link
                   key={item.label}
                   href={item.href}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex flex-col items-center gap-1"
+                  className="flex flex-col items-center gap-1.5"
                 >
                   <Image
                     src={item.logoUrl ?? ""}
                     alt={item.label ?? ""}
                     width={1000}
                     height={1000}
-                    className="size-10 rounded-full border border-gray-200 object-cover"
+                    className="size-9 rounded-full border border-gray-200 object-center"
                   />
-                </a>
+                  <span className="line-clamp-2 font-medium text-xs">
+                    {item.label}
+                  </span>
+                </Link>
               ))}
             </div>
           </div>

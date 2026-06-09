@@ -128,7 +128,7 @@ export function PartnerExpoExhibitorsTable({
                 className="rounded-full"
                 onClick={() => setQuery("")}
               >
-                <XIcon className="size-3.5" />
+                <XIcon />
               </InputGroupButton>
             </InputGroupAddon>
           )}
@@ -174,7 +174,6 @@ export function PartnerExpoExhibitorsTable({
                 <TableHead>Contact</TableHead>
                 <TableHead>Booths</TableHead>
                 <TableHead>Slot</TableHead>
-
                 <TableHead>Payment</TableHead>
               </TableRow>
             </TableHeader>
@@ -183,7 +182,7 @@ export function PartnerExpoExhibitorsTable({
                 <TableRow key={exhibitor.id}>
                   <TableCell className="font-medium">
                     <Link
-                      href={`/partner/expos/${expoId}/exhibitors/${exhibitor.id}`}
+                      href={`/partner/expo-program/expos/${expoId}/exhibitors/${exhibitor.id}`}
                       className="flex items-center gap-2 hover:underline"
                     >
                       {exhibitor.logoUrl ? (

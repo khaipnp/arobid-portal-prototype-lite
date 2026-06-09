@@ -14,7 +14,6 @@ export default async function SellerTradeCreditPage() {
   return (
     <DashboardShell
       title="TradeCredit Wallet"
-      description="View your point balance, reserved credits, cap usage, and immutable ledger history."
       breadcrumbs={[
         { label: "Seller", href: "/seller" },
         { label: "TradeCredit" }

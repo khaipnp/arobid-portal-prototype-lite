@@ -16,7 +16,7 @@ export function Pricing() {
         {plans.map((plan) => (
           <article
             key={plan.name}
-            className="relative overflow-hidden rounded-4xl border-2 bg-white/80 p-2 backdrop-blur-sm hover:border-legend transition-colors duration-300"
+            className="relative overflow-hidden rounded-4xl border bg-white/80 p-2 backdrop-blur-sm hover:border-legend transition-colors duration-300"
           >
             <div className="relative h-[166px] overflow-hidden rounded-xl">
               <Image
@@ -32,15 +32,11 @@ export function Pricing() {
                 </span>
               </div>
             </div>
-            <div className="p-4">
+            <div className="px-4 py-5">
               <h3 className="font-semibold text-xl">{plan.name}</h3>
-              <p className="mt-2 min-h-10 text-[#6b7280] text-xs leading-4">
+              <p className="mt-2 min-h-10 text-foreground text-sm">
                 {plan.description}
               </p>
-              <div className="mt-4 flex items-baseline gap-4">
-                <span className="text-xs">Only from</span>
-                <span className="font-semibold text-3xl">{plan.price}</span>
-              </div>
             </div>
             <div className="rounded-xl border border-[#f3f4f6] bg-white p-4">
               <ul className="space-y-2">
@@ -49,9 +45,7 @@ export function Pricing() {
                     <Check className="size-4 text-emerald-600" />
                     <span
                       className={
-                        feature.match(/^[0-9]|Product Listing/)
-                          ? "font-semibold"
-                          : undefined
+                        feature.match(/^[4-9]/) ? "font-semibold" : undefined
                       }
                     >
                       {feature}

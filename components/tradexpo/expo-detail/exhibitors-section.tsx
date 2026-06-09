@@ -1,6 +1,6 @@
 "use client"
 
-import { SearchIcon } from "lucide-react"
+import { SearchIcon, XIcon } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input"
 import {
   InputGroup,
   InputGroupAddon,
+  InputGroupButton,
   InputGroupInput
 } from "@/components/ui/input-group"
 import { Label } from "@/components/ui/label"
@@ -157,10 +158,12 @@ export function ExhibitorsSection({
     <section className="bg-muted px-4 py-16">
       <div className="container mx-auto">
         <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-          <h2 className="font-semibold text-[32px] leading-10">Exhibitors</h2>
-          <div className="flex flex-col gap-2 md:flex-row md:items-center">
-            <InputGroup className="rounded-full bg-white">
-              <InputGroupAddon>
+          <h2 className="flex-1 font-semibold text-[32px] leading-10">
+            Exhibitors
+          </h2>
+          <div className="flex flex-1 flex-col gap-2 md:flex-row md:items-center">
+            <InputGroup className="w-full max-w-xs rounded-full bg-white">
+              <InputGroupAddon align="inline-start">
                 <SearchIcon />
               </InputGroupAddon>
               <InputGroupInput
@@ -168,10 +171,22 @@ export function ExhibitorsSection({
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by exhibitor name..."
               />
+              {search && (
+                <InputGroupAddon align="inline-end">
+                  <InputGroupButton
+                    variant="ghost"
+                    size="icon-xs"
+                    className="rounded-full"
+                    onClick={() => setSearch("")}
+                  >
+                    <XIcon />
+                  </InputGroupButton>
+                </InputGroupAddon>
+              )}
             </InputGroup>
 
             <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger className="w-full rounded-full bg-white text-sm md:w-xs">
+              <SelectTrigger className="rounded-full bg-white md:max-w-xs">
                 <SelectValue placeholder="All category" />
               </SelectTrigger>
               <SelectContent>
@@ -183,10 +198,7 @@ export function ExhibitorsSection({
                 ))}
               </SelectContent>
             </Select>
-            <Button
-              asChild
-              className="rounded-full bg-legend text-sm hover:bg-legend-600"
-            >
+            <Button asChild className="rounded-full" size="lg">
               <Link href="#booths">Join as Exhibitor</Link>
             </Button>
           </div>

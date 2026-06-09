@@ -3,7 +3,13 @@ import Image from "next/image"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card"
 import type { PartnerExpoExhibitorDetail } from "@/lib/partner/db"
 import { Label } from "../ui/label"
 
@@ -68,7 +74,7 @@ export function PartnerExpoExhibitorDetailView({
   )
 
   return (
-    <div className="space-y-8 px-4">
+    <div className="mt-6 space-y-8">
       <Card>
         <CardContent className="flex flex-col gap-4 md:flex-row md:items-start">
           <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border">
@@ -116,42 +122,40 @@ export function PartnerExpoExhibitorDetailView({
         </CardContent>
       </Card>
 
-      <section className="space-y-4">
-        <div>
-          <h2 className="font-medium text-lg">Performance</h2>
-          <p className="text-muted-foreground text-sm">
+      <Card size="sm">
+        <CardHeader className="border-b">
+          <CardTitle>Performance</CardTitle>
+          <CardDescription>
             Real engagement captured between expo start and end.
-          </p>
-        </div>
-        <Card>
-          <CardContent className="grid gap-3 md:grid-cols-3">
-            <PerformanceMetric
-              label="RFQs received"
-              value={numberFormat.format(detail.performance.rfqCount)}
-            />
-            <PerformanceMetric
-              label="Chat events received"
-              value={numberFormat.format(detail.performance.chatCount)}
-            />
-            <PerformanceMetric
-              label="eProfile visits"
-              value={numberFormat.format(detail.performance.eProfileVisits)}
-            />
-            <PerformanceMetric
-              label="Most viewed product"
-              value={formatTopProduct(detail.performance.topViewedProduct)}
-            />
-            <PerformanceMetric
-              label="Most chatted product"
-              value={formatTopProduct(detail.performance.topChattedProduct)}
-            />
-            <PerformanceMetric
-              label="Most wishlisted product"
-              value={formatTopProduct(detail.performance.topWishlistedProduct)}
-            />
-          </CardContent>
-        </Card>
-      </section>
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-3 md:grid-cols-3">
+          <PerformanceMetric
+            label="RFQs received"
+            value={numberFormat.format(detail.performance.rfqCount)}
+          />
+          <PerformanceMetric
+            label="Chat events received"
+            value={numberFormat.format(detail.performance.chatCount)}
+          />
+          <PerformanceMetric
+            label="eProfile visits"
+            value={numberFormat.format(detail.performance.eProfileVisits)}
+          />
+          <PerformanceMetric
+            label="Most viewed product"
+            value={formatTopProduct(detail.performance.topViewedProduct)}
+          />
+          <PerformanceMetric
+            label="Most chatted product"
+            value={formatTopProduct(detail.performance.topChattedProduct)}
+          />
+          <PerformanceMetric
+            label="Most wishlisted product"
+            value={formatTopProduct(detail.performance.topWishlistedProduct)}
+          />
+        </CardContent>
+      </Card>
 
       {/* Orders */}
       <section className="space-y-4">
