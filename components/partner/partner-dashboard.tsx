@@ -318,6 +318,76 @@ export function PartnerDashboard({
             />
           </div>
         </div>
+        <div className="space-y-5 xl:col-span-3">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold text-2xl">
+              Partner Activation Funnel
+            </h2>
+            <Tabs
+              value={selectedDuration}
+              onValueChange={(value) =>
+                setSelectedDuration(
+                  value as (typeof dashboardDurations)[number]
+                )
+              }
+            >
+              <TabsList className="rounded-xl p-1">
+                {dashboardDurations.map((duration) => (
+                  <TabsTrigger
+                    key={duration}
+                    value={duration}
+                    className="rounded-lg px-3"
+                  >
+                    {duration}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <MetricWidget
+              label="Invited enterprises"
+              value={operationsSummary.views}
+              description="Visitor activity in the selected duration"
+              icon={<EyeIcon className="size-4" />}
+              comparison={buildPeriodComparison(
+                operationsSummary.views,
+                previousOperationsSummary.views
+              )}
+            />
+            <MetricWidget
+              label="Verified enterprises"
+              value={operationsSummary.activatedEnterprises}
+              description="Member activity in the selected duration"
+              icon={<UsersIcon className="size-4" />}
+              comparison={buildPeriodComparison(
+                operationsSummary.activatedEnterprises,
+                previousOperationsSummary.activatedEnterprises
+              )}
+            />
+            <MetricWidget
+              label="Profile completed"
+              value={operationsSummary.soldBooths}
+              description="Booth sold in the selected duration"
+              icon={<ActivityIcon className="size-4" />}
+              comparison={buildPeriodComparison(
+                operationsSummary.soldBooths,
+                previousOperationsSummary.soldBooths
+              )}
+            />
+            <MetricWidget
+              label="Expo activated"
+              value={operationsSummary.rfqs}
+              description="RFQs created in the selected duration"
+              icon={<RadioTowerIcon className="size-4" />}
+              comparison={buildPeriodComparison(
+                operationsSummary.rfqs,
+                previousOperationsSummary.rfqs
+              )}
+            />
+          </div>
+        </div>
         <ExpoInventorySection metrics={metrics} />
         <TradeActivitySection metrics={metrics} />
       </div>
