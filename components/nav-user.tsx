@@ -3,6 +3,7 @@
 import {
   BellIcon,
   ChevronRightIcon,
+  LanguagesIcon,
   LogOutIcon,
   UserCircleIcon
 } from "lucide-react"
@@ -10,6 +11,14 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import * as React from "react"
 import { AccountProfileDialog } from "@/components/account/account-profile-dialog"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,6 +48,7 @@ export function NavUser({
   const { isMobile } = useSidebar()
   const router = useRouter()
   const [accountOpen, setAccountOpen] = React.useState(false)
+  const [languageOpen, setLanguageOpen] = React.useState(false)
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" })
@@ -101,6 +111,15 @@ export function NavUser({
                     Notifications
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={(event) => {
+                    event.preventDefault()
+                    setLanguageOpen(true)
+                  }}
+                >
+                  <LanguagesIcon />
+                  Language
+                </DropdownMenuItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout}>
@@ -112,6 +131,24 @@ export function NavUser({
         </SidebarMenuItem>
       </SidebarMenu>
       <AccountProfileDialog open={accountOpen} onOpenChange={setAccountOpen} />
+      <Dialog open={languageOpen} onOpenChange={setLanguageOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Language</DialogTitle>
+            <DialogDescription>
+              Choose the language you want to use.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-2">
+            <Button type="button" variant="outline" className="justify-start">
+              English
+            </Button>
+            <Button type="button" variant="outline" className="justify-start">
+              Vietnamese
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }
