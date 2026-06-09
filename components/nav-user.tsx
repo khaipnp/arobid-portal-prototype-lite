@@ -150,11 +150,7 @@ export function NavUser({
               <div className="grid grid-cols-2 gap-2">
                 <Button
                   type="button"
-                  variant={
-                    selectedLanguage === "English"
-                      ? "outline border-foreground"
-                      : "ghost"
-                  }
+                  variant={selectedLanguage === "English" ? "outline" : "ghost"}
                   className={cn(
                     selectedLanguage === "English" ? "border-foreground" : "",
                     "h-fit flex-col justify-start items-start py-2 gap-0.5"
