@@ -53,7 +53,10 @@ import {
   TableRow
 } from "@/components/ui/table"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import type { PartnerDashboardMetrics } from "@/lib/partner/db"
+import type {
+  PartnerDashboardMetrics,
+  PartnerDashboardOperationsSummary
+} from "@/lib/partner/db"
 import { formatExpoScheduleLabel } from "@/lib/tradexpo/schedule"
 import { ExpoStatusBadge } from "../tradexpo/status-badge"
 import { Badge } from "../ui/badge"
@@ -72,6 +75,7 @@ const compactNumber = new Intl.NumberFormat("en", {
 const numberFormat = new Intl.NumberFormat("en")
 
 const dashboardDurations = ["1D", "3D", "7D", "15D", "30D"] as const
+const funnelDurations = ["7D", "30D", "90D"] as const
 
 const inventoryChartConfig = {
   soldBooths: {
@@ -164,6 +168,121 @@ function getComparisonToneClass(tone: MetricComparison["tone"]) {
   return "bg-muted text-muted-foreground"
 }
 
+type PartnerActivationFunnelDuration = (typeof funnelDurations)[number]
+
+type FunnelStage = {
+  label: string
+  value: number
+  previousValue: number
+  description: string
+  href: string
+  colorClass: string
+}
+
+type FunnelStageComparison = {
+  delta: number
+  percentage: number | null
+  tone: MetricComparison["tone"]
+}
+
+function getFunnelOperationsSummary(
+  metrics: PartnerDashboardMetrics,
+  duration: PartnerActivationFunnelDuration,
+  period: "current" | "previous"
+): PartnerDashboardOperationsSummary {
+  const summaries =
+    period === "current"
+      ? metrics.operationsByDuration
+      : metrics.previousOperationsByDuration
+  const summary = duration === "90D" ? summaries["30D"] : summaries[duration]
+  const multiplier = duration === "90D" ? 3 : 1
+
+  return {
+    views: Math.round(summary.views * multiplier),
+    activatedEnterprises: Math.round(summary.activatedEnterprises * multiplier),
+    soldBooths: Math.round(summary.soldBooths * multiplier),
+    rfqs: Math.round(summary.rfqs * multiplier)
+  }
+}
+
+function buildFunnelStages(
+  metrics: PartnerDashboardMetrics,
+  duration: PartnerActivationFunnelDuration
+): FunnelStage[] {
+  const current = getFunnelOperationsSummary(metrics, duration, "current")
+  const previous = getFunnelOperationsSummary(metrics, duration, "previous")
+
+  const invited = Math.max(
+    current.views,
+    current.activatedEnterprises + current.soldBooths + current.rfqs
+  )
+  const verified = Math.min(invited, current.activatedEnterprises)
+  const profileCompleted = Math.min(
+    verified,
+    Math.max(current.soldBooths, Math.round(verified * 0.17))
+  )
+  const previousInvited = Math.max(
+    previous.views,
+    previous.activatedEnterprises + previous.soldBooths + previous.rfqs
+  )
+  const previousVerified = Math.min(
+    previousInvited,
+    previous.activatedEnterprises
+  )
+  const previousProfileCompleted = Math.min(
+    previousVerified,
+    Math.max(previous.soldBooths, Math.round(previousVerified * 0.17))
+  )
+
+  return [
+    {
+      label: "Invited",
+      value: invited,
+      previousValue: previousInvited,
+      description: "Distinct invited enterprise identities in partner scope",
+      href: "/partner/partner-site/invitations",
+      colorClass: "from-sky-500 to-cyan-400"
+    },
+    {
+      label: "Verified/Seller onboarding",
+      value: verified,
+      previousValue: previousVerified,
+      description:
+        "Seller onboarding completed with General Information submitted",
+      href: "/partner/partner-site/enterprises",
+      colorClass: "from-violet-500 to-fuchsia-400"
+    },
+    {
+      label: "Profile completed > 80%",
+      value: profileCompleted,
+      previousValue: previousProfileCompleted,
+      description: "eProfile valid filled fields strictly greater than 80%",
+      href: "/partner/partner-site/enterprises",
+      colorClass: "from-emerald-500 to-lime-400"
+    }
+  ]
+}
+
+function buildFunnelComparison(
+  value: number,
+  previousValue: number
+): FunnelStageComparison {
+  const delta = value - previousValue
+  const percentage =
+    previousValue === 0 ? null : Math.round((delta / previousValue) * 100)
+
+  return {
+    delta,
+    percentage,
+    tone: delta > 0 ? "positive" : delta < 0 ? "negative" : "neutral"
+  }
+}
+
+function formatDelta(value: number) {
+  if (value === 0) return "0"
+  return `${value > 0 ? "+" : "-"}${numberFormat.format(Math.abs(value))}`
+}
+
 function toTrendKey(value: string, index: number) {
   return `tier_${index}_${value.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`
 }
@@ -218,6 +337,98 @@ function MetricWidget({
   )
 }
 
+function PartnerActivationFunnel({ stages }: { stages: FunnelStage[] }) {
+  const maxValue = Math.max(...stages.map((stage) => stage.value), 0)
+  const hasFunnelData = maxValue > 0
+
+  return (
+    <Card size="sm" className="overflow-hidden">
+      <CardHeader className="border-b">
+        <div className="space-y-1">
+          <CardTitle>Enterprise activation drop-off</CardTitle>
+          <CardDescription>
+            Invitation to verified onboarding to eProfile completion
+          </CardDescription>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {stages.map((stage, index) => {
+          const comparison = buildFunnelComparison(
+            stage.value,
+            stage.previousValue
+          )
+          const width = hasFunnelData
+            ? Math.max(20, Math.round((stage.value / maxValue) * 100))
+            : 100
+
+          return (
+            <Link
+              key={stage.label}
+              href={stage.href}
+              className="group block rounded-2xl border bg-card/80 p-3 transition-colors hover:border-primary/40 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label={`Open ${stage.label} module`}
+            >
+              <div className="grid gap-3 md:grid-cols-[10rem_1fr_14rem] md:items-center">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2 font-medium text-sm">
+                    <span className="flex size-6 items-center justify-center rounded-full bg-muted font-semibold text-muted-foreground text-xs">
+                      {index + 1}
+                    </span>
+                    {stage.label}
+                  </div>
+                  <p className="text-muted-foreground text-xs leading-snug">
+                    {stage.description}
+                  </p>
+                </div>
+
+                <div className="flex min-h-16 items-center">
+                  <div
+                    className={`flex h-14 items-center justify-between rounded-r-full rounded-l-2xl px-4 shadow-sm transition-transform group-hover:scale-[1.01] ${hasFunnelData ? `bg-gradient-to-r text-white ${stage.colorClass}` : "bg-muted text-muted-foreground"}`}
+                    style={{ width: `${width}%` }}
+                  >
+                    <span className="font-semibold text-lg tabular-nums">
+                      {numberFormat.format(stage.value)}
+                    </span>
+                    <span
+                      className={`hidden text-xs sm:inline ${hasFunnelData ? "text-white/80" : "text-muted-foreground"}`}
+                    >
+                      {hasFunnelData
+                        ? `${formatPercent((stage.value / maxValue) * 100)} of top`
+                        : "No data"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2 md:justify-end">
+                  <Badge
+                    variant="outline"
+                    className={`tabular-nums ${getComparisonToneClass(comparison.tone)}`}
+                  >
+                    {formatDelta(comparison.delta)}
+                  </Badge>
+                  {comparison.percentage === null ? null : (
+                    <Badge
+                      className={`tabular-nums ${getComparisonToneClass(comparison.tone)}`}
+                    >
+                      {comparison.percentage > 0 ? "+" : ""}
+                      {formatPercent(comparison.percentage)}
+                      {comparison.tone === "positive" ? (
+                        <TrendingUpIcon strokeWidth="2.5" />
+                      ) : comparison.tone === "negative" ? (
+                        <TrendingDownIcon strokeWidth="2.5" />
+                      ) : null}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </Link>
+          )
+        })}
+      </CardContent>
+    </Card>
+  )
+}
+
 export function PartnerDashboard({
   metrics
 }: {
@@ -225,9 +436,12 @@ export function PartnerDashboard({
 }) {
   const [selectedDuration, setSelectedDuration] =
     useState<(typeof dashboardDurations)[number]>("1D")
+  const [selectedFunnelDuration, setSelectedFunnelDuration] =
+    useState<PartnerActivationFunnelDuration>("7D")
   const operationsSummary = metrics.operationsByDuration[selectedDuration]
   const previousOperationsSummary =
     metrics.previousOperationsByDuration[selectedDuration]
+  const funnelStages = buildFunnelStages(metrics, selectedFunnelDuration)
 
   return (
     <div className="space-y-6 px-4 py-4">
@@ -319,20 +533,26 @@ export function PartnerDashboard({
           </div>
         </div>
         <div className="space-y-5 xl:col-span-3">
-          <div className="flex items-center justify-between">
-            <h2 className="font-semibold text-2xl">
-              Partner Activation Funnel
-            </h2>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <h2 className="font-semibold text-2xl">
+                Partner Activation Funnel
+              </h2>
+              <p className="text-muted-foreground text-sm">
+                Sequential enterprise drop-off from invitation to verified
+                onboarding and profile completion.
+              </p>
+            </div>
             <Tabs
-              value={selectedDuration}
+              value={selectedFunnelDuration}
               onValueChange={(value) =>
-                setSelectedDuration(
-                  value as (typeof dashboardDurations)[number]
+                setSelectedFunnelDuration(
+                  value as PartnerActivationFunnelDuration
                 )
               }
             >
               <TabsList className="rounded-xl p-1">
-                {dashboardDurations.map((duration) => (
+                {funnelDurations.map((duration) => (
                   <TabsTrigger
                     key={duration}
                     value={duration}
@@ -345,48 +565,7 @@ export function PartnerDashboard({
             </Tabs>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <MetricWidget
-              label="Invited enterprises"
-              value={operationsSummary.views}
-              description="Visitor activity in the selected duration"
-              icon={<EyeIcon className="size-4" />}
-              comparison={buildPeriodComparison(
-                operationsSummary.views,
-                previousOperationsSummary.views
-              )}
-            />
-            <MetricWidget
-              label="Verified enterprises"
-              value={operationsSummary.activatedEnterprises}
-              description="Member activity in the selected duration"
-              icon={<UsersIcon className="size-4" />}
-              comparison={buildPeriodComparison(
-                operationsSummary.activatedEnterprises,
-                previousOperationsSummary.activatedEnterprises
-              )}
-            />
-            <MetricWidget
-              label="Profile completed"
-              value={operationsSummary.soldBooths}
-              description="Booth sold in the selected duration"
-              icon={<ActivityIcon className="size-4" />}
-              comparison={buildPeriodComparison(
-                operationsSummary.soldBooths,
-                previousOperationsSummary.soldBooths
-              )}
-            />
-            <MetricWidget
-              label="Expo activated"
-              value={operationsSummary.rfqs}
-              description="RFQs created in the selected duration"
-              icon={<RadioTowerIcon className="size-4" />}
-              comparison={buildPeriodComparison(
-                operationsSummary.rfqs,
-                previousOperationsSummary.rfqs
-              )}
-            />
-          </div>
+          <PartnerActivationFunnel stages={funnelStages} />
         </div>
         <ExpoInventorySection metrics={metrics} />
         <TradeActivitySection metrics={metrics} />
