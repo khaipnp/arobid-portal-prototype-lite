@@ -649,6 +649,41 @@ export type PartnerExpoOperationsDetail = {
   registrationStatusBreakdown: PartnerExpoRegistrationStatusBreakdown[]
 }
 
+export const partnerReferralDateRanges = ["7d", "30d", "90d", "all"] as const
+
+export const partnerReferralShareChannels = [
+  "copy",
+  "facebook",
+  "linkedin",
+  "zalo",
+  "whatsapp",
+  "email"
+] as const
+
+export type PartnerReferralDateRange =
+  (typeof partnerReferralDateRanges)[number]
+
+export type PartnerReferralShareChannel =
+  (typeof partnerReferralShareChannels)[number]
+
+export type PartnerReferralAnalyticsChannel = {
+  channel: PartnerReferralShareChannel
+  views: number
+  conversions: number
+  conversionRate: number
+}
+
+export type PartnerReferralAnalytics = {
+  status: "ready" | "empty" | "unavailable"
+  dateRange: PartnerReferralDateRange
+  channel: PartnerReferralShareChannel | "all"
+  pageViews: number
+  conversions: number
+  conversionRate: number
+  lastUpdatedAt: string | null
+  channelBreakdown: PartnerReferralAnalyticsChannel[]
+}
+
 export type PartnerExpoExhibitorPaymentStatus = "Paid" | "Pending" | "No order"
 
 export type PartnerExpoExhibitorTierMix = {
@@ -4909,6 +4944,175 @@ function toNumber(value: unknown): number {
         : 0
 
   return Number.isFinite(numberValue) ? numberValue : 0
+}
+
+function getPartnerReferralRangeSince(range: PartnerReferralDateRange) {
+  if (range === "all") return null
+
+  const days = range === "7d" ? 7 : range === "90d" ? 90 : 30
+  return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
+}
+
+function toConversionRate(conversions: number, pageViews: number) {
+  if (pageViews <= 0) return 0
+  return Math.round((conversions / pageViews) * 1000) / 10
+}
+
+export async function getPartnerExpoReferralAnalytics(
+  userId: string,
+  expoId: string,
+  input: {
+    dateRange?: PartnerReferralDateRange
+    channel?: PartnerReferralShareChannel | "all"
+  } = {}
+): Promise<PartnerReferralAnalytics | null> {
+  const assigned = await getAssignedPartnerExpoName(userId, expoId)
+  if (!assigned) return null
+
+  const dateRange = input.dateRange ?? "30d"
+  const channel = input.channel ?? "all"
+  const since = getPartnerReferralRangeSince(dateRange)
+  const channelFilter = channel === "all" ? null : channel
+
+  const metricRows = (await sql`
+    with landings as (
+      select
+        event.id,
+        event.referral_token,
+        event.share_channel,
+        event.created_at
+      from expo_referral_events event
+      where event.expo_id = ${expoId}
+        and event.event_type = 'landing'
+        and (${since}::timestamptz is null or event.created_at >= ${since})
+        and (${channelFilter}::text is null or event.share_channel = ${channelFilter})
+    ),
+    conversions as (
+      select
+        conversion.id,
+        attribution.share_channel,
+        conversion.created_at
+      from expo_referral_events conversion
+      inner join lateral (
+        select landing.share_channel
+        from landings landing
+        where landing.referral_token = conversion.referral_token
+          and landing.created_at <= conversion.created_at
+          and conversion.created_at < landing.created_at + interval '7 days'
+        order by landing.created_at desc
+        limit 1
+      ) attribution on true
+      where conversion.expo_id = ${expoId}
+        and conversion.event_type in (
+          'join_exhibitor_click',
+          'exhibitor_item_click',
+          'virtual_lobby_click'
+        )
+        and (${since}::timestamptz is null or conversion.created_at >= ${since})
+    ),
+    all_events as (
+      select created_at from landings
+      union all
+      select created_at from conversions
+    )
+    select
+      (select count(*)::int from landings) as page_views,
+      (select count(*)::int from conversions) as conversions,
+      (select max(created_at) from all_events) as last_updated_at
+  `) as {
+    page_views: number | string
+    conversions: number | string
+    last_updated_at: string | Date | null
+  }[]
+
+  const channelRows = (await sql`
+    with channels(channel) as (
+      values
+        ('copy'),
+        ('facebook'),
+        ('linkedin'),
+        ('zalo'),
+        ('whatsapp'),
+        ('email')
+    ),
+    landings as (
+      select
+        event.id,
+        event.referral_token,
+        event.share_channel,
+        event.created_at
+      from expo_referral_events event
+      where event.expo_id = ${expoId}
+        and event.event_type = 'landing'
+        and (${since}::timestamptz is null or event.created_at >= ${since})
+        and (${channelFilter}::text is null or event.share_channel = ${channelFilter})
+    ),
+    conversions as (
+      select
+        conversion.id,
+        attribution.share_channel,
+        conversion.created_at
+      from expo_referral_events conversion
+      inner join lateral (
+        select landing.share_channel
+        from landings landing
+        where landing.referral_token = conversion.referral_token
+          and landing.created_at <= conversion.created_at
+          and conversion.created_at < landing.created_at + interval '7 days'
+        order by landing.created_at desc
+        limit 1
+      ) attribution on true
+      where conversion.expo_id = ${expoId}
+        and conversion.event_type in (
+          'join_exhibitor_click',
+          'exhibitor_item_click',
+          'virtual_lobby_click'
+        )
+        and (${since}::timestamptz is null or conversion.created_at >= ${since})
+    )
+    select
+      channels.channel,
+      count(distinct landings.id)::int as views,
+      count(distinct conversions.id)::int as conversions
+    from channels
+    left join landings on landings.share_channel = channels.channel
+    left join conversions on conversions.share_channel = channels.channel
+    where ${channelFilter}::text is null or channels.channel = ${channelFilter}
+    group by channels.channel
+    order by views desc, conversions desc, channels.channel asc
+  `) as {
+    channel: PartnerReferralShareChannel
+    views: number | string
+    conversions: number | string
+  }[]
+
+  const metric = metricRows[0]
+  const pageViews = toNumber(metric?.page_views)
+  const conversions = toNumber(metric?.conversions)
+  const lastUpdatedAt = metric?.last_updated_at
+    ? toIso(metric.last_updated_at)
+    : null
+
+  return {
+    status: lastUpdatedAt ? "ready" : "empty",
+    dateRange,
+    channel,
+    pageViews,
+    conversions,
+    conversionRate: toConversionRate(conversions, pageViews),
+    lastUpdatedAt,
+    channelBreakdown: channelRows.map((row) => {
+      const views = toNumber(row.views)
+      const rowConversions = toNumber(row.conversions)
+
+      return {
+        channel: row.channel,
+        views,
+        conversions: rowConversions,
+        conversionRate: toConversionRate(rowConversions, views)
+      }
+    })
+  }
 }
 
 export async function listPartnerAssignedExpos(
