@@ -55,10 +55,41 @@ function toSellerExpoViewStatus(status: ExpoStatus): SellerExpoViewStatus {
   return "Upcoming"
 }
 
-function formatDate(iso: string) {
-  return new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" }).format(
-    new Date(iso)
-  )
+const dateFormatter = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" })
+
+const monthYearFormatter = new Intl.DateTimeFormat("en-GB", {
+  month: "long",
+  year: "numeric"
+})
+
+function formatDate(iso?: string | null) {
+  if (!iso) return null
+
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return null
+
+  return dateFormatter.format(date)
+}
+
+function formatExpoSchedule(expo: Expo) {
+  const startDate = formatDate(expo.startDate ?? expo.startAt)
+  const endDate = formatDate(expo.endDate ?? expo.endAt)
+
+  if (startDate && endDate) return `${startDate} – ${endDate}`
+  if (startDate) return startDate
+  if (endDate) return endDate
+
+  if (
+    expo.schedulePrecision === "month_year" &&
+    expo.scheduleMonth &&
+    expo.scheduleYear
+  ) {
+    return monthYearFormatter.format(
+      new Date(expo.scheduleYear, expo.scheduleMonth - 1)
+    )
+  }
+
+  return "TBA"
 }
 
 interface ExpoWithBooths {
@@ -246,8 +277,7 @@ function ExpoCard({
         <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-muted-foreground text-sm">
           <span className="flex items-center gap-1">
             <CalendarIcon className="h-3.5 w-3.5" />
-            {formatDate(expo.startDate ?? "")} –{" "}
-            {formatDate(expo.endDate ?? "")}
+            {formatExpoSchedule(expo)}
           </span>
           <span className="flex items-center gap-1">
             <StoreIcon className="h-3.5 w-3.5" />
