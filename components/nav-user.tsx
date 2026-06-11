@@ -7,10 +7,10 @@ import {
   LogOutIcon,
   UserCircleIcon
 } from "lucide-react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import * as React from "react"
 import { AccountProfileDialog } from "@/components/account/account-profile-dialog"
+import { NotificationTrigger } from "@/components/notifications/notification-trigger"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -105,14 +105,20 @@ export function NavUser({
                   <UserCircleIcon />
                   Account
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Link
-                    href="/seller/notifications"
-                    className="flex items-center gap-1.5"
+                <DropdownMenuItem
+                  asChild
+                  onSelect={(event) => {
+                    event.preventDefault()
+                  }}
+                >
+                  <NotificationTrigger
+                    className="h-auto w-full justify-start rounded-md px-1.5 py-1 font-normal"
+                    size="sm"
+                    variant="ghost"
                   >
                     <BellIcon />
                     Notifications
-                  </Link>
+                  </NotificationTrigger>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onSelect={(event) => {
@@ -144,7 +150,7 @@ export function NavUser({
           </DialogHeader>
           <div className="grid gap-6">
             <section className="grid gap-2">
-              <h3 className="font-medium text-foreground text-base">
+              <h3 className="font-medium text-base text-foreground">
                 Language
               </h3>
               <div className="grid grid-cols-2 gap-2">
@@ -153,13 +159,13 @@ export function NavUser({
                   variant={selectedLanguage === "English" ? "outline" : "ghost"}
                   className={cn(
                     selectedLanguage === "English" ? "border-foreground" : "",
-                    "h-fit flex-col justify-start items-start py-2 gap-0.5"
+                    "h-fit flex-col items-start justify-start gap-0.5 py-2"
                   )}
                   aria-pressed={selectedLanguage === "English"}
                   onClick={() => setSelectedLanguage("English")}
                 >
                   English{" "}
-                  <span className="text-xs text-muted-foreground items-start">
+                  <span className="items-start text-muted-foreground text-xs">
                     Global
                   </span>
                 </Button>
@@ -172,20 +178,20 @@ export function NavUser({
                     selectedLanguage === "Vietnamese"
                       ? "border-foreground"
                       : "",
-                    "h-fit flex-col justify-start items-start py-2 gap-0.5"
+                    "h-fit flex-col items-start justify-start gap-0.5 py-2"
                   )}
                   aria-pressed={selectedLanguage === "Vietnamese"}
                   onClick={() => setSelectedLanguage("Vietnamese")}
                 >
                   Tiếng Việt{" "}
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-muted-foreground text-xs">
                     Việt Nam
                   </span>
                 </Button>
               </div>
             </section>
             <section className="grid gap-2">
-              <h3 className="font-medium text-foreground text-base">
+              <h3 className="font-medium text-base text-foreground">
                 Currency
               </h3>
               <div className="grid grid-cols-2 gap-2">
@@ -194,7 +200,7 @@ export function NavUser({
                   variant={selectedCurrency === "USD" ? "outline" : "ghost"}
                   className={cn(
                     selectedCurrency === "USD" ? "border-foreground" : "",
-                    "h-fit flex-col justify-start items-start py-2 gap-0.5"
+                    "h-fit flex-col items-start justify-start gap-0.5 py-2"
                   )}
                   aria-pressed={selectedCurrency === "USD"}
                   onClick={() => setSelectedCurrency("USD")}
@@ -206,7 +212,7 @@ export function NavUser({
                   variant={selectedCurrency === "VND" ? "outline" : "ghost"}
                   className={cn(
                     selectedCurrency === "VND" ? "border-foreground" : "",
-                    "h-fit flex-col justify-start items-start py-2 gap-0.5"
+                    "h-fit flex-col items-start justify-start gap-0.5 py-2"
                   )}
                   aria-pressed={selectedCurrency === "VND"}
                   onClick={() => setSelectedCurrency("VND")}
