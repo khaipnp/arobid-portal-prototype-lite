@@ -17,8 +17,6 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
-  Line,
-  LineChart,
   Pie,
   PieChart,
   PolarAngleAxis,
@@ -59,7 +57,6 @@ import type {
 } from "@/lib/partner/db"
 import { formatExpoScheduleLabel } from "@/lib/tradexpo/schedule"
 import { ExpoStatusBadge } from "../tradexpo/status-badge"
-import { Badge } from "../ui/badge"
 import {
   Tooltip,
   TooltipContent,
@@ -88,7 +85,7 @@ const inventoryChartConfig = {
   }
 } satisfies ChartConfig
 
-const tierTrendColors = [
+const boothTierColors = [
   "var(--chart-1)",
   "var(--chart-2)",
   "var(--chart-3)",
@@ -205,7 +202,7 @@ function buildFunnelStages(
   ]
 }
 
-function toTrendKey(value: string, index: number) {
+function toChartKey(value: string, index: number) {
   return `tier_${index}_${value.toLowerCase().replace(/[^a-z0-9]+/g, "_")}`
 }
 
@@ -259,8 +256,8 @@ function PartnerActivationFunnel({ stages }: { stages: FunnelStage[] }) {
           </CardDescription>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {stages.map((stage, index) => {
+      <CardContent>
+        {stages.map((stage) => {
           const width = hasFunnelData
             ? Math.max(20, Math.round((stage.value / maxValue) * 100))
             : 100
@@ -269,25 +266,19 @@ function PartnerActivationFunnel({ stages }: { stages: FunnelStage[] }) {
             <Link
               key={stage.label}
               href={stage.href}
-              className="group block rounded-2xl border bg-card/80 p-3 transition-colors hover:border-primary/40 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="group block rounded-2xl bg-card/80 px-4 transition-colors hover:border-primary/40 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               aria-label={`Open ${stage.label} module`}
             >
-              <div className="grid gap-3 md:grid-cols-[10rem_1fr] md:items-center">
+              <div className="grid gap-12 md:grid-cols-[15rem_1fr] md:items-center">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 font-medium text-sm">
-                    <span className="flex size-6 items-center justify-center rounded-full bg-muted font-semibold text-muted-foreground text-xs">
-                      {index + 1}
-                    </span>
                     {stage.label}
                   </div>
-                  <p className="text-muted-foreground text-xs leading-snug">
-                    {stage.description}
-                  </p>
                 </div>
 
                 <div className="flex min-h-16 items-center">
                   <div
-                    className={`flex h-14 items-center justify-between rounded-r-full rounded-l-2xl px-4 shadow-sm transition-transform group-hover:scale-[1.01] ${hasFunnelData ? `bg-gradient-to-r text-white ${stage.colorClass}` : "bg-muted text-muted-foreground"}`}
+                    className={`flex h-10 items-center justify-between rounded-r-full rounded-l-2xl px-4 shadow-sm transition-transform ${hasFunnelData ? `bg-gradient-to-r text-white ${stage.colorClass}` : "bg-muted text-muted-foreground"}`}
                     style={{ width: `${width}%` }}
                   >
                     <span className="font-semibold text-lg tabular-nums">
@@ -678,37 +669,26 @@ function ExpoInventorySection({
       fill: "var(--color-unsoldBooths)"
     }
   ]
-  const tiers = Array.from(
-    new Set(metrics.boothTierMonthlyTrend.map((item) => item.tier))
-  )
-  const tierKeys = tiers.map((tier, index) => ({
-    tier,
-    key: toTrendKey(tier, index),
-    color: tierTrendColors[index % tierTrendColors.length]
-  }))
-  const trendConfig = tierKeys.reduce<ChartConfig>((acc, item) => {
-    acc[item.key] = {
-      label: item.tier,
+  const boothTierPieData = metrics.boothTierBreakdown.map((item, index) => {
+    const tierKey = toChartKey(item.name, index)
+
+    return {
+      tierKey,
+      tierName: item.name,
+      boothCount: item.value,
+      color: boothTierColors[index % boothTierColors.length],
+      fill: `var(--color-${tierKey})`
+    }
+  })
+  const boothTierConfig = boothTierPieData.reduce<ChartConfig>((acc, item) => {
+    acc[item.tierKey] = {
+      label: item.tierName,
       color: item.color
     }
     return acc
   }, {})
-  const trendData = Array.from(
-    metrics.boothTierMonthlyTrend.reduce((acc, item) => {
-      const month = acc.get(item.monthKey) ?? {
-        monthKey: item.monthKey,
-        monthLabel: item.monthLabel
-      }
-      const tierKey = tierKeys.find((tier) => tier.tier === item.tier)?.key
-      if (tierKey) {
-        month[tierKey] = item.soldBooths
-      }
-      acc.set(item.monthKey, month)
-      return acc
-    }, new Map<string, Record<string, string | number>>())
-  ).map(([, value]) => value)
   const hasExpoData = inventoryData.length > 0
-  const hasTrendData = trendData.length > 0 && tierKeys.length > 0
+  const hasBoothTierData = boothTierPieData.length > 0
 
   return (
     <section className="space-y-5 xl:col-span-3">
@@ -760,38 +740,36 @@ function ExpoInventorySection({
 
         <Card size="sm">
           <CardHeader className="border-b">
-            <CardTitle>Purchased booth trend</CardTitle>
-            <CardDescription>Last 6 months by booth tier</CardDescription>
+            <CardTitle>Purchased booths by tier</CardTitle>
+            <CardDescription>All-time purchased booth count</CardDescription>
           </CardHeader>
           <CardContent>
-            {hasTrendData ? (
-              <ChartContainer config={trendConfig} className="h-80 w-full">
-                <LineChart
-                  accessibilityLayer
-                  data={trendData}
-                  margin={{ left: 8, right: 16 }}
-                >
-                  <CartesianGrid vertical={false} />
-                  <XAxis
-                    dataKey="monthLabel"
-                    tickLine={false}
-                    axisLine={false}
-                    tickMargin={8}
+            {hasBoothTierData ? (
+              <ChartContainer config={boothTierConfig} className="h-80 w-full">
+                <PieChart accessibilityLayer>
+                  <ChartTooltip
+                    content={
+                      <ChartTooltipContent hideLabel nameKey="tierKey" />
+                    }
                   />
-                  <YAxis tickLine={false} axisLine={false} width={32} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <ChartLegend content={<ChartLegendContent />} />
-                  {tierKeys.map((item) => (
-                    <Line
-                      key={item.key}
-                      dataKey={item.key}
-                      type="monotone"
-                      stroke={`var(--color-${item.key})`}
-                      strokeWidth={2}
-                      dot={{ r: 3 }}
-                    />
-                  ))}
-                </LineChart>
+                  <Pie
+                    data={boothTierPieData}
+                    dataKey="boothCount"
+                    nameKey="tierKey"
+                    innerRadius={64}
+                    outerRadius={108}
+                    paddingAngle={2}
+                    label={({ value }) => numberFormat.format(Number(value))}
+                    labelLine={false}
+                  >
+                    {boothTierPieData.map((item) => (
+                      <Cell key={item.tierKey} fill={item.fill} />
+                    ))}
+                  </Pie>
+                  <ChartLegend
+                    content={<ChartLegendContent nameKey="tierKey" />}
+                  />
+                </PieChart>
               </ChartContainer>
             ) : (
               <EmptyInventoryState />

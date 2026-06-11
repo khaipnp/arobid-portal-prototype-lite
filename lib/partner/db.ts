@@ -294,6 +294,8 @@ export type PartnerEnterpriseMember = {
   lastAction: string | null
   acceptedAt: string | null
   inviteExpiresAt: string | null
+  invitationSentAt?: string | null
+  invitationSentBy?: string | null
   removedAt: string | null
   createdAt: string
   updatedAt: string
@@ -3761,6 +3763,32 @@ export async function getPartnerEnterpriseWorkspace(
       left join partner_deal_context_events pdce on pdce.deal_context_id = pdc.id
       where pdc.partner_org_id = ${organization.id}
       group by pdc.enterprise_member_id, pdc.stage, pdc.updated_at
+    ),
+    latest_invites as (
+      select
+        invite_events.association_id,
+        invite_events.created_at as invitation_sent_at,
+        coalesce(
+          nullif(trim(u.name), ''),
+          u.email,
+          nullif(invite_events.actor_label, ''),
+          invite_events.actor_id,
+          invite_events.actor_type
+        ) as invitation_sent_by
+      from (
+        select
+          pemae.*,
+          row_number() over (
+            partition by pemae.association_id
+            order by pemae.created_at desc, pemae.id desc
+          ) as row_number
+        from partner_enterprise_member_audit_events pemae
+        where pemae.partner_org_id = ${organization.id}
+          and pemae.source = 'tenant_invite'
+          and pemae.action in ('invite', 'resend_invite')
+      ) invite_events
+      left join users u on u.id = invite_events.actor_id
+      where invite_events.row_number = 1
     )
     select
       pem.id,
@@ -3779,6 +3807,8 @@ export async function getPartnerEnterpriseWorkspace(
       pem.removed_reason,
       pem.created_at,
       pem.updated_at,
+      li.invitation_sent_at,
+      li.invitation_sent_by,
       pem.expo_participation_count,
       pem.rfq_generated_count,
       pem.trade_signal_count,
@@ -3790,8 +3820,9 @@ export async function getPartnerEnterpriseWorkspace(
     left join companies c on c.id = pem.enterprise_id
     left join quota_totals qt on qt.enterprise_member_id = pem.id
     left join deal_totals dt on dt.enterprise_member_id = pem.id
+    left join latest_invites li on li.association_id = pem.id
     where pem.partner_org_id = ${organization.id}
-    order by pem.created_at desc
+    order by coalesce(li.invitation_sent_at, pem.created_at) desc
   `) as {
     id: string
     enterprise_id: string | null
@@ -3816,6 +3847,8 @@ export async function getPartnerEnterpriseWorkspace(
     removed_reason: string | null
     created_at: string | Date
     updated_at: string | Date
+    invitation_sent_at: string | Date | null
+    invitation_sent_by: string | null
   }[]
 
   const members = rows.map((row) => ({
@@ -3833,6 +3866,10 @@ export async function getPartnerEnterpriseWorkspace(
     inviteExpiresAt: row.invite_expires_at
       ? toIso(row.invite_expires_at)
       : null,
+    invitationSentAt: row.invitation_sent_at
+      ? toIso(row.invitation_sent_at)
+      : toIso(row.created_at),
+    invitationSentBy: row.invitation_sent_by,
     removedAt: row.removed_at ? toIso(row.removed_at) : null,
     removedReason: row.removed_reason,
     createdAt: toIso(row.created_at),
