@@ -74,10 +74,41 @@ const boothStatusIcon: Record<SellerBoothStatus, ReactNode> = {
   Ended: <CircleDashedIcon className="size-3.5" />
 }
 
-function formatDate(iso: string) {
-  return new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" }).format(
-    new Date(iso)
-  )
+const dateFormatter = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium" })
+
+const monthYearFormatter = new Intl.DateTimeFormat("en-GB", {
+  month: "long",
+  year: "numeric"
+})
+
+function formatDate(iso?: string | null) {
+  if (!iso) return null
+
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return null
+
+  return dateFormatter.format(date)
+}
+
+function formatExpoSchedule(expo: Expo) {
+  const startDate = formatDate(expo.startDate ?? expo.startAt)
+  const endDate = formatDate(expo.endDate ?? expo.endAt)
+
+  if (startDate && endDate) return `${startDate} - ${endDate}`
+  if (startDate) return startDate
+  if (endDate) return endDate
+
+  if (
+    expo.schedulePrecision === "month_year" &&
+    expo.scheduleMonth &&
+    expo.scheduleYear
+  ) {
+    return monthYearFormatter.format(
+      new Date(expo.scheduleYear, expo.scheduleMonth - 1)
+    )
+  }
+
+  return "TBA"
 }
 
 function formatCurrency(amount: number) {
@@ -258,7 +289,7 @@ export function SellerExpoDetail({
           <SummaryTile
             icon={<CalendarDaysIcon className="size-4" />}
             label="Expo timeline"
-            value={`${formatDate(expo.startDate ?? "")} - ${formatDate(expo.endDate ?? "")}`}
+            value={formatExpoSchedule(expo)}
           />
           <SummaryTile
             icon={<Building2Icon className="size-4" />}
