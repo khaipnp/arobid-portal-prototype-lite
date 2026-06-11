@@ -2,7 +2,7 @@
 
 import { SaveIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useMemo, useState } from "react"
+import { type Dispatch, type SetStateAction, useMemo, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -23,6 +23,7 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import type { CreditRule, CreditValuation } from "@/lib/tradecredit/types"
 
 const vnd = new Intl.NumberFormat("vi-VN", {
@@ -41,6 +42,12 @@ function formatDateTime(iso: string) {
   })
 }
 
+type ValuationForm = {
+  creditValueVnd: string
+  effectiveAt: string
+  reasonNote: string
+}
+
 export function TradeCreditPolicyManager({
   initialRules,
   activeValuation,
@@ -54,7 +61,7 @@ export function TradeCreditPolicyManager({
   const [rules, setRules] = useState(initialRules)
   const [savingRuleId, setSavingRuleId] = useState<string | null>(null)
   const [valuationSaving, setValuationSaving] = useState(false)
-  const [valuationForm, setValuationForm] = useState({
+  const [valuationForm, setValuationForm] = useState<ValuationForm>({
     creditValueVnd: String(activeValuation.creditValueVnd),
     effectiveAt: "",
     reasonNote: ""
@@ -143,7 +150,7 @@ export function TradeCreditPolicyManager({
   }
 
   return (
-    <div className="space-y-4 px-4">
+    <div className="mt-6 space-y-4">
       {message ? (
         <div className="rounded-md border bg-muted px-3 py-2 text-sm">
           {message}
@@ -155,121 +162,160 @@ export function TradeCreditPolicyManager({
         </div>
       ) : null}
 
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(360px,0.8fr)]">
-        <RuleTable
-          title="Earn Rules"
-          description="System-owned triggers. Admin may only change status and credit quantity."
-          rules={groupedRules.earn}
-          savingRuleId={savingRuleId}
-          onChange={updateRuleDraft}
-          onSave={saveRule}
-        />
-        <Card>
-          <CardHeader>
-            <CardTitle>Credit Valuation</CardTitle>
-            <CardDescription>
-              Active burn-time value:{" "}
-              {vnd.format(activeValuation.creditValueVnd)} per credit.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-2">
-              <Label htmlFor="creditValueVnd">VND value for 1 credit</Label>
-              <Input
-                id="creditValueVnd"
-                type="number"
-                min={1}
-                value={valuationForm.creditValueVnd}
-                onChange={(event) =>
-                  setValuationForm((current) => ({
-                    ...current,
-                    creditValueVnd: event.target.value
-                  }))
-                }
+      <Tabs defaultValue="earn" className="space-y-4">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="earn">Earn</TabsTrigger>
+          <TabsTrigger value="burn">Burn</TabsTrigger>
+        </TabsList>
+        <TabsContent value="earn" className="mt-0">
+          <RuleTable
+            title="Earn Rules"
+            description="System-owned triggers. Admin may only change status and credit quantity."
+            rules={groupedRules.earn}
+            savingRuleId={savingRuleId}
+            onChange={updateRuleDraft}
+            onSave={saveRule}
+          />
+        </TabsContent>
+        <TabsContent value="burn" className="mt-0">
+          <section className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(360px,0.8fr)]">
+            <RuleTable
+              title="Burn Rules"
+              description="Checkout and unlock-service burn rules. Trigger logic remains system-defined."
+              rules={groupedRules.burn}
+              savingRuleId={savingRuleId}
+              onChange={updateRuleDraft}
+              onSave={saveRule}
+            />
+            <div className="space-y-4">
+              <CreditValuationCard
+                activeValuation={activeValuation}
+                valuationForm={valuationForm}
+                valuationSaving={valuationSaving}
+                onChange={setValuationForm}
+                onSave={saveValuation}
               />
+              <ValuationHistoryCard valuationHistory={valuationHistory} />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="effectiveAt">Effective time</Label>
-              <Input
-                id="effectiveAt"
-                type="datetime-local"
-                value={valuationForm.effectiveAt}
-                onChange={(event) =>
-                  setValuationForm((current) => ({
-                    ...current,
-                    effectiveAt: event.target.value
-                  }))
-                }
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="reasonNote">Reason note</Label>
-              <Input
-                id="reasonNote"
-                value={valuationForm.reasonNote}
-                onChange={(event) =>
-                  setValuationForm((current) => ({
-                    ...current,
-                    reasonNote: event.target.value
-                  }))
-                }
-                placeholder="Policy calibration for V1 launch"
-              />
-            </div>
-            <Button
-              className="w-full"
-              disabled={valuationSaving}
-              onClick={saveValuation}
-            >
-              <SaveIcon />
-              {valuationSaving ? "Saving..." : "Save Valuation"}
-            </Button>
-          </CardContent>
-        </Card>
-      </section>
-
-      <section className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(360px,0.8fr)]">
-        <RuleTable
-          title="Burn Rules"
-          description="Checkout and unlock-service burn rules. Trigger logic remains system-defined."
-          rules={groupedRules.burn}
-          savingRuleId={savingRuleId}
-          onChange={updateRuleDraft}
-          onSave={saveRule}
-        />
-        <Card>
-          <CardHeader>
-            <CardTitle>Valuation History</CardTitle>
-            <CardDescription>
-              Changing valuation does not rewrite balances or old earn ledger
-              entries.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {valuationHistory.map((valuation) => (
-                <div
-                  key={valuation.valuationId}
-                  className="rounded-md border px-3 py-2 text-sm"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="font-medium">
-                      {vnd.format(valuation.creditValueVnd)}
-                    </span>
-                    <span className="text-muted-foreground text-xs">
-                      {formatDateTime(valuation.effectiveAt)}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-muted-foreground text-xs">
-                    {valuation.reasonNote}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </section>
+          </section>
+        </TabsContent>
+      </Tabs>
     </div>
+  )
+}
+
+function CreditValuationCard({
+  activeValuation,
+  valuationForm,
+  valuationSaving,
+  onChange,
+  onSave
+}: {
+  activeValuation: CreditValuation
+  valuationForm: ValuationForm
+  valuationSaving: boolean
+  onChange: Dispatch<SetStateAction<ValuationForm>>
+  onSave: () => void
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Credit Valuation</CardTitle>
+        <CardDescription>
+          Active burn-time value: {vnd.format(activeValuation.creditValueVnd)}
+          per credit.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid gap-2">
+          <Label htmlFor="creditValueVnd">VND value for 1 credit</Label>
+          <Input
+            id="creditValueVnd"
+            type="number"
+            min={1}
+            value={valuationForm.creditValueVnd}
+            onChange={(event) =>
+              onChange((current) => ({
+                ...current,
+                creditValueVnd: event.target.value
+              }))
+            }
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="effectiveAt">Effective time</Label>
+          <Input
+            id="effectiveAt"
+            type="datetime-local"
+            value={valuationForm.effectiveAt}
+            onChange={(event) =>
+              onChange((current) => ({
+                ...current,
+                effectiveAt: event.target.value
+              }))
+            }
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="reasonNote">Reason note</Label>
+          <Input
+            id="reasonNote"
+            value={valuationForm.reasonNote}
+            onChange={(event) =>
+              onChange((current) => ({
+                ...current,
+                reasonNote: event.target.value
+              }))
+            }
+            placeholder="Policy calibration for V1 launch"
+          />
+        </div>
+        <Button className="w-full" disabled={valuationSaving} onClick={onSave}>
+          <SaveIcon />
+          {valuationSaving ? "Saving..." : "Save Valuation"}
+        </Button>
+      </CardContent>
+    </Card>
+  )
+}
+
+function ValuationHistoryCard({
+  valuationHistory
+}: {
+  valuationHistory: CreditValuation[]
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Valuation History</CardTitle>
+        <CardDescription>
+          Changing valuation does not rewrite balances or old earn ledger
+          entries.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-3">
+          {valuationHistory.map((valuation) => (
+            <div
+              key={valuation.valuationId}
+              className="rounded-md border px-3 py-2 text-sm"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-medium">
+                  {vnd.format(valuation.creditValueVnd)}
+                </span>
+                <span className="text-muted-foreground text-xs">
+                  {formatDateTime(valuation.effectiveAt)}
+                </span>
+              </div>
+              <p className="mt-1 text-muted-foreground text-xs">
+                {valuation.reasonNote}
+              </p>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 

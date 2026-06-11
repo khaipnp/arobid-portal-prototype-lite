@@ -6,7 +6,6 @@ import {
   GaugeIcon,
   InfoIcon,
   RadioTowerIcon,
-  TrendingDownIcon,
   TrendingUpIcon,
   UsersIcon
 } from "lucide-react"
@@ -17,6 +16,7 @@ import {
   Bar,
   BarChart,
   CartesianGrid,
+  Cell,
   Line,
   LineChart,
   Pie,
@@ -135,66 +135,24 @@ function formatRatio(value: number, total: number) {
   return total > 0 ? Math.round((value / total) * 100) : 0
 }
 
-type MetricComparison = {
-  value: string
-  tone: "positive" | "negative" | "neutral"
-}
-
-function buildPeriodComparison(
-  value: number,
-  previousValue: number
-): MetricComparison {
-  if (previousValue === 0) {
-    return {
-      value: value > 0 ? "New" : "0%",
-      tone: value > 0 ? "positive" : "neutral"
-    }
-  }
-
-  const deltaPercent = Math.round(
-    ((value - previousValue) / previousValue) * 100
-  )
-
-  return {
-    value: `${deltaPercent > 0 ? "+" : ""}${formatPercent(deltaPercent)}`,
-    tone:
-      deltaPercent > 0 ? "positive" : deltaPercent < 0 ? "negative" : "neutral"
-  }
-}
-
-function getComparisonToneClass(tone: MetricComparison["tone"]) {
-  if (tone === "positive") return "bg-green-200/70 text-green-700"
-  if (tone === "negative") return "bg-red-200/70 text-red-700"
-  return "bg-muted text-muted-foreground"
-}
-
 type PartnerActivationFunnelDuration = (typeof funnelDurations)[number]
 
 type FunnelStage = {
   label: string
   value: number
-  previousValue: number
   description: string
   href: string
   colorClass: string
 }
 
-type FunnelStageComparison = {
-  delta: number
-  percentage: number | null
-  tone: MetricComparison["tone"]
-}
-
 function getFunnelOperationsSummary(
   metrics: PartnerDashboardMetrics,
-  duration: PartnerActivationFunnelDuration,
-  period: "current" | "previous"
+  duration: PartnerActivationFunnelDuration
 ): PartnerDashboardOperationsSummary {
-  const summaries =
-    period === "current"
-      ? metrics.operationsByDuration
-      : metrics.previousOperationsByDuration
-  const summary = duration === "90D" ? summaries["30D"] : summaries[duration]
+  const summary =
+    duration === "90D"
+      ? metrics.operationsByDuration["30D"]
+      : metrics.operationsByDuration[duration]
   const multiplier = duration === "90D" ? 3 : 1
 
   return {
@@ -209,8 +167,7 @@ function buildFunnelStages(
   metrics: PartnerDashboardMetrics,
   duration: PartnerActivationFunnelDuration
 ): FunnelStage[] {
-  const current = getFunnelOperationsSummary(metrics, duration, "current")
-  const previous = getFunnelOperationsSummary(metrics, duration, "previous")
+  const current = getFunnelOperationsSummary(metrics, duration)
 
   const invited = Math.max(
     current.views,
@@ -221,24 +178,11 @@ function buildFunnelStages(
     verified,
     Math.max(current.soldBooths, Math.round(verified * 0.17))
   )
-  const previousInvited = Math.max(
-    previous.views,
-    previous.activatedEnterprises + previous.soldBooths + previous.rfqs
-  )
-  const previousVerified = Math.min(
-    previousInvited,
-    previous.activatedEnterprises
-  )
-  const previousProfileCompleted = Math.min(
-    previousVerified,
-    Math.max(previous.soldBooths, Math.round(previousVerified * 0.17))
-  )
 
   return [
     {
       label: "Invited",
       value: invited,
-      previousValue: previousInvited,
       description: "Distinct invited enterprise identities in partner scope",
       href: "/partner/partner-site/invitations",
       colorClass: "from-sky-500 to-cyan-400"
@@ -246,7 +190,6 @@ function buildFunnelStages(
     {
       label: "Verified/Seller onboarding",
       value: verified,
-      previousValue: previousVerified,
       description:
         "Seller onboarding completed with General Information submitted",
       href: "/partner/partner-site/enterprises",
@@ -255,32 +198,11 @@ function buildFunnelStages(
     {
       label: "Profile completed > 80%",
       value: profileCompleted,
-      previousValue: previousProfileCompleted,
       description: "eProfile valid filled fields strictly greater than 80%",
       href: "/partner/partner-site/enterprises",
       colorClass: "from-emerald-500 to-lime-400"
     }
   ]
-}
-
-function buildFunnelComparison(
-  value: number,
-  previousValue: number
-): FunnelStageComparison {
-  const delta = value - previousValue
-  const percentage =
-    previousValue === 0 ? null : Math.round((delta / previousValue) * 100)
-
-  return {
-    delta,
-    percentage,
-    tone: delta > 0 ? "positive" : delta < 0 ? "negative" : "neutral"
-  }
-}
-
-function formatDelta(value: number) {
-  if (value === 0) return "0"
-  return `${value > 0 ? "+" : "-"}${numberFormat.format(Math.abs(value))}`
 }
 
 function toTrendKey(value: string, index: number) {
@@ -291,14 +213,12 @@ function MetricWidget({
   label,
   value,
   description,
-  icon,
-  comparison
+  icon
 }: {
   label: string
   value: number
   description: string
   icon: ReactNode
-  comparison?: MetricComparison
 }) {
   return (
     <TooltipProvider>
@@ -315,22 +235,10 @@ function MetricWidget({
           </div>
           <CardAction className="text-legend">{icon}</CardAction>
         </CardHeader>
-        <CardContent className="flex flex-1 items-end justify-between gap-2">
+        <CardContent className="flex flex-1 items-end">
           <div className="font-semibold text-3xl tabular-nums leading-none tracking-tight">
             {numberFormat.format(value)}
           </div>
-          {comparison ? (
-            <Badge
-              className={`px-1.5 tabular-nums ${getComparisonToneClass(comparison.tone)}`}
-            >
-              {comparison.value}{" "}
-              {comparison.tone === "positive" ? (
-                <TrendingUpIcon strokeWidth="2.5" />
-              ) : comparison.tone === "negative" ? (
-                <TrendingDownIcon strokeWidth="2.5" />
-              ) : null}
-            </Badge>
-          ) : null}
         </CardContent>
       </Card>
     </TooltipProvider>
@@ -353,10 +261,6 @@ function PartnerActivationFunnel({ stages }: { stages: FunnelStage[] }) {
       </CardHeader>
       <CardContent className="space-y-4">
         {stages.map((stage, index) => {
-          const comparison = buildFunnelComparison(
-            stage.value,
-            stage.previousValue
-          )
           const width = hasFunnelData
             ? Math.max(20, Math.round((stage.value / maxValue) * 100))
             : 100
@@ -368,7 +272,7 @@ function PartnerActivationFunnel({ stages }: { stages: FunnelStage[] }) {
               className="group block rounded-2xl border bg-card/80 p-3 transition-colors hover:border-primary/40 hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               aria-label={`Open ${stage.label} module`}
             >
-              <div className="grid gap-3 md:grid-cols-[10rem_1fr_14rem] md:items-center">
+              <div className="grid gap-3 md:grid-cols-[10rem_1fr] md:items-center">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 font-medium text-sm">
                     <span className="flex size-6 items-center justify-center rounded-full bg-muted font-semibold text-muted-foreground text-xs">
@@ -398,28 +302,6 @@ function PartnerActivationFunnel({ stages }: { stages: FunnelStage[] }) {
                     </span>
                   </div>
                 </div>
-
-                <div className="flex flex-wrap items-center gap-2 md:justify-end">
-                  <Badge
-                    variant="outline"
-                    className={`tabular-nums ${getComparisonToneClass(comparison.tone)}`}
-                  >
-                    {formatDelta(comparison.delta)}
-                  </Badge>
-                  {comparison.percentage === null ? null : (
-                    <Badge
-                      className={`tabular-nums ${getComparisonToneClass(comparison.tone)}`}
-                    >
-                      {comparison.percentage > 0 ? "+" : ""}
-                      {formatPercent(comparison.percentage)}
-                      {comparison.tone === "positive" ? (
-                        <TrendingUpIcon strokeWidth="2.5" />
-                      ) : comparison.tone === "negative" ? (
-                        <TrendingDownIcon strokeWidth="2.5" />
-                      ) : null}
-                    </Badge>
-                  )}
-                </div>
               </div>
             </Link>
           )
@@ -439,8 +321,6 @@ export function PartnerDashboard({
   const [selectedFunnelDuration, setSelectedFunnelDuration] =
     useState<PartnerActivationFunnelDuration>("7D")
   const operationsSummary = metrics.operationsByDuration[selectedDuration]
-  const previousOperationsSummary =
-    metrics.previousOperationsByDuration[selectedDuration]
   const funnelStages = buildFunnelStages(metrics, selectedFunnelDuration)
 
   return (
@@ -495,40 +375,24 @@ export function PartnerDashboard({
               value={operationsSummary.views}
               description="Visitor activity in the selected duration"
               icon={<EyeIcon className="size-4" />}
-              comparison={buildPeriodComparison(
-                operationsSummary.views,
-                previousOperationsSummary.views
-              )}
             />
             <MetricWidget
               label="Activated Members"
               value={operationsSummary.activatedEnterprises}
               description="Member activity in the selected duration"
               icon={<UsersIcon className="size-4" />}
-              comparison={buildPeriodComparison(
-                operationsSummary.activatedEnterprises,
-                previousOperationsSummary.activatedEnterprises
-              )}
             />
             <MetricWidget
               label="Sold Booth"
               value={operationsSummary.soldBooths}
               description="Booth sold in the selected duration"
               icon={<ActivityIcon className="size-4" />}
-              comparison={buildPeriodComparison(
-                operationsSummary.soldBooths,
-                previousOperationsSummary.soldBooths
-              )}
             />
             <MetricWidget
               label="Deal Room"
               value={operationsSummary.rfqs}
               description="RFQs & Chat created in the selected duration"
               icon={<RadioTowerIcon className="size-4" />}
-              comparison={buildPeriodComparison(
-                operationsSummary.rfqs,
-                previousOperationsSummary.rfqs
-              )}
             />
           </div>
         </div>
@@ -795,6 +659,25 @@ function ExpoInventorySection({
     soldPercent: formatRatio(item.soldBooths, item.totalBooths),
     unsoldPercent: formatRatio(item.unsoldBooths, item.totalBooths)
   }))
+  const inventoryTotals = inventoryData.reduce(
+    (totals, item) => ({
+      soldBooths: totals.soldBooths + item.soldBooths,
+      unsoldBooths: totals.unsoldBooths + item.unsoldBooths
+    }),
+    { soldBooths: 0, unsoldBooths: 0 }
+  )
+  const inventoryPieData = [
+    {
+      boothStatus: "soldBooths",
+      boothCount: inventoryTotals.soldBooths,
+      fill: "var(--color-soldBooths)"
+    },
+    {
+      boothStatus: "unsoldBooths",
+      boothCount: inventoryTotals.unsoldBooths,
+      fill: "var(--color-unsoldBooths)"
+    }
+  ]
   const tiers = Array.from(
     new Set(metrics.boothTierMonthlyTrend.map((item) => item.tier))
   )
@@ -836,7 +719,7 @@ function ExpoInventorySection({
         <Card size="sm">
           <CardHeader className="border-b">
             <CardTitle className="capitalize">Booth sold vs unsold</CardTitle>
-            <CardDescription>Capacity allocation by Expo</CardDescription>
+            <CardDescription>Total booth inventory status</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
             {hasExpoData ? (
@@ -844,37 +727,30 @@ function ExpoInventorySection({
                 config={inventoryChartConfig}
                 className="h-80 w-full"
               >
-                <BarChart
-                  accessibilityLayer
-                  data={inventoryData}
-                  layout="vertical"
-                  margin={{ left: 8, right: 16 }}
-                >
-                  <CartesianGrid horizontal={false} />
-                  <XAxis type="number" hide />
-                  <YAxis
-                    dataKey="expoName"
-                    type="category"
-                    tickLine={false}
-                    axisLine={false}
-                    width={118}
-                    tickFormatter={(value) => String(value).slice(0, 18)}
+                <PieChart accessibilityLayer>
+                  <ChartTooltip
+                    content={
+                      <ChartTooltipContent hideLabel nameKey="boothStatus" />
+                    }
                   />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <ChartLegend content={<ChartLegendContent />} />
-                  <Bar
-                    dataKey="soldBooths"
-                    stackId="booths"
-                    fill="var(--color-soldBooths)"
-                    radius={[4, 0, 0, 4]}
+                  <Pie
+                    data={inventoryPieData}
+                    dataKey="boothCount"
+                    nameKey="boothStatus"
+                    innerRadius={64}
+                    outerRadius={108}
+                    paddingAngle={2}
+                    label={({ value }) => numberFormat.format(Number(value))}
+                    labelLine={false}
+                  >
+                    {inventoryPieData.map((item) => (
+                      <Cell key={item.boothStatus} fill={item.fill} />
+                    ))}
+                  </Pie>
+                  <ChartLegend
+                    content={<ChartLegendContent nameKey="boothStatus" />}
                   />
-                  <Bar
-                    dataKey="unsoldBooths"
-                    stackId="booths"
-                    fill="var(--color-unsoldBooths)"
-                    radius={[0, 4, 4, 0]}
-                  />
-                </BarChart>
+                </PieChart>
               </ChartContainer>
             ) : (
               <EmptyInventoryState />
