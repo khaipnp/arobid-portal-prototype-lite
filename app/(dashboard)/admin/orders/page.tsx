@@ -1,11 +1,11 @@
-import { OrderManagementDashboard } from "@/components/orders/order-management-dashboard";
-import { DashboardShell } from "@/components/tradexpo/dashboard-shell";
-import { listOrders } from "@/lib/orders/db";
+import { OrderManagementDashboard } from "@/components/orders/order-management-dashboard"
+import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
+import { listOrders } from "@/lib/orders/db"
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"
 
 export default async function OrdersPage() {
-  const initialOrders = await listOrders();
+  const initialOrders = await listOrders()
 
   return (
     <DashboardShell
@@ -14,5 +14,5 @@ export default async function OrdersPage() {
     >
       <OrderManagementDashboard initialOrders={initialOrders} />
     </DashboardShell>
-  );
+  )
 }

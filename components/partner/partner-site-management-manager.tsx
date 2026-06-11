@@ -143,7 +143,7 @@ export function PartnerSiteManagementManager({
   ) {
     if (
       (key === "primaryColor" || key === "accentColor") &&
-      !hexColorPattern.test(value)
+      (typeof value !== "string" || !hexColorPattern.test(value))
     ) {
       return
     }

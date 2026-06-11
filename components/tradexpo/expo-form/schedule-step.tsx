@@ -1,36 +1,36 @@
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { CheckCircle2Icon } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { EXPO_FORM_TIMEZONES } from "@/lib/tradexpo/expo-form-utils";
-import { EXPO_MONTH_OPTIONS } from "@/lib/tradexpo/schedule";
-import type { ExpoSchedulePrecision } from "@/lib/tradexpo/types";
-import { SCHEDULE_PRECISION_OPTIONS } from "./constants";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CheckCircle2Icon } from "lucide-react";
+  SelectValue
+} from "@/components/ui/select"
+import { EXPO_FORM_TIMEZONES } from "@/lib/tradexpo/expo-form-utils"
+import { EXPO_MONTH_OPTIONS } from "@/lib/tradexpo/schedule"
+import type { ExpoSchedulePrecision } from "@/lib/tradexpo/types"
+import { SCHEDULE_PRECISION_OPTIONS } from "./constants"
 
 type ScheduleStepProps = {
-  schedulePrecision: ExpoSchedulePrecision;
-  onSchedulePrecisionChange: (value: ExpoSchedulePrecision) => void;
-  startLocal: string;
-  onStartLocalChange: (value: string) => void;
-  endLocal: string;
-  onEndLocalChange: (value: string) => void;
-  timezone: string;
-  onTimezoneChange: (value: string) => void;
-  scheduleMonth: string;
-  onScheduleMonthChange: (value: string) => void;
-  scheduleYear: string;
-  onScheduleYearChange: (value: string) => void;
-  scheduleError: string | null;
-  onScheduleErrorChange: (value: string | null) => void;
-};
+  schedulePrecision: ExpoSchedulePrecision
+  onSchedulePrecisionChange: (value: ExpoSchedulePrecision) => void
+  startLocal: string
+  onStartLocalChange: (value: string) => void
+  endLocal: string
+  onEndLocalChange: (value: string) => void
+  timezone: string
+  onTimezoneChange: (value: string) => void
+  scheduleMonth: string
+  onScheduleMonthChange: (value: string) => void
+  scheduleYear: string
+  onScheduleYearChange: (value: string) => void
+  scheduleError: string | null
+  onScheduleErrorChange: (value: string | null) => void
+}
 
 export function ScheduleStep({
   schedulePrecision,
@@ -46,7 +46,7 @@ export function ScheduleStep({
   scheduleYear,
   onScheduleYearChange,
   scheduleError,
-  onScheduleErrorChange,
+  onScheduleErrorChange
 }: ScheduleStepProps) {
   return (
     <div className="space-y-6">
@@ -61,8 +61,8 @@ export function ScheduleStep({
         <RadioGroup
           value={schedulePrecision}
           onValueChange={(value) => {
-            onSchedulePrecisionChange(value as ExpoSchedulePrecision);
-            onScheduleErrorChange(null);
+            onSchedulePrecisionChange(value as ExpoSchedulePrecision)
+            onScheduleErrorChange(null)
           }}
           className="grid gap-3 md:grid-cols-3"
         >
@@ -173,5 +173,5 @@ export function ScheduleStep({
         ) : null}
       </section>
     </div>
-  );
+  )
 }

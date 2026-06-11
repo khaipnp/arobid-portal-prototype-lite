@@ -17,9 +17,9 @@ import {
   listExpoHalls,
   listExpoLayoutTemplates
 } from "@/lib/tradexpo/db/platform-data"
+import { formatExpoScheduleLabel } from "@/lib/tradexpo/schedule"
 import type { ExpoStatus } from "@/lib/tradexpo/types"
 import { formatDateTime, getExpoTimelinePhase } from "@/lib/tradexpo/utils"
-import { formatExpoScheduleLabel } from "@/lib/tradexpo/schedule"
 import {
   resetExpoPaymentConfigToDefault,
   saveExpoPaymentConfig

@@ -1,10 +1,10 @@
-"use client";
+"use client"
 
 /* eslint-disable @next/next/no-img-element */
 
-import { MoreHorizontalIcon, PlusIcon, SearchIcon, XIcon } from "lucide-react";
-import Link from "next/link";
-import * as React from "react";
+import { MoreHorizontalIcon, PlusIcon, SearchIcon, XIcon } from "lucide-react"
+import Link from "next/link"
+import * as React from "react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,78 +14,78 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+  AlertDialogTrigger
+} from "@/components/ui/alert-dialog"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  DialogTitle
+} from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+  DropdownMenuTrigger
+} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  SelectValue
+} from "@/components/ui/select"
 import {
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Textarea } from "@/components/ui/textarea";
-import { getAssetUrl } from "@/lib/image-utils";
+  TableRow
+} from "@/components/ui/table"
+import { Textarea } from "@/components/ui/textarea"
+import { getAssetUrl } from "@/lib/image-utils"
 import {
   toggleBoothTemplateActive,
-  toggleBoothTemplatePublic,
-} from "@/lib/tradexpo/actions/booth-templates";
+  toggleBoothTemplatePublic
+} from "@/lib/tradexpo/actions/booth-templates"
 import type {
   BoothTemplate,
   BoothTemplateUsage,
   BoothType,
-  ModelAsset,
-} from "@/lib/tradexpo/types";
+  ModelAsset
+} from "@/lib/tradexpo/types"
 import {
   canPublish,
   createMockId,
   formatDateTime,
   getAssetMap,
   getTranslationName,
-  isValidFileName,
-} from "@/lib/tradexpo/utils";
+  isValidFileName
+} from "@/lib/tradexpo/utils"
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
-  InputGroupInput,
-} from "../ui/input-group";
+  InputGroupInput
+} from "../ui/input-group"
 
 interface BoothTemplateFormState {
-  name: string;
-  boothTypeId: string;
-  description: string;
-  glbFileName: string;
-  thumbnailFileName: string;
-  blendFileName: string;
-  isPublic: boolean;
-  isActive: boolean;
+  name: string
+  boothTypeId: string
+  description: string
+  glbFileName: string
+  thumbnailFileName: string
+  blendFileName: string
+  isPublic: boolean
+  isActive: boolean
 }
 
 const defaultFormState: BoothTemplateFormState = {
@@ -96,123 +96,115 @@ const defaultFormState: BoothTemplateFormState = {
   thumbnailFileName: "",
   blendFileName: "",
   isPublic: false,
-  isActive: true,
-};
+  isActive: true
+}
 
 export function BoothTemplateLibraryManager({
   initialAssets,
   initialTemplates,
   initialUsage,
-  initialBoothTypes,
+  initialBoothTypes
 }: {
-  initialAssets: ModelAsset[];
-  initialTemplates: BoothTemplate[];
-  initialUsage: BoothTemplateUsage[];
-  initialBoothTypes: BoothType[];
+  initialAssets: ModelAsset[]
+  initialTemplates: BoothTemplate[]
+  initialUsage: BoothTemplateUsage[]
+  initialBoothTypes: BoothType[]
 }) {
   const [assets, setAssets] = React.useState<ModelAsset[]>(() =>
-    initialAssets.map((a) => ({ ...a })),
-  );
+    initialAssets.map((a) => ({ ...a }))
+  )
   const [templates, setTemplates] = React.useState<BoothTemplate[]>(() =>
     initialTemplates.map((t) => ({
       ...t,
-      translations: t.translations.map((tr) => ({ ...tr })),
-    })),
-  );
+      translations: t.translations.map((tr) => ({ ...tr }))
+    }))
+  )
   const [usages, setUsages] = React.useState<BoothTemplateUsage[]>(() =>
-    initialUsage.map((u) => ({ ...u })),
-  );
-  const boothTypes = React.useMemo(
-    () => initialBoothTypes,
-    [initialBoothTypes],
-  );
+    initialUsage.map((u) => ({ ...u }))
+  )
+  const boothTypes = React.useMemo(() => initialBoothTypes, [initialBoothTypes])
 
-  const [search, setSearch] = React.useState("");
-  const [page, setPage] = React.useState(1);
+  const [search, setSearch] = React.useState("")
+  const [page, setPage] = React.useState(1)
 
-  const [formOpen, setFormOpen] = React.useState(false);
-  const [formMode, setFormMode] = React.useState<"create" | "edit">("create");
+  const [formOpen, setFormOpen] = React.useState(false)
+  const [formMode, setFormMode] = React.useState<"create" | "edit">("create")
   const [editingTemplateId, setEditingTemplateId] = React.useState<
     string | null
-  >(null);
+  >(null)
   const [formState, setFormState] =
-    React.useState<BoothTemplateFormState>(defaultFormState);
-  const [formErrors, setFormErrors] = React.useState<Record<string, string>>(
-    {},
-  );
+    React.useState<BoothTemplateFormState>(defaultFormState)
+  const [formErrors, setFormErrors] = React.useState<Record<string, string>>({})
 
   const [notice, setNotice] = React.useState<{
-    type: "success" | "error" | "info";
-    text: string;
-  } | null>(null);
+    type: "success" | "error" | "info"
+    text: string
+  } | null>(null)
 
   const [translationTemplateId, setTranslationTemplateId] = React.useState<
     string | null
-  >(null);
+  >(null)
   const [translationLanguageCode, setTranslationLanguageCode] =
-    React.useState("vi");
-  const [translationName, setTranslationName] = React.useState("");
-  const previewLocale = "en";
+    React.useState("vi")
+  const [translationName, setTranslationName] = React.useState("")
+  const previewLocale = "en"
   const [deleteTemplateId, setDeleteTemplateId] = React.useState<string | null>(
-    null,
-  );
+    null
+  )
 
-  const assetMap = React.useMemo(() => getAssetMap(assets), [assets]);
+  const assetMap = React.useMemo(() => getAssetMap(assets), [assets])
 
   const filteredTemplates = React.useMemo(() => {
-    const keyword = search.trim().toLowerCase();
+    const keyword = search.trim().toLowerCase()
 
     if (!keyword) {
-      return templates;
+      return templates
     }
 
     return templates.filter((template) =>
-      template.name.toLowerCase().includes(keyword),
-    );
-  }, [templates, search]);
+      template.name.toLowerCase().includes(keyword)
+    )
+  }, [templates, search])
 
-  const pageSize = 5;
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredTemplates.length / pageSize),
-  );
+  const pageSize = 5
+  const totalPages = Math.max(1, Math.ceil(filteredTemplates.length / pageSize))
 
   React.useEffect(() => {
     if (page > totalPages) {
-      setPage(totalPages);
+      setPage(totalPages)
     }
-  }, [page, totalPages]);
+  }, [page, totalPages])
 
   const pagedTemplates = React.useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return filteredTemplates.slice(start, start + pageSize);
-  }, [filteredTemplates, page]);
+    const start = (page - 1) * pageSize
+    return filteredTemplates.slice(start, start + pageSize)
+  }, [filteredTemplates, page])
 
   const translationTarget = React.useMemo(
     () => templates.find((template) => template.id === translationTemplateId),
-    [templates, translationTemplateId],
-  );
+    [templates, translationTemplateId]
+  )
 
   const deleteTarget = React.useMemo(
     () => templates.find((template) => template.id === deleteTemplateId),
-    [templates, deleteTemplateId],
-  );
+    [templates, deleteTemplateId]
+  )
 
   const resetForm = React.useCallback(() => {
-    setFormState(defaultFormState);
-    setFormErrors({});
-    setEditingTemplateId(null);
-  }, []);
+    setFormState(defaultFormState)
+    setFormErrors({})
+    setEditingTemplateId(null)
+  }, [])
 
   const openCreateForm = React.useCallback(() => {
-    resetForm();
-    setFormMode("create");
-    setFormOpen(true);
-  }, [resetForm]);
+    resetForm()
+    setFormMode("create")
+    setFormOpen(true)
+  }, [resetForm])
 
   const openEditForm = React.useCallback((template: BoothTemplate) => {
-    setFormMode("edit");
-    setEditingTemplateId(template.id);
+    setFormMode("edit")
+    setEditingTemplateId(template.id)
     setFormState({
       name: template.name,
       boothTypeId: template.boothTypeId,
@@ -221,121 +213,121 @@ export function BoothTemplateLibraryManager({
       thumbnailFileName: "",
       blendFileName: "",
       isPublic: template.isPublic,
-      isActive: template.isActive,
-    });
-    setFormErrors({});
-    setFormOpen(true);
-  }, []);
+      isActive: template.isActive
+    })
+    setFormErrors({})
+    setFormOpen(true)
+  }, [])
 
   const handleFormOpenChange = React.useCallback(
     (nextOpen: boolean) => {
-      setFormOpen(nextOpen);
+      setFormOpen(nextOpen)
 
       if (!nextOpen) {
-        resetForm();
+        resetForm()
       }
     },
-    [resetForm],
-  );
+    [resetForm]
+  )
 
   const scheduleAssetProcessing = React.useCallback((asset: ModelAsset) => {
     window.setTimeout(() => {
       setAssets((currentAssets) =>
         currentAssets.map((item) =>
-          item.id === asset.id ? { ...item, status: "processing" } : item,
-        ),
-      );
-    }, 600);
+          item.id === asset.id ? { ...item, status: "processing" } : item
+        )
+      )
+    }, 600)
 
     window.setTimeout(() => {
       const nextStatus = asset.fileName.toLowerCase().includes("fail")
         ? "failed"
-        : "ready";
+        : "ready"
 
       setAssets((currentAssets) =>
         currentAssets.map((item) =>
-          item.id === asset.id ? { ...item, status: nextStatus } : item,
-        ),
-      );
-    }, 2100);
-  }, []);
+          item.id === asset.id ? { ...item, status: nextStatus } : item
+        )
+      )
+    }, 2100)
+  }, [])
 
   function validateForm() {
-    const nextErrors: Record<string, string> = {};
+    const nextErrors: Record<string, string> = {}
     const currentTemplate = templates.find(
-      (template) => template.id === editingTemplateId,
-    );
+      (template) => template.id === editingTemplateId
+    )
 
     const duplicateName = templates.some(
       (template) =>
         template.name.toLowerCase() === formState.name.trim().toLowerCase() &&
-        template.id !== editingTemplateId,
-    );
+        template.id !== editingTemplateId
+    )
 
     if (!formState.name.trim()) {
-      nextErrors.name = "Name is required";
+      nextErrors.name = "Name is required"
     } else if (duplicateName) {
-      nextErrors.name = "Name already exists";
+      nextErrors.name = "Name already exists"
     }
 
     if (!formState.boothTypeId) {
-      nextErrors.boothTypeId = "Booth type is required";
+      nextErrors.boothTypeId = "Booth type is required"
     }
 
     const requiresGlb =
-      formMode === "create" || !currentTemplate?.renderGlbAssetId;
+      formMode === "create" || !currentTemplate?.renderGlbAssetId
     const requiresThumbnail =
-      formMode === "create" || !currentTemplate?.thumbnailAssetId;
+      formMode === "create" || !currentTemplate?.thumbnailAssetId
 
     if (requiresGlb && !formState.glbFileName.trim()) {
-      nextErrors.glbFileName = "GLB file is required";
+      nextErrors.glbFileName = "GLB file is required"
     }
 
     if (requiresThumbnail && !formState.thumbnailFileName.trim()) {
-      nextErrors.thumbnailFileName = "Thumbnail is required";
+      nextErrors.thumbnailFileName = "Thumbnail is required"
     }
 
     if (
       formState.glbFileName.trim() &&
       !isValidFileName(formState.glbFileName, "glb")
     ) {
-      nextErrors.glbFileName = "Only .glb format is accepted";
+      nextErrors.glbFileName = "Only .glb format is accepted"
     }
 
     if (
       formState.thumbnailFileName.trim() &&
       !isValidFileName(formState.thumbnailFileName, "thumbnail")
     ) {
-      nextErrors.thumbnailFileName = "Use JPG, PNG, or WEBP image format";
+      nextErrors.thumbnailFileName = "Use JPG, PNG, or WEBP image format"
     }
 
     if (
       formState.blendFileName.trim() &&
       !isValidFileName(formState.blendFileName, "blend")
     ) {
-      nextErrors.blendFileName = "Only .blend format is accepted";
+      nextErrors.blendFileName = "Only .blend format is accepted"
     }
 
     if (formState.isPublic) {
       const willCreateNewRequiredAssets =
         Boolean(formState.glbFileName.trim()) ||
-        Boolean(formState.thumbnailFileName.trim());
+        Boolean(formState.thumbnailFileName.trim())
 
       if (willCreateNewRequiredAssets) {
         nextErrors.isPublic =
-          "Cannot publish while required assets are still processing";
+          "Cannot publish while required assets are still processing"
       } else if (currentTemplate && !canPublish(currentTemplate, assetMap)) {
         nextErrors.isPublic =
-          "Cannot publish: required assets are not ready yet";
+          "Cannot publish: required assets are not ready yet"
       }
     }
 
-    setFormErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
+    setFormErrors(nextErrors)
+    return Object.keys(nextErrors).length === 0
   }
 
   function buildAsset(fileName: string, kind: "blend" | "glb" | "thumbnail") {
-    const id = createMockId("asset");
+    const id = createMockId("asset")
 
     return {
       id,
@@ -346,51 +338,51 @@ export function BoothTemplateLibraryManager({
         kind === "blend"
           ? `https://example.com/files/${fileName}`
           : getAssetUrl(null, createMockId("preview")),
-      createdAt: new Date().toISOString(),
-    };
+      createdAt: new Date().toISOString()
+    }
   }
 
   function handleSave(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+    event.preventDefault()
 
     if (!validateForm()) {
-      return;
+      return
     }
 
     const currentTemplate = templates.find(
-      (template) => template.id === editingTemplateId,
-    );
+      (template) => template.id === editingTemplateId
+    )
 
-    const newAssets: ModelAsset[] = [];
+    const newAssets: ModelAsset[] = []
 
     if (formState.glbFileName.trim()) {
-      newAssets.push(buildAsset(formState.glbFileName.trim(), "glb"));
+      newAssets.push(buildAsset(formState.glbFileName.trim(), "glb"))
     }
 
     if (formState.thumbnailFileName.trim()) {
       newAssets.push(
-        buildAsset(formState.thumbnailFileName.trim(), "thumbnail"),
-      );
+        buildAsset(formState.thumbnailFileName.trim(), "thumbnail")
+      )
     }
 
     if (formState.blendFileName.trim()) {
-      newAssets.push(buildAsset(formState.blendFileName.trim(), "blend"));
+      newAssets.push(buildAsset(formState.blendFileName.trim(), "blend"))
     }
 
     const newGlbAssetId =
       newAssets.find((asset) => asset.kind === "glb")?.id ||
-      currentTemplate?.renderGlbAssetId;
+      currentTemplate?.renderGlbAssetId
 
     const newThumbnailAssetId =
       newAssets.find((asset) => asset.kind === "thumbnail")?.id ||
-      currentTemplate?.thumbnailAssetId;
+      currentTemplate?.thumbnailAssetId
 
     if (!newGlbAssetId || !newThumbnailAssetId || !formState.boothTypeId) {
       setNotice({
         type: "error",
-        text: "Missing required fields. Please verify booth type and required assets.",
-      });
-      return;
+        text: "Missing required fields. Please verify booth type and required assets."
+      })
+      return
     }
 
     if (formMode === "create") {
@@ -407,28 +399,28 @@ export function BoothTemplateLibraryManager({
         isPublic: false,
         isActive: formState.isActive,
         updatedBy: "Khai Pham",
-        updatedAt: new Date().toISOString(),
-      };
+        updatedAt: new Date().toISOString()
+      }
 
-      setTemplates((currentTemplates) => [nextTemplate, ...currentTemplates]);
+      setTemplates((currentTemplates) => [nextTemplate, ...currentTemplates])
       setUsages((currentUsage) => [
         {
           boothTemplateId: nextTemplate.id,
           upcomingExpoBoothCount: 0,
           liveExpoBoothCount: 0,
-          archivedExpoBoothCount: 0,
+          archivedExpoBoothCount: 0
         },
-        ...currentUsage,
-      ]);
+        ...currentUsage
+      ])
       setNotice({
         type: "success",
-        text: "Booth template created. Required assets are processing.",
-      });
+        text: "Booth template created. Required assets are processing."
+      })
     } else if (currentTemplate) {
       setTemplates((currentTemplates) =>
         currentTemplates.map((template) => {
           if (template.id !== currentTemplate.id) {
-            return template;
+            return template
           }
 
           return {
@@ -444,41 +436,41 @@ export function BoothTemplateLibraryManager({
             isPublic: formState.isPublic,
             isActive: formState.isActive,
             updatedBy: "Khai Pham",
-            updatedAt: new Date().toISOString(),
-          };
-        }),
-      );
+            updatedAt: new Date().toISOString()
+          }
+        })
+      )
 
       setNotice({
         type: "success",
-        text: "Booth template updated successfully.",
-      });
+        text: "Booth template updated successfully."
+      })
     }
 
     if (newAssets.length > 0) {
-      setAssets((currentAssets) => [...newAssets, ...currentAssets]);
+      setAssets((currentAssets) => [...newAssets, ...currentAssets])
       newAssets.forEach((asset) => {
-        scheduleAssetProcessing(asset);
-      });
+        scheduleAssetProcessing(asset)
+      })
     }
 
-    setFormOpen(false);
-    resetForm();
+    setFormOpen(false)
+    resetForm()
   }
 
   function getUsage(templateId: string) {
-    return usages.find((item) => item.boothTemplateId === templateId);
+    return usages.find((item) => item.boothTemplateId === templateId)
   }
 
   function handleTogglePublic(template: BoothTemplate) {
-    const nextPublic = !template.isPublic;
+    const nextPublic = !template.isPublic
 
     if (nextPublic && !canPublish(template, assetMap)) {
       setNotice({
         type: "error",
-        text: "Cannot publish: required assets are not ready yet.",
-      });
-      return;
+        text: "Cannot publish: required assets are not ready yet."
+      })
+      return
     }
 
     setTemplates((currentTemplates) =>
@@ -488,30 +480,30 @@ export function BoothTemplateLibraryManager({
               ...item,
               isPublic: nextPublic,
               updatedAt: new Date().toISOString(),
-              updatedBy: item.updatedBy,
+              updatedBy: item.updatedBy
             }
-          : item,
-      ),
-    );
+          : item
+      )
+    )
 
     void toggleBoothTemplatePublic(template.id).catch(() => {
       setTemplates((currentTemplates) =>
         currentTemplates.map((item) =>
           item.id === template.id
             ? { ...item, isPublic: template.isPublic }
-            : item,
-        ),
-      );
+            : item
+        )
+      )
       setNotice({
         type: "error",
-        text: "Failed to update template visibility.",
-      });
-    });
+        text: "Failed to update template visibility."
+      })
+    })
   }
 
   function handleToggleActive(template: BoothTemplate) {
-    const nextActive = !template.isActive;
-    const usage = getUsage(template.id);
+    const nextActive = !template.isActive
+    const usage = getUsage(template.id)
 
     setTemplates((currentTemplates) =>
       currentTemplates.map((item) =>
@@ -520,120 +512,120 @@ export function BoothTemplateLibraryManager({
               ...item,
               isActive: nextActive,
               updatedAt: new Date().toISOString(),
-              updatedBy: item.updatedBy,
+              updatedBy: item.updatedBy
             }
-          : item,
-      ),
-    );
+          : item
+      )
+    )
 
     void toggleBoothTemplateActive(template.id).catch(() => {
       setTemplates((currentTemplates) =>
         currentTemplates.map((item) =>
           item.id === template.id
             ? { ...item, isActive: template.isActive }
-            : item,
-        ),
-      );
+            : item
+        )
+      )
       setNotice({
         type: "error",
-        text: "Failed to update template activation.",
-      });
-    });
+        text: "Failed to update template activation."
+      })
+    })
 
     if (!nextActive && (usage?.upcomingExpoBoothCount || 0) > 0) {
       setNotice({
         type: "info",
-        text: `Template deactivated. Mock notification sent to ${usage?.upcomingExpoBoothCount} exhibitor(s).`,
-      });
-      return;
+        text: `Template deactivated. Mock notification sent to ${usage?.upcomingExpoBoothCount} exhibitor(s).`
+      })
+      return
     }
 
     setNotice({
       type: "success",
-      text: nextActive ? "Template re-activated." : "Template deactivated.",
-    });
+      text: nextActive ? "Template re-activated." : "Template deactivated."
+    })
   }
 
   function handleDeleteTemplate(template: BoothTemplate) {
-    const usage = getUsage(template.id);
+    const usage = getUsage(template.id)
     const totalReferences =
       (usage?.upcomingExpoBoothCount || 0) +
       (usage?.liveExpoBoothCount || 0) +
-      (usage?.archivedExpoBoothCount || 0);
+      (usage?.archivedExpoBoothCount || 0)
 
     if (totalReferences > 0) {
       setNotice({
         type: "error",
-        text: "This template is used by one or more expo booths and cannot be deleted.",
-      });
-      return;
+        text: "This template is used by one or more expo booths and cannot be deleted."
+      })
+      return
     }
 
-    const nextTemplates = templates.filter((item) => item.id !== template.id);
+    const nextTemplates = templates.filter((item) => item.id !== template.id)
     const removedAssetIds = [
       template.sourceBlendAssetId,
       template.renderGlbAssetId,
-      template.thumbnailAssetId,
-    ].filter(Boolean);
+      template.thumbnailAssetId
+    ].filter(Boolean)
 
-    setTemplates(nextTemplates);
+    setTemplates(nextTemplates)
     setUsages((currentUsage) =>
-      currentUsage.filter((item) => item.boothTemplateId !== template.id),
-    );
+      currentUsage.filter((item) => item.boothTemplateId !== template.id)
+    )
 
     setAssets((currentAssets) =>
       currentAssets.filter((asset) => {
         if (!removedAssetIds.includes(asset.id)) {
-          return true;
+          return true
         }
 
         return nextTemplates.some((candidate) =>
           [
             candidate.sourceBlendAssetId,
             candidate.renderGlbAssetId,
-            candidate.thumbnailAssetId,
-          ].includes(asset.id),
-        );
-      }),
-    );
+            candidate.thumbnailAssetId
+          ].includes(asset.id)
+        )
+      })
+    )
 
     if (translationTemplateId === template.id) {
-      setTranslationTemplateId(null);
+      setTranslationTemplateId(null)
     }
 
     setNotice({
       type: "success",
-      text: "Template and linked unused assets were deleted.",
-    });
+      text: "Template and linked unused assets were deleted."
+    })
   }
 
   function handleAddTranslation(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+    event.preventDefault()
 
     if (!translationTemplateId) {
-      return;
+      return
     }
 
-    const normalizedCode = translationLanguageCode.trim().toLowerCase();
+    const normalizedCode = translationLanguageCode.trim().toLowerCase()
 
     if (!normalizedCode || !translationName.trim()) {
       setNotice({
         type: "error",
-        text: "Language code and translated name are required.",
-      });
-      return;
+        text: "Language code and translated name are required."
+      })
+      return
     }
 
     setTemplates((currentTemplates) =>
       currentTemplates.map((template) => {
         if (template.id !== translationTemplateId) {
-          return template;
+          return template
         }
 
         const existing = template.translations.find(
           (translation) =>
-            translation.languageCode.toLowerCase() === normalizedCode,
-        );
+            translation.languageCode.toLowerCase() === normalizedCode
+        )
 
         if (existing) {
           return {
@@ -641,52 +633,52 @@ export function BoothTemplateLibraryManager({
             translations: template.translations.map((translation) =>
               translation.languageCode.toLowerCase() === normalizedCode
                 ? { ...translation, name: translationName.trim() }
-                : translation,
+                : translation
             ),
             updatedAt: new Date().toISOString(),
-            updatedBy: "Khai Pham",
-          };
+            updatedBy: "Khai Pham"
+          }
         }
 
         return {
           ...template,
           translations: [
             ...template.translations,
-            { languageCode: normalizedCode, name: translationName.trim() },
+            { languageCode: normalizedCode, name: translationName.trim() }
           ],
           updatedAt: new Date().toISOString(),
-          updatedBy: "Khai Pham",
-        };
-      }),
-    );
+          updatedBy: "Khai Pham"
+        }
+      })
+    )
 
-    setTranslationName("");
-    setNotice({ type: "success", text: "Translation saved." });
+    setTranslationName("")
+    setNotice({ type: "success", text: "Translation saved." })
   }
 
   function handleDeleteTranslation(languageCode: string) {
     if (!translationTemplateId) {
-      return;
+      return
     }
 
     setTemplates((currentTemplates) =>
       currentTemplates.map((template) => {
         if (template.id !== translationTemplateId) {
-          return template;
+          return template
         }
 
         return {
           ...template,
           translations: template.translations.filter(
-            (translation) => translation.languageCode !== languageCode,
+            (translation) => translation.languageCode !== languageCode
           ),
           updatedAt: new Date().toISOString(),
-          updatedBy: "Khai Pham",
-        };
-      }),
-    );
+          updatedBy: "Khai Pham"
+        }
+      })
+    )
 
-    setNotice({ type: "success", text: "Translation removed." });
+    setNotice({ type: "success", text: "Translation removed." })
   }
 
   return (
@@ -700,8 +692,8 @@ export function BoothTemplateLibraryManager({
             <InputGroupInput
               value={search}
               onChange={(event) => {
-                setSearch(event.target.value);
-                setPage(1);
+                setSearch(event.target.value)
+                setPage(1)
               }}
               placeholder="Search booth template by name"
             />
@@ -761,15 +753,15 @@ export function BoothTemplateLibraryManager({
                 </TableRow>
               ) : (
                 pagedTemplates.map((template) => {
-                  const status = template.isActive ? "Active" : "Inactive";
+                  const status = template.isActive ? "Active" : "Inactive"
                   const translatedName = getTranslationName(
                     template.name,
                     template.translations,
-                    previewLocale,
-                  );
+                    previewLocale
+                  )
                   const boothTypeName =
                     boothTypes.find((type) => type.id === template.boothTypeId)
-                      ?.name || "Unknown";
+                      ?.name || "Unknown"
 
                   return (
                     <TableRow key={template.id}>
@@ -832,9 +824,7 @@ export function BoothTemplateLibraryManager({
                             <DropdownMenuItem
                               onSelect={() =>
                                 setTranslationTemplateId((currentId) =>
-                                  currentId === template.id
-                                    ? null
-                                    : template.id,
+                                  currentId === template.id ? null : template.id
                                 )
                               }
                             >
@@ -853,7 +843,7 @@ export function BoothTemplateLibraryManager({
                         </DropdownMenu>
                       </TableCell>
                     </TableRow>
-                  );
+                  )
                 })
               )}
             </TableBody>
@@ -896,7 +886,7 @@ export function BoothTemplateLibraryManager({
         open={Boolean(deleteTarget)}
         onOpenChange={(open) => {
           if (!open) {
-            setDeleteTemplateId(null);
+            setDeleteTemplateId(null)
           }
         }}
       >
@@ -914,11 +904,11 @@ export function BoothTemplateLibraryManager({
               variant="destructive"
               onClick={() => {
                 if (!deleteTarget) {
-                  return;
+                  return
                 }
 
-                handleDeleteTemplate(deleteTarget);
-                setDeleteTemplateId(null);
+                handleDeleteTemplate(deleteTarget)
+                setDeleteTemplateId(null)
               }}
             >
               Delete
@@ -949,7 +939,7 @@ export function BoothTemplateLibraryManager({
                 onChange={(event) =>
                   setFormState((currentState) => ({
                     ...currentState,
-                    name: event.target.value,
+                    name: event.target.value
                   }))
                 }
                 placeholder="Minimal Basic Booth"
@@ -966,7 +956,7 @@ export function BoothTemplateLibraryManager({
                 onValueChange={(value) =>
                   setFormState((currentState) => ({
                     ...currentState,
-                    boothTypeId: value,
+                    boothTypeId: value
                   }))
                 }
               >
@@ -993,7 +983,7 @@ export function BoothTemplateLibraryManager({
                 onChange={(event) =>
                   setFormState((currentState) => ({
                     ...currentState,
-                    description: event.target.value,
+                    description: event.target.value
                   }))
                 }
                 className="min-h-20"
@@ -1009,7 +999,7 @@ export function BoothTemplateLibraryManager({
                   onChange={(event) =>
                     setFormState((currentState) => ({
                       ...currentState,
-                      glbFileName: event.target.value,
+                      glbFileName: event.target.value
                     }))
                   }
                   placeholder="example.glb"
@@ -1032,7 +1022,7 @@ export function BoothTemplateLibraryManager({
                   onChange={(event) =>
                     setFormState((currentState) => ({
                       ...currentState,
-                      thumbnailFileName: event.target.value,
+                      thumbnailFileName: event.target.value
                     }))
                   }
                   placeholder="example.png"
@@ -1058,7 +1048,7 @@ export function BoothTemplateLibraryManager({
                 onChange={(event) =>
                   setFormState((currentState) => ({
                     ...currentState,
-                    blendFileName: event.target.value,
+                    blendFileName: event.target.value
                   }))
                 }
                 placeholder="source.blend"
@@ -1081,7 +1071,7 @@ export function BoothTemplateLibraryManager({
                   onCheckedChange={(checked) =>
                     setFormState((currentState) => ({
                       ...currentState,
-                      isPublic: checked === true,
+                      isPublic: checked === true
                     }))
                   }
                 />
@@ -1093,7 +1083,7 @@ export function BoothTemplateLibraryManager({
                   onCheckedChange={(checked) =>
                     setFormState((currentState) => ({
                       ...currentState,
-                      isActive: checked === true,
+                      isActive: checked === true
                     }))
                   }
                 />
@@ -1123,8 +1113,8 @@ export function BoothTemplateLibraryManager({
         open={Boolean(translationTarget)}
         onOpenChange={(open) => {
           if (!open) {
-            setTranslationTemplateId(null);
-            setTranslationName("");
+            setTranslationTemplateId(null)
+            setTranslationName("")
           }
         }}
       >
@@ -1203,7 +1193,7 @@ export function BoothTemplateLibraryManager({
                                 variant="destructive"
                                 onClick={() =>
                                   handleDeleteTranslation(
-                                    translation.languageCode,
+                                    translation.languageCode
                                   )
                                 }
                               >
@@ -1222,5 +1212,5 @@ export function BoothTemplateLibraryManager({
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }

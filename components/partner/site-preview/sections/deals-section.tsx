@@ -11,7 +11,9 @@ export function DealsSection({ media = [] }: { media?: string[] }) {
           >
             HOT DEAL
           </span>
-          <h2 className="font-bold text-2xl text-slate-950">Brand eVoucher</h2>
+          <h2 className="font-bold text-2xl text-slate-950">
+            eVoucher and Deals
+          </h2>
         </div>
         <div className="grid gap-5 lg:grid-cols-[1fr_2fr]">
           <DealCard imageUrl={media[0]} large title="Top Ranking" />

@@ -1,21 +1,21 @@
-import { BoothTemplateLibraryManager } from "@/components/tradexpo/booth-template-library-manager";
-import { DashboardShell } from "@/components/tradexpo/dashboard-shell";
+import { BoothTemplateLibraryManager } from "@/components/tradexpo/booth-template-library-manager"
+import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import {
   listBoothTemplates,
   listBoothTemplateUsage,
-  listBoothTypes,
-} from "@/lib/tradexpo/db/booth-templates";
-import { listHallTemplateAssets } from "@/lib/tradexpo/db/hall-templates";
+  listBoothTypes
+} from "@/lib/tradexpo/db/booth-templates"
+import { listHallTemplateAssets } from "@/lib/tradexpo/db/hall-templates"
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"
 
 export default async function BoothTemplateLibraryPage() {
   const [assets, templates, usages, boothTypes] = await Promise.all([
     listHallTemplateAssets(),
     listBoothTemplates(),
     listBoothTemplateUsage(),
-    listBoothTypes(),
-  ]);
+    listBoothTypes()
+  ])
 
   return (
     <DashboardShell
@@ -23,7 +23,7 @@ export default async function BoothTemplateLibraryPage() {
       breadcrumbs={[
         { label: "Dashboard", href: "/admin" },
         { label: "TradeXpo", href: "/admin/tradexpo" },
-        { label: "Booth Templates" },
+        { label: "Booth Templates" }
       ]}
     >
       <BoothTemplateLibraryManager
@@ -33,5 +33,5 @@ export default async function BoothTemplateLibraryPage() {
         initialBoothTypes={boothTypes}
       />
     </DashboardShell>
-  );
+  )
 }

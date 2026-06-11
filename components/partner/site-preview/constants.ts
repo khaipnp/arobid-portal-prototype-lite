@@ -32,6 +32,8 @@ export const alwaysVisibleSections: AlwaysVisibleSiteSectionKey[] = [
   "footer"
 ]
 export const initialSections: EnabledSiteSections = {
+  bannerAds1: true,
+  bannerAds2: true,
   community: true,
   categories: true,
   featuredSuppliers: true,
@@ -48,6 +50,8 @@ export const initialSections: EnabledSiteSections = {
 
 export const initialSectionMedia: SiteSectionMedia = {
   banner: [""],
+  bannerAds1: ["", "", "", ""],
+  bannerAds2: ["", "", "", ""],
   community: ["", "", ""],
   categories: ["", "", "", "", "", "", "", ""],
   bfm: [""],
@@ -63,6 +67,16 @@ export const initialSectionMedia: SiteSectionMedia = {
 }
 
 export const sectionOptions: SectionOption[] = [
+  {
+    key: "bannerAds1",
+    title: "Banner Ads #1",
+    description: "Show the first inline banner placement."
+  },
+  {
+    key: "bannerAds2",
+    title: "Banner Ads #2",
+    description: "Show the second inline banner placement."
+  },
   {
     key: "community",
     title: "Community/value cards",
@@ -90,8 +104,8 @@ export const sectionOptions: SectionOption[] = [
   },
   {
     key: "expoCarousel",
-    title: "Expo banner carousel",
-    description: "Show exhibition promotional carousel."
+    title: "Expo Banner",
+    description: "Show exhibition promotional banner."
   },
   {
     key: "newProducts",
@@ -105,8 +119,8 @@ export const sectionOptions: SectionOption[] = [
   },
   {
     key: "promo",
-    title: "Large promo block",
-    description: "Show large marketing content block."
+    title: "Why Join?",
+    description: "Show the Why Join section with media and news links."
   },
   {
     key: "featureCards",
@@ -131,6 +145,18 @@ export const mediaSlotOptions: MediaSlotOption[] = [
     title: "Banner hero media",
     description: "Main visual used in the top hero banner.",
     slots: ["Hero visual"]
+  },
+  {
+    key: "bannerAds1",
+    title: "Banner Ads #1 media",
+    description: "Localized banner assets for the first inline placement.",
+    slots: ["Desktop VN", "Desktop EN", "Mobile VN", "Mobile EN"]
+  },
+  {
+    key: "bannerAds2",
+    title: "Banner Ads #2 media",
+    description: "Localized banner assets for the second inline placement.",
+    slots: ["Desktop VN", "Desktop EN", "Mobile VN", "Mobile EN"]
   },
   {
     key: "community",
@@ -179,9 +205,9 @@ export const mediaSlotOptions: MediaSlotOption[] = [
   },
   {
     key: "expoCarousel",
-    title: "Expo carousel media",
-    description: "Background visual for the expo carousel banner.",
-    slots: ["Carousel visual"]
+    title: "Expo banner media",
+    description: "Background visual for the expo banner.",
+    slots: ["Banner media"]
   },
   {
     key: "newProducts",
@@ -197,9 +223,9 @@ export const mediaSlotOptions: MediaSlotOption[] = [
   },
   {
     key: "promo",
-    title: "Promo media",
-    description: "Images for the large promo cards.",
-    slots: ["Promo 1", "Promo 2", "Promo 3"]
+    title: "Why Join media",
+    description: "Media for the Why Join section.",
+    slots: ["Section media"]
   },
   {
     key: "featureCards",

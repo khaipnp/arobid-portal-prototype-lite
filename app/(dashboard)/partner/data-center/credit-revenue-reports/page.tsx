@@ -1,33 +1,33 @@
-import { ArrowUpRightIcon } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-import { DashboardShell } from "@/components/tradexpo/dashboard-shell";
-import { Button } from "@/components/ui/button";
+import { ArrowUpRightIcon } from "lucide-react"
+import Image from "next/image"
+import Link from "next/link"
+import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
+import { Button } from "@/components/ui/button"
 import {
   Empty,
   EmptyContent,
   EmptyDescription,
   EmptyHeader,
   EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
-import { requireRole } from "@/lib/auth/rbac";
-import { requirePartnerTab } from "@/lib/partner/access";
-import { ensurePlatformSchema } from "@/lib/platform/ensure-schema";
+  EmptyTitle
+} from "@/components/ui/empty"
+import { requireRole } from "@/lib/auth/rbac"
+import { requirePartnerTab } from "@/lib/partner/access"
+import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 
-export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic"
 
 export default async function CreditRevenueReportPage() {
-  await ensurePlatformSchema();
-  const userId = await requireRole("partner");
-  await requirePartnerTab(userId, "quota");
+  await ensurePlatformSchema()
+  const userId = await requireRole("partner")
+  await requirePartnerTab(userId, "quota")
 
   return (
     <DashboardShell
       breadcrumbs={[
         { label: "Partner", href: "/partner" },
         { label: "Data Center" },
-        { label: "Credit Revenue Reports" },
+        { label: "Credit Revenue Reports" }
       ]}
     >
       <Empty>
@@ -68,5 +68,5 @@ export default async function CreditRevenueReportPage() {
         </Button>
       </Empty>
     </DashboardShell>
-  );
+  )
 }
