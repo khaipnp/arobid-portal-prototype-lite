@@ -28,7 +28,6 @@ import {
   InputGroupButton,
   InputGroupInput
 } from "@/components/ui/input-group"
-import { Label } from "@/components/ui/label"
 import { NativeSelect } from "@/components/ui/native-select"
 import {
   Table,
@@ -52,8 +51,14 @@ const invitationStatusLabels = {
   expired: "Expired"
 } as const
 
+const sentAtFormat = new Intl.DateTimeFormat("en-GB", {
+  dateStyle: "medium",
+  timeStyle: "short"
+})
+
 type InvitationStatus = keyof typeof invitationStatusLabels
 type StatusFilter = InvitationStatus | "all"
+type SenderFilter = "all" | string
 type RecipientSource = "manual" | "import"
 
 type InvitationRow = {
@@ -61,7 +66,8 @@ type InvitationRow = {
   recipient: string
   enterpriseName: string
   status: InvitationStatus
-  updatedAt: string
+  sentAt: string
+  sentBy: string
 }
 
 type RecipientIssue = {
@@ -109,6 +115,7 @@ export function PartnerSiteInvitationManager({
   const partnerId = workspace.organization?.id ?? ""
   const [query, setQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all")
+  const [senderFilter, setSenderFilter] = useState<SenderFilter>("all")
   const [inviteOpen, setInviteOpen] = useState(false)
   const [inputMode, setInputMode] = useState<RecipientSource>("manual")
   const [recipientText, setRecipientText] = useState("")
@@ -138,18 +145,38 @@ export function PartnerSiteInvitationManager({
     [workspace.members]
   )
 
+  const senderOptions = useMemo(
+    () =>
+      Array.from(
+        new Set(invitations.map((invitation) => invitation.sentBy))
+      ).sort((first, second) => first.localeCompare(second)),
+    [invitations]
+  )
+
   const filteredInvitations = useMemo(() => {
     const search = query.trim().toLowerCase()
 
-    return invitations.filter((invitation) => {
-      const matchesSearch =
-        !search || invitation.recipient.toLowerCase().includes(search)
-      const matchesStatus =
-        statusFilter === "all" || invitation.status === statusFilter
+    return invitations
+      .filter((invitation) => {
+        const matchesSearch =
+          !search || invitation.recipient.toLowerCase().includes(search)
+        const matchesStatus =
+          statusFilter === "all" || invitation.status === statusFilter
+        const matchesSender =
+          senderFilter === "all" || invitation.sentBy === senderFilter
 
-      return matchesSearch && matchesStatus
-    })
-  }, [invitations, query, statusFilter])
+        return matchesSearch && matchesStatus && matchesSender
+      })
+      .sort((first, second) => {
+        const firstTime = new Date(first.sentAt).getTime()
+        const secondTime = new Date(second.sentAt).getTime()
+
+        return (
+          secondTime - firstTime ||
+          first.recipient.localeCompare(second.recipient)
+        )
+      })
+  }, [invitations, query, senderFilter, statusFilter])
 
   function resetInviteDialog() {
     setInputMode("manual")
@@ -335,9 +362,9 @@ export function PartnerSiteInvitationManager({
 
   return (
     <div className="mt-5 space-y-4">
-      <div className="flex flex-col justify-between gap-2 sm:flex-row">
-        <div className="flex gap-2">
-          <InputGroup className="w-full max-w-xs">
+      <div className="flex flex-col justify-between gap-2 xl:flex-row">
+        <div className="flex flex-col gap-2 md:flex-row">
+          <InputGroup className="w-full md:max-w-xs">
             <InputGroupAddon align="inline-start">
               <SearchIcon className="h-4 w-4 text-muted-foreground" />
             </InputGroupAddon>
@@ -360,7 +387,7 @@ export function PartnerSiteInvitationManager({
             )}
           </InputGroup>
           <NativeSelect
-            className="w-full sm:w-44"
+            className="w-full md:w-44"
             value={statusFilter}
             onChange={(event) =>
               setStatusFilter(event.target.value as StatusFilter)
@@ -370,6 +397,18 @@ export function PartnerSiteInvitationManager({
             <option value="pending">Pending</option>
             <option value="accepted">Accepted</option>
             <option value="expired">Expired</option>
+          </NativeSelect>
+          <NativeSelect
+            className="w-full md:w-56"
+            value={senderFilter}
+            onChange={(event) => setSenderFilter(event.target.value)}
+          >
+            <option value="all">All senders</option>
+            {senderOptions.map((sender) => (
+              <option key={sender} value={sender}>
+                {sender}
+              </option>
+            ))}
           </NativeSelect>
         </div>
         <Button
@@ -393,6 +432,8 @@ export function PartnerSiteInvitationManager({
           <TableHeader>
             <TableRow>
               <TableHead>Recipient</TableHead>
+              <TableHead>Sent at</TableHead>
+              <TableHead>Sent by</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Action</TableHead>
             </TableRow>
@@ -402,7 +443,7 @@ export function PartnerSiteInvitationManager({
               <TableRow>
                 <TableCell
                   className="h-32 text-center text-muted-foreground"
-                  colSpan={3}
+                  colSpan={5}
                 >
                   No invitation matches current filters.
                 </TableCell>
@@ -412,6 +453,14 @@ export function PartnerSiteInvitationManager({
               <TableRow key={invitation.id}>
                 <TableCell>
                   {invitation.recipient || "No recipient email"}
+                </TableCell>
+                <TableCell>
+                  <div className="font-medium text-sm">
+                    {formatSentAt(invitation.sentAt)}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <span className="text-sm">{invitation.sentBy}</span>
                 </TableCell>
                 <TableCell>
                   <InvitationStatusBadge status={invitation.status} />
@@ -567,21 +616,6 @@ export function PartnerSiteInvitationManager({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  )
-}
-
-function Field({
-  children,
-  label
-}: {
-  children: React.ReactNode
-  label: string
-}) {
-  return (
-    <div className="space-y-2">
-      <Label>{label}</Label>
-      {children}
     </div>
   )
 }
@@ -778,8 +812,21 @@ function toInvitationRow(
     recipient: member.contactEmail ?? "",
     enterpriseName: member.enterpriseName,
     status,
-    updatedAt: member.updatedAt
+    sentAt: member.invitationSentAt ?? member.createdAt,
+    sentBy: getInvitationSenderLabel(member.invitationSentBy)
   }
+}
+
+function getInvitationSenderLabel(value?: string | null) {
+  const label = value?.trim()
+  return label || "Unknown sender"
+}
+
+function formatSentAt(value: string) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return "—"
+
+  return sentAtFormat.format(date)
 }
 
 function getInvitationStatus(
