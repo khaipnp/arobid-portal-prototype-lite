@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server"
 import { requirePartnerApiAction } from "@/lib/partner/access"
 import {
-  createPartnerSiteInvitations,
-  type PartnerSiteInvitationRecipientSource
+  type PartnerSiteInvitationRecipientSource,
+  validatePartnerSiteInvitationRecipients
 } from "@/lib/partner/db"
 import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 
@@ -25,15 +25,15 @@ export async function POST(request: Request) {
       recipients?: unknown
       source?: unknown
     }
-    const result = await createPartnerSiteInvitations(userId, {
-      invitationType: "join_partner_site",
+    const preview = await validatePartnerSiteInvitationRecipients(userId, {
       recipients: toRecipientArray(body.recipients),
       source: isRecipientSource(body.source) ? body.source : "manual"
     })
 
-    return NextResponse.json(result, { status: 201 })
+    return NextResponse.json(preview)
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Send failed."
+    const message =
+      error instanceof Error ? error.message : "Validation failed."
     const status = message === "Forbidden." ? 403 : 400
     return NextResponse.json({ error: message }, { status })
   }

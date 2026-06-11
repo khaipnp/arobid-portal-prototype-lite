@@ -1,27 +1,27 @@
 "use client"
 
 import {
-  CopyIcon,
-  LinkIcon,
+  DownloadIcon,
+  FileSpreadsheetIcon,
   MailIcon,
-  QrCodeIcon,
   SearchIcon,
   SendIcon,
+  UploadIcon,
   XIcon
 } from "lucide-react"
-import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useMemo, useState } from "react"
+import * as XLSX from "xlsx"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
 import {
   InputGroup,
   InputGroupAddon,
@@ -30,7 +30,6 @@ import {
 } from "@/components/ui/input-group"
 import { Label } from "@/components/ui/label"
 import { NativeSelect } from "@/components/ui/native-select"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import {
   Table,
   TableBody,
@@ -49,19 +48,13 @@ import type {
 
 const invitationStatusLabels = {
   accepted: "Accepted",
-  pending: "Pending"
+  pending: "Pending",
+  expired: "Expired"
 } as const
-
-const invitationTypeLabels = {
-  site_visit: "Visit Tenant",
-  join_partner_site: "Join Tenant"
-} as const
-
-const invitationTypeOptions = ["site_visit", "join_partner_site"] as const
 
 type InvitationStatus = keyof typeof invitationStatusLabels
 type StatusFilter = InvitationStatus | "all"
-type InvitationType = (typeof invitationTypeOptions)[number]
+type RecipientSource = "manual" | "import"
 
 type InvitationRow = {
   id: string
@@ -71,9 +64,28 @@ type InvitationRow = {
   updatedAt: string
 }
 
+type RecipientIssue = {
+  email: string
+  reason: string
+}
+
+type RecipientPreview = {
+  source: RecipientSource
+  limit: number
+  normalizedRecipients: string[]
+  valid: string[]
+  invalid: RecipientIssue[]
+  duplicates: RecipientIssue[]
+  existingPending: RecipientIssue[]
+  existingExpired: RecipientIssue[]
+  existingAccepted: RecipientIssue[]
+  canSend: boolean
+}
+
 type ParsedRecipients = {
   valid: string[]
   invalid: string[]
+  duplicates: string[]
 }
 
 type SendInvitationResponse = {
@@ -81,12 +93,12 @@ type SendInvitationResponse = {
   createdCount: number
   resentCount: number
   skipped: { email: string; reason: string }[]
+  preview?: RecipientPreview
 }
 
 export function PartnerSiteInvitationManager({
   access,
-  workspace,
-  inviteBaseUrl
+  workspace
 }: {
   access: PartnerAccess
   workspace: PartnerEnterpriseWorkspace
@@ -98,27 +110,28 @@ export function PartnerSiteInvitationManager({
   const [query, setQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all")
   const [inviteOpen, setInviteOpen] = useState(false)
-  const [invitationType, setInvitationType] = useState<InvitationType | null>(
-    null
-  )
+  const [inputMode, setInputMode] = useState<RecipientSource>("manual")
   const [recipientText, setRecipientText] = useState("")
+  const [uploadedRecipients, setUploadedRecipients] = useState<string[]>([])
+  const [uploadedFileName, setUploadedFileName] = useState<string | null>(null)
+  const [preview, setPreview] = useState<RecipientPreview | null>(null)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [resendingId, setResendingId] = useState<string | null>(null)
+  const [isValidating, setIsValidating] = useState(false)
   const [isSending, setIsSending] = useState(false)
 
-  const invitationLink = useMemo(() => {
-    if (!partnerId || !invitationType) return ""
-
-    return buildInvitationLink({ inviteBaseUrl, invitationType, partnerId })
-  }, [inviteBaseUrl, invitationType, partnerId])
   const parsedRecipients = useMemo(
     () => parseRecipientEmails(recipientText),
     [recipientText]
   )
-  const qrCodeUrl = invitationLink
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(invitationLink)}`
-    : ""
+  const selectedRecipients = useMemo(
+    () =>
+      inputMode === "manual"
+        ? [...parsedRecipients.valid, ...parsedRecipients.invalid]
+        : uploadedRecipients,
+    [inputMode, parsedRecipients, uploadedRecipients]
+  )
 
   const invitations = useMemo(
     () => workspace.members.map(toInvitationRow).filter(isInvitationRow),
@@ -138,20 +151,71 @@ export function PartnerSiteInvitationManager({
     })
   }, [invitations, query, statusFilter])
 
+  function resetInviteDialog() {
+    setInputMode("manual")
+    setRecipientText("")
+    setUploadedRecipients([])
+    setUploadedFileName(null)
+    setPreview(null)
+    setError(null)
+  }
+
   function openInviteDialog() {
-    setInvitationType(null)
+    resetInviteDialog()
     setInviteOpen(true)
   }
 
-  async function copyInvitationLink() {
-    if (!invitationLink) return
+  function updateInviteOpen(open: boolean) {
+    setInviteOpen(open)
+    if (!open) resetInviteDialog()
+  }
 
+  async function validateRecipients() {
+    setMessage(null)
     setError(null)
+    setPreview(null)
+
+    if (!partnerId) {
+      setError("Partner context is required before sending invitations.")
+      return
+    }
+    if (selectedRecipients.length === 0) {
+      setError("Enter at least one recipient email.")
+      return
+    }
+
+    setIsValidating(true)
     try {
-      await navigator.clipboard.writeText(invitationLink)
-      setMessage("Invitation link copied.")
-    } catch {
-      setError("Could not copy invitation link.")
+      const response = await fetch(
+        "/api/partner/partner-site/invitations/validate",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            recipients: selectedRecipients,
+            source: inputMode
+          })
+        }
+      )
+      const payload = (await response.json().catch(() => null)) as
+        | RecipientPreview
+        | { error?: string }
+        | null
+      if (!response.ok) {
+        throw new Error(
+          payload && "error" in payload && payload.error
+            ? payload.error
+            : "Could not validate recipients."
+        )
+      }
+
+      setPreview(payload as RecipientPreview)
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Could not validate recipients."
+      )
+    } finally {
+      setIsValidating(false)
     }
   }
 
@@ -159,20 +223,8 @@ export function PartnerSiteInvitationManager({
     setMessage(null)
     setError(null)
 
-    if (!partnerId) {
-      setError("Partner context is required before sending invitations.")
-      return
-    }
-    if (!invitationType) {
-      setError("Choose an invitation type before sending invitations.")
-      return
-    }
-    if (parsedRecipients.invalid.length > 0) {
-      setError(`Invalid email: ${parsedRecipients.invalid.join(", ")}`)
-      return
-    }
-    if (parsedRecipients.valid.length === 0) {
-      setError("Enter at least one valid recipient email.")
+    if (!preview?.canSend) {
+      setError("Validate recipients before sending invitations.")
       return
     }
 
@@ -181,7 +233,7 @@ export function PartnerSiteInvitationManager({
       const response = await fetch("/api/partner/partner-site/invitations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ invitationType, recipientText })
+        body: JSON.stringify({ recipients: preview.valid, source: inputMode })
       })
       if (!response.ok) {
         const payload = (await response.json().catch(() => null)) as {
@@ -192,7 +244,7 @@ export function PartnerSiteInvitationManager({
 
       const result = (await response.json()) as SendInvitationResponse
       setMessage(
-        `Invitation email sent to ${result.sentCount} recipient(s). ${result.createdCount} new, ${result.resentCount} resent.`
+        `Invitation records created for ${result.createdCount} recipient(s).`
       )
       if (result.skipped.length > 0) {
         setError(
@@ -211,7 +263,12 @@ export function PartnerSiteInvitationManager({
   }
 
   async function resendInvitation(invitation: InvitationRow) {
-    if (invitation.status !== "pending" || resendingId) return
+    if (
+      (invitation.status !== "pending" && invitation.status !== "expired") ||
+      resendingId
+    ) {
+      return
+    }
 
     setResendingId(invitation.id)
     setMessage(null)
@@ -241,6 +298,38 @@ export function PartnerSiteInvitationManager({
       )
     } finally {
       setResendingId(null)
+    }
+  }
+
+  function downloadTemplate() {
+    const blob = new Blob(["Recipient Email\n"], {
+      type: "text/csv;charset=utf-8;"
+    })
+    const url = URL.createObjectURL(blob)
+    const anchor = document.createElement("a")
+    anchor.href = url
+    anchor.download = "partner-site-invitation-template.csv"
+    anchor.click()
+    URL.revokeObjectURL(url)
+  }
+
+  async function handleFileUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    event.target.value = ""
+    setPreview(null)
+    setError(null)
+    setUploadedRecipients([])
+    setUploadedFileName(null)
+
+    if (!file) return
+
+    try {
+      const recipients = await readRecipientFile(file)
+      setUploadedRecipients(recipients)
+      setUploadedFileName(file.name)
+      setInputMode("import")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not read file.")
     }
   }
 
@@ -278,8 +367,9 @@ export function PartnerSiteInvitationManager({
             }
           >
             <option value="all">All statuses</option>
-            <option value="accepted">Accepted</option>
             <option value="pending">Pending</option>
+            <option value="accepted">Accepted</option>
+            <option value="expired">Expired</option>
           </NativeSelect>
         </div>
         <Button
@@ -327,7 +417,8 @@ export function PartnerSiteInvitationManager({
                   <InvitationStatusBadge status={invitation.status} />
                 </TableCell>
                 <TableCell className="text-right">
-                  {invitation.status === "pending" ? (
+                  {invitation.status === "pending" ||
+                  invitation.status === "expired" ? (
                     <Button
                       size="sm"
                       variant="outline"
@@ -350,140 +441,130 @@ export function PartnerSiteInvitationManager({
         </Table>
       </div>
 
-      <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+      <Dialog open={inviteOpen} onOpenChange={updateInviteOpen}>
+        <DialogContent className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>Create invitation</DialogTitle>
             <DialogDescription>
-              Choose Visit Tenant or Join Tenant first, then share by link or
-              email.
+              Validate recipients first, then send Join Partner invitation
+              records under the current Partner Site context.
             </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4">
-            <Field label="Invitation type">
-              <RadioGroup
-                aria-label="Invitation type"
-                className="grid gap-3 sm:grid-cols-2"
-                value={invitationType ?? undefined}
-                onValueChange={(value) =>
-                  setInvitationType(value as InvitationType)
-                }
-              >
-                {invitationTypeOptions.map((type) => (
-                  <label
-                    key={type}
-                    className="flex cursor-pointer items-center gap-3 rounded-2xl border p-3 text-sm transition-colors hover:bg-muted/60 has-data-[state=checked]:border-legend has-data-[state=checked]:bg-legend/5"
-                  >
-                    <RadioGroupItem value={type} />
-                    <span className="font-medium">
-                      {invitationTypeLabels[type]}
-                    </span>
-                  </label>
-                ))}
-              </RadioGroup>
-            </Field>
+            <Tabs
+              value={inputMode}
+              onValueChange={(value) => {
+                setInputMode(value as RecipientSource)
+                setPreview(null)
+                setError(null)
+              }}
+            >
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="manual">
+                  <MailIcon className="h-4 w-4" />
+                  Manual input
+                </TabsTrigger>
+                <TabsTrigger value="import">
+                  <FileSpreadsheetIcon className="h-4 w-4" />
+                  Import file
+                </TabsTrigger>
+              </TabsList>
 
-            {invitationType ? (
-              <Tabs key={invitationType} defaultValue="link">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="link">
-                    <LinkIcon className="h-4 w-4" />
-                    Link
-                  </TabsTrigger>
-                  <TabsTrigger value="email">
-                    <MailIcon className="h-4 w-4" />
-                    Email
-                  </TabsTrigger>
-                </TabsList>
+              <TabsContent value="manual" className="mt-5 space-y-4">
+                <Textarea
+                  value={recipientText}
+                  onChange={(event) => {
+                    setRecipientText(event.target.value)
+                    setPreview(null)
+                  }}
+                  placeholder="a@company.com, b@company.com"
+                  rows={8}
+                />
 
-                <TabsContent value="link" className="space-y-4">
-                  <Field label="Invitation link">
-                    <div className="flex gap-2">
-                      <Input readOnly value={invitationLink} />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        disabled={!invitationLink}
-                        onClick={copyInvitationLink}
-                      >
-                        <CopyIcon className="h-4 w-4" />
-                        Copy
-                      </Button>
-                    </div>
-                  </Field>
+                <p className="text-muted-foreground text-sm">
+                  Manual input supports up to 20 comma-separated emails.
+                </p>
+              </TabsContent>
 
-                  <div className="flex min-h-56 flex-col items-center justify-center gap-3 rounded-2xl border bg-muted/30 p-4">
-                    {qrCodeUrl ? (
-                      <Image
-                        alt="Invitation QR code"
-                        className="rounded-lg"
-                        height={180}
-                        src={qrCodeUrl}
-                        unoptimized
-                        width={180}
-                      />
-                    ) : (
-                      <QrCodeIcon className="h-16 w-16 text-muted-foreground" />
-                    )}
-                    <p className="text-center text-muted-foreground text-xs">
-                      Share QR code or copy invitation link.
-                    </p>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="email" className="space-y-4">
-                  <Field label="Recipient email list">
-                    <Textarea
-                      value={recipientText}
-                      onChange={(event) => setRecipientText(event.target.value)}
-                      placeholder="a@company.com, b@company.com"
-                      rows={8}
-                    />
-                  </Field>
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="secondary">
-                      {parsedRecipients.valid.length} valid
-                    </Badge>
-                    {parsedRecipients.invalid.length > 0 ? (
-                      <Badge variant="destructive">
-                        {parsedRecipients.invalid.length} invalid
-                      </Badge>
-                    ) : null}
-                    <Badge variant="outline">
-                      {invitationTypeLabels[invitationType]}
-                    </Badge>
-                  </div>
-                  {parsedRecipients.invalid.length > 0 ? (
-                    <p className="text-destructive text-sm">
-                      Invalid email: {parsedRecipients.invalid.join(", ")}
-                    </p>
-                  ) : null}
-                  <p className="text-muted-foreground text-sm">
-                    System sends standard email template automatically. Partner
-                    users cannot edit sender or content.
-                  </p>
+              <TabsContent value="import" className="space-y-4">
+                <div className="flex flex-wrap gap-2">
                   <Button
-                    className="w-full"
-                    disabled={
-                      !canManageInvitations ||
-                      isSending ||
-                      !partnerId ||
-                      !invitationType
-                    }
-                    onClick={sendInvitationEmail}
+                    type="button"
+                    variant="outline"
+                    onClick={downloadTemplate}
                   >
-                    <SendIcon className="h-4 w-4" />
-                    {isSending ? "Sending..." : "Send email"}
+                    <DownloadIcon className="h-4 w-4" />
+                    Download template
                   </Button>
-                </TabsContent>
-              </Tabs>
-            ) : (
-              <div className="rounded-2xl border border-dashed bg-muted/30 p-4 text-muted-foreground text-sm">
-                Select an invitation type to choose a sending method.
-              </div>
-            )}
+                  <Button asChild variant="outline">
+                    <label className="cursor-pointer">
+                      <UploadIcon className="h-4 w-4" />
+                      Upload CSV/XLSX
+                      <input
+                        className="sr-only"
+                        type="file"
+                        accept=".csv,.xlsx"
+                        onChange={handleFileUpload}
+                      />
+                    </label>
+                  </Button>
+                </div>
+                <p className="text-muted-foreground text-sm">
+                  Imported files must include only a Recipient Email column and
+                  support up to 200 emails.
+                </p>
+                {uploadedFileName ? (
+                  <div className="rounded-md border bg-muted px-3 py-2 text-sm">
+                    {uploadedFileName}: {uploadedRecipients.length} recipient(s)
+                    loaded.
+                  </div>
+                ) : null}
+              </TabsContent>
+            </Tabs>
+
+            <div className="flex flex-wrap gap-2">
+              <Badge variant="secondary">
+                {selectedRecipients.length} recipient(s)
+              </Badge>
+              {inputMode === "manual" &&
+              parsedRecipients.duplicates.length > 0 ? (
+                <Badge variant="outline">
+                  {parsedRecipients.duplicates.length} duplicate(s) ignored
+                </Badge>
+              ) : null}
+              <Badge variant="outline">Join Partner</Badge>
+              {preview ? (
+                <Badge variant={preview.canSend ? "default" : "destructive"}>
+                  {preview.canSend ? "Ready to send" : "Fix required"}
+                </Badge>
+              ) : null}
+            </div>
+
+            {preview ? <RecipientPreviewPanel preview={preview} /> : null}
           </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!canManageInvitations || isValidating || isSending}
+              onClick={validateRecipients}
+            >
+              {isValidating ? "Validating..." : "Preview validation"}
+            </Button>
+            <Button
+              disabled={
+                !canManageInvitations ||
+                isSending ||
+                !partnerId ||
+                !preview?.canSend
+              }
+              onClick={sendInvitationEmail}
+            >
+              <SendIcon className="h-4 w-4" />
+              {isSending ? "Sending..." : "Send invitation"}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
@@ -505,50 +586,179 @@ function Field({
   )
 }
 
+function RecipientPreviewPanel({ preview }: { preview: RecipientPreview }) {
+  return (
+    <div className="space-y-3 rounded-2xl border p-4">
+      <div className="flex flex-wrap gap-2">
+        <Badge variant="secondary">{preview.valid.length} valid</Badge>
+        {preview.invalid.length > 0 ? (
+          <Badge variant="destructive">{preview.invalid.length} invalid</Badge>
+        ) : null}
+        {preview.duplicates.length > 0 ? (
+          <Badge variant="outline">
+            {preview.duplicates.length} duplicate(s) ignored
+          </Badge>
+        ) : null}
+      </div>
+
+      <PreviewIssueList title="Valid recipients" emails={preview.valid} />
+      <PreviewIssueList title="Invalid emails" issues={preview.invalid} />
+      <PreviewIssueList
+        title="Duplicates ignored"
+        issues={preview.duplicates}
+      />
+      <PreviewIssueList
+        title="Already pending"
+        issues={preview.existingPending}
+      />
+      <PreviewIssueList
+        title="Expired - use Resend"
+        issues={preview.existingExpired}
+      />
+      <PreviewIssueList
+        title="Already accepted"
+        issues={preview.existingAccepted}
+      />
+    </div>
+  )
+}
+
+function PreviewIssueList({
+  emails,
+  issues,
+  title
+}: {
+  emails?: string[]
+  issues?: RecipientIssue[]
+  title: string
+}) {
+  const items = issues ?? emails?.map((email) => ({ email, reason: "" })) ?? []
+  if (items.length === 0) return null
+
+  return (
+    <div className="space-y-1">
+      <p className="font-medium text-sm">{title}</p>
+      <div className="max-h-28 overflow-y-auto rounded-md bg-muted/40 p-2 text-sm">
+        {items.map((item) => (
+          <div
+            key={`${title}-${item.email}`}
+            className="flex justify-between gap-3"
+          >
+            <span>{item.email}</span>
+            {item.reason ? (
+              <span className="text-muted-foreground">{item.reason}</span>
+            ) : null}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+async function readRecipientFile(file: File) {
+  const extension = file.name.split(".").pop()?.toLowerCase()
+  if (extension !== "csv" && extension !== "xlsx") {
+    throw new Error("Unsupported file type. Upload .csv or .xlsx.")
+  }
+
+  if (extension === "csv") {
+    const text = await file.text()
+    return parseRecipientCsv(text)
+  }
+
+  const buffer = await file.arrayBuffer()
+  const workbook = XLSX.read(buffer, { type: "array" })
+  const sheetName = workbook.SheetNames[0]
+  if (!sheetName) throw new Error("Spreadsheet is empty.")
+  const sheet = workbook.Sheets[sheetName]
+  const rows = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet, {
+    defval: ""
+  })
+  return extractRecipientEmailColumn(rows)
+}
+
+function parseRecipientCsv(value: string) {
+  const lines = value
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+  const [header, ...rows] = lines
+  if (!header) throw new Error("CSV is empty.")
+  const headers = splitCsvLine(header)
+  const emailIndex = headers.findIndex(
+    (item) => item.trim().toLowerCase() === "recipient email"
+  )
+  if (emailIndex === -1) {
+    throw new Error('Template must include "Recipient Email" column.')
+  }
+
+  return rows
+    .map((line) => splitCsvLine(line)[emailIndex]?.trim() ?? "")
+    .filter(Boolean)
+}
+
+function splitCsvLine(line: string) {
+  const values: string[] = []
+  let current = ""
+  let quoted = false
+
+  for (const char of line) {
+    if (char === '"') {
+      quoted = !quoted
+      continue
+    }
+    if (char === "," && !quoted) {
+      values.push(current)
+      current = ""
+      continue
+    }
+    current += char
+  }
+  values.push(current)
+
+  return values
+}
+
+function extractRecipientEmailColumn(rows: Record<string, unknown>[]) {
+  if (rows.length === 0) throw new Error("Spreadsheet is empty.")
+  const firstRow = rows[0]
+  const emailKey = Object.keys(firstRow).find(
+    (key) => key.trim().toLowerCase() === "recipient email"
+  )
+  if (!emailKey) {
+    throw new Error('Template must include "Recipient Email" column.')
+  }
+
+  return rows.map((row) => String(row[emailKey] ?? "").trim()).filter(Boolean)
+}
+
 function parseRecipientEmails(value: string): ParsedRecipients {
   const emails = value
     .split(",")
     .map((email) => email.trim().toLowerCase())
     .filter(Boolean)
-  const uniqueEmails = Array.from(new Set(emails))
+  const seen = new Set<string>()
+  const uniqueEmails: string[] = []
+  const duplicates: string[] = []
+
+  for (const email of emails) {
+    if (seen.has(email)) {
+      duplicates.push(email)
+      continue
+    }
+    seen.add(email)
+    uniqueEmails.push(email)
+  }
 
   return {
     valid: uniqueEmails.filter(isEmail),
-    invalid: uniqueEmails.filter((email) => !isEmail(email))
+    invalid: uniqueEmails.filter((email) => !isEmail(email)),
+    duplicates
   }
 }
 
 function isEmail(value: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
-}
-
-function buildInvitationLink({
-  inviteBaseUrl,
-  invitationType,
-  partnerId
-}: {
-  inviteBaseUrl: string
-  invitationType: InvitationType
-  partnerId: string
-}) {
-  const url = getInvitationBaseUrl(inviteBaseUrl)
-  url.searchParams.set("partnerId", partnerId)
-  url.searchParams.set(
-    "type",
-    invitationType === "site_visit" ? "visit" : "join"
-  )
-  return url.toString()
-}
-
-function getInvitationBaseUrl(value: string) {
-  try {
-    const url = new URL(value)
-    if (url.protocol === "https:") return url
-  } catch {
-    return new URL("https://arobid.site/invite")
-  }
-
-  return new URL("https://arobid.site/invite")
 }
 
 function isInvitationRow(row: InvitationRow | null): row is InvitationRow {
@@ -582,6 +792,13 @@ function getInvitationStatus(
     member.activationStatus === "invited" ||
     member.activationStatus === "pending_acceptance"
   ) {
+    if (
+      member.inviteExpiresAt &&
+      new Date(member.inviteExpiresAt).getTime() < Date.now()
+    ) {
+      return "expired"
+    }
+
     return "pending"
   }
 
@@ -589,9 +806,15 @@ function getInvitationStatus(
 }
 
 function InvitationStatusBadge({ status }: { status: InvitationStatus }) {
-  if (status === "accepted") {
-    return <Badge variant="default">Accepted</Badge>
-  }
+  return (
+    <Badge variant={getStatusBadgeVariant(status)}>
+      {invitationStatusLabels[status]}
+    </Badge>
+  )
+}
 
-  return <Badge variant="secondary">Pending</Badge>
+function getStatusBadgeVariant(status: InvitationStatus) {
+  if (status === "accepted") return "default"
+  if (status === "expired") return "destructive"
+  return "secondary"
 }
