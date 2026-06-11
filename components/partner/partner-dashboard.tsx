@@ -521,9 +521,9 @@ export function PartnerDashboard({
               )}
             />
             <MetricWidget
-              label="RFQs"
+              label="Deal Room"
               value={operationsSummary.rfqs}
-              description="RFQs created in the selected duration"
+              description="RFQs & Chat created in the selected duration"
               icon={<RadioTowerIcon className="size-4" />}
               comparison={buildPeriodComparison(
                 operationsSummary.rfqs,
