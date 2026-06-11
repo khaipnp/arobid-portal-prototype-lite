@@ -126,9 +126,6 @@ export function NavSeller({
           </Link>
         </SidebarMenuButton>
       </SidebarMenu>
-      <SidebarMenu>
-        <NotificationNavLink href="/seller/notifications" />
-      </SidebarMenu>
 
       {canUseDealRoom ? (
         <SidebarMenu>
@@ -295,44 +292,6 @@ export function NavSeller({
           </SidebarMenuItem>
         ))}
       </SidebarMenu>
-
-      {canManageSeller ? (
-        <>
-          <HoverCard>
-            <HoverCardTrigger asChild>
-              <SidebarGroupLabel className="cursor-help underline">
-                Demo
-              </SidebarGroupLabel>
-            </HoverCardTrigger>
-            <HoverCardContent align="start" className="text-sm">
-              <span className="font-bold">PO Note: &nbsp;</span>
-              <span>Chỉ dùng cho mục đích demo không cần coding</span>
-            </HoverCardContent>
-          </HoverCard>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              isActive={isActiveItem(
-                pathname,
-                "/seller/checkout-demo",
-                activeKey
-              )}
-            >
-              <Link
-                href="/seller/checkout-demo"
-                aria-current={
-                  isActiveItem(pathname, "/seller/checkout-demo", activeKey)
-                    ? "page"
-                    : undefined
-                }
-              >
-                <ShoppingCartIcon />
-                <span>Checkout Demo (eVoucher)</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </>
-      ) : null}
     </SidebarGroup>
   )
 }

@@ -100,6 +100,44 @@ async function ensureExpoPackageDisplaySchema() {
   `
 }
 
+async function ensureExpoReferralAnalyticsSchema() {
+  await sql`
+    create table if not exists expo_referral_events (
+      id text primary key,
+      expo_id text not null references expos(id) on delete cascade,
+      referral_token text not null,
+      share_channel text not null check (
+        share_channel in ('copy', 'facebook', 'linkedin', 'zalo', 'whatsapp', 'email')
+      ),
+      event_type text not null check (
+        event_type in (
+          'landing',
+          'join_exhibitor_click',
+          'exhibitor_item_click',
+          'virtual_lobby_click'
+        )
+      ),
+      visitor_user_id text references users(id) on delete set null,
+      visitor_key text,
+      metadata jsonb not null default '{}'::jsonb,
+      created_at timestamptz not null default now()
+    )
+  `
+  await sql`
+    create index if not exists idx_expo_referral_events_metrics
+    on expo_referral_events (expo_id, event_type, share_channel, created_at desc)
+  `
+  await sql`
+    create index if not exists idx_expo_referral_events_attribution
+    on expo_referral_events (expo_id, referral_token, created_at desc)
+  `
+  await sql`
+    insert into platform_schema_migrations (name)
+    values ('expo_referral_analytics_v1')
+    on conflict (name) do update set applied_at = now()
+  `
+}
+
 async function ensureCompanyRepresentativeSchema() {
   await sql`
     alter table companies
@@ -172,6 +210,7 @@ export async function ensurePlatformSchema() {
       await backfillCompanyRepresentatives()
       await ensureExpoMarketingContentSchema()
       await ensureExpoPackageDisplaySchema()
+      await ensureExpoReferralAnalyticsSchema()
       await ensureTradeCreditSchema()
       await ensureAccountProfileSchema()
       platformSchemaReady = true
@@ -1284,6 +1323,8 @@ export async function ensurePlatformSchema() {
     create index if not exists idx_expo_exhibitor_rfq_events_lookup
     on expo_exhibitor_rfq_events (expo_id, exhibitor_id, product_id, created_at desc)
   `
+
+  await ensureExpoReferralAnalyticsSchema()
 
   await migrateExpoManagementSchema()
   await migratePartnerOrganizationSchema()

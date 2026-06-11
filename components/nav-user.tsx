@@ -3,13 +3,22 @@
 import {
   BellIcon,
   ChevronRightIcon,
+  LanguagesIcon,
   LogOutIcon,
   UserCircleIcon
 } from "lucide-react"
-import Link from "next/link"
 import { useRouter } from "next/navigation"
 import * as React from "react"
 import { AccountProfileDialog } from "@/components/account/account-profile-dialog"
+import { NotificationTrigger } from "@/components/notifications/notification-trigger"
+import { Button } from "@/components/ui/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle
+} from "@/components/ui/dialog"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,6 +35,7 @@ import {
   useSidebar
 } from "@/components/ui/sidebar"
 import { UserAvatar } from "@/components/user-avatar"
+import { cn } from "@/lib/utils"
 
 export function NavUser({
   user
@@ -39,6 +49,9 @@ export function NavUser({
   const { isMobile } = useSidebar()
   const router = useRouter()
   const [accountOpen, setAccountOpen] = React.useState(false)
+  const [languageOpen, setLanguageOpen] = React.useState(false)
+  const [selectedLanguage, setSelectedLanguage] = React.useState("English")
+  const [selectedCurrency, setSelectedCurrency] = React.useState("USD")
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" })
@@ -92,14 +105,29 @@ export function NavUser({
                   <UserCircleIcon />
                   Account
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Link
-                    href="/seller/notifications"
-                    className="flex items-center gap-1.5"
+                <DropdownMenuItem
+                  asChild
+                  onSelect={(event) => {
+                    event.preventDefault()
+                  }}
+                >
+                  <NotificationTrigger
+                    className="h-auto w-full justify-start rounded-md px-1.5 py-1 font-normal"
+                    size="sm"
+                    variant="ghost"
                   >
                     <BellIcon />
                     Notifications
-                  </Link>
+                  </NotificationTrigger>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={(event) => {
+                    event.preventDefault()
+                    setLanguageOpen(true)
+                  }}
+                >
+                  <LanguagesIcon />
+                  Language
                 </DropdownMenuItem>
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
@@ -112,6 +140,90 @@ export function NavUser({
         </SidebarMenuItem>
       </SidebarMenu>
       <AccountProfileDialog open={accountOpen} onOpenChange={setAccountOpen} />
+      <Dialog open={languageOpen} onOpenChange={setLanguageOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Language</DialogTitle>
+            <DialogDescription>
+              Choose the language you want to use.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-6">
+            <section className="grid gap-2">
+              <h3 className="font-medium text-base text-foreground">
+                Language
+              </h3>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant={selectedLanguage === "English" ? "outline" : "ghost"}
+                  className={cn(
+                    selectedLanguage === "English" ? "border-foreground" : "",
+                    "h-fit flex-col items-start justify-start gap-0.5 py-2"
+                  )}
+                  aria-pressed={selectedLanguage === "English"}
+                  onClick={() => setSelectedLanguage("English")}
+                >
+                  English{" "}
+                  <span className="items-start text-muted-foreground text-xs">
+                    Global
+                  </span>
+                </Button>
+                <Button
+                  type="button"
+                  variant={
+                    selectedLanguage === "Vietnamese" ? "outline" : "ghost"
+                  }
+                  className={cn(
+                    selectedLanguage === "Vietnamese"
+                      ? "border-foreground"
+                      : "",
+                    "h-fit flex-col items-start justify-start gap-0.5 py-2"
+                  )}
+                  aria-pressed={selectedLanguage === "Vietnamese"}
+                  onClick={() => setSelectedLanguage("Vietnamese")}
+                >
+                  Tiếng Việt{" "}
+                  <span className="text-muted-foreground text-xs">
+                    Việt Nam
+                  </span>
+                </Button>
+              </div>
+            </section>
+            <section className="grid gap-2">
+              <h3 className="font-medium text-base text-foreground">
+                Currency
+              </h3>
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant={selectedCurrency === "USD" ? "outline" : "ghost"}
+                  className={cn(
+                    selectedCurrency === "USD" ? "border-foreground" : "",
+                    "h-fit flex-col items-start justify-start gap-0.5 py-2"
+                  )}
+                  aria-pressed={selectedCurrency === "USD"}
+                  onClick={() => setSelectedCurrency("USD")}
+                >
+                  USD
+                </Button>
+                <Button
+                  type="button"
+                  variant={selectedCurrency === "VND" ? "outline" : "ghost"}
+                  className={cn(
+                    selectedCurrency === "VND" ? "border-foreground" : "",
+                    "h-fit flex-col items-start justify-start gap-0.5 py-2"
+                  )}
+                  aria-pressed={selectedCurrency === "VND"}
+                  onClick={() => setSelectedCurrency("VND")}
+                >
+                  VND
+                </Button>
+              </div>
+            </section>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

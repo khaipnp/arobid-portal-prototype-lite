@@ -247,11 +247,32 @@ export type PartnerEnterpriseAssociationAuditFilters = {
 
 export type PartnerSiteInvitationType = "site_visit" | "join_partner_site"
 
+export type PartnerSiteInvitationRecipientSource = "manual" | "import"
+
+export type PartnerSiteInvitationRecipientIssue = {
+  email: string
+  reason: string
+}
+
+export type PartnerSiteInvitationRecipientPreview = {
+  source: PartnerSiteInvitationRecipientSource
+  limit: number
+  normalizedRecipients: string[]
+  valid: string[]
+  invalid: PartnerSiteInvitationRecipientIssue[]
+  duplicates: PartnerSiteInvitationRecipientIssue[]
+  existingPending: PartnerSiteInvitationRecipientIssue[]
+  existingExpired: PartnerSiteInvitationRecipientIssue[]
+  existingAccepted: PartnerSiteInvitationRecipientIssue[]
+  canSend: boolean
+}
+
 export type PartnerSiteInvitationSendResult = {
   sentCount: number
   createdCount: number
   resentCount: number
   skipped: { email: string; reason: string }[]
+  preview?: PartnerSiteInvitationRecipientPreview
 }
 
 export type PartnerEnterpriseMember = {
@@ -272,6 +293,7 @@ export type PartnerEnterpriseMember = {
   publicProfile: boolean
   lastAction: string | null
   acceptedAt: string | null
+  inviteExpiresAt: string | null
   removedAt: string | null
   createdAt: string
   updatedAt: string
@@ -647,6 +669,41 @@ export type PartnerExpoOperationsDetail = {
   tierBreakdown: PartnerExpoTierBreakdown[]
   hallBreakdown: PartnerExpoHallBreakdown[]
   registrationStatusBreakdown: PartnerExpoRegistrationStatusBreakdown[]
+}
+
+export const partnerReferralDateRanges = ["7d", "30d", "90d", "all"] as const
+
+export const partnerReferralShareChannels = [
+  "copy",
+  "facebook",
+  "linkedin",
+  "zalo",
+  "whatsapp",
+  "email"
+] as const
+
+export type PartnerReferralDateRange =
+  (typeof partnerReferralDateRanges)[number]
+
+export type PartnerReferralShareChannel =
+  (typeof partnerReferralShareChannels)[number]
+
+export type PartnerReferralAnalyticsChannel = {
+  channel: PartnerReferralShareChannel
+  views: number
+  conversions: number
+  conversionRate: number
+}
+
+export type PartnerReferralAnalytics = {
+  status: "ready" | "empty" | "unavailable"
+  dateRange: PartnerReferralDateRange
+  channel: PartnerReferralShareChannel | "all"
+  pageViews: number
+  conversions: number
+  conversionRate: number
+  lastUpdatedAt: string | null
+  channelBreakdown: PartnerReferralAnalyticsChannel[]
 }
 
 export type PartnerExpoExhibitorPaymentStatus = "Paid" | "Pending" | "No order"
@@ -1993,6 +2050,7 @@ async function requirePartnerEnterpriseMember(
       publicProfile: row.public_profile,
       lastAction: row.last_action,
       acceptedAt: row.accepted_at ? toIso(row.accepted_at) : null,
+      inviteExpiresAt: null,
       removedAt: row.removed_at ? toIso(row.removed_at) : null,
       removedReason: row.removed_reason,
       createdAt: "",
@@ -2488,6 +2546,7 @@ export async function getPartnerQuotaWorkspace(
       publicProfile: row.public_profile,
       lastAction: row.last_action,
       acceptedAt: row.accepted_at ? toIso(row.accepted_at) : null,
+      inviteExpiresAt: null,
       removedAt: row.removed_at ? toIso(row.removed_at) : null,
       removedReason: row.removed_reason,
       createdAt: toIso(row.created_at),
@@ -3715,6 +3774,7 @@ export async function getPartnerEnterpriseWorkspace(
       pem.public_profile,
       pem.last_action,
       pem.accepted_at,
+      pem.invite_expires_at,
       pem.removed_at,
       pem.removed_reason,
       pem.created_at,
@@ -3751,6 +3811,7 @@ export async function getPartnerEnterpriseWorkspace(
     public_profile: boolean
     last_action: string | null
     accepted_at: string | Date | null
+    invite_expires_at: string | Date | null
     removed_at: string | Date | null
     removed_reason: string | null
     created_at: string | Date
@@ -3769,6 +3830,9 @@ export async function getPartnerEnterpriseWorkspace(
     publicProfile: row.public_profile,
     lastAction: row.last_action,
     acceptedAt: row.accepted_at ? toIso(row.accepted_at) : null,
+    inviteExpiresAt: row.invite_expires_at
+      ? toIso(row.invite_expires_at)
+      : null,
     removedAt: row.removed_at ? toIso(row.removed_at) : null,
     removedReason: row.removed_reason,
     createdAt: toIso(row.created_at),
@@ -4493,11 +4557,163 @@ export async function createPartnerEnterpriseMember(
   }
 }
 
+const partnerSiteInvitationEmailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+function getPartnerSiteInvitationLimit(
+  source: PartnerSiteInvitationRecipientSource
+) {
+  return source === "import" ? 200 : 20
+}
+
+function getFirstInvitationPreviewError(
+  preview: PartnerSiteInvitationRecipientPreview
+) {
+  if (preview.normalizedRecipients.length === 0) {
+    return "At least one recipient email is required."
+  }
+  if (preview.normalizedRecipients.length > preview.limit) {
+    return `Recipient limit exceeded. ${preview.source === "import" ? "Imported files" : "Manual input"} support up to ${preview.limit} emails.`
+  }
+  if (preview.invalid.length > 0) return "Invalid email found."
+  if (preview.existingPending.length > 0) {
+    return "One or more recipients already have pending invitations."
+  }
+  if (preview.existingExpired.length > 0) {
+    return "One or more recipients have expired invitations. Use Resend."
+  }
+  if (preview.existingAccepted.length > 0) {
+    return "One or more recipients already accepted invitations."
+  }
+
+  return null
+}
+
+export async function validatePartnerSiteInvitationRecipients(
+  userId: string,
+  input: {
+    recipients: string[]
+    source?: PartnerSiteInvitationRecipientSource
+  }
+): Promise<PartnerSiteInvitationRecipientPreview> {
+  const organization = await requirePrimaryPartnerOrganization(userId)
+  const source = input.source ?? "manual"
+  const limit = getPartnerSiteInvitationLimit(source)
+  const seen = new Set<string>()
+  const normalizedRecipients: string[] = []
+  const duplicates: PartnerSiteInvitationRecipientIssue[] = []
+
+  for (const rawEmail of input.recipients) {
+    const email = rawEmail.trim().toLowerCase()
+    if (!email) continue
+    if (seen.has(email)) {
+      duplicates.push({ email, reason: "Duplicate ignored." })
+      continue
+    }
+    seen.add(email)
+    normalizedRecipients.push(email)
+  }
+
+  const invalid = normalizedRecipients
+    .filter((email) => !partnerSiteInvitationEmailPattern.test(email))
+    .map((email) => ({ email, reason: "Invalid email format." }))
+  const structurallyValid = normalizedRecipients.filter((email) =>
+    partnerSiteInvitationEmailPattern.test(email)
+  )
+
+  const existingRows = structurallyValid.length
+    ? ((await sql`
+        select
+          lower(contact_email) as email,
+          activation_status,
+          accepted_at,
+          invite_expires_at
+        from partner_enterprise_members
+        where partner_org_id = ${organization.id}
+          and source = 'tenant_invite'
+          and contact_email is not null
+          and lower(contact_email) = any(${structurallyValid}::text[])
+      `) as {
+        email: string
+        activation_status: PartnerEnterpriseMember["activationStatus"]
+        accepted_at: string | Date | null
+        invite_expires_at: string | Date | null
+      }[])
+    : []
+
+  const existingPending: PartnerSiteInvitationRecipientIssue[] = []
+  const existingExpired: PartnerSiteInvitationRecipientIssue[] = []
+  const existingAccepted: PartnerSiteInvitationRecipientIssue[] = []
+  const blocked = new Set<string>()
+  const now = Date.now()
+
+  for (const row of existingRows) {
+    if (row.activation_status === "blocked") {
+      invalid.push({ email: row.email, reason: "Blocked association." })
+      blocked.add(row.email)
+      continue
+    }
+
+    const accepted =
+      row.activation_status === "active" || Boolean(row.accepted_at)
+    const expiresAt = row.invite_expires_at
+      ? new Date(row.invite_expires_at).getTime()
+      : null
+    const expired = !accepted && expiresAt !== null && expiresAt < now
+    const pending =
+      !accepted &&
+      !expired &&
+      (row.activation_status === "invited" ||
+        row.activation_status === "pending_acceptance")
+
+    if (accepted) {
+      existingAccepted.push({
+        email: row.email,
+        reason: "Invitation already accepted."
+      })
+      blocked.add(row.email)
+      continue
+    }
+    if (expired) {
+      existingExpired.push({
+        email: row.email,
+        reason: "Invitation expired. Use Resend."
+      })
+      blocked.add(row.email)
+      continue
+    }
+    if (pending) {
+      existingPending.push({
+        email: row.email,
+        reason: "Pending invitation already exists."
+      })
+      blocked.add(row.email)
+    }
+  }
+
+  const valid = structurallyValid.filter((email) => !blocked.has(email))
+  const preview: PartnerSiteInvitationRecipientPreview = {
+    source,
+    limit,
+    normalizedRecipients,
+    valid,
+    invalid,
+    duplicates,
+    existingPending,
+    existingExpired,
+    existingAccepted,
+    canSend: false
+  }
+  preview.canSend = getFirstInvitationPreviewError(preview) === null
+
+  return preview
+}
+
 export async function createPartnerSiteInvitations(
   userId: string,
   input: {
     invitationType: PartnerSiteInvitationType
     recipients: string[]
+    source?: PartnerSiteInvitationRecipientSource
   }
 ): Promise<PartnerSiteInvitationSendResult> {
   const organization = await requirePrimaryPartnerOrganization(userId)
@@ -4508,18 +4724,18 @@ export async function createPartnerSiteInvitations(
     throw new Error("Invalid invitation type.")
   }
 
-  const recipients = Array.from(
-    new Set(input.recipients.map((email) => email.trim().toLowerCase()))
-  ).filter(Boolean)
-  if (recipients.length === 0) {
-    throw new Error("At least one recipient email is required.")
-  }
+  const preview = await validatePartnerSiteInvitationRecipients(userId, {
+    recipients: input.recipients,
+    source: input.source
+  })
+  const previewError = getFirstInvitationPreviewError(preview)
+  if (previewError) throw new Error(previewError)
 
   const skipped: { email: string; reason: string }[] = []
   let createdCount = 0
-  let resentCount = 0
+  const resentCount = 0
 
-  for (const email of recipients) {
+  for (const email of preview.valid) {
     await sql`select pg_advisory_xact_lock(hashtext(${`${organization.id}|tenant_invite|${email}`}))`
     const duplicateRows = (await sql`
       select id, activation_status, accepted_at
@@ -4543,38 +4759,12 @@ export async function createPartnerSiteInvitations(
       skipped.push({ email, reason: "Already accepted." })
       continue
     }
-
-    const inviteToken = randomUUID()
     if (duplicate) {
-      await sql`
-        update partner_enterprise_members
-        set
-          activation_status = 'pending_acceptance',
-          relationship_type = ${getRelationshipTypeForInvitation(input.invitationType)},
-          invite_token = ${inviteToken},
-          invite_expires_at = now() + interval '30 days',
-          last_action = 'resend_invite',
-          updated_at = now()
-        where id = ${duplicate.id}
-          and partner_org_id = ${organization.id}
-      `
-      await recordPartnerEnterpriseAssociationAudit({
-        associationId: duplicate.id,
-        partnerOrgId: organization.id,
-        partnerOrgName: organization.name,
-        enterpriseId: null,
-        enterpriseName: email,
-        action: "resend_invite",
-        oldStatus: duplicate.activation_status,
-        newStatus: "pending_acceptance",
-        source: "tenant_invite",
-        actorType: "partner_user",
-        actorId: userId
-      })
-      resentCount += 1
+      skipped.push({ email, reason: "Invitation already exists." })
       continue
     }
 
+    const inviteToken = randomUUID()
     const id = `partner-member-${randomUUID()}`
     await sql`
       insert into partner_enterprise_members (
@@ -4600,7 +4790,7 @@ export async function createPartnerSiteInvitations(
         'tenant_invite',
         ${getRelationshipTypeForInvitation(input.invitationType)},
         ${inviteToken},
-        now() + interval '30 days',
+        now() + interval '7 days',
         'invite'
       )
     `
@@ -4623,7 +4813,8 @@ export async function createPartnerSiteInvitations(
     sentCount: createdCount + resentCount,
     createdCount,
     resentCount,
-    skipped
+    skipped,
+    preview
   }
 }
 
@@ -4654,7 +4845,7 @@ export async function resendPartnerEnterpriseInvitation(
     set
       activation_status = 'pending_acceptance',
       invite_token = ${inviteToken},
-      invite_expires_at = now() + interval '30 days',
+      invite_expires_at = now() + interval '7 days',
       last_action = 'resend_invite',
       updated_at = now()
     where id = ${memberId}
@@ -4909,6 +5100,175 @@ function toNumber(value: unknown): number {
         : 0
 
   return Number.isFinite(numberValue) ? numberValue : 0
+}
+
+function getPartnerReferralRangeSince(range: PartnerReferralDateRange) {
+  if (range === "all") return null
+
+  const days = range === "7d" ? 7 : range === "90d" ? 90 : 30
+  return new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
+}
+
+function toConversionRate(conversions: number, pageViews: number) {
+  if (pageViews <= 0) return 0
+  return Math.round((conversions / pageViews) * 1000) / 10
+}
+
+export async function getPartnerExpoReferralAnalytics(
+  userId: string,
+  expoId: string,
+  input: {
+    dateRange?: PartnerReferralDateRange
+    channel?: PartnerReferralShareChannel | "all"
+  } = {}
+): Promise<PartnerReferralAnalytics | null> {
+  const assigned = await getAssignedPartnerExpoName(userId, expoId)
+  if (!assigned) return null
+
+  const dateRange = input.dateRange ?? "30d"
+  const channel = input.channel ?? "all"
+  const since = getPartnerReferralRangeSince(dateRange)
+  const channelFilter = channel === "all" ? null : channel
+
+  const metricRows = (await sql`
+    with landings as (
+      select
+        event.id,
+        event.referral_token,
+        event.share_channel,
+        event.created_at
+      from expo_referral_events event
+      where event.expo_id = ${expoId}
+        and event.event_type = 'landing'
+        and (${since}::timestamptz is null or event.created_at >= ${since})
+        and (${channelFilter}::text is null or event.share_channel = ${channelFilter})
+    ),
+    conversions as (
+      select
+        conversion.id,
+        attribution.share_channel,
+        conversion.created_at
+      from expo_referral_events conversion
+      inner join lateral (
+        select landing.share_channel
+        from landings landing
+        where landing.referral_token = conversion.referral_token
+          and landing.created_at <= conversion.created_at
+          and conversion.created_at < landing.created_at + interval '7 days'
+        order by landing.created_at desc
+        limit 1
+      ) attribution on true
+      where conversion.expo_id = ${expoId}
+        and conversion.event_type in (
+          'join_exhibitor_click',
+          'exhibitor_item_click',
+          'virtual_lobby_click'
+        )
+        and (${since}::timestamptz is null or conversion.created_at >= ${since})
+    ),
+    all_events as (
+      select created_at from landings
+      union all
+      select created_at from conversions
+    )
+    select
+      (select count(*)::int from landings) as page_views,
+      (select count(*)::int from conversions) as conversions,
+      (select max(created_at) from all_events) as last_updated_at
+  `) as {
+    page_views: number | string
+    conversions: number | string
+    last_updated_at: string | Date | null
+  }[]
+
+  const channelRows = (await sql`
+    with channels(channel) as (
+      values
+        ('copy'),
+        ('facebook'),
+        ('linkedin'),
+        ('zalo'),
+        ('whatsapp'),
+        ('email')
+    ),
+    landings as (
+      select
+        event.id,
+        event.referral_token,
+        event.share_channel,
+        event.created_at
+      from expo_referral_events event
+      where event.expo_id = ${expoId}
+        and event.event_type = 'landing'
+        and (${since}::timestamptz is null or event.created_at >= ${since})
+        and (${channelFilter}::text is null or event.share_channel = ${channelFilter})
+    ),
+    conversions as (
+      select
+        conversion.id,
+        attribution.share_channel,
+        conversion.created_at
+      from expo_referral_events conversion
+      inner join lateral (
+        select landing.share_channel
+        from landings landing
+        where landing.referral_token = conversion.referral_token
+          and landing.created_at <= conversion.created_at
+          and conversion.created_at < landing.created_at + interval '7 days'
+        order by landing.created_at desc
+        limit 1
+      ) attribution on true
+      where conversion.expo_id = ${expoId}
+        and conversion.event_type in (
+          'join_exhibitor_click',
+          'exhibitor_item_click',
+          'virtual_lobby_click'
+        )
+        and (${since}::timestamptz is null or conversion.created_at >= ${since})
+    )
+    select
+      channels.channel,
+      count(distinct landings.id)::int as views,
+      count(distinct conversions.id)::int as conversions
+    from channels
+    left join landings on landings.share_channel = channels.channel
+    left join conversions on conversions.share_channel = channels.channel
+    where ${channelFilter}::text is null or channels.channel = ${channelFilter}
+    group by channels.channel
+    order by views desc, conversions desc, channels.channel asc
+  `) as {
+    channel: PartnerReferralShareChannel
+    views: number | string
+    conversions: number | string
+  }[]
+
+  const metric = metricRows[0]
+  const pageViews = toNumber(metric?.page_views)
+  const conversions = toNumber(metric?.conversions)
+  const lastUpdatedAt = metric?.last_updated_at
+    ? toIso(metric.last_updated_at)
+    : null
+
+  return {
+    status: lastUpdatedAt ? "ready" : "empty",
+    dateRange,
+    channel,
+    pageViews,
+    conversions,
+    conversionRate: toConversionRate(conversions, pageViews),
+    lastUpdatedAt,
+    channelBreakdown: channelRows.map((row) => {
+      const views = toNumber(row.views)
+      const rowConversions = toNumber(row.conversions)
+
+      return {
+        channel: row.channel,
+        views,
+        conversions: rowConversions,
+        conversionRate: toConversionRate(rowConversions, views)
+      }
+    })
+  }
 }
 
 export async function listPartnerAssignedExpos(
