@@ -43,6 +43,10 @@ import {
   ChartTooltipContent
 } from "@/components/ui/chart"
 import {
+  type DateRange,
+  DateRangePicker
+} from "@/components/ui/date-range-picker"
+import {
   Table,
   TableBody,
   TableCell,
@@ -72,6 +76,7 @@ const compactNumber = new Intl.NumberFormat("en", {
 const numberFormat = new Intl.NumberFormat("en")
 
 const dashboardDurations = ["1D", "3D", "7D", "15D", "30D"] as const
+const dashboardDurationTabs = [...dashboardDurations, "Custom"] as const
 const funnelDurations = ["7D", "30D", "90D"] as const
 
 const inventoryChartConfig = {
@@ -132,6 +137,34 @@ function formatRatio(value: number, total: number) {
   return total > 0 ? Math.round((value / total) * 100) : 0
 }
 
+function getCustomDashboardDuration(
+  range: DateRange | undefined
+): (typeof dashboardDurations)[number] {
+  if (!range?.from) return "1D"
+
+  const to = range.to ?? range.from
+  const fromDay = Date.UTC(
+    range.from.getFullYear(),
+    range.from.getMonth(),
+    range.from.getDate()
+  )
+  const toDay = Date.UTC(to.getFullYear(), to.getMonth(), to.getDate())
+  const daySpan = Math.max(
+    1,
+    Math.round(Math.abs(toDay - fromDay) / 86_400_000) + 1
+  )
+
+  return dashboardDurations.reduce((closest, duration) => {
+    const closestDays = Number.parseInt(closest, 10)
+    const durationDays = Number.parseInt(duration, 10)
+
+    return Math.abs(durationDays - daySpan) < Math.abs(closestDays - daySpan)
+      ? duration
+      : closest
+  })
+}
+
+type PartnerDashboardDurationFilter = (typeof dashboardDurationTabs)[number]
 type PartnerActivationFunnelDuration = (typeof funnelDurations)[number]
 
 type FunnelStage = {
@@ -308,10 +341,16 @@ export function PartnerDashboard({
   metrics: PartnerDashboardMetrics
 }) {
   const [selectedDuration, setSelectedDuration] =
-    useState<(typeof dashboardDurations)[number]>("1D")
+    useState<PartnerDashboardDurationFilter>("1D")
+  const [customDateRange, setCustomDateRange] = useState<DateRange>()
   const [selectedFunnelDuration, setSelectedFunnelDuration] =
     useState<PartnerActivationFunnelDuration>("7D")
-  const operationsSummary = metrics.operationsByDuration[selectedDuration]
+  const effectiveDashboardDuration =
+    selectedDuration === "Custom"
+      ? getCustomDashboardDuration(customDateRange)
+      : selectedDuration
+  const operationsSummary =
+    metrics.operationsByDuration[effectiveDashboardDuration]
   const funnelStages = buildFunnelStages(metrics, selectedFunnelDuration)
 
   return (
@@ -336,28 +375,36 @@ export function PartnerDashboard({
 
       <div className="grid gap-12 xl:grid-cols-3">
         <div className="space-y-5 xl:col-span-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="font-semibold text-2xl">Operations Summary</h2>
-            <Tabs
-              value={selectedDuration}
-              onValueChange={(value) =>
-                setSelectedDuration(
-                  value as (typeof dashboardDurations)[number]
-                )
-              }
-            >
-              <TabsList className="rounded-xl p-1">
-                {dashboardDurations.map((duration) => (
-                  <TabsTrigger
-                    key={duration}
-                    value={duration}
-                    className="rounded-lg px-3"
-                  >
-                    {duration}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
+            <div className="flex flex-col gap-2 sm:items-end">
+              <Tabs
+                value={selectedDuration}
+                onValueChange={(value) =>
+                  setSelectedDuration(value as PartnerDashboardDurationFilter)
+                }
+              >
+                <TabsList className="rounded-xl p-1">
+                  {dashboardDurationTabs.map((duration) => (
+                    <TabsTrigger
+                      key={duration}
+                      value={duration}
+                      className="rounded-lg px-3"
+                    >
+                      {duration}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+              {selectedDuration === "Custom" && (
+                <DateRangePicker
+                  value={customDateRange}
+                  onChange={setCustomDateRange}
+                  placeholder="From date - to date"
+                  className="w-full sm:w-[20rem]"
+                />
+              )}
+            </div>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
