@@ -11,6 +11,7 @@ export default function AdminBannerAdsPage() {
         { label: "Settings" },
         { label: "Banner Ads" }
       ]}
+      showBackButton
     >
       <BannerAdsManagement />
     </DashboardShell>
