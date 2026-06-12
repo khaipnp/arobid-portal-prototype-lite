@@ -6135,7 +6135,53 @@ export async function getPartnerExpoOperationsDetail(
 export async function getPartnerDashboardMetrics(
   userId: string
 ): Promise<PartnerDashboardMetrics> {
-  const expoRows = (await sql`
+  type ExpoMetricRow = {
+    id: string
+    name: string
+    thumbnail_url: string
+    status: string
+    schedule_precision: ExpoSchedulePrecision | null
+    schedule_month: number | null
+    schedule_year: number | null
+    start_date: string | Date | null
+    end_date: string | Date | null
+    total_booths: number | string
+    sold_booths: number | string
+    unsold_booths: number | string
+    published_booths: number | string
+    go_live_events: number | string
+    live_sessions: number | string
+    peak_viewers: number | string
+    comments: number | string
+    revenue: number | string
+  }
+  type BreakdownRow = { name: string; value: number | string }
+  type BoothTierMonthlyRow = {
+    month_key: string
+    month_label: string
+    tier: string
+    sold_booths: number | string
+  }
+  type OperationRow = {
+    label: PartnerDashboardDuration
+    views: number | string
+    previous_views: number | string
+    activated_enterprises: number | string
+    previous_activated_enterprises: number | string
+    sold_booths: number | string
+    previous_sold_booths: number | string
+    rfqs: number | string
+    previous_rfqs: number | string
+  }
+
+  const [
+    expoRows,
+    countryRows,
+    boothTierRows,
+    boothTierMonthlyRows,
+    operationRows
+  ] = (await Promise.all([
+    sql`
     with assigned as (
       select distinct
         e.id,
@@ -6229,28 +6275,9 @@ export async function getPartnerDashboardMetrics(
     left join comment_stats cs on cs.expo_id = a.id
     left join revenue_stats rs on rs.expo_id = a.id
     order by a.start_date asc, a.name asc
-  `) as {
-    id: string
-    name: string
-    thumbnail_url: string
-    status: string
-    schedule_precision: ExpoSchedulePrecision | null
-    schedule_month: number | null
-    schedule_year: number | null
-    start_date: string | Date | null
-    end_date: string | Date | null
-    total_booths: number | string
-    sold_booths: number | string
-    unsold_booths: number | string
-    published_booths: number | string
-    go_live_events: number | string
-    live_sessions: number | string
-    peak_viewers: number | string
-    comments: number | string
-    revenue: number | string
-  }[]
+    `,
 
-  const countryRows = (await sql`
+    sql`
     with assigned as (
       select distinct e.id
       from partner_memberships pm
@@ -6270,9 +6297,9 @@ export async function getPartnerDashboardMetrics(
     group by coalesce(nullif(trim(u.location), ''), 'Unknown')
     order by value desc, name asc
     limit 6
-  `) as { name: string; value: number | string }[]
+    `,
 
-  const boothTierRows = (await sql`
+    sql`
     with assigned as (
       select distinct e.id
       from partner_memberships pm
@@ -6290,9 +6317,9 @@ export async function getPartnerDashboardMetrics(
     inner join assigned a on a.id = sbr.expo_id
     group by sbr.booth_tier
     order by value desc, name asc
-  `) as { name: string; value: number | string }[]
+    `,
 
-  const boothTierMonthlyRows = (await sql`
+    sql`
     with
       assigned as (
         select distinct e.id
@@ -6330,14 +6357,9 @@ export async function getPartnerDashboardMetrics(
       and sbr.expo_id in (select id from assigned)
     group by m.month_start, t.tier
     order by m.month_start asc, t.tier asc
-  `) as {
-    month_key: string
-    month_label: string
-    tier: string
-    sold_booths: number | string
-  }[]
+    `,
 
-  const operationRows = (await sql`
+    sql`
     with
       durations(label, days) as (
         values ('1D', 1), ('3D', 3), ('7D', 7), ('15D', 15), ('30D', 30)
@@ -6435,17 +6457,14 @@ export async function getPartnerDashboardMetrics(
       ), 0)::int as previous_rfqs
     from durations d
     order by d.days asc
-  `) as {
-    label: PartnerDashboardDuration
-    views: number | string
-    previous_views: number | string
-    activated_enterprises: number | string
-    previous_activated_enterprises: number | string
-    sold_booths: number | string
-    previous_sold_booths: number | string
-    rfqs: number | string
-    previous_rfqs: number | string
-  }[]
+    `
+  ])) as [
+    ExpoMetricRow[],
+    BreakdownRow[],
+    BreakdownRow[],
+    BoothTierMonthlyRow[],
+    OperationRow[]
+  ]
 
   const expoMetrics = expoRows.map((row) => {
     const totalBooths = toNumber(row.total_booths)
