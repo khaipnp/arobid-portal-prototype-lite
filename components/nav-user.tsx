@@ -37,6 +37,24 @@ import {
 import { UserAvatar } from "@/components/user-avatar"
 import { cn } from "@/lib/utils"
 
+const languageOptions = [
+  { language: "English", region: "Global", value: "English" },
+  { language: "Tiếng Việt", region: "Việt Nam", value: "Vietnamese" },
+  { language: "简体中文", region: "美国", value: "简体中文" },
+  { language: "Français", region: "France", value: "Français" },
+  { language: "한국어", region: "대한민국", value: "한국어" },
+  { language: "Dutch", region: "Netherlands", value: "Dutch" }
+]
+
+const currencyOptions = [
+  { currency: "USD", value: "USD" },
+  { currency: "EUR", value: "EUR" },
+  { currency: "GBP", value: "GBP" },
+  { currency: "JPY", value: "JPY" },
+  { currency: "VND", value: "VND" },
+  { currency: "KRW", value: "KRW" }
+]
+
 export function NavUser({
   user
 }: {
@@ -141,7 +159,7 @@ export function NavUser({
       </SidebarMenu>
       <AccountProfileDialog open={accountOpen} onOpenChange={setAccountOpen} />
       <Dialog open={languageOpen} onOpenChange={setLanguageOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Language</DialogTitle>
             <DialogDescription>
@@ -153,77 +171,109 @@ export function NavUser({
               <h3 className="font-medium text-base text-foreground">
                 Language
               </h3>
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  type="button"
-                  variant={selectedLanguage === "English" ? "outline" : "ghost"}
-                  className={cn(
-                    selectedLanguage === "English" ? "border-foreground" : "",
-                    "h-fit flex-col items-start justify-start gap-0.5 py-2"
-                  )}
-                  aria-pressed={selectedLanguage === "English"}
-                  onClick={() => setSelectedLanguage("English")}
-                >
-                  English{" "}
-                  <span className="items-start text-muted-foreground text-xs">
-                    Global
-                  </span>
-                </Button>
-                <Button
-                  type="button"
-                  variant={
-                    selectedLanguage === "Vietnamese" ? "outline" : "ghost"
-                  }
-                  className={cn(
-                    selectedLanguage === "Vietnamese"
-                      ? "border-foreground"
-                      : "",
-                    "h-fit flex-col items-start justify-start gap-0.5 py-2"
-                  )}
-                  aria-pressed={selectedLanguage === "Vietnamese"}
-                  onClick={() => setSelectedLanguage("Vietnamese")}
-                >
-                  Tiếng Việt{" "}
-                  <span className="text-muted-foreground text-xs">
-                    Việt Nam
-                  </span>
-                </Button>
+              <div className="grid grid-cols-4 gap-3">
+                {languageOptions.map(({ language, region, value }) => (
+                  <LanguageSelector
+                    key={value}
+                    language={language}
+                    region={region}
+                    selectedLanguage={selectedLanguage}
+                    value={value}
+                    onSelect={setSelectedLanguage}
+                  />
+                ))}
               </div>
             </section>
             <section className="grid gap-2">
               <h3 className="font-medium text-base text-foreground">
                 Currency
               </h3>
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  type="button"
-                  variant={selectedCurrency === "USD" ? "outline" : "ghost"}
-                  className={cn(
-                    selectedCurrency === "USD" ? "border-foreground" : "",
-                    "h-fit flex-col items-start justify-start gap-0.5 py-2"
-                  )}
-                  aria-pressed={selectedCurrency === "USD"}
-                  onClick={() => setSelectedCurrency("USD")}
-                >
-                  USD
-                </Button>
-                <Button
-                  type="button"
-                  variant={selectedCurrency === "VND" ? "outline" : "ghost"}
-                  className={cn(
-                    selectedCurrency === "VND" ? "border-foreground" : "",
-                    "h-fit flex-col items-start justify-start gap-0.5 py-2"
-                  )}
-                  aria-pressed={selectedCurrency === "VND"}
-                  onClick={() => setSelectedCurrency("VND")}
-                >
-                  VND
-                </Button>
+              <div className="grid grid-cols-4 gap-3">
+                {currencyOptions.map(({ currency, value }) => (
+                  <CurrencySelector
+                    key={value}
+                    currency={currency}
+                    selectedCurrency={selectedCurrency}
+                    value={value}
+                    onSelect={setSelectedCurrency}
+                  />
+                ))}
               </div>
             </section>
           </div>
         </DialogContent>
       </Dialog>
     </>
+  )
+}
+
+// Function to render a language selector
+
+type LanguageSelectorProps = {
+  language: string
+  region: string
+  selectedLanguage: string
+  value: string
+  onSelect: (language: string) => void
+}
+
+function LanguageSelector({
+  language,
+  region,
+  selectedLanguage,
+  value,
+  onSelect
+}: LanguageSelectorProps) {
+  const isSelected = selectedLanguage === value
+
+  return (
+    <Button
+      type="button"
+      variant={isSelected ? "outline" : "ghost"}
+      className={cn(
+        isSelected ? "border-foreground" : "",
+        "h-fit flex-col items-start justify-start gap-0.5 py-2"
+      )}
+      aria-pressed={isSelected}
+      onClick={() => onSelect(value)}
+    >
+      {language}
+      <span className="items-start text-muted-foreground text-xs">
+        {region}
+      </span>
+    </Button>
+  )
+}
+
+// Function to render a currency selector
+
+type CurrencySelectorProps = {
+  currency: string
+  selectedCurrency: string
+  value: string
+  onSelect: (currency: string) => void
+}
+
+function CurrencySelector({
+  currency,
+  selectedCurrency,
+  value,
+  onSelect
+}: CurrencySelectorProps) {
+  const isSelected = selectedCurrency === value
+
+  return (
+    <Button
+      type="button"
+      variant={isSelected ? "outline" : "ghost"}
+      className={cn(
+        isSelected ? "border-foreground" : "",
+        "h-fit flex-col items-start justify-start gap-0.5 py-2"
+      )}
+      aria-pressed={isSelected}
+      onClick={() => onSelect(value)}
+    >
+      {currency}
+    </Button>
   )
 }
