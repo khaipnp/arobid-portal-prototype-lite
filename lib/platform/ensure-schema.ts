@@ -1,3 +1,4 @@
+import { ensureBadgeSchema } from "@/lib/badges/schema"
 import { sql } from "@/lib/db/neon"
 import { ensureTradeCreditSchema } from "@/lib/tradecredit/db"
 import { CURRENT_USER_ID } from "@/lib/user/current-user"
@@ -213,6 +214,7 @@ export async function ensurePlatformSchema() {
       await ensureExpoReferralAnalyticsSchema()
       await ensureTradeCreditSchema()
       await ensureAccountProfileSchema()
+      await ensureBadgeSchema()
       platformSchemaReady = true
       return
     }
@@ -675,6 +677,7 @@ export async function ensurePlatformSchema() {
     on auth_sessions (expires_at)
   `
   await ensureCompanyRepresentativeSchema()
+  await ensureBadgeSchema()
   await sql`
     create table if not exists platform_schema_migrations (
       name text primary key,

@@ -1,7 +1,12 @@
 import { BadgeManagementConfig } from "@/components/badges/badge-management-config"
 import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
+import { getBadgeManagementWorkspace } from "@/lib/badges/db"
+import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 
-export default function AdminBadgeManagementPage() {
+export default async function AdminBadgeManagementPage() {
+  await ensurePlatformSchema()
+  const workspace = await getBadgeManagementWorkspace()
+
   return (
     <DashboardShell
       title="Badge Management"
@@ -11,7 +16,7 @@ export default function AdminBadgeManagementPage() {
         { label: "Badge Management" }
       ]}
     >
-      <BadgeManagementConfig />
+      <BadgeManagementConfig initialWorkspace={workspace} />
     </DashboardShell>
   )
 }

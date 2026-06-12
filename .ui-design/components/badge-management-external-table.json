@@ -1,10 +1,10 @@
 {
-  "name": "BadgeManagementExternalTable",
+  "name": "BadgeManagementCatalogTable",
   "created_at": "2026-06-12T00:00:00.000Z",
-  "purpose": "External badge master data management table for badge module, group, search, and pagination controls.",
+  "purpose": "Database-backed badge catalog management table for module, group, level type, level, search, and pagination controls.",
   "complexity": "Composite",
   "props": [],
-  "state_pattern": "Local state inside BadgeManagementConfig",
+  "state_pattern": "Server-loaded workspace with local client state and API persistence",
   "composition": "Composed inside existing BadgeManagementConfig page section",
   "accessibility_level": "Basic semantic table with labeled controls and pagination links",
   "styling": "Tailwind CSS with shadcn/ui primitives",
