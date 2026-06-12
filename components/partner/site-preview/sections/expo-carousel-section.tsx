@@ -1,47 +1,47 @@
-import Image from "next/image"
+import type { SiteBranding } from "../types"
+import { SectionMedia } from "./section-media"
 
-export function ExpoCarouselSection({ media = [] }: { media?: string[] }) {
+export function ExpoCarouselSection({
+  branding,
+  media = []
+}: {
+  branding?: SiteBranding
+  media?: string[]
+}) {
   const imageUrl = media[0]
 
   return (
     <section className="bg-white px-6 py-14">
       <div className="mx-auto max-w-6xl">
         <div className="relative overflow-hidden rounded-[2rem] bg-slate-950 px-10 py-16 text-white">
-          {imageUrl ? (
-            <Image
-              alt=""
-              className="object-cover opacity-35"
-              fill
-              sizes="1152px"
-              src={imageUrl}
-            />
-          ) : null}
+          <SectionMedia
+            alt="Expo banner"
+            className="object-cover opacity-35"
+            sizes="1152px"
+            src={imageUrl}
+          />
           <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-slate-950/20" />
           <div className="relative max-w-xl space-y-4">
             <p
               className="font-semibold text-sm uppercase tracking-[0.2em]"
               style={{ color: "var(--site-accent)" }}
             >
-              TradeXpo Live
+              TradeXpo
             </p>
             <h2 className="font-bold text-4xl">
-              Discover upcoming exhibitions
+              {branding?.expoTitle ?? "Discover Upcoming Trade Events"}
             </h2>
             <p className="text-white/70">
-              Promote curated expo programs with one strong carousel banner.
+              {branding?.expoDescription ??
+                "Explore trade expos, connect with global businesses, and discover new opportunities on TradeXpo."}
             </p>
             <button
               className="rounded-full px-5 py-3 font-semibold text-sm text-white"
               style={{ backgroundColor: "var(--site-primary)" }}
               type="button"
             >
-              Browse expos
+              {branding?.expoCtaLabel ?? "Explore TradeXpo"}
             </button>
-          </div>
-          <div className="absolute right-8 bottom-8 flex gap-2">
-            <span className="h-2 w-8 rounded-full bg-white" />
-            <span className="size-2 rounded-full bg-white/40" />
-            <span className="size-2 rounded-full bg-white/40" />
           </div>
         </div>
       </div>

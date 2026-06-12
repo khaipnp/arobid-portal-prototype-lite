@@ -24,8 +24,8 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "./ui/hover-card"
 
 const seller = [
   {
-    name: "Legal Information",
-    url: "/seller/b2b-marketplace",
+    name: "B2B Marketplace",
+    url: "/marketplace",
     icon: <DotIcon />
   },
   {

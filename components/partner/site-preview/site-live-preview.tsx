@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react"
 import { alwaysVisibleSections } from "./constants"
+import { BannerAdsSection } from "./sections/banner-ads-section"
 import { BannerSection } from "./sections/banner-section"
 import { BfmSection } from "./sections/bfm-section"
 import { CategoriesSection } from "./sections/categories-section"
@@ -58,7 +59,10 @@ export function SiteLivePreview({
           <CategoriesSection media={sectionMedia.categories} />
         ) : null}
         {visibleCoreSections.has("bfm") ? (
-          <BfmSection media={sectionMedia.bfm} />
+          <BfmSection branding={branding} media={sectionMedia.bfm} />
+        ) : null}
+        {sections.bannerAds1 ? (
+          <BannerAdsSection media={sectionMedia.bannerAds1} />
         ) : null}
         {sections.featuredSuppliers ? (
           <SuppliersSection
@@ -74,7 +78,13 @@ export function SiteLivePreview({
           />
         ) : null}
         {sections.expoCarousel ? (
-          <ExpoCarouselSection media={sectionMedia.expoCarousel} />
+          <ExpoCarouselSection
+            branding={branding}
+            media={sectionMedia.expoCarousel}
+          />
+        ) : null}
+        {sections.bannerAds2 ? (
+          <BannerAdsSection media={sectionMedia.bannerAds2} />
         ) : null}
         {sections.newProducts ? (
           <ProductsSection
@@ -88,7 +98,9 @@ export function SiteLivePreview({
             media={sectionMedia.recommendedSuppliers}
           />
         ) : null}
-        {sections.promo ? <PromoSection media={sectionMedia.promo} /> : null}
+        {sections.promo ? (
+          <PromoSection branding={branding} media={sectionMedia.promo} />
+        ) : null}
         {sections.featureCards ? (
           <FeatureCardsSection media={sectionMedia.featureCards} />
         ) : null}

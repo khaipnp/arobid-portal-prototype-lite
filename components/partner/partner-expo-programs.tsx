@@ -1,15 +1,15 @@
-"use client";
+"use client"
 
-import type { PartnerAccess } from "@/lib/partner/access";
-import type { PartnerExpoProgramsWorkspace } from "@/lib/partner/db";
-import { PartnerExpoList } from "./partner-expo-list";
+import type { PartnerAccess } from "@/lib/partner/access"
+import type { PartnerExpoProgramsWorkspace } from "@/lib/partner/db"
+import { PartnerExpoList } from "./partner-expo-list"
 
 export function PartnerExpoPrograms({
   access,
-  workspace,
+  workspace
 }: {
-  access: PartnerAccess;
-  workspace: PartnerExpoProgramsWorkspace;
+  access: PartnerAccess
+  workspace: PartnerExpoProgramsWorkspace
 }) {
   return (
     <div className="mt-6 space-y-4">
@@ -18,5 +18,5 @@ export function PartnerExpoPrograms({
         assignedExpos={workspace.assignedExpos}
       />
     </div>
-  );
+  )
 }

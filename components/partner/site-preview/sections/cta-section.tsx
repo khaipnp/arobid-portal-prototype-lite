@@ -1,5 +1,5 @@
-import Image from "next/image"
 import type { CtaOption, SiteBranding } from "../types"
+import { SectionMedia } from "./section-media"
 
 const ctaLabels: Record<CtaOption, string> = {
   contact_tenant: "Contact Tenant",
@@ -16,37 +16,31 @@ export function CtaSection({
   media?: string[]
 }) {
   const imageUrl = media[0]
+  const ctaLabel = branding.finalCtaLabel ?? ctaLabels[branding.ctaOption]
 
   return (
     <section className="relative overflow-hidden bg-slate-950 px-6 py-16 text-white">
-      {imageUrl ? (
-        <Image
-          alt=""
-          className="object-cover opacity-25"
-          fill
-          sizes="1152px"
-          src={imageUrl}
-        />
-      ) : null}
+      <SectionMedia
+        alt="Final CTA background"
+        className="object-cover opacity-25"
+        sizes="1152px"
+        src={imageUrl}
+      />
       <div className="absolute inset-0 bg-slate-950/60" />
       <div className="relative mx-auto max-w-4xl space-y-6 text-center">
-        {branding.logoUrl ? (
-          <Image
-            alt={`${branding.tenantName} logo`}
-            className="mx-auto h-12 w-40 object-contain"
-            height={48}
-            src={branding.logoUrl}
-            width={160}
-          />
-        ) : null}
-        <h2 className="font-bold text-4xl">{branding.tenantName}</h2>
-        <p className="text-white/70">{branding.serviceBundleText}</p>
+        <h2 className="font-bold text-4xl">
+          {branding.finalCtaTitle ?? "Ready to grow your business globally?"}
+        </h2>
+        <p className="text-white/70">
+          {branding.finalCtaDescription ??
+            "Connect with thousands of businesses in the TBSG community to scale your reach and shape your future."}
+        </p>
         <button
           className="rounded-full px-5 py-3 font-semibold text-sm text-white"
           style={{ backgroundColor: "var(--site-primary)" }}
           type="button"
         >
-          {ctaLabels[branding.ctaOption]}
+          {ctaLabel}
         </button>
       </div>
     </section>

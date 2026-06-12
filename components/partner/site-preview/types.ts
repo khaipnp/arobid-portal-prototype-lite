@@ -11,6 +11,27 @@ export type SiteBranding = {
   bannerUrl: string
   primaryColor: string
   accentColor: string
+  heroEyebrow?: string
+  heroTitle?: string
+  heroCopy?: string
+  searchPlaceholder?: string
+  primaryCtaLabel?: string
+  secondaryCtaLabel?: string
+  headerCtaLabel?: string
+  navItems?: string[]
+  bfmTitle?: string
+  bfmCopy?: string
+  bfmCtaLabel?: string
+  expoTitle?: string
+  expoDescription?: string
+  expoCtaLabel?: string
+  whyJoinTitle?: string
+  whyJoinDescription?: string
+  whyJoinCtaLabel?: string
+  whyJoinNewsUrls?: string[]
+  finalCtaTitle?: string
+  finalCtaDescription?: string
+  finalCtaLabel?: string
   ctaOption: CtaOption
   publicEmail: string
   publicPhone: string
@@ -21,6 +42,8 @@ export type SiteBranding = {
 
 export type AlwaysVisibleSiteSectionKey = "header" | "banner" | "bfm" | "footer"
 export type SiteSectionKey =
+  | "bannerAds1"
+  | "bannerAds2"
   | "community"
   | "categories"
   | "featuredSuppliers"
@@ -36,6 +59,8 @@ export type SiteSectionKey =
 
 export type SiteMediaKey =
   | "banner"
+  | "bannerAds1"
+  | "bannerAds2"
   | "community"
   | "categories"
   | "bfm"

@@ -1,10 +1,12 @@
 "use client"
 
 import {
+  BadgeCheckIcon,
   BrickWallShieldIcon,
   Building2Icon,
   Grid3x2Icon,
   HistoryIcon,
+  ImageIcon,
   LayoutDashboardIcon,
   LayoutTemplateIcon,
   MonitorPlayIcon,
@@ -82,6 +84,21 @@ const servicesLinks = [
     name: "Payment Management",
     url: "/admin/settings/payment-management",
     icon: <WalletCardsIcon />
+  },
+  {
+    name: "Banner Ads",
+    url: "/admin/settings/banner-ads",
+    icon: <ImageIcon />
+  },
+  {
+    name: "Site Content Builder",
+    url: "/admin/settings/site-content-builder",
+    icon: <LayoutTemplateIcon />
+  },
+  {
+    name: "Badge Management",
+    url: "/admin/settings/badge-management",
+    icon: <BadgeCheckIcon />
   }
 ]
 
