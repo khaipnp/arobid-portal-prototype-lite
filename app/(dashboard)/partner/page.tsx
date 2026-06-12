@@ -4,25 +4,22 @@ import { DashboardShell } from "@/components/tradexpo/dashboard-shell"
 import { requireRole } from "@/lib/auth/rbac"
 import { requirePartnerTab } from "@/lib/partner/access"
 import { getPartnerDashboardMetrics } from "@/lib/partner/db"
-import { ensurePlatformSchema } from "@/lib/platform/ensure-schema"
 
 export const dynamic = "force-dynamic"
 
-export default async function PartnerDashboardPage() {
-  const userId = await requireRole("partner")
-  await requirePartnerTab(userId, "overview")
-
+export default function PartnerDashboardPage() {
   return (
     <DashboardShell breadcrumbs={[{ label: "Dashboard" }]}>
       <Suspense fallback={<PartnerDashboardFallback />}>
-        <PartnerDashboardContent userId={userId} />
+        <PartnerDashboardContent />
       </Suspense>
     </DashboardShell>
   )
 }
 
-async function PartnerDashboardContent({ userId }: { userId: string }) {
-  await ensurePlatformSchema()
+async function PartnerDashboardContent() {
+  const userId = await requireRole("partner")
+  await requirePartnerTab(userId, "overview")
   const metrics = await getPartnerDashboardMetrics(userId)
 
   return <PartnerDashboard metrics={metrics} />
