@@ -254,6 +254,10 @@ function useBadgeManagementState() {
   const [addBadgeQuery, setAddBadgeQuery] = useState("")
   const [catalogQuery, setCatalogQuery] = useState("")
   const [catalogPage, setCatalogPage] = useState(1)
+  const [externalBadgeQuery, setExternalBadgeQuery] = useState("")
+  const [externalModuleFilter, setExternalModuleFilter] = useState("all")
+  const [externalGroupFilter, setExternalGroupFilter] = useState("all")
+  const [externalBadgePage, setExternalBadgePage] = useState(1)
   const [externalBadgeDraft, setExternalBadgeDraft] = useState(
     emptyExternalBadgeDraft
   )
@@ -290,6 +294,55 @@ function useBadgeManagementState() {
     .flat()
     .filter((item) => item.active).length
   const publishedAt = publishedAtByContext[selectedContext.id]
+  const externalBadgeDefinitions = useMemo(
+    () => catalogBadges.filter((badge) => badge.origin === "External Badge"),
+    [catalogBadges]
+  )
+  const externalBadgeModules = useMemo(
+    () => [...new Set(externalBadgeDefinitions.map((badge) => badge.module))],
+    [externalBadgeDefinitions]
+  )
+  const externalBadgeGroups = useMemo(
+    () => [...new Set(externalBadgeDefinitions.map((badge) => badge.group))],
+    [externalBadgeDefinitions]
+  )
+  const filteredExternalBadgeDefinitions = useMemo(() => {
+    const query = externalBadgeQuery.trim().toLowerCase()
+
+    return externalBadgeDefinitions.filter((badge) => {
+      const matchesQuery = query
+        ? [
+            badge.id,
+            badge.name,
+            badge.module,
+            badge.group,
+            badge.whereItAppears
+          ].some((value) => value.toLowerCase().includes(query))
+        : true
+      const matchesModule =
+        externalModuleFilter === "all" || badge.module === externalModuleFilter
+      const matchesGroup =
+        externalGroupFilter === "all" || badge.group === externalGroupFilter
+
+      return matchesQuery && matchesModule && matchesGroup
+    })
+  }, [
+    externalBadgeDefinitions,
+    externalBadgeQuery,
+    externalGroupFilter,
+    externalModuleFilter
+  ])
+  const totalExternalBadgePages = Math.max(
+    1,
+    Math.ceil(filteredExternalBadgeDefinitions.length / BADGE_CATALOG_PAGE_SIZE)
+  )
+  const paginatedExternalBadgeDefinitions = useMemo(() => {
+    const start = (externalBadgePage - 1) * BADGE_CATALOG_PAGE_SIZE
+    return filteredExternalBadgeDefinitions.slice(
+      start,
+      start + BADGE_CATALOG_PAGE_SIZE
+    )
+  }, [externalBadgePage, filteredExternalBadgeDefinitions])
   const filteredBadgeDefinitions = useMemo(() => {
     const query = catalogQuery.trim().toLowerCase()
     if (!query) return catalogBadges
@@ -317,6 +370,16 @@ function useBadgeManagementState() {
       setCatalogPage(totalCatalogPages)
     }
   }, [catalogPage, totalCatalogPages])
+
+  useEffect(() => {
+    if (externalBadgePage > totalExternalBadgePages) {
+      setExternalBadgePage(totalExternalBadgePages)
+    }
+  }, [externalBadgePage, totalExternalBadgePages])
+
+  function resetExternalBadgePage() {
+    setExternalBadgePage(1)
+  }
 
   function getCatalogBadge(badgeId: string) {
     const badge = catalogBadges.find((item) => item.id === badgeId)
@@ -480,6 +543,12 @@ function useBadgeManagementState() {
     contextCounts,
     activePlacements,
     publishedAt,
+    externalBadgeDefinitions,
+    externalBadgeModules,
+    externalBadgeGroups,
+    filteredExternalBadgeDefinitions,
+    totalExternalBadgePages,
+    paginatedExternalBadgeDefinitions,
     filteredBadgeDefinitions,
     totalCatalogPages,
     paginatedBadgeDefinitions,
@@ -497,6 +566,15 @@ function useBadgeManagementState() {
     setCatalogQuery,
     catalogPage,
     setCatalogPage,
+    externalBadgeQuery,
+    setExternalBadgeQuery,
+    externalModuleFilter,
+    setExternalModuleFilter,
+    externalGroupFilter,
+    setExternalGroupFilter,
+    externalBadgePage,
+    setExternalBadgePage,
+    resetExternalBadgePage,
     externalBadgeDraft,
     getCatalogBadge,
     updateRanking,
@@ -526,6 +604,12 @@ export function BadgeManagementConfig() {
     contextCounts,
     activePlacements,
     publishedAt,
+    externalBadgeDefinitions,
+    externalBadgeModules,
+    externalBadgeGroups,
+    filteredExternalBadgeDefinitions,
+    totalExternalBadgePages,
+    paginatedExternalBadgeDefinitions,
     filteredBadgeDefinitions,
     totalCatalogPages,
     paginatedBadgeDefinitions,
@@ -543,6 +627,15 @@ export function BadgeManagementConfig() {
     setCatalogQuery,
     catalogPage,
     setCatalogPage,
+    externalBadgeQuery,
+    setExternalBadgeQuery,
+    externalModuleFilter,
+    setExternalModuleFilter,
+    externalGroupFilter,
+    setExternalGroupFilter,
+    externalBadgePage,
+    setExternalBadgePage,
+    resetExternalBadgePage,
     externalBadgeDraft,
     getCatalogBadge,
     updateRanking,
@@ -797,6 +890,184 @@ export function BadgeManagementConfig() {
           </Card>
         </div>
       </div>
+
+      <Card className="border-foreground/10">
+        <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
+          <div>
+            <CardTitle>External Badge Management</CardTitle>
+            <p className="mt-1 text-muted-foreground text-sm">
+              Manage external badge master data by module, certification group,
+              and display surface.
+            </p>
+          </div>
+          <Badge variant="secondary" className="shrink-0">
+            {externalBadgeDefinitions.length} badges
+          </Badge>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px_260px]">
+            <Input
+              value={externalBadgeQuery}
+              onChange={(event) => {
+                setExternalBadgeQuery(event.target.value)
+                resetExternalBadgePage()
+              }}
+              placeholder="Search external badge, module, group, surface, or ID"
+            />
+            <Select
+              value={externalModuleFilter}
+              onValueChange={(value) => {
+                setExternalModuleFilter(value)
+                resetExternalBadgePage()
+              }}
+            >
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder="Module" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All modules</SelectItem>
+                {externalBadgeModules.map((module) => (
+                  <SelectItem key={module} value={module}>
+                    {module}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={externalGroupFilter}
+              onValueChange={(value) => {
+                setExternalGroupFilter(value)
+                resetExternalBadgePage()
+              }}
+            >
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder="Group" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All groups</SelectItem>
+                {externalBadgeGroups.map((group) => (
+                  <SelectItem key={group} value={group}>
+                    {group}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="overflow-hidden rounded-2xl border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[240px]">Badge</TableHead>
+                  <TableHead className="w-[160px]">Module</TableHead>
+                  <TableHead className="w-[260px]">Group</TableHead>
+                  <TableHead>Where it appears</TableHead>
+                  <TableHead className="w-[150px] text-center">
+                    Status
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedExternalBadgeDefinitions.length > 0 ? (
+                  paginatedExternalBadgeDefinitions.map((badge) => (
+                    <TableRow key={badge.id}>
+                      <TableCell className="whitespace-normal">
+                        <div className="space-y-1">
+                          <BadgeArtwork badge={badge} size="sm" />
+                          <p className="break-all text-muted-foreground text-xs">
+                            {badge.id}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{badge.module}</Badge>
+                      </TableCell>
+                      <TableCell className="whitespace-normal">
+                        <span className="text-sm">{badge.group}</span>
+                      </TableCell>
+                      <TableCell className="whitespace-normal text-muted-foreground text-xs leading-relaxed">
+                        {badge.whereItAppears}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant="outline" className="text-xs">
+                          Need verification rule
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={5}
+                      className="py-10 text-center text-muted-foreground"
+                    >
+                      No external badges found
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {filteredExternalBadgeDefinitions.length > 0 ? (
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-muted-foreground text-sm">
+                Showing {(externalBadgePage - 1) * BADGE_CATALOG_PAGE_SIZE + 1}-
+                {Math.min(
+                  externalBadgePage * BADGE_CATALOG_PAGE_SIZE,
+                  filteredExternalBadgeDefinitions.length
+                )}{" "}
+                of {filteredExternalBadgeDefinitions.length}
+              </p>
+              <Pagination className="mx-0 w-auto justify-end">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href="#"
+                      onClick={(event) => {
+                        event.preventDefault()
+                        setExternalBadgePage((current) =>
+                          Math.max(1, current - 1)
+                        )
+                      }}
+                      aria-disabled={externalBadgePage === 1}
+                      className={
+                        externalBadgePage === 1
+                          ? "pointer-events-none opacity-50"
+                          : ""
+                      }
+                    />
+                  </PaginationItem>
+                  <PaginationItem>
+                    <span className="px-3 text-sm">
+                      Page {externalBadgePage} / {totalExternalBadgePages}
+                    </span>
+                  </PaginationItem>
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      onClick={(event) => {
+                        event.preventDefault()
+                        setExternalBadgePage((current) =>
+                          Math.min(totalExternalBadgePages, current + 1)
+                        )
+                      }}
+                      aria-disabled={
+                        externalBadgePage === totalExternalBadgePages
+                      }
+                      className={
+                        externalBadgePage === totalExternalBadgePages
+                          ? "pointer-events-none opacity-50"
+                          : ""
+                      }
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
 
       <Card className="border-foreground/10">
         <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
