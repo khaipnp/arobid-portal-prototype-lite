@@ -8,7 +8,6 @@ import {
   GemIcon,
   GripVerticalIcon,
   type LucideIcon,
-  PackageCheckIcon,
   PlusIcon,
   ShieldCheckIcon,
   SlidersHorizontalIcon,
@@ -54,671 +53,23 @@ import {
   TableRow
 } from "@/components/ui/table"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import type { BadgeManagementWorkspace } from "@/lib/badges/db"
 import { cn } from "@/lib/utils"
-
-type BadgeOrigin = "Internal Badge" | "External Badge"
-type DisplayTarget = "Supplier" | "Product" | "RFQ" | "TradeXpo"
-
-type BadgeDefinition = {
-  id: string
-  module: string
-  name: string
-  origin: BadgeOrigin
-  group: string
-  condition: string
-  whereItAppears: string
-  designLink?: string
-}
-
-type BadgeRankingConfig = {
-  badgeId: string
-  active: boolean
-  priority: number
-}
-
-type DisplayContext = {
-  id: string
-  title: string
-  target: DisplayTarget
-  surface: string
-  ranking: BadgeRankingConfig[]
-}
-
-type EntityPreview = {
-  name: string
-  eligibleBadgeIds: string[]
-}
-
-type ExternalBadgeDraft = {
-  name: string
-  module: string
-  group: string
-  condition: string
-}
-
-const emptyExternalBadgeDraft: ExternalBadgeDraft = {
-  name: "",
-  module: "",
-  group: "Certificate",
-  condition: ""
-}
-
-const BADGE_CATALOG_PAGE_SIZE = 10
-
-const productPreviewThumbs = [
-  "front-angle",
-  "rear-angle",
-  "folded-view",
-  "open-view",
-  "detail-view"
-]
-
-const internalBadgeSeedRows: BadgeDefinition[] = [
-  {
-    id: "BADGE-B2B-ISO-9001",
-    module: "B2B",
-    name: "ISO 9001:2015",
-    origin: "Internal Badge",
-    group: "Certificate",
-    condition:
-      "Current internal badge inventory entry from the approved Badge Documentation sheet.",
-    whereItAppears:
-      "B2B Product Detail > Certifications & Compliance; Supplier e-Profile; TradeXpo Trust Signals.",
-    designLink:
-      "https://www.figma.com/design/XfMhwQO4xZT97rgjsu3Sjn/B2B-Marketplace-2026?node-id=64-2493&t=bLrcHotl6etil7f9-4"
-  },
-  {
-    id: "BADGE-B2B-PRODUCT-NEW",
-    module: "B2B",
-    name: "Product New",
-    origin: "Internal Badge",
-    group: "Product",
-    condition:
-      "System grants the label when product publish/approval date is inside the New Arrival window.",
-    whereItAppears:
-      "B2B product card/listing if design enables the badge; Homepage Product Highlight > New Arrival.",
-    designLink:
-      "https://www.figma.com/design/XfMhwQO4xZT97rgjsu3Sjn/B2B-Marketplace-2026?node-id=102-6380&t=bLrcHotl6etil7f9-4"
-  },
-  {
-    id: "BADGE-B2B-PRODUCT-LIVE",
-    module: "B2B",
-    name: "Product Live",
-    origin: "Internal Badge",
-    group: "Product",
-    condition:
-      "System grants the label when the product is published, visible, and approved for live display.",
-    whereItAppears:
-      "B2B product card/listing only if Product Live badge is approved by PO/design.",
-    designLink:
-      "https://www.figma.com/design/XfMhwQO4xZT97rgjsu3Sjn/B2B-Marketplace-2026?node-id=2273-26940&t=Tjgx2b2vDZLhtzkW-4"
-  },
-  {
-    id: "BADGE-B2B-TOP-DEAL",
-    module: "B2B",
-    name: "Top Deal",
-    origin: "Internal Badge",
-    group: "Product",
-    condition:
-      "System grants the label when product is linked to an active deal/campaign source.",
-    whereItAppears:
-      "B2B product card/listing; campaign/deal product section only after admin/config source exists.",
-    designLink:
-      "https://www.figma.com/design/XfMhwQO4xZT97rgjsu3Sjn/B2B-Marketplace-2026?node-id=102-6380&t=bLrcHotl6etil7f9-4"
-  },
-  {
-    id: "BADGE-B2B-SPECIAL-OFFER",
-    module: "B2B",
-    name: "Special Offer",
-    origin: "Internal Badge",
-    group: "Product",
-    condition:
-      "System grants the label when product is linked to an active promotion/special-offer source.",
-    whereItAppears:
-      "B2B product card/listing; promotion/campaign section only after admin/config source exists.",
-    designLink:
-      "https://www.figma.com/design/XfMhwQO4xZT97rgjsu3Sjn/B2B-Marketplace-2026?node-id=102-6380&t=bLrcHotl6etil7f9-4"
-  },
-  {
-    id: "BADGE-RFQ-SILVER",
-    module: "RFQ",
-    name: "Silver",
-    origin: "Internal Badge",
-    group: "Membership",
-    condition:
-      "System grants the label from supplier membership/package status.",
-    whereItAppears:
-      "Supplier card; supplier e-Profile header; marketplace member display.",
-    designLink:
-      "https://www.figma.com/design/Vye89EQ5zcaTuZr466qbhG/RFQ-Hubs?node-id=183-13587&t=2cvKZHliZCv6B9CG-4"
-  },
-  {
-    id: "BADGE-RFQ-GOLD",
-    module: "RFQ",
-    name: "Gold",
-    origin: "Internal Badge",
-    group: "Membership",
-    condition:
-      "System grants the label from supplier membership/package status.",
-    whereItAppears:
-      "Supplier card; supplier e-Profile header; marketplace member display.",
-    designLink:
-      "https://www.figma.com/design/Vye89EQ5zcaTuZr466qbhG/RFQ-Hubs?node-id=183-13587&t=2cvKZHliZCv6B9CG-4"
-  },
-  {
-    id: "BADGE-RFQ-PIONEER",
-    module: "RFQ",
-    name: "Pioneer",
-    origin: "Internal Badge",
-    group: "Membership",
-    condition:
-      "System grants the label from supplier membership/package status if separate Pioneer badge is approved.",
-    whereItAppears:
-      "Supplier card; supplier e-Profile header; marketplace member display only if separate Pioneer badge is approved.",
-    designLink:
-      "https://www.figma.com/design/Vye89EQ5zcaTuZr466qbhG/RFQ-Hubs?node-id=183-13587&t=2cvKZHliZCv6B9CG-4"
-  },
-  {
-    id: "BADGE-RFQ-DIAMOND",
-    module: "RFQ",
-    name: "Diamond",
-    origin: "Internal Badge",
-    group: "Membership",
-    condition:
-      "System grants the label from supplier membership/package status.",
-    whereItAppears:
-      "Supplier card; supplier e-Profile header; marketplace member display.",
-    designLink:
-      "https://www.figma.com/design/Vye89EQ5zcaTuZr466qbhG/RFQ-Hubs?node-id=183-13587&t=2cvKZHliZCv6B9CG-4"
-  },
-  {
-    id: "BADGE-TX-VERIFIED-PRO",
-    module: "TX",
-    name: "Verified Pro",
-    origin: "Internal Badge",
-    group: "Verification",
-    condition:
-      "System grants the label from supplier verification source after backend source is confirmed.",
-    whereItAppears:
-      "Supplier Type filter/search context; supplier card only after BE source is confirmed.",
-    designLink:
-      "https://www.figma.com/design/nL5mryBHkc8RIwMZUE5fsO/TradeXpo?node-id=2385-13052&t=7g7SOTWs8lMlWV2i-4"
-  },
-  {
-    id: "BADGE-TX-HOT-PICK",
-    module: "TX",
-    name: "Hot Pick",
-    origin: "Internal Badge",
-    group: "Exhibition Highlight",
-    condition:
-      "System grants the label from TradeXpo highlight/config source after source exists.",
-    whereItAppears:
-      "TradeXpo exhibition card/list/homepage only after admin/config source exists.",
-    designLink:
-      "https://www.figma.com/design/nL5mryBHkc8RIwMZUE5fsO/TradeXpo?node-id=294-1086&t=7g7SOTWs8lMlWV2i-4"
-  },
-  {
-    id: "BADGE-TX-FEATURED",
-    module: "TX",
-    name: "Featured",
-    origin: "Internal Badge",
-    group: "Exhibition Highlight",
-    condition:
-      "System grants the label from TradeXpo featured placement source.",
-    whereItAppears:
-      "TradeXpo exhibition card; exhibition list; homepage featured exhibition section.",
-    designLink:
-      "https://www.figma.com/design/nL5mryBHkc8RIwMZUE5fsO/TradeXpo?node-id=294-1086&t=7g7SOTWs8lMlWV2i-4"
-  }
-]
-
-type ExternalBadgeGroupSeed = {
-  module: "Company" | "Product / Service"
-  group: string
-  whereItAppears: string
-  names: string[]
-}
-
-const externalBadgeGroupRows: ExternalBadgeGroupSeed[] = [
-  {
-    module: "Company",
-    group: "Corporate Identity & Trust",
-    whereItAppears: "Company card; company detail pages.",
-    names: ["GS1", "EORI", "IEC"]
-  },
-  {
-    module: "Company",
-    group: "Quality Management",
-    whereItAppears: "Company card; company detail pages.",
-    names: [
-      "ISO 9001",
-      "ISO 13485",
-      "IATF 16949",
-      "AS9100",
-      "GMP",
-      "cGMP",
-      "HACCP",
-      "ISO 22000",
-      "FSSC 22000",
-      "BRCGS"
-    ]
-  },
-  {
-    module: "Company",
-    group: "ESG & Sustainability",
-    whereItAppears: "Company card; company detail pages.",
-    names: [
-      "EcoVadis",
-      "Sedex",
-      "SMETA",
-      "SA8000",
-      "B Corp",
-      "CDP",
-      "SBTi",
-      "Net Zero",
-      "Synesgy",
-      "UNGC",
-      "S&P ESG",
-      "RBA"
-    ]
-  },
-  {
-    module: "Company",
-    group: "Information Security & Digital Trust",
-    whereItAppears: "Company card; company detail pages.",
-    names: [
-      "ISO 27001",
-      "ISO 27701",
-      "ISO 22301",
-      "ISO 20000",
-      "SOC 1",
-      "SOC 2",
-      "SOC 3",
-      "PCI DSS",
-      "TISAX"
-    ]
-  },
-  {
-    module: "Company",
-    group: "Export & Trade Compliance",
-    whereItAppears: "Company card; company detail pages.",
-    names: [
-      "AEO",
-      "FDA",
-      "CE",
-      "UKCA",
-      "UL",
-      "FCC",
-      "RoHS",
-      "REACH",
-      "Halal",
-      "Kosher",
-      "GlobalG.A.P",
-      "FSC",
-      "USDA Organic",
-      "EU Organic",
-      "ASC",
-      "MSC",
-      "PEFC"
-    ]
-  },
-  {
-    module: "Product / Service",
-    group: "Market Access & Regulatory",
-    whereItAppears: "Product card; product detail pages; service detail pages.",
-    names: [
-      "CE",
-      "UKCA",
-      "FCC",
-      "UL",
-      "CSA",
-      "CCC",
-      "PSE",
-      "KC",
-      "BIS",
-      "SAA",
-      "EAC",
-      "FDA",
-      "FDA 510(k)",
-      "CE MDR"
-    ]
-  },
-  {
-    module: "Product / Service",
-    group: "Religious & Cultural Compliance",
-    whereItAppears: "Product card; product detail pages; service detail pages.",
-    names: ["Halal", "Kosher", "Vegan", "Vegetarian"]
-  },
-  {
-    module: "Product / Service",
-    group: "Quality & Safety",
-    whereItAppears: "Product card; product detail pages; service detail pages.",
-    names: [
-      "ISO 9001",
-      "ISO 13485",
-      "ISO 17025",
-      "ISO 17020",
-      "IATF 16949",
-      "AS9100",
-      "TL9000",
-      "GMP",
-      "cGMP",
-      "HACCP",
-      "ISO 22000",
-      "FSSC 22000",
-      "BRCGS",
-      "SQF",
-      "IFS",
-      "IECQ QC080000",
-      "MDSAP"
-    ]
-  },
-  {
-    module: "Product / Service",
-    group: "ESG & Sustainability",
-    whereItAppears: "Product card; product detail pages; service detail pages.",
-    names: [
-      "EcoVadis",
-      "Sedex",
-      "SMETA",
-      "SA8000",
-      "B Corp",
-      "GRI",
-      "ISSB",
-      "CDP",
-      "SBTi",
-      "Net Zero",
-      "Synesgy",
-      "S&P ESG",
-      "FSC",
-      "PEFC",
-      "Rainforest Alliance",
-      "Fairtrade",
-      "ISCC PLUS",
-      "RSPO"
-    ]
-  },
-  {
-    module: "Product / Service",
-    group: "Industry Specific Standards & Market Certifications",
-    whereItAppears: "Product card; product detail pages; service detail pages.",
-    names: [
-      "GlobalG.A.P",
-      "USDA Organic",
-      "EU Organic",
-      "JAS Organic",
-      "MSC",
-      "ASC",
-      "OEKO-TEX",
-      "GOTS",
-      "Bluesign",
-      "BCI",
-      "Textile Exchange",
-      "WRAP",
-      "LEED",
-      "BREEAM",
-      "CE Construction",
-      "ASTM",
-      "EN",
-      "IEC",
-      "IEC 62368",
-      "IEC 60601",
-      "Energy Star",
-      "EPEAT",
-      "JCI",
-      "ISO 15189",
-      "CAP",
-      "FIATA",
-      "IATA",
-      "WCA",
-      "AEO",
-      "ISO 28000",
-      "ISO 10002",
-      "ISO 44001",
-      "ITIL",
-      "Six Sigma",
-      "CPD",
-      "FWF",
-      "MSC CoC",
-      "BAP",
-      "ISO 21001"
-    ]
-  },
-  {
-    module: "Product / Service",
-    group: "Information Security & Digital Trust",
-    whereItAppears: "Product card; product detail pages; service detail pages.",
-    names: [
-      "ISO 27001",
-      "ISO 27701",
-      "ISO 20000",
-      "ISO 22301",
-      "SOC 1",
-      "SOC 2",
-      "SOC 3",
-      "PCI DSS",
-      "TISAX",
-      "NIST CSF"
-    ]
-  }
-]
-
-function slugifyToken(value: string) {
-  return value
-    .toUpperCase()
-    .replace(/[^A-Z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-}
-
-function makeExternalBadgeId(module: string, name: string) {
-  return `BADGE-EXT-${slugifyToken(module)}-${slugifyToken(name)}`
-}
-
-const initialBadgeDefinitions: BadgeDefinition[] = [
-  ...internalBadgeSeedRows,
-  ...externalBadgeGroupRows.flatMap((group) =>
-    group.names.map((name) => ({
-      id: makeExternalBadgeId(group.module, name),
-      module: group.module,
-      name,
-      origin: "External Badge" as const,
-      group: group.group,
-      condition:
-        "External badge master data from boss list. Eligibility and verification are not configured in Admin Portal.",
-      whereItAppears: group.whereItAppears
-    }))
-  )
-]
-
-const displayContexts: DisplayContext[] = [
-  {
-    id: "product-card-listing",
-    title: "Product Card / Listing",
-    target: "Product",
-    surface: "B2B product card/listing; campaign/deal product sections",
-    ranking: [
-      { badgeId: "BADGE-B2B-PRODUCT-NEW", active: true, priority: 1 },
-      { badgeId: "BADGE-B2B-PRODUCT-LIVE", active: true, priority: 2 },
-      { badgeId: "BADGE-B2B-TOP-DEAL", active: true, priority: 3 },
-      { badgeId: "BADGE-B2B-SPECIAL-OFFER", active: true, priority: 4 }
-    ]
-  },
-  {
-    id: "product-detail-certifications",
-    title: "Product Detail",
-    target: "Product",
-    surface: "Certifications & Compliance",
-    ranking: [
-      {
-        badgeId: makeExternalBadgeId("Product / Service", "ISO 9001"),
-        active: true,
-        priority: 1
-      },
-      {
-        badgeId: makeExternalBadgeId("Product / Service", "CE"),
-        active: true,
-        priority: 2
-      },
-      {
-        badgeId: makeExternalBadgeId("Product / Service", "FDA"),
-        active: true,
-        priority: 3
-      }
-    ]
-  },
-  {
-    id: "supplier-eprofile-header",
-    title: "Supplier e-Profile Header",
-    target: "Supplier",
-    surface: "Supplier e-Profile header; marketplace member display",
-    ranking: [
-      { badgeId: "BADGE-RFQ-DIAMOND", active: true, priority: 1 },
-      { badgeId: "BADGE-RFQ-GOLD", active: true, priority: 2 },
-      { badgeId: "BADGE-RFQ-SILVER", active: true, priority: 3 },
-      { badgeId: "BADGE-RFQ-PIONEER", active: false, priority: 4 },
-      {
-        badgeId: makeExternalBadgeId("Company", "ISO 9001"),
-        active: true,
-        priority: 5
-      },
-      {
-        badgeId: makeExternalBadgeId("Company", "GS1"),
-        active: true,
-        priority: 6
-      }
-    ]
-  },
-  {
-    id: "supplier-card",
-    title: "Supplier Card",
-    target: "Supplier",
-    surface: "Supplier card; Supplier Type filter/search context",
-    ranking: [
-      { badgeId: "BADGE-TX-VERIFIED-PRO", active: true, priority: 1 },
-      { badgeId: "BADGE-RFQ-DIAMOND", active: true, priority: 2 },
-      { badgeId: "BADGE-RFQ-GOLD", active: true, priority: 3 },
-      { badgeId: "BADGE-RFQ-SILVER", active: true, priority: 4 }
-    ]
-  },
-  {
-    id: "tradexpo-trust-signals",
-    title: "TradeXpo Trust Signals",
-    target: "TradeXpo",
-    surface: "TradeXpo Trust Signals",
-    ranking: [
-      {
-        badgeId: makeExternalBadgeId("Company", "ISO 9001"),
-        active: true,
-        priority: 1
-      },
-      {
-        badgeId: makeExternalBadgeId("Company", "CE"),
-        active: true,
-        priority: 2
-      },
-      {
-        badgeId: makeExternalBadgeId("Company", "FDA"),
-        active: true,
-        priority: 3
-      }
-    ]
-  },
-  {
-    id: "tradexpo-exhibitor-card",
-    title: "TradeXpo Exhibitor Card",
-    target: "TradeXpo",
-    surface: "Booth selector; hall/expo configuration; exhibitor card/header",
-    ranking: [
-      { badgeId: "BADGE-TX-FEATURED", active: true, priority: 1 },
-      { badgeId: "BADGE-TX-HOT-PICK", active: true, priority: 2 },
-      { badgeId: "BADGE-TX-VERIFIED-PRO", active: true, priority: 3 }
-    ]
-  }
-]
-
-const previewByContext: Record<string, EntityPreview[]> = {
-  "product-card-listing": [
-    {
-      name: "Samsung Galaxy Fold Product Card",
-      eligibleBadgeIds: [
-        "BADGE-B2B-PRODUCT-NEW",
-        "BADGE-B2B-PRODUCT-LIVE",
-        "BADGE-B2B-SPECIAL-OFFER"
-      ]
-    },
-    {
-      name: "Industrial Pump Product Card",
-      eligibleBadgeIds: ["BADGE-B2B-PRODUCT-LIVE", "BADGE-B2B-TOP-DEAL"]
-    }
-  ],
-  "product-detail-certifications": [
-    {
-      name: "Food Processing Product Detail",
-      eligibleBadgeIds: [
-        makeExternalBadgeId("Product / Service", "ISO 9001"),
-        makeExternalBadgeId("Product / Service", "FDA")
-      ]
-    },
-    {
-      name: "Industrial Component Product Detail",
-      eligibleBadgeIds: [
-        makeExternalBadgeId("Product / Service", "CE"),
-        makeExternalBadgeId("Product / Service", "ISO 9001")
-      ]
-    }
-  ],
-  "supplier-eprofile-header": [
-    {
-      name: "SUNSPACE WINDOW JOINT STOCK COMPANY",
-      eligibleBadgeIds: [
-        "BADGE-RFQ-DIAMOND",
-        "BADGE-RFQ-GOLD",
-        makeExternalBadgeId("Company", "ISO 9001"),
-        makeExternalBadgeId("Company", "GS1")
-      ]
-    },
-    {
-      name: "MEKONG INDUSTRIAL SUPPLY CO., LTD",
-      eligibleBadgeIds: [
-        "BADGE-RFQ-GOLD",
-        makeExternalBadgeId("Company", "ISO 9001")
-      ]
-    }
-  ],
-  "supplier-card": [
-    {
-      name: "Verified Pro Supplier Card",
-      eligibleBadgeIds: [
-        "BADGE-TX-VERIFIED-PRO",
-        "BADGE-RFQ-GOLD",
-        "BADGE-RFQ-SILVER"
-      ]
-    },
-    {
-      name: "Membership-only Supplier Card",
-      eligibleBadgeIds: ["BADGE-RFQ-DIAMOND", "BADGE-RFQ-GOLD"]
-    }
-  ],
-  "tradexpo-trust-signals": [
-    {
-      name: "TradeXpo Booth Trust Signals",
-      eligibleBadgeIds: [
-        makeExternalBadgeId("Company", "ISO 9001"),
-        makeExternalBadgeId("Company", "CE")
-      ]
-    }
-  ],
-  "tradexpo-exhibitor-card": [
-    {
-      name: "Featured Exhibitor Card",
-      eligibleBadgeIds: ["BADGE-TX-FEATURED", "BADGE-TX-HOT-PICK"]
-    },
-    {
-      name: "Verified Exhibitor Header",
-      eligibleBadgeIds: ["BADGE-TX-VERIFIED-PRO", "BADGE-TX-FEATURED"]
-    }
-  ]
-}
+import { Skeleton } from "../ui/skeleton"
+import {
+  BADGE_CATALOG_PAGE_SIZE,
+  type BadgeDefinition,
+  type BadgeDraft,
+  type BadgeLevelType,
+  type BadgeRankingConfig,
+  type DisplayContext,
+  type DisplayTarget,
+  type EntityPreview,
+  emptyBadgeDraft,
+  makeExternalBadgeId,
+  previewByContext,
+  productPreviewThumbs
+} from "./badge-management-data"
 
 const badgeArtwork: Record<
   string,
@@ -856,10 +207,6 @@ function getBadgeArtwork(badge: BadgeDefinition) {
   )
 }
 
-function originVariant(origin: BadgeOrigin) {
-  return origin === "Internal Badge" ? "default" : "outline"
-}
-
 function targetTone(target: DisplayTarget) {
   const tones: Record<DisplayTarget, string> = {
     Supplier: "border-emerald-200 bg-emerald-50 text-emerald-700",
@@ -870,7 +217,22 @@ function targetTone(target: DisplayTarget) {
   return tones[target]
 }
 
-function getContextCounts() {
+function levelTone(level: number) {
+  if (level >= 5) return "border-purple-200 bg-purple-50 text-purple-700"
+  if (level === 4) return "border-fuchsia-200 bg-fuchsia-50 text-fuchsia-700"
+  if (level === 3) return "border-sky-200 bg-sky-50 text-sky-700"
+  if (level === 2) return "border-emerald-200 bg-emerald-50 text-emerald-700"
+  return "border-slate-200 bg-slate-50 text-slate-700"
+}
+
+function getLevelTypeName(levelTypes: BadgeLevelType[], levelTypeId: string) {
+  return (
+    levelTypes.find((levelType) => levelType.id === levelTypeId)?.name ??
+    levelTypeId
+  )
+}
+
+function getContextCounts(displayContexts: DisplayContext[]) {
   return displayContexts.reduce(
     (counts, context) => {
       counts[context.target] = (counts[context.target] ?? 0) + 1
@@ -880,21 +242,53 @@ function getContextCounts() {
   )
 }
 
-export function BadgeManagementConfig() {
-  const [catalogBadges, setCatalogBadges] = useState(initialBadgeDefinitions)
+async function readApiError(response: Response, fallback: string) {
+  try {
+    const body = (await response.json()) as { error?: string }
+    return body.error || fallback
+  } catch (_error) {
+    return fallback
+  }
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback
+}
+
+const fallbackContext: DisplayContext = {
+  id: "",
+  title: "No context",
+  target: "Product",
+  surface: "",
+  ranking: []
+}
+
+function useBadgeManagementState(initialWorkspace: BadgeManagementWorkspace) {
+  const [levelTypes] = useState(initialWorkspace.levelTypes)
+  const [catalogBadges, setCatalogBadges] = useState(initialWorkspace.badges)
+  const [displayContexts, setDisplayContexts] = useState(
+    initialWorkspace.displayContexts
+  )
   const [rankingsByContext, setRankingsByContext] = useState(
     () =>
       Object.fromEntries(
-        displayContexts.map((context) => [context.id, context.ranking])
+        initialWorkspace.displayContexts.map((context) => [
+          context.id,
+          context.ranking
+        ])
       ) as Record<string, BadgeRankingConfig[]>
   )
   const [selectedContextId, setSelectedContextId] = useState(
-    displayContexts[0]?.id ?? ""
+    initialWorkspace.displayContexts[0]?.id ?? ""
   )
   const [previewEntityName, setPreviewEntityName] = useState("")
   const [publishedAtByContext, setPublishedAtByContext] = useState<
     Record<string, string | null>
-  >(Object.fromEntries(displayContexts.map((context) => [context.id, null])))
+  >(
+    Object.fromEntries(
+      initialWorkspace.displayContexts.map((context) => [context.id, null])
+    )
+  )
   const [isPreviewOpen, setIsPreviewOpen] = useState(false)
   const [isAddBadgeOpen, setIsAddBadgeOpen] = useState(false)
   const [isAddExternalBadgeOpen, setIsAddExternalBadgeOpen] = useState(false)
@@ -902,13 +296,21 @@ export function BadgeManagementConfig() {
   const [addBadgeQuery, setAddBadgeQuery] = useState("")
   const [catalogQuery, setCatalogQuery] = useState("")
   const [catalogPage, setCatalogPage] = useState(1)
-  const [externalBadgeDraft, setExternalBadgeDraft] = useState(
-    emptyExternalBadgeDraft
-  )
+  const [badgeCatalogQuery, setBadgeCatalogQuery] = useState("")
+  const [badgeModuleFilter, setBadgeModuleFilter] = useState("all")
+  const [badgeGroupFilter, setBadgeGroupFilter] = useState("all")
+  const [badgeCatalogPage, setBadgeCatalogPage] = useState(1)
+  const [badgeDraft, setBadgeDraft] = useState(emptyBadgeDraft)
+  const [badgeBeingEdited, setBadgeBeingEdited] =
+    useState<BadgeDefinition | null>(null)
+  const [isEditBadgeOpen, setIsEditBadgeOpen] = useState(false)
+  const [isSavingBadge, setIsSavingBadge] = useState(false)
+  const [operationError, setOperationError] = useState<string | null>(null)
 
   const selectedContext =
     displayContexts.find((context) => context.id === selectedContextId) ??
-    displayContexts[0]
+    displayContexts[0] ??
+    fallbackContext
   const selectedRanking = rankingsByContext[selectedContext.id] ?? []
   const previewEntities = previewByContext[selectedContext.id] ?? []
   const selectedPreviewEntity =
@@ -921,33 +323,103 @@ export function BadgeManagementConfig() {
     return sortedRanking.filter((item) => item.active)
   }, [sortedRanking])
   const availableBadgesForContext = catalogBadges.filter(
-    (badge) => !selectedRanking.some((item) => item.badgeId === badge.id)
+    (badge) =>
+      badge.status !== "archived" &&
+      !selectedRanking.some((item) => item.badgeId === badge.id)
   )
   const filteredAvailableBadges = useMemo(() => {
     const query = addBadgeQuery.trim().toLowerCase()
     if (!query) return availableBadgesForContext
 
-    return availableBadgesForContext.filter((badge) =>
-      [badge.id, badge.name, badge.module, badge.group, badge.origin].some(
-        (value) => value.toLowerCase().includes(query)
-      )
-    )
-  }, [addBadgeQuery, availableBadgesForContext])
-  const contextCounts = getContextCounts()
+    return availableBadgesForContext.filter((badge) => {
+      const levelTypeName = getLevelTypeName(levelTypes, badge.levelTypeId)
+      return [
+        badge.id,
+        badge.name,
+        badge.module,
+        badge.group,
+        badge.levelTypeId,
+        levelTypeName,
+        `level ${badge.level}`
+      ].some((value) => value.toLowerCase().includes(query))
+    })
+  }, [addBadgeQuery, availableBadgesForContext, levelTypes])
+  const contextCounts = getContextCounts(displayContexts)
   const activePlacements = Object.values(rankingsByContext)
     .flat()
     .filter((item) => item.active).length
   const publishedAt = publishedAtByContext[selectedContext.id]
+  const badgeCatalogDefinitions = useMemo(
+    () => catalogBadges.filter((badge) => badge.status !== "archived"),
+    [catalogBadges]
+  )
+  const badgeModules = useMemo(
+    () => [...new Set(badgeCatalogDefinitions.map((badge) => badge.module))],
+    [badgeCatalogDefinitions]
+  )
+  const badgeGroups = useMemo(
+    () => [...new Set(badgeCatalogDefinitions.map((badge) => badge.group))],
+    [badgeCatalogDefinitions]
+  )
+  const filteredBadgeCatalogDefinitions = useMemo(() => {
+    const query = badgeCatalogQuery.trim().toLowerCase()
+
+    return badgeCatalogDefinitions.filter((badge) => {
+      const levelTypeName = getLevelTypeName(levelTypes, badge.levelTypeId)
+      const matchesQuery = query
+        ? [
+            badge.id,
+            badge.name,
+            badge.module,
+            badge.group,
+            badge.whereItAppears,
+            badge.levelTypeId,
+            levelTypeName,
+            `level ${badge.level}`
+          ].some((value) => value.toLowerCase().includes(query))
+        : true
+      const matchesModule =
+        badgeModuleFilter === "all" || badge.module === badgeModuleFilter
+      const matchesGroup =
+        badgeGroupFilter === "all" || badge.group === badgeGroupFilter
+
+      return matchesQuery && matchesModule && matchesGroup
+    })
+  }, [
+    badgeCatalogDefinitions,
+    badgeCatalogQuery,
+    badgeGroupFilter,
+    badgeModuleFilter,
+    levelTypes
+  ])
+  const totalBadgeCatalogPages = Math.max(
+    1,
+    Math.ceil(filteredBadgeCatalogDefinitions.length / BADGE_CATALOG_PAGE_SIZE)
+  )
+  const paginatedBadgeCatalogDefinitions = useMemo(() => {
+    const start = (badgeCatalogPage - 1) * BADGE_CATALOG_PAGE_SIZE
+    return filteredBadgeCatalogDefinitions.slice(
+      start,
+      start + BADGE_CATALOG_PAGE_SIZE
+    )
+  }, [badgeCatalogPage, filteredBadgeCatalogDefinitions])
   const filteredBadgeDefinitions = useMemo(() => {
     const query = catalogQuery.trim().toLowerCase()
-    if (!query) return catalogBadges
+    if (!query) return badgeCatalogDefinitions
 
-    return catalogBadges.filter((badge) =>
-      [badge.id, badge.name, badge.module, badge.group, badge.origin].some(
-        (value) => value.toLowerCase().includes(query)
-      )
-    )
-  }, [catalogBadges, catalogQuery])
+    return badgeCatalogDefinitions.filter((badge) => {
+      const levelTypeName = getLevelTypeName(levelTypes, badge.levelTypeId)
+      return [
+        badge.id,
+        badge.name,
+        badge.module,
+        badge.group,
+        badge.levelTypeId,
+        levelTypeName,
+        `level ${badge.level}`
+      ].some((value) => value.toLowerCase().includes(query))
+    })
+  }, [badgeCatalogDefinitions, catalogQuery, levelTypes])
   const totalCatalogPages = Math.max(
     1,
     Math.ceil(filteredBadgeDefinitions.length / BADGE_CATALOG_PAGE_SIZE)
@@ -965,6 +437,16 @@ export function BadgeManagementConfig() {
       setCatalogPage(totalCatalogPages)
     }
   }, [catalogPage, totalCatalogPages])
+
+  useEffect(() => {
+    if (badgeCatalogPage > totalBadgeCatalogPages) {
+      setBadgeCatalogPage(totalBadgeCatalogPages)
+    }
+  }, [badgeCatalogPage, totalBadgeCatalogPages])
+
+  function resetBadgeCatalogPage() {
+    setBadgeCatalogPage(1)
+  }
 
   function getCatalogBadge(badgeId: string) {
     const badge = catalogBadges.find((item) => item.id === badgeId)
@@ -1053,67 +535,316 @@ export function BadgeManagementConfig() {
   function openAddBadgeDialog() {
     setBadgeToAdd("")
     setAddBadgeQuery("")
+    setOperationError(null)
     setIsAddBadgeOpen(true)
   }
 
-  function publishContext() {
-    setPublishedAtByContext((current) => ({
-      ...current,
-      [selectedContext.id]: new Date().toISOString()
-    }))
+  async function publishContext() {
+    setOperationError(null)
+    try {
+      const response = await fetch(
+        `/api/admin/badge-display-contexts/${encodeURIComponent(selectedContext.id)}/rankings`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ranking: sortedRanking })
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error(await readApiError(response, "Publish ranking failed."))
+      }
+
+      const workspace = (await response.json()) as BadgeManagementWorkspace
+      setCatalogBadges(workspace.badges)
+      setDisplayContexts(workspace.displayContexts)
+      setRankingsByContext(
+        Object.fromEntries(
+          workspace.displayContexts.map((context) => [
+            context.id,
+            context.ranking
+          ])
+        ) as Record<string, BadgeRankingConfig[]>
+      )
+      setPublishedAtByContext((current) => ({
+        ...current,
+        [selectedContext.id]: new Date().toISOString()
+      }))
+    } catch (error) {
+      setOperationError(getErrorMessage(error, "Publish ranking failed."))
+    }
   }
 
   function openAddExternalBadgeDialog() {
-    setExternalBadgeDraft(emptyExternalBadgeDraft)
+    setBadgeDraft(emptyBadgeDraft)
+    setBadgeBeingEdited(null)
+    setOperationError(null)
     setIsAddExternalBadgeOpen(true)
   }
 
-  function updateExternalBadgeDraft(patch: Partial<ExternalBadgeDraft>) {
-    setExternalBadgeDraft((current) => ({ ...current, ...patch }))
+  function openEditBadgeDialog(badge: BadgeDefinition) {
+    setBadgeBeingEdited(badge)
+    setBadgeDraft({
+      name: badge.name,
+      module: badge.module,
+      group: badge.group,
+      levelTypeId: badge.levelTypeId,
+      level: badge.level,
+      condition: badge.condition,
+      whereItAppears: badge.whereItAppears,
+      designLink: badge.designLink ?? ""
+    })
+    setOperationError(null)
+    setIsEditBadgeOpen(true)
   }
 
-  function createExternalBadge() {
-    const name = externalBadgeDraft.name.trim()
+  function updateBadgeDraft(patch: Partial<BadgeDraft>) {
+    setBadgeDraft((current) => ({ ...current, ...patch }))
+  }
+
+  async function createBadgeFromDraft() {
+    const name = badgeDraft.name.trim()
     if (!name) return
 
-    const module = externalBadgeDraft.module.trim() || "External"
-    const group = externalBadgeDraft.group.trim() || "Certificate"
-    const condition =
-      externalBadgeDraft.condition.trim() ||
-      "External badge eligibility must be verified and valid. Condition is not configured in Admin Portal."
-    const slug = name
-      .toUpperCase()
-      .replace(/[^A-Z0-9]+/g, "-")
-      .replace(/^-|-$/g, "")
-    const baseId = `BADGE-EXT-${slug || "CUSTOM"}`
+    setIsSavingBadge(true)
+    setOperationError(null)
+    try {
+      const response = await fetch("/api/admin/badges", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(badgeDraft)
+      })
 
-    setCatalogBadges((current) => {
-      let nextId = baseId
-      let suffix = 2
-      while (current.some((badge) => badge.id === nextId)) {
-        nextId = `${baseId}-${suffix}`
-        suffix += 1
+      if (!response.ok) {
+        throw new Error(await readApiError(response, "Create badge failed."))
       }
 
-      return [
-        ...current,
-        {
-          id: nextId,
-          module,
-          name,
-          origin: "External Badge",
-          group,
-          condition,
-          whereItAppears:
-            "Available for Admin Badge Management contexts after operations assigns it."
-        }
-      ]
-    })
-
-    setCatalogQuery("")
-    setExternalBadgeDraft(emptyExternalBadgeDraft)
-    setIsAddExternalBadgeOpen(false)
+      const body = (await response.json()) as { badge: BadgeDefinition }
+      setCatalogBadges((current) => [...current, body.badge])
+      setCatalogQuery("")
+      setBadgeCatalogQuery("")
+      setBadgeDraft(emptyBadgeDraft)
+      setIsAddExternalBadgeOpen(false)
+    } catch (error) {
+      setOperationError(getErrorMessage(error, "Create badge failed."))
+    } finally {
+      setIsSavingBadge(false)
+    }
   }
+
+  async function updateBadgeFromDraft() {
+    if (!badgeBeingEdited) return
+    const name = badgeDraft.name.trim()
+    if (!name) return
+
+    setIsSavingBadge(true)
+    setOperationError(null)
+    try {
+      const response = await fetch(
+        `/api/admin/badges/${encodeURIComponent(badgeBeingEdited.id)}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(badgeDraft)
+        }
+      )
+
+      if (!response.ok) {
+        throw new Error(await readApiError(response, "Update badge failed."))
+      }
+
+      const body = (await response.json()) as { badge: BadgeDefinition }
+      setCatalogBadges((current) =>
+        current.map((badge) =>
+          badge.id === body.badge.id ? body.badge : badge
+        )
+      )
+      setBadgeBeingEdited(null)
+      setBadgeDraft(emptyBadgeDraft)
+      setIsEditBadgeOpen(false)
+    } catch (error) {
+      setOperationError(getErrorMessage(error, "Update badge failed."))
+    } finally {
+      setIsSavingBadge(false)
+    }
+  }
+
+  async function archiveBadgeFromCatalog(badge: BadgeDefinition) {
+    setIsSavingBadge(true)
+    setOperationError(null)
+    try {
+      const response = await fetch(
+        `/api/admin/badges/${encodeURIComponent(badge.id)}`,
+        { method: "DELETE" }
+      )
+
+      if (!response.ok) {
+        throw new Error(await readApiError(response, "Archive badge failed."))
+      }
+
+      setCatalogBadges((current) =>
+        current.map((item) =>
+          item.id === badge.id ? { ...item, status: "archived" } : item
+        )
+      )
+      setRankingsByContext(
+        (current) =>
+          Object.fromEntries(
+            Object.entries(current).map(([contextId, ranking]) => [
+              contextId,
+              ranking.filter((item) => item.badgeId !== badge.id)
+            ])
+          ) as Record<string, BadgeRankingConfig[]>
+      )
+    } catch (error) {
+      setOperationError(getErrorMessage(error, "Archive badge failed."))
+    } finally {
+      setIsSavingBadge(false)
+    }
+  }
+  return {
+    levelTypes,
+    displayContexts,
+    rankingsByContext,
+    selectedContext,
+    setSelectedContextId,
+    previewEntities,
+    selectedPreviewEntity,
+    setPreviewEntityName,
+    sortedRanking,
+    activeRanking,
+    availableBadgesForContext,
+    filteredAvailableBadges,
+    contextCounts,
+    activePlacements,
+    publishedAt,
+    badgeCatalogDefinitions,
+    badgeModules,
+    badgeGroups,
+    filteredBadgeCatalogDefinitions,
+    totalBadgeCatalogPages,
+    paginatedBadgeCatalogDefinitions,
+    filteredBadgeDefinitions,
+    totalCatalogPages,
+    paginatedBadgeDefinitions,
+    isPreviewOpen,
+    setIsPreviewOpen,
+    isAddBadgeOpen,
+    setIsAddBadgeOpen,
+    isAddExternalBadgeOpen,
+    setIsAddExternalBadgeOpen,
+    isEditBadgeOpen,
+    setIsEditBadgeOpen,
+    setBadgeBeingEdited,
+    isSavingBadge,
+    operationError,
+    badgeToAdd,
+    setBadgeToAdd,
+    addBadgeQuery,
+    setAddBadgeQuery,
+    catalogQuery,
+    setCatalogQuery,
+    catalogPage,
+    setCatalogPage,
+    badgeCatalogQuery,
+    setBadgeCatalogQuery,
+    badgeModuleFilter,
+    setBadgeModuleFilter,
+    badgeGroupFilter,
+    setBadgeGroupFilter,
+    badgeCatalogPage,
+    setBadgeCatalogPage,
+    resetBadgeCatalogPage,
+    badgeDraft,
+    getCatalogBadge,
+    updateRanking,
+    moveRanking,
+    addBadgeToContext,
+    removeBadgeFromContext,
+    openAddBadgeDialog,
+    publishContext,
+    openAddExternalBadgeDialog,
+    openEditBadgeDialog,
+    updateBadgeDraft,
+    createBadgeFromDraft,
+    updateBadgeFromDraft,
+    archiveBadgeFromCatalog
+  }
+}
+
+export function BadgeManagementConfig({
+  initialWorkspace
+}: {
+  initialWorkspace: BadgeManagementWorkspace
+}) {
+  const {
+    levelTypes,
+    displayContexts,
+    rankingsByContext,
+    selectedContext,
+    setSelectedContextId,
+    previewEntities,
+    selectedPreviewEntity,
+    setPreviewEntityName,
+    sortedRanking,
+    activeRanking,
+    availableBadgesForContext,
+    filteredAvailableBadges,
+    contextCounts,
+    activePlacements,
+    publishedAt,
+    badgeCatalogDefinitions,
+    badgeModules,
+    badgeGroups,
+    filteredBadgeCatalogDefinitions,
+    totalBadgeCatalogPages,
+    paginatedBadgeCatalogDefinitions,
+    filteredBadgeDefinitions,
+    totalCatalogPages,
+    paginatedBadgeDefinitions,
+    isPreviewOpen,
+    setIsPreviewOpen,
+    isAddBadgeOpen,
+    setIsAddBadgeOpen,
+    isAddExternalBadgeOpen,
+    setIsAddExternalBadgeOpen,
+    isEditBadgeOpen,
+    setIsEditBadgeOpen,
+    setBadgeBeingEdited,
+    isSavingBadge,
+    operationError,
+    badgeToAdd,
+    setBadgeToAdd,
+    addBadgeQuery,
+    setAddBadgeQuery,
+    catalogQuery,
+    setCatalogQuery,
+    catalogPage,
+    setCatalogPage,
+    badgeCatalogQuery,
+    setBadgeCatalogQuery,
+    badgeModuleFilter,
+    setBadgeModuleFilter,
+    badgeGroupFilter,
+    setBadgeGroupFilter,
+    badgeCatalogPage,
+    setBadgeCatalogPage,
+    resetBadgeCatalogPage,
+    badgeDraft,
+    getCatalogBadge,
+    updateRanking,
+    moveRanking,
+    addBadgeToContext,
+    removeBadgeFromContext,
+    openAddBadgeDialog,
+    publishContext,
+    openAddExternalBadgeDialog,
+    openEditBadgeDialog,
+    updateBadgeDraft,
+    createBadgeFromDraft,
+    updateBadgeFromDraft,
+    archiveBadgeFromCatalog
+  } = useBadgeManagementState(initialWorkspace)
 
   return (
     <div className="mt-6 space-y-6">
@@ -1129,6 +860,15 @@ export function BadgeManagementConfig() {
         />
         <MetricCard label="Active placements" value={activePlacements} />
       </div>
+
+      {operationError ? (
+        <div
+          role="alert"
+          className="rounded-2xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-destructive text-sm"
+        >
+          {operationError}
+        </div>
+      ) : null}
 
       <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)]">
         <Card className="border-foreground/10">
@@ -1259,7 +999,7 @@ export function BadgeManagementConfig() {
                       <TableHead className="w-[130px]">Context #</TableHead>
                       <TableHead>Badge</TableHead>
                       <TableHead>Group</TableHead>
-                      <TableHead>Badge Type</TableHead>
+                      <TableHead>Level</TableHead>
                       <TableHead className="w-[112px] text-center">
                         Active
                       </TableHead>
@@ -1310,8 +1050,15 @@ export function BadgeManagementConfig() {
                               <Badge variant="outline">{badge.group}</Badge>
                             </TableCell>
                             <TableCell>
-                              <Badge variant={originVariant(badge.origin)}>
-                                {badge.origin}
+                              <Badge
+                                variant="outline"
+                                className={cn("border", levelTone(badge.level))}
+                              >
+                                {getLevelTypeName(
+                                  levelTypes,
+                                  badge.levelTypeId
+                                )}{" "}
+                                L{badge.level}
                               </Badge>
                             </TableCell>
                             <TableCell className="text-center">
@@ -1342,7 +1089,7 @@ export function BadgeManagementConfig() {
                     ) : (
                       <TableRow>
                         <TableCell
-                          colSpan={5}
+                          colSpan={6}
                           className="py-10 text-center text-muted-foreground"
                         >
                           No badges
@@ -1358,11 +1105,223 @@ export function BadgeManagementConfig() {
       </div>
 
       <Card className="border-foreground/10">
+        <CardHeader className="flex flex-row items-start justify-between gap-3 space-y-0">
+          <div>
+            <CardTitle>Badge Catalog Management</CardTitle>
+            <p className="mt-1 text-muted-foreground text-sm">
+              Manage badge catalog master data by module, certification group,
+              and display surface.
+            </p>
+          </div>
+          <Badge variant="secondary" className="shrink-0">
+            {badgeCatalogDefinitions.length} badges
+          </Badge>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_220px_260px]">
+            <Input
+              value={badgeCatalogQuery}
+              onChange={(event) => {
+                setBadgeCatalogQuery(event.target.value)
+                resetBadgeCatalogPage()
+              }}
+              placeholder="Search badge, module, group, level, surface, or ID"
+            />
+            <Select
+              value={badgeModuleFilter}
+              onValueChange={(value) => {
+                setBadgeModuleFilter(value)
+                resetBadgeCatalogPage()
+              }}
+            >
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder="Module" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All modules</SelectItem>
+                {badgeModules.map((module) => (
+                  <SelectItem key={module} value={module}>
+                    {module}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select
+              value={badgeGroupFilter}
+              onValueChange={(value) => {
+                setBadgeGroupFilter(value)
+                resetBadgeCatalogPage()
+              }}
+            >
+              <SelectTrigger className="bg-white">
+                <SelectValue placeholder="Group" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All groups</SelectItem>
+                {badgeGroups.map((group) => (
+                  <SelectItem key={group} value={group}>
+                    {group}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="overflow-hidden rounded-2xl border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[240px]">Badge</TableHead>
+                  <TableHead className="w-[160px]">Module</TableHead>
+                  <TableHead className="w-[260px]">Group</TableHead>
+                  <TableHead className="w-[180px]">Level</TableHead>
+                  <TableHead>Where it appears</TableHead>
+                  <TableHead className="w-[150px] text-center">
+                    Status
+                  </TableHead>
+                  <TableHead className="w-[160px] text-right">
+                    Actions
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedBadgeCatalogDefinitions.length > 0 ? (
+                  paginatedBadgeCatalogDefinitions.map((badge) => (
+                    <TableRow key={badge.id}>
+                      <TableCell className="whitespace-normal">
+                        <div className="space-y-1">
+                          <BadgeArtwork badge={badge} size="sm" />
+                          <p className="break-all text-muted-foreground text-xs">
+                            {badge.id}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{badge.module}</Badge>
+                      </TableCell>
+                      <TableCell className="whitespace-normal">
+                        <span className="text-sm">{badge.group}</span>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={cn("border", levelTone(badge.level))}
+                        >
+                          {getLevelTypeName(levelTypes, badge.levelTypeId)} L
+                          {badge.level}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="whitespace-normal text-muted-foreground text-xs leading-relaxed">
+                        {badge.whereItAppears}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge variant="outline" className="text-xs capitalize">
+                          {badge.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => openEditBadgeDialog(badge)}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            disabled={isSavingBadge}
+                            onClick={() => void archiveBadgeFromCatalog(badge)}
+                          >
+                            Archive
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={7}
+                      className="py-10 text-center text-muted-foreground"
+                    >
+                      No badges found
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {filteredBadgeCatalogDefinitions.length > 0 ? (
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-muted-foreground text-sm">
+                Showing {(badgeCatalogPage - 1) * BADGE_CATALOG_PAGE_SIZE + 1}-
+                {Math.min(
+                  badgeCatalogPage * BADGE_CATALOG_PAGE_SIZE,
+                  filteredBadgeCatalogDefinitions.length
+                )}{" "}
+                of {filteredBadgeCatalogDefinitions.length}
+              </p>
+              <Pagination className="mx-0 w-auto justify-end">
+                <PaginationContent>
+                  <PaginationItem>
+                    <PaginationPrevious
+                      href="#"
+                      onClick={(event) => {
+                        event.preventDefault()
+                        setBadgeCatalogPage((current) =>
+                          Math.max(1, current - 1)
+                        )
+                      }}
+                      aria-disabled={badgeCatalogPage === 1}
+                      className={
+                        badgeCatalogPage === 1
+                          ? "pointer-events-none opacity-50"
+                          : ""
+                      }
+                    />
+                  </PaginationItem>
+                  <PaginationItem>
+                    <span className="px-3 text-sm">
+                      Page {badgeCatalogPage} / {totalBadgeCatalogPages}
+                    </span>
+                  </PaginationItem>
+                  <PaginationItem>
+                    <PaginationNext
+                      href="#"
+                      onClick={(event) => {
+                        event.preventDefault()
+                        setBadgeCatalogPage((current) =>
+                          Math.min(totalBadgeCatalogPages, current + 1)
+                        )
+                      }}
+                      aria-disabled={
+                        badgeCatalogPage === totalBadgeCatalogPages
+                      }
+                      className={
+                        badgeCatalogPage === totalBadgeCatalogPages
+                          ? "pointer-events-none opacity-50"
+                          : ""
+                      }
+                    />
+                  </PaginationItem>
+                </PaginationContent>
+              </Pagination>
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
+
+      <Card className="border-foreground/10">
         <CardHeader className="flex flex-row items-center justify-between gap-3 space-y-0">
           <CardTitle>Badge Catalog Reference</CardTitle>
           <Button type="button" size="sm" onClick={openAddExternalBadgeDialog}>
             <PlusIcon className="size-4" />
-            Add External Badge
+            Add Badge
           </Button>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -1372,7 +1331,7 @@ export function BadgeManagementConfig() {
               setCatalogQuery(event.target.value)
               setCatalogPage(1)
             }}
-            placeholder="Search badge, module, group, type, or ID"
+            placeholder="Search badge, module, group, level, or ID"
             className="max-w-md"
           />
           <div className="overflow-hidden rounded-2xl border">
@@ -1380,7 +1339,7 @@ export function BadgeManagementConfig() {
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[220px]">Badge</TableHead>
-                  <TableHead className="w-[150px]">Badge Type</TableHead>
+                  <TableHead className="w-[150px]">Level</TableHead>
                   <TableHead>Module</TableHead>
                   <TableHead>Group</TableHead>
                   <TableHead className="min-w-[280px]">Condition</TableHead>
@@ -1402,8 +1361,12 @@ export function BadgeManagementConfig() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant={originVariant(badge.origin)}>
-                          {badge.origin}
+                        <Badge
+                          variant="outline"
+                          className={cn("border", levelTone(badge.level))}
+                        >
+                          {getLevelTypeName(levelTypes, badge.levelTypeId)} L
+                          {badge.level}
                         </Badge>
                       </TableCell>
                       <TableCell>{badge.module}</TableCell>
@@ -1581,7 +1544,7 @@ export function BadgeManagementConfig() {
                 setAddBadgeQuery(event.target.value)
                 setBadgeToAdd("")
               }}
-              placeholder="Search badge by name, module, type, or ID"
+              placeholder="Search badge by name, module, level, or ID"
             />
 
             <Select
@@ -1595,7 +1558,7 @@ export function BadgeManagementConfig() {
               <SelectContent>
                 {filteredAvailableBadges.map((badge) => (
                   <SelectItem key={badge.id} value={badge.id}>
-                    {`${badge.name} • ${badge.module} • ${badge.origin}`}
+                    {`${badge.name} • ${badge.module} • ${getLevelTypeName(levelTypes, badge.levelTypeId)} L${badge.level}`}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -1633,43 +1596,14 @@ export function BadgeManagementConfig() {
       >
         <DialogContent className="sm:max-w-xl">
           <DialogHeader>
-            <DialogTitle>Add External Badge</DialogTitle>
+            <DialogTitle>Add Badge</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-4">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Input
-                value={externalBadgeDraft.name}
-                onChange={(event) =>
-                  updateExternalBadgeDraft({ name: event.target.value })
-                }
-                placeholder="Badge name"
-              />
-              <Input
-                value={externalBadgeDraft.module}
-                onChange={(event) =>
-                  updateExternalBadgeDraft({ module: event.target.value })
-                }
-                placeholder="Module"
-              />
-              <Input
-                value={externalBadgeDraft.group}
-                onChange={(event) =>
-                  updateExternalBadgeDraft({ group: event.target.value })
-                }
-                placeholder="Group"
-              />
-              <Input value="External Badge" disabled />
-            </div>
-
-            <Input
-              value={externalBadgeDraft.condition}
-              onChange={(event) =>
-                updateExternalBadgeDraft({ condition: event.target.value })
-              }
-              placeholder="Condition / verification note"
-            />
-          </div>
+          <BadgeDraftFields
+            badgeDraft={badgeDraft}
+            levelTypes={levelTypes}
+            updateBadgeDraft={updateBadgeDraft}
+          />
 
           <DialogFooter>
             <Button
@@ -1681,14 +1615,158 @@ export function BadgeManagementConfig() {
             </Button>
             <Button
               type="button"
-              onClick={createExternalBadge}
-              disabled={!externalBadgeDraft.name.trim()}
+              onClick={() => void createBadgeFromDraft()}
+              disabled={!badgeDraft.name.trim() || isSavingBadge}
             >
-              Add External Badge
+              {isSavingBadge ? "Saving..." : "Add Badge"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog
+        open={isEditBadgeOpen}
+        onOpenChange={(open) => {
+          setIsEditBadgeOpen(open)
+          if (!open) {
+            setBadgeBeingEdited(null)
+            updateBadgeDraft(emptyBadgeDraft)
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Edit Badge</DialogTitle>
+          </DialogHeader>
+
+          <BadgeDraftFields
+            badgeDraft={badgeDraft}
+            levelTypes={levelTypes}
+            updateBadgeDraft={updateBadgeDraft}
+          />
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setIsEditBadgeOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={() => void updateBadgeFromDraft()}
+              disabled={!badgeDraft.name.trim() || isSavingBadge}
+            >
+              {isSavingBadge ? "Saving..." : "Save Badge"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}
+
+function BadgeDraftFields({
+  badgeDraft,
+  levelTypes,
+  updateBadgeDraft
+}: {
+  badgeDraft: BadgeDraft
+  levelTypes: BadgeLevelType[]
+  updateBadgeDraft: (patch: Partial<BadgeDraft>) => void
+}) {
+  const selectedLevelType =
+    levelTypes.find((levelType) => levelType.id === badgeDraft.levelTypeId) ??
+    levelTypes[0]
+  const minLevel = selectedLevelType?.minLevel ?? 1
+  const maxLevel = selectedLevelType?.maxLevel ?? 5
+  const levelOptions = Array.from(
+    { length: maxLevel - minLevel + 1 },
+    (_item, index) => minLevel + index
+  )
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Input
+          aria-label="Badge name"
+          value={badgeDraft.name}
+          onChange={(event) => updateBadgeDraft({ name: event.target.value })}
+          placeholder="Badge name"
+        />
+        <Input
+          aria-label="Module"
+          value={badgeDraft.module}
+          onChange={(event) => updateBadgeDraft({ module: event.target.value })}
+          placeholder="Module"
+        />
+        <Input
+          aria-label="Group"
+          value={badgeDraft.group}
+          onChange={(event) => updateBadgeDraft({ group: event.target.value })}
+          placeholder="Group"
+        />
+        <Select
+          value={badgeDraft.levelTypeId}
+          onValueChange={(levelTypeId) =>
+            updateBadgeDraft({
+              levelTypeId: levelTypeId as BadgeDraft["levelTypeId"],
+              level: 1
+            })
+          }
+        >
+          <SelectTrigger aria-label="Level type" className="bg-white">
+            <SelectValue placeholder="Level type" />
+          </SelectTrigger>
+          <SelectContent>
+            {levelTypes.map((levelType) => (
+              <SelectItem key={levelType.id} value={levelType.id}>
+                {levelType.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={String(badgeDraft.level)}
+          onValueChange={(level) => updateBadgeDraft({ level: Number(level) })}
+        >
+          <SelectTrigger aria-label="Level" className="bg-white">
+            <SelectValue placeholder="Level" />
+          </SelectTrigger>
+          <SelectContent>
+            {levelOptions.map((level) => (
+              <SelectItem key={level} value={String(level)}>
+                Level {level}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Input
+          aria-label="Design link"
+          value={badgeDraft.designLink}
+          onChange={(event) =>
+            updateBadgeDraft({ designLink: event.target.value })
+          }
+          placeholder="Design link"
+        />
+      </div>
+      <Input
+        aria-label="Where it appears"
+        value={badgeDraft.whereItAppears}
+        onChange={(event) =>
+          updateBadgeDraft({ whereItAppears: event.target.value })
+        }
+        placeholder="Where it appears"
+      />
+      <Input
+        aria-label="Condition or verification note"
+        value={badgeDraft.condition}
+        onChange={(event) =>
+          updateBadgeDraft({ condition: event.target.value })
+        }
+        placeholder="Condition / verification note"
+      />
     </div>
   )
 }
@@ -1715,19 +1793,16 @@ function ProductListingPreview({
         })}
       </div>
 
-      <div className="mt-5 space-y-4">
-        <p className="text-[15px] text-muted-foreground">
-          Company:{" "}
-          <span className="font-medium text-[#082873] underline underline-offset-2">
-            SUNSPACE WINDOW JOINT STOCK COMPANY
-          </span>
-        </p>
+      <div className="mt-5 space-y-3">
+        <Skeleton className="h-3 w-full" />
 
         <div className="max-w-4xl space-y-2">
-          <h3 className="font-semibold text-3xl text-slate-950 leading-tight tracking-tight">
-            Galaxy Z Fold 6: The 10.1&quot; 4G LTE Powerhouse for Work, Learn &
-            Call | 8GB+256GB | Android 15
-          </h3>
+          <div className="space-y-1">
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-3 w-3xs" />
+            <Skeleton className="h-3 w-xs" />
+          </div>
+
           <div className="flex flex-wrap items-center gap-3 text-sm">
             <div className="flex items-center gap-1 text-amber-500">
               <StarIcon className="size-4 fill-current" />
@@ -1736,39 +1811,18 @@ function ProductListingPreview({
               <StarIcon className="size-4 fill-current" />
               <StarIcon className="size-4 fill-current text-amber-300" />
             </div>
-            <span className="text-muted-foreground">(65 danh gia)</span>
+            <Skeleton className="h-3 w-20" />
           </div>
         </div>
 
         <div className="grid gap-4 md:grid-cols-[68px_minmax(0,1fr)]">
           <div className="space-y-3">
             {productPreviewThumbs.map((thumbId) => (
-              <div
-                key={thumbId}
-                className="flex aspect-square items-center justify-center rounded-2xl bg-[#e3e3e3]"
-              >
-                <PackageCheckIcon className="size-6 text-muted-foreground" />
-              </div>
+              <Skeleton key={thumbId} className="size-18 rounded-2xl" />
             ))}
           </div>
 
-          <div className="relative min-h-[520px] overflow-hidden rounded-[28px] bg-[#d9d9d9]">
-            <div className="absolute top-5 right-5 flex size-12 items-center justify-center rounded-full bg-black/45 text-white">
-              <span className="text-2xl leading-none">♥</span>
-            </div>
-
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="relative flex h-[270px] w-[170px] items-center justify-center">
-                <div className="absolute top-10 left-0 h-[190px] w-[105px] rounded-[18px] border border-slate-400 bg-slate-200 shadow-md" />
-                <div className="absolute top-0 right-2 flex h-[235px] w-[120px] items-center justify-center rounded-[20px] border border-slate-500 bg-gradient-to-b from-[#f6d2be] to-[#d55a42] text-center font-bold text-3xl text-white leading-[1.05] shadow-lg">
-                  SAMSUNG
-                  <br />
-                  GALAXY
-                </div>
-                <div className="absolute bottom-4 left-4 h-4 w-12 rounded-full bg-black/10 blur-md" />
-              </div>
-            </div>
-          </div>
+          <Skeleton className="h-full w-full rounded-3xl" />
         </div>
       </div>
     </div>

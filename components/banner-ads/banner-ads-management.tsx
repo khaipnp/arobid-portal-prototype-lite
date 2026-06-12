@@ -2,7 +2,6 @@
 
 import {
   ArrowDownIcon,
-  ArrowLeftIcon,
   ArrowUpDownIcon,
   ArrowUpIcon,
   Building2Icon,
@@ -1095,18 +1094,7 @@ export function BannerAdsManagement() {
       ) : selectedPlacement ? (
         <>
           <div className="flex flex-wrap items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setActiveView("list")}
-            >
-              <ArrowLeftIcon className="size-4" />
-              Back to placements
-            </Button>
             <div className="space-y-1">
-              <p className="text-muted-foreground text-xs uppercase tracking-[0.18em]">
-                Banner Ads
-              </p>
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="font-semibold text-2xl tracking-tight">
                   Placement Detail
