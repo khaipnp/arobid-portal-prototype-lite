@@ -78,6 +78,7 @@ const numberFormat = new Intl.NumberFormat("en")
 const dashboardDurations = ["1D", "3D", "7D", "15D", "30D"] as const
 const dashboardDurationTabs = [...dashboardDurations, "Custom"] as const
 const funnelDurations = ["7D", "30D", "90D"] as const
+const funnelDurationTabs = [...funnelDurations, "Custom"] as const
 
 const inventoryChartConfig = {
   soldBooths: {
@@ -166,6 +167,7 @@ function getCustomDashboardDuration(
 
 type PartnerDashboardDurationFilter = (typeof dashboardDurationTabs)[number]
 type PartnerActivationFunnelDuration = (typeof funnelDurations)[number]
+type PartnerActivationFunnelTab = (typeof funnelDurationTabs)[number]
 
 type FunnelStage = {
   label: string
@@ -173,6 +175,32 @@ type FunnelStage = {
   description: string
   href: string
   colorClass: string
+}
+
+function getCustomFunnelDuration(
+  range: DateRange | undefined
+): PartnerActivationFunnelDuration {
+  if (!range?.from) return "7D"
+
+  const to = range.to ?? range.from
+  const fromDay = Date.UTC(
+    range.from.getFullYear(),
+    range.from.getMonth(),
+    range.from.getDate()
+  )
+  const toDay = Date.UTC(to.getFullYear(), to.getMonth(), to.getDate())
+  const daySpan = Math.max(
+    1,
+    Math.round(Math.abs(toDay - fromDay) / 86_400_000) + 1
+  )
+
+  return funnelDurations.reduce((closest, duration) => {
+    const closestDays = Number.parseInt(closest, 10)
+    const durationDays = Number.parseInt(duration, 10)
+    return Math.abs(durationDays - daySpan) < Math.abs(closestDays - daySpan)
+      ? duration
+      : closest
+  })
 }
 
 function getFunnelOperationsSummary(
@@ -317,13 +345,6 @@ function PartnerActivationFunnel({ stages }: { stages: FunnelStage[] }) {
                     <span className="font-semibold text-lg tabular-nums">
                       {numberFormat.format(stage.value)}
                     </span>
-                    <span
-                      className={`hidden text-xs sm:inline ${hasFunnelData ? "text-white/80" : "text-muted-foreground"}`}
-                    >
-                      {hasFunnelData
-                        ? `${formatPercent((stage.value / maxValue) * 100)} of top`
-                        : "No data"}
-                    </span>
                   </div>
                 </div>
               </div>
@@ -344,14 +365,20 @@ export function PartnerDashboard({
     useState<PartnerDashboardDurationFilter>("1D")
   const [customDateRange, setCustomDateRange] = useState<DateRange>()
   const [selectedFunnelDuration, setSelectedFunnelDuration] =
-    useState<PartnerActivationFunnelDuration>("7D")
+    useState<PartnerActivationFunnelTab>("7D")
+  const [funnelCustomDateRange, setFunnelCustomDateRange] =
+    useState<DateRange>()
   const effectiveDashboardDuration =
     selectedDuration === "Custom"
       ? getCustomDashboardDuration(customDateRange)
       : selectedDuration
   const operationsSummary =
     metrics.operationsByDuration[effectiveDashboardDuration]
-  const funnelStages = buildFunnelStages(metrics, selectedFunnelDuration)
+  const effectiveFunnelDuration: PartnerActivationFunnelDuration =
+    selectedFunnelDuration === "Custom"
+      ? getCustomFunnelDuration(funnelCustomDateRange)
+      : selectedFunnelDuration
+  const funnelStages = buildFunnelStages(metrics, effectiveFunnelDuration)
 
   return (
     <div className="space-y-6 px-4 py-4">
@@ -445,26 +472,34 @@ export function PartnerDashboard({
                 onboarding and profile completion.
               </p>
             </div>
-            <Tabs
-              value={selectedFunnelDuration}
-              onValueChange={(value) =>
-                setSelectedFunnelDuration(
-                  value as PartnerActivationFunnelDuration
-                )
-              }
-            >
-              <TabsList className="rounded-xl p-1">
-                {funnelDurations.map((duration) => (
-                  <TabsTrigger
-                    key={duration}
-                    value={duration}
-                    className="rounded-lg px-3"
-                  >
-                    {duration}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-            </Tabs>
+            <div className="flex flex-col gap-2 sm:items-end">
+              <Tabs
+                value={selectedFunnelDuration}
+                onValueChange={(value) =>
+                  setSelectedFunnelDuration(value as PartnerActivationFunnelTab)
+                }
+              >
+                <TabsList className="rounded-xl p-1">
+                  {funnelDurationTabs.map((duration) => (
+                    <TabsTrigger
+                      key={duration}
+                      value={duration}
+                      className="rounded-lg px-3"
+                    >
+                      {duration}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </Tabs>
+              {selectedFunnelDuration === "Custom" && (
+                <DateRangePicker
+                  value={funnelCustomDateRange}
+                  onChange={setFunnelCustomDateRange}
+                  placeholder="From date - to date"
+                  className="w-full sm:w-[20rem]"
+                />
+              )}
+            </div>
           </div>
 
           <PartnerActivationFunnel stages={funnelStages} />
