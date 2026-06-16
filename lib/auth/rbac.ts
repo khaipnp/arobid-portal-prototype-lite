@@ -1,5 +1,6 @@
 import { headers } from "next/headers"
 import { redirect } from "next/navigation"
+import { cache } from "react"
 import { getCurrentSessionUserId } from "@/lib/auth/session"
 import { sql } from "@/lib/db/neon"
 
@@ -13,7 +14,7 @@ export const APP_ROLES = [
 ] as const
 export type AppRole = (typeof APP_ROLES)[number]
 
-export async function getCurrentUserIdFromRequest(): Promise<string> {
+export const getCurrentUserIdFromRequest = cache(async (): Promise<string> => {
   const sessionUserId = await getCurrentSessionUserId()
   if (sessionUserId) return sessionUserId
 
@@ -23,9 +24,9 @@ export async function getCurrentUserIdFromRequest(): Promise<string> {
     return userId
   }
   throw new Error("Unauthorized")
-}
+})
 
-export async function userHasRole(
+export const userHasRole = cache(async function userHasRole(
   userId: string,
   role: AppRole,
   expoId?: string | null
@@ -60,7 +61,7 @@ export async function userHasRole(
         limit 1
       `) as { "?column?": number }[])
   return rows.length > 0
-}
+})
 
 export async function requireRole(role: AppRole): Promise<string> {
   let userId = ""
