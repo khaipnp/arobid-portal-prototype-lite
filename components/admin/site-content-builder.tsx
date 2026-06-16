@@ -71,6 +71,7 @@ type ContentField = {
   source: "Manual" | "Linked" | "Hybrid" | "Template"
   validation: string
   example: string
+  maxLength?: number
 }
 
 type ExternalManagement = {
@@ -105,6 +106,13 @@ type SiteConfig = {
 }
 
 type PreviewViewport = "desktop" | "mobile"
+
+type FieldGroup = {
+  id: string
+  label: string
+  description?: string
+  fields: ContentField[]
+}
 
 const configurableSites: SiteConfig[] = [
   {
@@ -145,6 +153,159 @@ const configurableSites: SiteConfig[] = [
             source: "Manual",
             validation: "Maximum 120 characters.",
             example: "Watch for men, industrial parts, solar systems..."
+          }
+        ]
+      },
+      {
+        id: "marketplace-seo",
+        name: "SEO Metadata by Route",
+        area: "Header",
+        description:
+          "Route-level title and meta description used for social link previews and search snippets across marketplace surfaces.",
+        required: false,
+        dataMode: "Manual",
+        previewLabel: "Homepage, TradeXpo, and BFM meta tags",
+        fields: [
+          {
+            id: "home-title-en",
+            label: "Homepage title (EN)",
+            type: "Text",
+            appearsIn: "https://arobid.com/en",
+            source: "Manual",
+            validation:
+              "Recommended 50 to 65 characters. Use the public page title only.",
+            example:
+              "Arobid.com | AI-Powered Trade & Investment Infrastructure",
+            maxLength: 65
+          },
+          {
+            id: "home-description-en",
+            label: "Homepage meta description (EN)",
+            type: "Text",
+            appearsIn: "https://arobid.com/en",
+            source: "Manual",
+            validation:
+              "Recommended 140 to 170 characters for snippet quality.",
+            example:
+              "Connect businesses, opportunities, and ecosystems through an AI-powered & Data-driven infrastructure designed for global trade and investment growth.",
+            maxLength: 170
+          },
+          {
+            id: "home-title-vi",
+            label: "Homepage title (VI)",
+            type: "Text",
+            appearsIn: "https://arobid.com/vi",
+            source: "Manual",
+            validation:
+              "Recommended 50 to 65 characters. Use the public page title only.",
+            example:
+              "Arobid.com | Hạ tầng Xúc tiến Thương mại & Đầu tư vận hành bởi AI",
+            maxLength: 65
+          },
+          {
+            id: "home-description-vi",
+            label: "Homepage meta description (VI)",
+            type: "Text",
+            appearsIn: "https://arobid.com/vi",
+            source: "Manual",
+            validation:
+              "Recommended 140 to 170 characters for snippet quality.",
+            example:
+              "Kết nối doanh nghiệp, cơ hội và hệ sinh thái thông qua hạ tầng vận hành bởi AI, kết nối bởi dữ liệu, thúc đẩy tăng trưởng thương mại và đầu tư toàn cầu.",
+            maxLength: 170
+          },
+          {
+            id: "tradexpo-title-en",
+            label: "TradeXpo title (EN)",
+            type: "Text",
+            appearsIn: "TradeXpo public landing page (EN)",
+            source: "Manual",
+            validation:
+              "Recommended 50 to 65 characters. Use the public page title only.",
+            example: "Arobid TradeXpo | Digital Trade Promotion Infrastructure",
+            maxLength: 65
+          },
+          {
+            id: "tradexpo-description-en",
+            label: "TradeXpo meta description (EN)",
+            type: "Text",
+            appearsIn: "TradeXpo public landing page (EN)",
+            source: "Manual",
+            validation:
+              "Recommended 140 to 170 characters for snippet quality.",
+            example:
+              "Scale trade promotion beyond physical events through AI-powered virtual expos and global business matching.",
+            maxLength: 170
+          },
+          {
+            id: "tradexpo-title-vi",
+            label: "TradeXpo title (VI)",
+            type: "Text",
+            appearsIn: "TradeXpo public landing page (VI)",
+            source: "Manual",
+            validation:
+              "Recommended 50 to 65 characters. Use the public page title only.",
+            example: "Arobid TradeXpo | Hạ tầng Xúc tiến Thương mại Số",
+            maxLength: 65
+          },
+          {
+            id: "tradexpo-description-vi",
+            label: "TradeXpo meta description (VI)",
+            type: "Text",
+            appearsIn: "TradeXpo public landing page (VI)",
+            source: "Manual",
+            validation:
+              "Recommended 140 to 170 characters for snippet quality.",
+            example:
+              "Mở rộng hoạt động xúc tiến thương mại vượt ra ngoài giới hạn triển lãm truyền thống bằng triển lãm số và kết nối doanh nghiệp, vận hành bởi AI.",
+            maxLength: 170
+          },
+          {
+            id: "bfm-title-en",
+            label: "Buyer Find & Match title (EN)",
+            type: "Text",
+            appearsIn: "https://arobid.com/en/buyer-find-and-match",
+            source: "Manual",
+            validation:
+              "Recommended 50 to 65 characters. Use the public page title only.",
+            example: "Buyer Find & Match | AI-Powered Global Buyer Discovery",
+            maxLength: 65
+          },
+          {
+            id: "bfm-description-en",
+            label: "Buyer Find & Match meta description (EN)",
+            type: "Text",
+            appearsIn: "https://arobid.com/en/buyer-find-and-match",
+            source: "Manual",
+            validation:
+              "Recommended 140 to 170 characters for snippet quality.",
+            example:
+              "Move beyond directories. Let AI identify, prioritize, and connect you with potential buyers worldwide.",
+            maxLength: 170
+          },
+          {
+            id: "bfm-title-vi",
+            label: "Buyer Find & Match title (VI)",
+            type: "Text",
+            appearsIn: "https://arobid.com/vi/buyer-find-and-match",
+            source: "Manual",
+            validation:
+              "Recommended 50 to 65 characters. Use the public page title only.",
+            example:
+              "Buyer Find & Match | Hạ tầng Tìm kiếm & Kết nối Người mua Toàn cầu",
+            maxLength: 65
+          },
+          {
+            id: "bfm-description-vi",
+            label: "Buyer Find & Match meta description (VI)",
+            type: "Text",
+            appearsIn: "https://arobid.com/vi/buyer-find-and-match",
+            source: "Manual",
+            validation:
+              "Recommended 140 to 170 characters for snippet quality.",
+            example:
+              "Vượt xa danh bạ doanh nghiệp thông thường. Để AI xác định, sàng lọc và kết nối với các người mua tiềm năng trên toàn cầu.",
+            maxLength: 170
           }
         ]
       },
@@ -559,6 +720,65 @@ const configurableSites: SiteConfig[] = [
         ]
       },
       {
+        id: "tbsg-seo",
+        name: "SEO Metadata by Locale",
+        area: "Header",
+        description:
+          "Locale-level title and meta description for the public TBSG landing pages.",
+        required: false,
+        dataMode: "Manual",
+        previewLabel: "EN and VI meta tags",
+        fields: [
+          {
+            id: "title-en",
+            label: "Landing page title (EN)",
+            type: "Text",
+            appearsIn: "https://arobid.com/partner/en/hdn-taybacsaigon",
+            source: "Manual",
+            validation:
+              "Recommended 50 to 65 characters. Use the public page title only.",
+            example: "TBSG Business Hub - AI & Data-Powered Business Ecosystem",
+            maxLength: 65
+          },
+          {
+            id: "description-en",
+            label: "Landing page meta description (EN)",
+            type: "Text",
+            appearsIn: "https://arobid.com/partner/en/hdn-taybacsaigon",
+            source: "Manual",
+            validation:
+              "Recommended 140 to 170 characters for snippet quality.",
+            example:
+              "Connect, promote and grow with trusted business partners. Access B2B opportunities, Buyer Find & Match and digital trade events through the TBSG ecosystem.",
+            maxLength: 170
+          },
+          {
+            id: "title-vi",
+            label: "Landing page title (VI)",
+            type: "Text",
+            appearsIn: "https://arobid.com/partner/vi/hdn-taybacsaigon",
+            source: "Manual",
+            validation:
+              "Recommended 50 to 65 characters. Use the public page title only.",
+            example:
+              "TBSG Business Hub - Hệ Sinh Thái Doanh Nghiệp Vận Hành Bởi AI & Dữ Liệu",
+            maxLength: 65
+          },
+          {
+            id: "description-vi",
+            label: "Landing page meta description (VI)",
+            type: "Text",
+            appearsIn: "https://arobid.com/partner/vi/hdn-taybacsaigon",
+            source: "Manual",
+            validation:
+              "Recommended 140 to 170 characters for snippet quality.",
+            example:
+              "Kết nối, quảng bá và phát triển cùng cộng đồng đối tác doanh nghiệp uy tín. Tiếp cận cơ hội giao thương B2B, Buyer Find & Match và sự kiện thương mại số.",
+            maxLength: 170
+          }
+        ]
+      },
+      {
         id: "tbsg-hero",
         name: "Hero Banner",
         area: "Above fold",
@@ -577,7 +797,7 @@ const configurableSites: SiteConfig[] = [
             appearsIn: "Hero visual area",
             source: "Manual",
             validation:
-              "Image required for MVP. Video optional when video player is enabled.",
+              "Use a landscape hero image or video with centered focal point. Recommended 1920 x 1080 or higher. Keep key content away from the edges for mobile crop.",
             example:
               "https://pub-f9f549362b7a4bc2ad361c7ca1858854.r2.dev/image/tenant-landing/hero-city.png"
           },
@@ -587,8 +807,10 @@ const configurableSites: SiteConfig[] = [
             type: "Text",
             appearsIn: "Main hero headline",
             source: "Manual",
-            validation: "Required. Maximum 100 characters.",
-            example: "TBSG Digital Trade Gateway"
+            validation:
+              "Required. Maximum 36 characters to keep the hero headline readable across desktop and mobile.",
+            example: "TBSG Business HUB",
+            maxLength: 36
           },
           {
             id: "hero-copy",
@@ -596,9 +818,10 @@ const configurableSites: SiteConfig[] = [
             type: "Text",
             appearsIn: "Hero supporting copy",
             source: "Manual",
-            validation: "Maximum 240 characters.",
+            validation: "Maximum 110 characters. Keep to one concise sentence.",
             example:
-              "Connect members, suppliers, buyers, and trade opportunities through Arobid."
+              "Accelerate global growth with AI-powered trade connections and market access",
+            maxLength: 110
           },
           {
             id: "search-placeholder",
@@ -606,8 +829,9 @@ const configurableSites: SiteConfig[] = [
             type: "Text",
             appearsIn: "Tenant search bar",
             source: "Manual",
-            validation: "Maximum 120 characters.",
-            example: "Search suppliers, products, expos..."
+            validation: "Maximum 28 characters.",
+            example: "Search Keyword",
+            maxLength: 28
           }
         ]
       },
@@ -699,9 +923,10 @@ const configurableSites: SiteConfig[] = [
             type: "Text",
             appearsIn: "BFM supporting copy",
             source: "Manual",
-            validation: "Maximum 220 characters.",
+            validation: "Maximum 135 characters. Keep to one sentence.",
             example:
-              "Instantly connecting standardized supplier data with verified buyer intent for absolute precision in global sourcing."
+              "Instantly connecting standardized supplier data with verified buyer intent for absolute precision in global sourcing.",
+            maxLength: 135
           },
           {
             id: "cta-label",
@@ -709,8 +934,9 @@ const configurableSites: SiteConfig[] = [
             type: "CTA",
             appearsIn: "BFM action button",
             source: "Manual",
-            validation: "Maximum 40 characters.",
-            example: "Get Matches Now"
+            validation: "Maximum 24 characters.",
+            example: "Get Matches Now",
+            maxLength: 24
           },
           {
             id: "media",
@@ -718,7 +944,8 @@ const configurableSites: SiteConfig[] = [
             type: "Image",
             appearsIn: "BFM media panel",
             source: "Manual",
-            validation: "Image or video URL. Recommended size 600 x 340.",
+            validation:
+              "Image or video URL. Recommended 1200 x 680 or higher. Landscape media only with centered focal area.",
             example:
               "https://pub-f9f549362b7a4bc2ad361c7ca1858854.r2.dev/image/tenant-landing/buyer-match-ui.png"
           }
@@ -740,7 +967,8 @@ const configurableSites: SiteConfig[] = [
             type: "Image",
             appearsIn: "Desktop Vietnamese banner slot",
             source: "Manual",
-            validation: "Recommended size 1440 x 360.",
+            validation:
+              "Recommended 2568 x 680 or 1284 x 340. Keep key text and logos inside the center-safe area.",
             example:
               "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=1440&q=80"
           },
@@ -750,7 +978,8 @@ const configurableSites: SiteConfig[] = [
             type: "Image",
             appearsIn: "Desktop English banner slot",
             source: "Manual",
-            validation: "Recommended size 1440 x 360.",
+            validation:
+              "Recommended 2568 x 680 or 1284 x 340. Keep key text and logos inside the center-safe area.",
             example:
               "https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1440&q=80"
           },
@@ -760,7 +989,8 @@ const configurableSites: SiteConfig[] = [
             type: "Image",
             appearsIn: "Mobile Vietnamese banner slot",
             source: "Manual",
-            validation: "Recommended size 768 x 420.",
+            validation:
+              "Recommended 600 x 1200 or 300 x 600. Use a vertical composition and keep text centered.",
             example:
               "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=768&q=80"
           },
@@ -770,7 +1000,8 @@ const configurableSites: SiteConfig[] = [
             type: "Image",
             appearsIn: "Mobile English banner slot",
             source: "Manual",
-            validation: "Recommended size 768 x 420.",
+            validation:
+              "Recommended 600 x 1200 or 300 x 600. Use a vertical composition and keep text centered.",
             example:
               "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=768&q=80"
           }
@@ -880,7 +1111,8 @@ const configurableSites: SiteConfig[] = [
             type: "Image",
             appearsIn: "Primary deal card",
             source: "Manual",
-            validation: "Recommended promotional image.",
+            validation:
+              "Recommended 900 x 900 or higher. Square image only for the main deal card.",
             example:
               "https://images.unsplash.com/photo-1556740749-887f6717d7e4?auto=format&fit=crop&w=900&q=80"
           },
@@ -890,7 +1122,8 @@ const configurableSites: SiteConfig[] = [
             type: "Image",
             appearsIn: "Secondary deal card 1",
             source: "Manual",
-            validation: "Recommended promotional image.",
+            validation:
+              "Recommended 820 x 412 or higher. Wide image only for secondary deal cards.",
             example:
               "https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=900&q=80"
           },
@@ -900,7 +1133,8 @@ const configurableSites: SiteConfig[] = [
             type: "Image",
             appearsIn: "Secondary deal card 2",
             source: "Manual",
-            validation: "Recommended promotional image.",
+            validation:
+              "Recommended 820 x 412 or higher. Wide image only for secondary deal cards.",
             example:
               "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=900&q=80"
           },
@@ -910,7 +1144,8 @@ const configurableSites: SiteConfig[] = [
             type: "Image",
             appearsIn: "Secondary deal card 3",
             source: "Manual",
-            validation: "Recommended promotional image.",
+            validation:
+              "Recommended 820 x 412 or higher. Wide image only for secondary deal cards.",
             example:
               "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=900&q=80"
           },
@@ -920,7 +1155,8 @@ const configurableSites: SiteConfig[] = [
             type: "Image",
             appearsIn: "Secondary deal card 4",
             source: "Manual",
-            validation: "Recommended promotional image.",
+            validation:
+              "Recommended 820 x 412 or higher. Wide image only for secondary deal cards.",
             example:
               "https://images.unsplash.com/photo-1522202222206-b7505069a3f0?auto=format&fit=crop&w=900&q=80"
           }
@@ -944,8 +1180,9 @@ const configurableSites: SiteConfig[] = [
             type: "Text",
             appearsIn: "Expo banner heading",
             source: "Manual",
-            validation: "Maximum 110 characters.",
-            example: "Discover Upcoming Trade Events"
+            validation: "Maximum 56 characters.",
+            example: "Discover Upcoming Trade Events",
+            maxLength: 56
           },
           {
             id: "expo-description",
@@ -953,9 +1190,11 @@ const configurableSites: SiteConfig[] = [
             type: "Text",
             appearsIn: "Expo banner description",
             source: "Manual",
-            validation: "Maximum 240 characters.",
+            validation:
+              "Maximum 130 characters. Keep to one or two short lines.",
             example:
-              "Explore trade expos, connect with global businesses, and discover new opportunities on TradeXpo."
+              "Explore trade expos, connect with global businesses, and discover new opportunities on TradeXpo.",
+            maxLength: 130
           },
           {
             id: "expo-cta",
@@ -963,8 +1202,9 @@ const configurableSites: SiteConfig[] = [
             type: "CTA",
             appearsIn: "Expo banner CTA button",
             source: "Manual",
-            validation: "Maximum 40 characters.",
-            example: "Explore TradeXpo"
+            validation: "Maximum 24 characters.",
+            example: "Explore TradeXpo",
+            maxLength: 24
           },
           {
             id: "expo-media",
@@ -972,7 +1212,8 @@ const configurableSites: SiteConfig[] = [
             type: "Video",
             appearsIn: "Expo banner visual area",
             source: "Manual",
-            validation: "Image or video URL.",
+            validation:
+              "Image or video URL. Recommended 1154 x 608 or higher with centered focal area.",
             example:
               "https://pub-f9f549362b7a4bc2ad361c7ca1858854.r2.dev/image/tenant-landing/expo-banner-bg.png"
           }
@@ -994,7 +1235,8 @@ const configurableSites: SiteConfig[] = [
             type: "Image",
             appearsIn: "Desktop Vietnamese banner slot",
             source: "Manual",
-            validation: "Recommended size 1440 x 360.",
+            validation:
+              "Recommended 2568 x 680 or 1284 x 340. Keep key text and logos inside the center-safe area.",
             example:
               "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1440&q=80"
           },
@@ -1004,7 +1246,8 @@ const configurableSites: SiteConfig[] = [
             type: "Image",
             appearsIn: "Desktop English banner slot",
             source: "Manual",
-            validation: "Recommended size 1440 x 360.",
+            validation:
+              "Recommended 2568 x 680 or 1284 x 340. Keep key text and logos inside the center-safe area.",
             example:
               "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1440&q=80"
           },
@@ -1014,7 +1257,8 @@ const configurableSites: SiteConfig[] = [
             type: "Image",
             appearsIn: "Mobile Vietnamese banner slot",
             source: "Manual",
-            validation: "Recommended size 768 x 420.",
+            validation:
+              "Recommended 600 x 1200 or 300 x 600. Use a vertical composition and keep text centered.",
             example:
               "https://images.unsplash.com/photo-1516321497487-e288fb19713f?auto=format&fit=crop&w=768&q=80"
           },
@@ -1024,7 +1268,8 @@ const configurableSites: SiteConfig[] = [
             type: "Image",
             appearsIn: "Mobile English banner slot",
             source: "Manual",
-            validation: "Recommended size 768 x 420.",
+            validation:
+              "Recommended 600 x 1200 or 300 x 600. Use a vertical composition and keep text centered.",
             example:
               "https://images.unsplash.com/photo-1497366412874-3415097a27e7?auto=format&fit=crop&w=768&q=80"
           }
@@ -1048,8 +1293,9 @@ const configurableSites: SiteConfig[] = [
             type: "Text",
             appearsIn: "Why Join section",
             source: "Manual",
-            validation: "Maximum 110 characters.",
-            example: "Why join TBSG?"
+            validation: "Maximum 40 characters.",
+            example: "Why join TBSG?",
+            maxLength: 40
           },
           {
             id: "description",
@@ -1057,9 +1303,11 @@ const configurableSites: SiteConfig[] = [
             type: "Text",
             appearsIn: "Why Join supporting copy",
             source: "Manual",
-            validation: "Maximum 320 characters.",
+            validation:
+              "Maximum 150 characters total. Use up to 3 short lines for cleaner spacing.",
             example:
-              "Connecting business partners.\nSupporting business transformation.\nExpanding global trade channels."
+              "Connecting business partners.\nSupporting business transformation.\nExpanding global trade channels.",
+            maxLength: 150
           },
           {
             id: "cta-label",
@@ -1067,8 +1315,9 @@ const configurableSites: SiteConfig[] = [
             type: "CTA",
             appearsIn: "Why Join button",
             source: "Manual",
-            validation: "Maximum 40 characters.",
-            example: "Join TBSG now"
+            validation: "Maximum 24 characters.",
+            example: "Join TBSG now",
+            maxLength: 24
           },
           {
             id: "media",
@@ -1076,7 +1325,8 @@ const configurableSites: SiteConfig[] = [
             type: "Video",
             appearsIn: "Video card area",
             source: "Manual",
-            validation: "Image or video URL.",
+            validation:
+              "Image or video URL. Recommended 1280 x 720 or higher. Use landscape media with a centered focal area.",
             example:
               "https://pub-f9f549362b7a4bc2ad361c7ca1858854.r2.dev/image/tenant-landing/why-join-video.png"
           },
@@ -1086,7 +1336,7 @@ const configurableSites: SiteConfig[] = [
             type: "Text",
             appearsIn: "News list",
             source: "Manual",
-            validation: "One URL per line.",
+            validation: "Up to 5 URLs. One URL per line.",
             example:
               "https://arobid.com/en/news/tbsg-business-network\nhttps://arobid.com/en/news/tradexpo-opportunities\nhttps://arobid.com/en/news/member-growth-program"
           }
@@ -1170,8 +1420,9 @@ const configurableSites: SiteConfig[] = [
             type: "Text",
             appearsIn: "Final CTA heading",
             source: "Manual",
-            validation: "Maximum 120 characters.",
-            example: "Ready to grow your business globally?"
+            validation: "Maximum 60 characters.",
+            example: "Ready to grow your business globally?",
+            maxLength: 60
           },
           {
             id: "description",
@@ -1179,9 +1430,11 @@ const configurableSites: SiteConfig[] = [
             type: "Text",
             appearsIn: "Final CTA supporting copy",
             source: "Manual",
-            validation: "Maximum 240 characters.",
+            validation:
+              "Maximum 140 characters. Keep to one or two short lines.",
             example:
-              "Connect with thousands of businesses in the TBSG community to scale your reach and shape your future."
+              "Connect with thousands of businesses in the TBSG community to scale your reach and shape your future.",
+            maxLength: 140
           },
           {
             id: "cta-label",
@@ -1189,8 +1442,9 @@ const configurableSites: SiteConfig[] = [
             type: "CTA",
             appearsIn: "Final CTA button",
             source: "Manual",
-            validation: "Maximum 40 characters.",
-            example: "Join TBSG now"
+            validation: "Maximum 24 characters.",
+            example: "Join TBSG now",
+            maxLength: 24
           },
           {
             id: "background-media",
@@ -1198,7 +1452,8 @@ const configurableSites: SiteConfig[] = [
             type: "Image",
             appearsIn: "Final CTA banner background",
             source: "Manual",
-            validation: "Banner image or video URL.",
+            validation:
+              "Banner image or video URL. Recommended 1920 x 880 or higher. Keep the main subject away from the centered text zone.",
             example:
               "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1440&q=80"
           }
@@ -1277,11 +1532,14 @@ export function SiteContentBuilder() {
     configurableSites.find((site) => site.id === selectedSiteId) ??
     configurableSites[0]
   const visibleSections = getBuilderVisibleSections(selectedSite)
+  const metadataSections = getBuilderMetadataSections(selectedSite)
+  const editableSections = [...metadataSections, ...visibleSections]
   const selectedSection =
-    visibleSections.find((section) => section.id === selectedSectionId) ??
+    editableSections.find((section) => section.id === selectedSectionId) ??
     visibleSections[0] ??
+    metadataSections[0] ??
     selectedSite.sections[0]
-  const stats = getSiteStats(selectedSite, visibleSections)
+  const stats = getSiteStats(selectedSite, editableSections)
   const selectedSectionStatus = getSectionStatus(
     selectedSite.id,
     selectedSection.id,
@@ -1293,8 +1551,11 @@ export function SiteContentBuilder() {
     const site = configurableSites.find((item) => item.id === siteId)
     if (!site) return
     const nextVisibleSections = getBuilderVisibleSections(site)
+    const nextMetadataSections = getBuilderMetadataSections(site)
     setSelectedSiteId(site.id)
-    setSelectedSectionId((nextVisibleSections[0] ?? site.sections[0]).id)
+    setSelectedSectionId(
+      (nextVisibleSections[0] ?? nextMetadataSections[0] ?? site.sections[0]).id
+    )
   }
 
   function setDraftValue(
@@ -1397,9 +1658,53 @@ export function SiteContentBuilder() {
               ))}
             </div>
 
+            {metadataSections.length > 0 ? (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label>Metadata setup</Label>
+                  <span className="text-muted-foreground text-xs">
+                    {metadataSections.length} group
+                    {metadataSections.length === 1 ? "" : "s"}
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {metadataSections.map((section) => (
+                    <button
+                      type="button"
+                      key={section.id}
+                      className={cn(
+                        "flex w-full gap-3 rounded-lg border p-3 text-left transition-colors hover:bg-muted/60",
+                        selectedSection.id === section.id &&
+                          "border-primary bg-primary/5"
+                      )}
+                      onClick={() => setSelectedSectionId(section.id)}
+                    >
+                      <span
+                        className={cn(
+                          "grid size-7 shrink-0 place-items-center rounded-full bg-muted font-medium text-xs",
+                          selectedSection.id === section.id &&
+                            "bg-primary text-primary-foreground"
+                        )}
+                      >
+                        <FileTextIcon className="size-3.5" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-medium text-sm">
+                          {section.name}
+                        </span>
+                        <span className="mt-1 block text-muted-foreground text-xs">
+                          {section.fields.length} fields
+                        </span>
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>Homepage section tree</Label>
+                <Label>Content sections</Label>
                 <span className="text-muted-foreground text-xs">
                   {visibleSections.length} sections
                 </span>
@@ -1457,27 +1762,19 @@ export function SiteContentBuilder() {
               <ExternalManagementNotice section={selectedSection} />
             ) : (
               <>
-                <div className="space-y-4">
-                  {selectedSection.fields.map((field) => (
-                    <FieldEditor
-                      field={field}
-                      key={field.id}
-                      value={getDraftValue(
-                        selectedSite.id,
-                        selectedSection.id,
-                        field
-                      )}
-                      onChange={(value) =>
-                        setDraftValue(
-                          selectedSite.id,
-                          selectedSection.id,
-                          field,
-                          value
-                        )
-                      }
-                    />
-                  ))}
-                </div>
+                <FieldGroupEditor
+                  getDraftValue={getDraftValue}
+                  onChange={(field, value) =>
+                    setDraftValue(
+                      selectedSite.id,
+                      selectedSection.id,
+                      field,
+                      value
+                    )
+                  }
+                  section={selectedSection}
+                  siteId={selectedSite.id}
+                />
 
                 <div className="border-t pt-5">
                   <SectionActionButtons
@@ -1526,8 +1823,10 @@ function SitePreviewDialog({
   viewport: PreviewViewport
 }) {
   const selectedSection =
-    site.sections.find((section) => section.id === selectedSectionId) ??
-    site.sections[0]
+    [
+      ...getBuilderMetadataSections(site),
+      ...getBuilderVisibleSections(site)
+    ].find((section) => section.id === selectedSectionId) ?? site.sections[0]
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -1583,20 +1882,11 @@ function SitePreviewDialog({
               {selectedSection.externalManagement ? (
                 <ExternalManagementNotice section={selectedSection} />
               ) : (
-                <div className="grid gap-3">
-                  {selectedSection.fields.map((field) => (
-                    <PreviewFieldValueCard
-                      field={field}
-                      key={field.id}
-                      value={getFieldPreviewValue(
-                        site.id,
-                        selectedSection.id,
-                        field,
-                        draftValues
-                      )}
-                    />
-                  ))}
-                </div>
+                <FieldGroupPreview
+                  draftValues={draftValues}
+                  section={selectedSection}
+                  siteId={site.id}
+                />
               )}
             </div>
           </aside>
@@ -1828,6 +2118,7 @@ function FieldEditor({
   value: string
 }) {
   const fieldId = `field-${field.id}`
+  const currentLength = value.length
 
   return (
     <div className="space-y-2 rounded-lg border p-3">
@@ -1838,6 +2129,11 @@ function FieldEditor({
             {field.label}
           </Label>
         </div>
+        {typeof field.maxLength === "number" ? (
+          <div className="shrink-0 text-muted-foreground text-xs">
+            {currentLength} / {field.maxLength}
+          </div>
+        ) : null}
       </div>
 
       <div className="rounded-md bg-muted/70 px-3 py-2">
@@ -1852,6 +2148,98 @@ function FieldEditor({
       {renderFieldInput(field, fieldId, value, onChange)}
 
       <p className="text-muted-foreground text-xs">{field.validation}</p>
+    </div>
+  )
+}
+
+function FieldGroupEditor({
+  getDraftValue,
+  onChange,
+  section,
+  siteId
+}: {
+  getDraftValue: (
+    siteId: string,
+    sectionId: string,
+    field: ContentField
+  ) => string
+  onChange: (field: ContentField, value: string) => void
+  section: SiteSection
+  siteId: string
+}) {
+  const groups = getFieldGroups(section)
+
+  return (
+    <div className="space-y-4">
+      {groups.map((group) => (
+        <div className="space-y-3" key={group.id}>
+          {groups.length > 1 ? (
+            <div className="rounded-lg border bg-muted/30 px-4 py-3">
+              <div className="font-medium text-sm">{group.label}</div>
+              {group.description ? (
+                <div className="mt-1 text-muted-foreground text-xs">
+                  {group.description}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+          <div className="space-y-4">
+            {group.fields.map((field) => (
+              <FieldEditor
+                field={field}
+                key={field.id}
+                value={getDraftValue(siteId, section.id, field)}
+                onChange={(value) => onChange(field, value)}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function FieldGroupPreview({
+  draftValues,
+  section,
+  siteId
+}: {
+  draftValues: Record<string, string>
+  section: SiteSection
+  siteId: string
+}) {
+  const groups = getFieldGroups(section)
+
+  return (
+    <div className="space-y-4">
+      {groups.map((group) => (
+        <div className="space-y-3" key={group.id}>
+          {groups.length > 1 ? (
+            <div className="rounded-lg border bg-muted/30 px-4 py-3">
+              <div className="font-medium text-sm">{group.label}</div>
+              {group.description ? (
+                <div className="mt-1 text-muted-foreground text-xs">
+                  {group.description}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+          <div className="grid gap-3">
+            {group.fields.map((field) => (
+              <PreviewFieldValueCard
+                field={field}
+                key={field.id}
+                value={getFieldPreviewValue(
+                  siteId,
+                  section.id,
+                  field,
+                  draftValues
+                )}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
     </div>
   )
 }
@@ -1907,6 +2295,7 @@ function renderFieldInput(
           onChange={(event) => onChange(event.target.value)}
         />
         <Input
+          maxLength={field.maxLength}
           value={value}
           onChange={(event) => onChange(event.target.value)}
         />
@@ -1919,6 +2308,7 @@ function renderFieldInput(
       <div className="flex gap-2">
         <Input
           id={fieldId}
+          placeholder={field.example}
           value={value}
           onChange={(event) => onChange(event.target.value)}
         />
@@ -1938,6 +2328,7 @@ function renderFieldInput(
     return (
       <Textarea
         id={fieldId}
+        maxLength={field.maxLength}
         value={value}
         onChange={(event) => onChange(event.target.value)}
       />
@@ -1947,6 +2338,7 @@ function renderFieldInput(
   return (
     <Input
       id={fieldId}
+      maxLength={field.maxLength}
       value={value}
       onChange={(event) => onChange(event.target.value)}
     />
@@ -1996,9 +2388,68 @@ function getBuilderVisibleSections(site: SiteConfig) {
 
   return site.sections.filter(
     (section) =>
+      !section.id.endsWith("-seo") &&
       section.area !== "Footer" &&
       (section.fields.length > 0 || Boolean(section.externalManagement?.href))
   )
+}
+
+function getBuilderMetadataSections(site: SiteConfig) {
+  return site.sections.filter((section) => section.id.endsWith("-seo"))
+}
+
+function getFieldGroups(section: SiteSection): FieldGroup[] {
+  if (section.id === "marketplace-seo") {
+    return [
+      {
+        id: "marketplace-homepage",
+        label: "Marketplace",
+        description: "Homepage metadata for /en and /vi.",
+        fields: section.fields.filter((field) => field.id.startsWith("home-"))
+      },
+      {
+        id: "marketplace-tradexpo",
+        label: "TradeXpo",
+        description: "Public TradeXpo landing page metadata by locale.",
+        fields: section.fields.filter((field) =>
+          field.id.startsWith("tradexpo-")
+        )
+      },
+      {
+        id: "marketplace-bfm",
+        label: "Buyer Find & Match",
+        description: "BFM landing page metadata for EN and VI.",
+        fields: section.fields.filter((field) => field.id.startsWith("bfm-"))
+      }
+    ].filter((group) => group.fields.length > 0)
+  }
+
+  if (section.id === "tbsg-seo") {
+    return [
+      {
+        id: "tbsg-en",
+        label: "TBSG EN",
+        description:
+          "Metadata for https://arobid.com/partner/en/hdn-taybacsaigon",
+        fields: section.fields.filter((field) => field.id.endsWith("-en"))
+      },
+      {
+        id: "tbsg-vi",
+        label: "TBSG VI",
+        description:
+          "Metadata for https://arobid.com/partner/vi/hdn-taybacsaigon",
+        fields: section.fields.filter((field) => field.id.endsWith("-vi"))
+      }
+    ].filter((group) => group.fields.length > 0)
+  }
+
+  return [
+    {
+      id: section.id,
+      label: section.name,
+      fields: section.fields
+    }
+  ]
 }
 
 function createMarketplacePreviewConfig(
