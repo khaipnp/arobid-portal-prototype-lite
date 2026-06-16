@@ -1,3 +1,4 @@
+import { cache } from "react"
 import { userHasRole } from "@/lib/auth/rbac"
 import {
   getPartnerModuleVisibility,
@@ -172,20 +173,22 @@ export function emptyPartnerAccess(): PartnerAccess {
   }
 }
 
-export async function getPartnerAccess(userId: string): Promise<PartnerAccess> {
-  const hasPartnerRole = await userHasRole(userId, "partner")
-  if (!hasPartnerRole) return emptyPartnerAccess()
+export const getPartnerAccess = cache(
+  async (userId: string): Promise<PartnerAccess> => {
+    const hasPartnerRole = await userHasRole(userId, "partner")
+    if (!hasPartnerRole) return emptyPartnerAccess()
 
-  const organization = await getPrimaryPartnerOrganization(userId)
-  if (!organization) return emptyPartnerAccess()
+    const organization = await getPrimaryPartnerOrganization(userId)
+    if (!organization) return emptyPartnerAccess()
 
-  const [capabilities, scopes] = await Promise.all([
-    getPartnerCapabilities(organization.id),
-    getPartnerScopes(organization.id)
-  ])
+    const [capabilities, scopes] = await Promise.all([
+      getPartnerCapabilities(organization.id),
+      getPartnerScopes(organization.id)
+    ])
 
-  return buildPartnerAccess({ organization, capabilities, scopes })
-}
+    return buildPartnerAccess({ organization, capabilities, scopes })
+  }
+)
 
 export async function requirePartnerModule(
   userId: string,
