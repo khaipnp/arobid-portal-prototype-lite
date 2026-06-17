@@ -53,18 +53,25 @@ type Props = {
     image: string
     label: string
   } | null
+  currentUserId?: string
   onClose: () => void
 }
 
-export function FloatingChat({ exhibitor, selectedProduct, onClose }: Props) {
+export function FloatingChat({
+  exhibitor,
+  selectedProduct,
+  currentUserId,
+  onClose
+}: Props) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   const [activeExhibitor, setActiveExhibitor] = useState<ChatPartner>({
-    id: exhibitor.id,
+    id: exhibitor.ownerUserId ?? exhibitor.id,
     name: exhibitor.name,
     company: exhibitor.company,
     avatarUrl: exhibitor.avatarUrl
   })
+  const [conversationId, setConversationId] = useState<string | null>(null)
   const [conversations, setConversations] = useState<ConversationData[]>([])
   const [searchQuery, setSearchQuery] = useState("")
   const [_isLoading, setIsLoading] = useState(true)
@@ -86,35 +93,37 @@ export function FloatingChat({ exhibitor, selectedProduct, onClose }: Props) {
 
   useEffect(() => {
     setActiveExhibitor({
-      id: exhibitor.id,
+      id: exhibitor.ownerUserId ?? exhibitor.id,
       name: exhibitor.name,
       company: exhibitor.company,
       avatarUrl: exhibitor.avatarUrl
     })
+    setConversationId(null)
   }, [exhibitor])
 
   useEffect(() => {
     if (!selectedProduct) return
+    const partnerId = exhibitor.ownerUserId ?? exhibitor.id
     setMessagesMap((prev) => {
-      const existing = prev[exhibitor.id] || []
-      const productSeedId = `product-seed-${exhibitor.id}-${selectedProduct.image}`
+      const existing = prev[partnerId] || []
+      const productSeedId = `product-seed-${partnerId}-${selectedProduct.image}`
       if (existing.some((msg) => msg.id === productSeedId)) {
         return prev
       }
       return {
         ...prev,
-        [exhibitor.id]: [
+        [partnerId]: [
           ...existing,
           {
             id: productSeedId,
-            senderId: exhibitor.id,
+            senderId: partnerId,
             text: `You are asking about: ${selectedProduct.label}`,
             timestamp: new Date()
           }
         ]
       }
     })
-  }, [exhibitor.id, selectedProduct])
+  }, [exhibitor.id, exhibitor.ownerUserId, selectedProduct])
 
   useEffect(() => {
     async function fetchConversations() {
@@ -124,17 +133,17 @@ export function FloatingChat({ exhibitor, selectedProduct, onClose }: Props) {
         if (payload.data) {
           setConversations(payload.data)
 
-          // If the current exhibitor isn't in the list, add a virtual entry
+          const partnerId = exhibitor.ownerUserId ?? exhibitor.id
           const exists = payload.data.some(
-            (c: ConversationData) => c.partner?.id === exhibitor.id
+            (c: ConversationData) => c.partner?.id === partnerId
           )
           if (!exists) {
             setMessagesMap((prev) => ({
               ...prev,
-              [exhibitor.id]: [
+              [partnerId]: [
                 {
                   id: "welcome-1",
-                  senderId: exhibitor.id,
+                  senderId: partnerId,
                   text: `Hello! Welcome to ${exhibitor.company}. How can we help you today?`,
                   timestamp: new Date()
                 }
@@ -198,20 +207,21 @@ export function FloatingChat({ exhibitor, selectedProduct, onClose }: Props) {
     }
   }, [])
 
+  const exhibitorPartnerId = exhibitor.ownerUserId ?? exhibitor.id
   const filteredConversations = [
     // Include current virtual conversation if not in list
-    ...(!conversations.some((c) => c.partner?.id === exhibitor.id)
+    ...(!conversations.some((c) => c.partner?.id === exhibitorPartnerId)
       ? [
           {
-            id: exhibitor.id,
+            id: exhibitorPartnerId,
             partner: {
-              id: exhibitor.id,
+              id: exhibitorPartnerId,
               name: exhibitor.name,
               company: exhibitor.company,
               avatarUrl: exhibitor.avatarUrl
             },
             lastMessage:
-              messagesMap[exhibitor.id]?.[0]?.text || "New conversation",
+              messagesMap[exhibitorPartnerId]?.[0]?.text || "New conversation",
             unreadCount: 0,
             lastActive: new Date().toISOString()
           }
@@ -224,40 +234,52 @@ export function FloatingChat({ exhibitor, selectedProduct, onClose }: Props) {
       c.partner?.name?.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!newMessage.trim()) return
+    const text = newMessage
+    setNewMessage("")
 
-    const userMsg: Message = {
-      id: Date.now().toString(),
-      senderId: "user-khai",
-      text: newMessage,
-      timestamp: new Date()
-    }
+    const senderId = currentUserId ?? "user-khai"
+    const tempId = `temp-${Date.now()}`
 
     setMessagesMap((prev) => ({
       ...prev,
-      [activeExhibitor.id]: [...(prev[activeExhibitor.id] || []), userMsg]
+      [activeExhibitor.id]: [
+        ...(prev[activeExhibitor.id] || []),
+        { id: tempId, senderId, text, timestamp: new Date() }
+      ]
     }))
-    setNewMessage("")
 
-    // Simulate response
-    setTimeout(() => {
-      setMessagesMap((prev) => {
-        const currentMsgs = prev[activeExhibitor.id] || []
-        return {
-          ...prev,
-          [activeExhibitor.id]: [
-            ...currentMsgs,
-            {
-              id: (Date.now() + 1).toString(),
-              senderId: activeExhibitor.id,
-              text: "Our team will review your message and get back to you shortly.",
-              timestamp: new Date()
-            }
-          ]
+    if (!currentUserId || !exhibitor.ownerUserId) return
+
+    try {
+      let convId = conversationId
+      if (!convId) {
+        const existingConv = conversations.find(
+          (c) => c.partner?.id === exhibitor.ownerUserId
+        )
+        if (existingConv) {
+          convId = existingConv.id
+        } else {
+          const res = await fetch("/api/deal-room/conversations", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ otherUserId: exhibitor.ownerUserId })
+          })
+          const data = await res.json()
+          convId = data.conversationId
         }
+        setConversationId(convId)
+      }
+
+      await fetch(`/api/deal-room/conversations/${convId}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: text, senderId })
       })
-    }, 1500)
+    } catch {
+      // message already shown optimistically; silently fail for prototype
+    }
   }
 
   return (
@@ -385,7 +407,7 @@ export function FloatingChat({ exhibitor, selectedProduct, onClose }: Props) {
           <ScrollArea className="flex-1 bg-white p-4">
             <div className="flex flex-col gap-4">
               {activeMessages.map((msg) => {
-                const isOwn = msg.senderId === "user-khai"
+                const isOwn = msg.senderId === (currentUserId ?? "user-khai")
                 return (
                   <div
                     key={msg.id}

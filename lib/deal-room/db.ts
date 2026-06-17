@@ -627,6 +627,39 @@ export async function archiveConversationForPartnerOrganization(input: {
   return rows.length > 0
 }
 
+export async function createOrFindDirectConversation(
+  userIdA: string,
+  userIdB: string
+): Promise<string> {
+  const existing = (await sql`
+    select c.id
+    from chat_conversations c
+    where c.type = 'direct'
+      and (select count(*) from chat_conversation_members where conversation_id = c.id) = 2
+      and exists (select 1 from chat_conversation_members where conversation_id = c.id and user_id = ${userIdA})
+      and exists (select 1 from chat_conversation_members where conversation_id = c.id and user_id = ${userIdB})
+    limit 1
+  `) as { id: string }[]
+
+  if (existing[0]) return existing[0].id
+
+  const created = (await sql`
+    insert into chat_conversations (id, type, created_at, is_read_only)
+    values (gen_random_uuid(), 'direct', now(), false)
+    returning id
+  `) as { id: string }[]
+  const conversationId = created[0].id
+
+  await sql`
+    insert into chat_conversation_members (conversation_id, user_id, joined_at, is_archived)
+    values
+      (${conversationId}, ${userIdA}, now(), false),
+      (${conversationId}, ${userIdB}, now(), false)
+  `
+
+  return conversationId
+}
+
 export async function updateRfqStatus(input: {
   messageId: string
   conversationId: string

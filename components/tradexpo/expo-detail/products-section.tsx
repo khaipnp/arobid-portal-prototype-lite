@@ -51,6 +51,7 @@ type Props = {
   initialProducts: ExpoDetailProduct[]
   totalProducts: number
   isAuthenticated?: boolean
+  currentUserId?: string
 }
 
 function toDialogItem(product: ExpoDetailProduct): ProductDialogItem {
@@ -66,6 +67,7 @@ function toDialogItem(product: ExpoDetailProduct): ProductDialogItem {
 function toChatExhibitor(product: ExpoDetailProduct): ExpoDetailExhibitor {
   return {
     id: product.exhibitorId,
+    ownerUserId: product.exhibitorOwnerUserId,
     name: product.exhibitorName,
     company: product.exhibitorCompany,
     logoUrl: product.exhibitorLogoUrl,
@@ -220,7 +222,8 @@ export function ProductsSection({
   expoId,
   initialProducts,
   totalProducts,
-  isAuthenticated = false
+  isAuthenticated = false,
+  currentUserId
 }: Props) {
   const router = useRouter()
   const sentinelRef = useRef<HTMLDivElement | null>(null)
@@ -445,6 +448,7 @@ export function ProductsSection({
         <FloatingChat
           exhibitor={toChatExhibitor(activeChatProduct)}
           selectedProduct={toDialogItem(activeChatProduct)}
+          currentUserId={currentUserId}
           onClose={() => setActiveChatProduct(null)}
         />
       ) : null}

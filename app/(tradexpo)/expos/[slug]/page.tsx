@@ -125,6 +125,7 @@ export default async function Page({
         expoName={expo.name}
         initialExhibitors={exhibitors}
         isAuthenticated={!!userId}
+        currentUserId={userId ?? undefined}
       />
       {productCount >= PRODUCT_FEATURE_MIN_PRODUCTS ? (
         <ProductsSection
@@ -132,6 +133,7 @@ export default async function Page({
           initialProducts={initialProducts}
           totalProducts={productCount}
           isAuthenticated={!!userId}
+          currentUserId={userId ?? undefined}
         />
       ) : null}
       <Audience content={marketingContent.whoShouldJoin} />
