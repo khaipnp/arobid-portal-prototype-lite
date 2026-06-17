@@ -1142,6 +1142,8 @@ export async function ensurePlatformSchema() {
 
   await sql`create index if not exists idx_chat_messages_conv_sent on chat_messages (conversation_id, sent_at asc)`
   await sql`create index if not exists idx_chat_messages_sender on chat_messages (sender_id)`
+  await sql`alter table chat_messages add column if not exists kind text not null default 'text'`
+  await sql`alter table chat_messages add column if not exists rfq_metadata jsonb`
   await sql`
     do $$
     begin
