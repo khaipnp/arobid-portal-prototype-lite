@@ -2,6 +2,10 @@ export type ConversationType = "direct"
 
 export type MessageStatus = "sent" | "delivered" | "read"
 
+export type MessageKind = "text" | "rfq"
+
+export type RfqStatus = "open" | "quoted" | "closed" | "expired"
+
 export type MessageFileType =
   | "jpg"
   | "jpeg"
@@ -42,6 +46,20 @@ export interface MessageAttachment {
   fileType: MessageFileType
 }
 
+export interface RfqMetadata {
+  productName: string
+  description: string
+  productImageUrl?: string
+  attachmentUrl?: string
+  attachmentName?: string
+  quantity: number
+  unit: string
+  destinationCountry?: string
+  targetPrice?: string
+  expiryDate: string
+  status: RfqStatus
+}
+
 export interface Message {
   id: string
   conversationId: string
@@ -53,6 +71,8 @@ export interface Message {
   editedAt?: string
   isDeleted: boolean
   isSystemMessage: boolean
+  kind: MessageKind
+  rfqMetadata?: RfqMetadata
 }
 
 export interface Conversation {
