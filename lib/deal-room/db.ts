@@ -4,7 +4,8 @@ import type {
   Conversation,
   ConversationMember,
   Message,
-  MessageAttachment
+  MessageAttachment,
+  RfqMetadata
 } from "@/lib/deal-room/types"
 
 function toIso(value: string | Date) {
@@ -338,6 +339,8 @@ export async function listMessagesByConversation(
     edited_at: string | Date | null
     is_deleted: boolean
     is_system_message: boolean
+    kind: Message["kind"]
+    rfq_metadata: RfqMetadata | null
   }[]
 
   const out: Record<string, Message[]> = {}
@@ -353,7 +356,9 @@ export async function listMessagesByConversation(
       sentAt: toIso(r.sent_at),
       editedAt: r.edited_at ? toIso(r.edited_at) : undefined,
       isDeleted: r.is_deleted,
-      isSystemMessage: r.is_system_message
+      isSystemMessage: r.is_system_message,
+      kind: r.kind ?? "text",
+      rfqMetadata: r.rfq_metadata ?? undefined
     })
     out[r.conversation_id] = list
   }
@@ -388,6 +393,8 @@ export async function listMessagesByConversationForPartnerOrganization(
     edited_at: string | Date | null
     is_deleted: boolean
     is_system_message: boolean
+    kind: Message["kind"]
+    rfq_metadata: RfqMetadata | null
   }[]
 
   const out: Record<string, Message[]> = {}
@@ -403,7 +410,9 @@ export async function listMessagesByConversationForPartnerOrganization(
       sentAt: toIso(r.sent_at),
       editedAt: r.edited_at ? toIso(r.edited_at) : undefined,
       isDeleted: r.is_deleted,
-      isSystemMessage: r.is_system_message
+      isSystemMessage: r.is_system_message,
+      kind: r.kind ?? "text",
+      rfqMetadata: r.rfq_metadata ?? undefined
     })
     out[r.conversation_id] = list
   }
@@ -457,6 +466,8 @@ export async function listConversationMessages(input: {
     edited_at: string | Date | null
     is_deleted: boolean
     is_system_message: boolean
+    kind: Message["kind"]
+    rfq_metadata: RfqMetadata | null
   }[]
 
   return rows.map((r) => ({
@@ -469,7 +480,9 @@ export async function listConversationMessages(input: {
     sentAt: toIso(r.sent_at),
     editedAt: r.edited_at ? toIso(r.edited_at) : undefined,
     isDeleted: r.is_deleted,
-    isSystemMessage: r.is_system_message
+    isSystemMessage: r.is_system_message,
+    kind: r.kind ?? "text",
+    rfqMetadata: r.rfq_metadata ?? undefined
   }))
 }
 
@@ -510,6 +523,8 @@ export async function createMessage(input: {
   attachments: MessageAttachment[]
   status: Message["status"]
   sentAt: string
+  kind?: Message["kind"]
+  rfqMetadata?: RfqMetadata
 }): Promise<void> {
   await sql`
     insert into chat_messages (
@@ -522,7 +537,9 @@ export async function createMessage(input: {
       sent_at,
       edited_at,
       is_deleted,
-      is_system_message
+      is_system_message,
+      kind,
+      rfq_metadata
     )
     values (
       ${input.id},
@@ -534,7 +551,9 @@ export async function createMessage(input: {
       ${input.sentAt},
       null,
       false,
-      false
+      false,
+      ${input.kind ?? "text"},
+      ${input.rfqMetadata ? JSON.stringify(input.rfqMetadata) : null}::jsonb
     )
   `
 }
@@ -606,4 +625,28 @@ export async function archiveConversationForPartnerOrganization(input: {
   `) as { conversation_id: string }[]
 
   return rows.length > 0
+}
+
+export async function updateRfqStatus(input: {
+  messageId: string
+  conversationId: string
+  requesterId: string
+  status: "quoted" | "closed"
+}): Promise<{ productName: string } | null> {
+  const rows = (await sql`
+    update chat_messages
+    set rfq_metadata = jsonb_set(
+      rfq_metadata,
+      '{status}',
+      ${JSON.stringify(input.status)}::jsonb
+    )
+    where id = ${input.messageId}
+      and conversation_id = ${input.conversationId}
+      and kind = 'rfq'
+      and sender_id != ${input.requesterId}
+      and is_deleted = false
+    returning rfq_metadata->>'productName' as product_name
+  `) as { product_name: string }[]
+
+  return rows[0] ? { productName: rows[0].product_name } : null
 }
