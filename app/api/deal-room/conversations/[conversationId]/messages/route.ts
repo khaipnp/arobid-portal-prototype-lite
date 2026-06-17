@@ -5,7 +5,7 @@ import {
   isConversationParticipant,
   listConversationMessages
 } from "@/lib/deal-room/db"
-import type { Message } from "@/lib/deal-room/types"
+import type { Message, RfqMetadata } from "@/lib/deal-room/types"
 
 interface Props {
   params: Promise<{ conversationId: string }>
@@ -44,6 +44,8 @@ export async function POST(request: Request, { params }: Props) {
       attachments?: Message["attachments"]
       status?: Message["status"]
       sentAt?: string
+      kind?: Message["kind"]
+      rfqMetadata?: RfqMetadata
     }
     if (!body.id || !body.senderId || !body.sentAt) {
       return NextResponse.json({ error: "Invalid payload." }, { status: 400 })
@@ -68,7 +70,9 @@ export async function POST(request: Request, { params }: Props) {
       content: body.content ?? "",
       attachments: body.attachments ?? [],
       status: body.status ?? "sent",
-      sentAt: body.sentAt
+      sentAt: body.sentAt,
+      kind: body.kind ?? "text",
+      rfqMetadata: body.rfqMetadata
     })
     return NextResponse.json({ ok: true })
   } catch (error) {
