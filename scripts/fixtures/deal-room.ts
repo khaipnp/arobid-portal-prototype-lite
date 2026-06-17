@@ -190,7 +190,8 @@ export const mockMessages: Record<string, Message[]> = {
       status: "read",
       sentAt: isoOffset(118),
       isDeleted: false,
-      isSystemMessage: false
+      isSystemMessage: false,
+      kind: "text" as const
     },
     {
       id: "msg-001-2",
@@ -202,7 +203,8 @@ export const mockMessages: Record<string, Message[]> = {
       status: "read",
       sentAt: isoOffset(115),
       isDeleted: false,
-      isSystemMessage: false
+      isSystemMessage: false,
+      kind: "text" as const
     },
     {
       id: "msg-001-3",
@@ -222,7 +224,8 @@ export const mockMessages: Record<string, Message[]> = {
       status: "read",
       sentAt: isoOffset(110),
       isDeleted: false,
-      isSystemMessage: false
+      isSystemMessage: false,
+      kind: "text" as const
     },
     {
       id: "msg-001-4",
@@ -234,7 +237,8 @@ export const mockMessages: Record<string, Message[]> = {
       status: "read",
       sentAt: isoOffset(105),
       isDeleted: false,
-      isSystemMessage: false
+      isSystemMessage: false,
+      kind: "text" as const
     },
     {
       id: "msg-001-5",
@@ -246,7 +250,8 @@ export const mockMessages: Record<string, Message[]> = {
       status: "read",
       sentAt: isoOffset(100),
       isDeleted: false,
-      isSystemMessage: false
+      isSystemMessage: false,
+      kind: "text" as const
     }
   ],
 
@@ -261,7 +266,8 @@ export const mockMessages: Record<string, Message[]> = {
       status: "read",
       sentAt: isoOffset(195),
       isDeleted: false,
-      isSystemMessage: false
+      isSystemMessage: false,
+      kind: "text" as const
     },
     {
       id: "msg-002-2",
@@ -273,7 +279,8 @@ export const mockMessages: Record<string, Message[]> = {
       status: "read",
       sentAt: isoOffset(180),
       isDeleted: false,
-      isSystemMessage: false
+      isSystemMessage: false,
+      kind: "text" as const
     },
     {
       id: "msg-002-3",
@@ -285,7 +292,8 @@ export const mockMessages: Record<string, Message[]> = {
       status: "read",
       sentAt: isoOffset(160),
       isDeleted: false,
-      isSystemMessage: false
+      isSystemMessage: false,
+      kind: "text" as const
     },
     {
       id: "msg-002-4",
@@ -297,7 +305,8 @@ export const mockMessages: Record<string, Message[]> = {
       status: "delivered",
       sentAt: isoOffset(45),
       isDeleted: false,
-      isSystemMessage: false
+      isSystemMessage: false,
+      kind: "text" as const
     },
     {
       id: "msg-002-5",
@@ -309,7 +318,8 @@ export const mockMessages: Record<string, Message[]> = {
       status: "delivered",
       sentAt: isoOffset(30),
       isDeleted: false,
-      isSystemMessage: false
+      isSystemMessage: false,
+      kind: "text" as const
     }
   ],
 
@@ -324,7 +334,8 @@ export const mockMessages: Record<string, Message[]> = {
       status: "read",
       sentAt: isoOffset(1450),
       isDeleted: false,
-      isSystemMessage: false
+      isSystemMessage: false,
+      kind: "text" as const
     },
     {
       id: "msg-003-2",
@@ -336,7 +347,8 @@ export const mockMessages: Record<string, Message[]> = {
       status: "read",
       sentAt: isoOffset(1430),
       isDeleted: false,
-      isSystemMessage: false
+      isSystemMessage: false,
+      kind: "text" as const
     },
     {
       id: "msg-003-3",
@@ -348,7 +360,8 @@ export const mockMessages: Record<string, Message[]> = {
       status: "read",
       sentAt: isoOffset(1420),
       isDeleted: false,
-      isSystemMessage: false
+      isSystemMessage: false,
+      kind: "text" as const
     },
     {
       id: "msg-003-4",
@@ -360,7 +373,8 @@ export const mockMessages: Record<string, Message[]> = {
       status: "read",
       sentAt: isoOffset(1400),
       isDeleted: false,
-      isSystemMessage: false
+      isSystemMessage: false,
+      kind: "text" as const
     }
   ],
 
@@ -375,7 +389,8 @@ export const mockMessages: Record<string, Message[]> = {
       status: "read",
       sentAt: isoOffset(490),
       isDeleted: false,
-      isSystemMessage: false
+      isSystemMessage: false,
+      kind: "text" as const
     }
   ],
 
@@ -390,7 +405,8 @@ export const mockMessages: Record<string, Message[]> = {
       status: "read",
       sentAt: isoOffset(990),
       isDeleted: false,
-      isSystemMessage: false
+      isSystemMessage: false,
+      kind: "text" as const
     }
   ]
 }
