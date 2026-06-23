@@ -39,6 +39,7 @@ type Props = {
   expoName: string
   initialExhibitors: ExpoDetailExhibitor[]
   isAuthenticated?: boolean
+  currentUserId?: string
 }
 
 type ChatProductContext = {
@@ -52,7 +53,8 @@ export function ExhibitorsSection({
   expoId,
   expoName,
   initialExhibitors,
-  isAuthenticated = false
+  isAuthenticated = false,
+  currentUserId
 }: Props) {
   const router = useRouter()
   const [search, setSearch] = useState("")
@@ -224,6 +226,7 @@ export function ExhibitorsSection({
         <FloatingChat
           exhibitor={activeChatExhibitor}
           selectedProduct={activeChatProduct}
+          currentUserId={currentUserId}
           onClose={() => {
             setActiveChatExhibitor(null)
             setActiveChatProduct(null)

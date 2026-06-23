@@ -38,6 +38,7 @@ import { listWishlistedTargetIds } from "@/lib/wishlist/db"
 
 export type ExpoDetailExhibitor = {
   id: string
+  ownerUserId?: string
   name: string
   company: string
   logoUrl?: string
@@ -56,6 +57,7 @@ export type ExpoDetailProduct = {
   description: string
   imageUrl?: string
   exhibitorId: string
+  exhibitorOwnerUserId?: string
   exhibitorName: string
   exhibitorCompany: string
   exhibitorLogoUrl?: string
@@ -1230,6 +1232,7 @@ export async function listExpoDetailProducts(
       coalesce(product_item.value ->> 'description', '') as product_description,
       nullif(product_item.value ->> 'imageUrl', '') as product_image_url,
       sbr.id as exhibitor_id,
+      sbr.user_id as exhibitor_owner_user_id,
       cu.name as exhibitor_name,
       coalesce(comp.name, cu.name) as exhibitor_company,
       nullif(comp.logo_url, '') as exhibitor_logo_url,
@@ -1263,6 +1266,7 @@ export async function listExpoDetailProducts(
     product_description: string | null
     product_image_url: string | null
     exhibitor_id: string
+    exhibitor_owner_user_id: string
     exhibitor_name: string
     exhibitor_company: string
     exhibitor_logo_url: string | null
@@ -1280,6 +1284,7 @@ export async function listExpoDetailProducts(
         description: row.product_description ?? "",
         imageUrl: row.product_image_url ?? undefined,
         exhibitorId: row.exhibitor_id,
+        exhibitorOwnerUserId: row.exhibitor_owner_user_id,
         exhibitorName: row.exhibitor_name,
         exhibitorCompany: row.exhibitor_company,
         exhibitorLogoUrl: row.exhibitor_logo_url ?? undefined,
@@ -1307,6 +1312,7 @@ export async function listExpoDetailExhibitorsByName(
     with ranked_exhibitors as (
     select
       sbr.id,
+      sbr.user_id as owner_user_id,
       sbr.booth_tier,
       sbr.booth_ref,
       cu.name,
@@ -1357,6 +1363,7 @@ export async function listExpoDetailExhibitorsByName(
     limit 36
   `) as {
     id: string
+    owner_user_id: string
     booth_tier: string
     booth_ref: string
     name: string
@@ -1398,6 +1405,7 @@ export async function listExpoDetailExhibitorsByName(
 
     return {
       id: row.id,
+      ownerUserId: row.owner_user_id,
       name: row.name,
       company: row.company ?? row.name,
       logoUrl: row.logo_url ?? undefined,
