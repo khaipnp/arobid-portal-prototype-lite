@@ -22,8 +22,9 @@ import {
   UploadIcon
 } from "lucide-react"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import type { ChangeEvent } from "react"
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -54,7 +55,7 @@ import {
 } from "@/components/ui/table"
 import { cn } from "@/lib/utils"
 
-type ModuleKey = "Marketplace" | "TradeXpo" | "RFQ" | "BFM"
+type ModuleKey = "Marketplace" | "TradeXpo" | "RFQ" | "BFM" | "Mini-site"
 type DisplayRule = "random-first" | "manual-order"
 type AssetSlotKey = "desktopVi" | "desktopEn" | "mobileVi" | "mobileEn"
 type PreviewVariant =
@@ -100,6 +101,7 @@ type Placement = {
   trackingId: string
   module: ModuleKey
   page: string
+  prototypeHref?: string
   positionName: string
   positionNote: string
   assetRequirements: AssetRequirement[]
@@ -135,6 +137,14 @@ type PlacementSeed = Omit<
   banners: BannerSeed[]
 }
 
+type MiniSitePlacementSample = {
+  code: string
+  key: string
+  page: string
+  placementOneName: string
+  placementTwoName: string
+}
+
 type BannerDraft = {
   id: string | null
   name: string
@@ -165,7 +175,8 @@ const MODULE_TABS: Array<{ value: "all" | ModuleKey; label: string }> = [
   { value: "Marketplace", label: "Marketplace" },
   { value: "TradeXpo", label: "TradeXpo" },
   { value: "RFQ", label: "RFQ" },
-  { value: "BFM", label: "BFM" }
+  { value: "BFM", label: "BFM" },
+  { value: "Mini-site", label: "Mini-site" }
 ]
 
 const companies: Company[] = [
@@ -640,8 +651,85 @@ const placementSeeds: PlacementSeed[] = [
     displayRule: "random-first",
     isEnabled: true,
     banners: []
+  },
+  {
+    id: "tenant-tbsg-homepage-01",
+    trackingId: "TEN-TBSG-HOME-01",
+    module: "Mini-site",
+    page: "TBSG Homepage",
+    prototypeHref: "/partner/hdn-taybacsaigon",
+    positionName: "TBSG Homepage #1",
+    positionNote:
+      "Homepage banner slot shown after Buyer Find & Match on the TBSG mini-site.",
+    assetRequirements: makeAssetRequirements("1284x340", "300x600"),
+    previewVariant: "in-content",
+    displayRule: "manual-order",
+    isEnabled: true,
+    banners: [
+      {
+        name: "TBSG Supplier Spotlight",
+        companyId: "company-vietgreen",
+        imageName: "tbsg-supplier-spotlight.png",
+        startAt: "2026-06-15T08:00",
+        endAt: "2026-07-15T23:00",
+        isActive: true,
+        sortOrder: 1
+      }
+    ]
+  },
+  {
+    id: "tenant-tbsg-homepage-02",
+    trackingId: "TEN-TBSG-HOME-02",
+    module: "Mini-site",
+    page: "TBSG Homepage",
+    prototypeHref: "/partner/hdn-taybacsaigon",
+    positionName: "TBSG Homepage #2",
+    positionNote:
+      "Homepage banner slot shown after the Expo Banner block on the TBSG mini-site.",
+    assetRequirements: makeAssetRequirements("1284x340", "300x600"),
+    previewVariant: "in-content",
+    displayRule: "manual-order",
+    isEnabled: true,
+    banners: [
+      {
+        name: "TBSG Partner Campaign",
+        companyId: "company-vnpt-hcm",
+        imageName: "tbsg-partner-campaign.png",
+        startAt: "2026-06-18T08:00",
+        endAt: "2026-07-18T23:00",
+        isActive: true,
+        sortOrder: 1
+      }
+    ]
   }
 ]
+
+const miniSitePlacementSamples: MiniSitePlacementSample[] = [
+  {
+    key: "tnsg",
+    code: "TNSG",
+    page: "TNSG Homepage",
+    placementOneName: "TNSG Supplier Spotlight",
+    placementTwoName: "TNSG Program Campaign"
+  },
+  {
+    key: "vnsg",
+    code: "VNSG",
+    page: "VNSG Homepage",
+    placementOneName: "VNSG Gateway Spotlight",
+    placementTwoName: "VNSG Partner Campaign"
+  }
+]
+
+const baseMiniSitePlacements = placementSeeds.filter((placement) =>
+  placement.id.startsWith("tenant-tbsg-homepage-")
+)
+
+placementSeeds.push(
+  ...miniSitePlacementSamples.flatMap((sample) =>
+    cloneMiniSitePlacementSeeds(baseMiniSitePlacements, sample)
+  )
+)
 
 const initialPlacements: Placement[] = placementSeeds.map((placement) => ({
   ...placement,
@@ -667,9 +755,12 @@ const initialPlacements: Placement[] = placementSeeds.map((placement) => ({
 }))
 
 export function BannerAdsManagement() {
+  const searchParams = useSearchParams()
+  const searchParamsKey = searchParams.toString()
   const [placements, setPlacements] = useState(initialPlacements)
   const [activeModule, setActiveModule] =
     useState<(typeof MODULE_TABS)[number]["value"]>("all")
+  const [activePage, setActivePage] = useState("all")
   const [selectedPlacementId, setSelectedPlacementId] = useState(
     initialPlacements[0]?.id ?? ""
   )
@@ -678,12 +769,29 @@ export function BannerAdsManagement() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
   const [draft, setDraft] = useState<BannerDraft>(createEmptyDraft(1))
   const [dialogError, setDialogError] = useState("")
+  const isMiniSiteSurface = activeModule === "Mini-site"
 
-  const filteredPlacements = useMemo(() => {
+  const availablePages = useMemo(() => {
     const scoped =
       activeModule === "all"
         ? placements
         : placements.filter((placement) => placement.module === activeModule)
+
+    return Array.from(new Set(scoped.map((placement) => placement.page))).sort(
+      (left, right) => left.localeCompare(right)
+    )
+  }, [activeModule, placements])
+
+  const filteredPlacements = useMemo(() => {
+    const moduleScoped =
+      activeModule === "all"
+        ? placements
+        : placements.filter((placement) => placement.module === activeModule)
+
+    const scoped =
+      !isMiniSiteSurface || activePage === "all"
+        ? moduleScoped
+        : moduleScoped.filter((placement) => placement.page === activePage)
 
     return scoped.sort((left, right) => {
       if (left.module !== right.module) {
@@ -691,7 +799,7 @@ export function BannerAdsManagement() {
       }
       return left.trackingId.localeCompare(right.trackingId)
     })
-  }, [activeModule, placements])
+  }, [activeModule, activePage, isMiniSiteSurface, placements])
 
   const selectedPlacement =
     placements.find((placement) => placement.id === selectedPlacementId) ??
@@ -721,15 +829,88 @@ export function BannerAdsManagement() {
     (placement) => placement.banners.length > 0
   ).length
 
+  useEffect(() => {
+    const moduleParam = searchParams.get("module")
+    const pageParam = searchParams.get("page")
+    const placementParam =
+      searchParams.get("placementId") ??
+      searchParams.get("placement") ??
+      searchParams.get("trackingId")
+
+    const nextModule = MODULE_TABS.some((tab) => tab.value === moduleParam)
+      ? (moduleParam as (typeof MODULE_TABS)[number]["value"])
+      : "all"
+
+    const moduleScoped =
+      nextModule === "all"
+        ? initialPlacements
+        : initialPlacements.filter(
+            (placement) => placement.module === nextModule
+          )
+
+    const nextPage =
+      nextModule === "Mini-site" &&
+      pageParam &&
+      moduleScoped.some((placement) => placement.page === pageParam)
+        ? pageParam
+        : "all"
+
+    const pageScoped =
+      nextPage === "all"
+        ? moduleScoped
+        : moduleScoped.filter((placement) => placement.page === nextPage)
+
+    const nextPlacement =
+      (placementParam
+        ? (pageScoped.find(
+            (placement) =>
+              placement.id === placementParam ||
+              placement.trackingId === placementParam
+          ) ??
+          moduleScoped.find(
+            (placement) =>
+              placement.id === placementParam ||
+              placement.trackingId === placementParam
+          ))
+        : null) ??
+      pageScoped[0] ??
+      moduleScoped[0] ??
+      initialPlacements[0]
+
+    setActiveModule(nextModule)
+    setActivePage(nextPage)
+    setSelectedPlacementId(nextPlacement?.id ?? "")
+    setActiveView("list")
+  }, [searchParamsKey])
+
   function handleModuleChange(
     nextModule: (typeof MODULE_TABS)[number]["value"]
   ) {
     setActiveModule(nextModule)
+    setActivePage("all")
     setActiveView("list")
     const nextPlacement =
       nextModule === "all"
         ? placements[0]
         : placements.find((placement) => placement.module === nextModule)
+    if (nextPlacement) {
+      setSelectedPlacementId(nextPlacement.id)
+    }
+  }
+
+  function handlePageChange(nextPage: string) {
+    setActivePage(nextPage)
+    setActiveView("list")
+
+    const moduleScoped =
+      activeModule === "all"
+        ? placements
+        : placements.filter((placement) => placement.module === activeModule)
+    const nextPlacement =
+      nextPage === "all"
+        ? moduleScoped[0]
+        : moduleScoped.find((placement) => placement.page === nextPage)
+
     if (nextPlacement) {
       setSelectedPlacementId(nextPlacement.id)
     }
@@ -982,9 +1163,16 @@ export function BannerAdsManagement() {
             />
           </div>
 
-          <div className="w-full xl:max-w-xs">
+          <div
+            className={cn(
+              "grid gap-4",
+              isMiniSiteSurface
+                ? "md:grid-cols-2 xl:max-w-2xl"
+                : "w-full xl:max-w-xs"
+            )}
+          >
             <Field>
-              <Label>Filter</Label>
+              <Label>Surface</Label>
               <Select
                 value={activeModule}
                 onValueChange={(value) =>
@@ -1005,6 +1193,25 @@ export function BannerAdsManagement() {
                 </SelectContent>
               </Select>
             </Field>
+
+            {isMiniSiteSurface ? (
+              <Field>
+                <Label>Page</Label>
+                <Select value={activePage} onValueChange={handlePageChange}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All pages</SelectItem>
+                    {availablePages.map((page) => (
+                      <SelectItem key={page} value={page}>
+                        {page}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+            ) : null}
           </div>
 
           <Card className="border-muted-foreground/10">
@@ -1019,7 +1226,8 @@ export function BannerAdsManagement() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[120px]">Module</TableHead>
+                      <TableHead className="w-[120px]">Surface</TableHead>
+                      <TableHead className="w-[150px]">Page</TableHead>
                       <TableHead className="w-[160px]">ID</TableHead>
                       <TableHead className="min-w-[260px]">
                         Position name
@@ -1053,6 +1261,9 @@ export function BannerAdsManagement() {
                                 {placement.module}
                               </Badge>
                             </TableCell>
+                            <TableCell className="text-muted-foreground text-sm">
+                              {placement.page}
+                            </TableCell>
                             <TableCell className="font-mono text-sm">
                               {placement.trackingId}
                             </TableCell>
@@ -1078,7 +1289,7 @@ export function BannerAdsManagement() {
                     ) : (
                       <TableRow>
                         <TableCell
-                          colSpan={6}
+                          colSpan={7}
                           className="py-10 text-center text-muted-foreground"
                         >
                           No placements found
@@ -2232,6 +2443,22 @@ function getPrototypeReference(placement: Placement): PrototypeReference {
     }
   }
 
+  if (placement.module === "Mini-site" && placement.page === "TBSG Homepage") {
+    return {
+      href: placement.prototypeHref,
+      label: `Open ${placement.page.replace(" Homepage", "")} tenant sample`,
+      coverage: placement.prototypeHref ? "available" : "reference"
+    }
+  }
+
+  if (placement.module === "Mini-site") {
+    return {
+      href: placement.prototypeHref,
+      label: `Open ${placement.page.replace(" Homepage", "")} tenant reference`,
+      coverage: placement.prototypeHref ? "available" : "reference"
+    }
+  }
+
   return {
     label: "Mock preview only",
     coverage: "planned"
@@ -2440,6 +2667,68 @@ function getSeedProfileVisits(index: number) {
   return seedCounts[index] ?? 0
 }
 
+function cloneMiniSitePlacementSeeds(
+  basePlacements: PlacementSeed[],
+  sample: MiniSitePlacementSample
+) {
+  return basePlacements.map((placement, index) => {
+    const nextPlacement = mapBannerStringValues(
+      JSON.parse(JSON.stringify(placement)) as PlacementSeed,
+      (value) =>
+        value
+          .replaceAll(
+            "tenant-tbsg-homepage-01",
+            `tenant-${sample.key}-homepage-01`
+          )
+          .replaceAll(
+            "tenant-tbsg-homepage-02",
+            `tenant-${sample.key}-homepage-02`
+          )
+          .replaceAll("TEN-TBSG-HOME-01", `TEN-${sample.code}-HOME-01`)
+          .replaceAll("TEN-TBSG-HOME-02", `TEN-${sample.code}-HOME-02`)
+          .replaceAll("TBSG Homepage", sample.page)
+          .replaceAll("TBSG", sample.code)
+          .replaceAll("tbsg-", `${sample.key}-`)
+    )
+
+    nextPlacement.page = sample.page
+    nextPlacement.positionName = `${sample.page} #${index + 1}`
+    nextPlacement.prototypeHref = undefined
+
+    if (nextPlacement.banners[0]) {
+      nextPlacement.banners[0].name =
+        index === 0 ? sample.placementOneName : sample.placementTwoName
+      nextPlacement.banners[0].imageName = `${sample.key}-homepage-${index + 1}.png`
+    }
+
+    return nextPlacement
+  })
+}
+
+function mapBannerStringValues<T>(
+  value: T,
+  replace: (value: string) => string
+): T {
+  if (typeof value === "string") {
+    return replace(value) as T
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => mapBannerStringValues(item, replace)) as T
+  }
+
+  if (value && typeof value === "object") {
+    const entries = Object.entries(value).map(([key, item]) => [
+      key,
+      mapBannerStringValues(item, replace)
+    ])
+
+    return Object.fromEntries(entries) as T
+  }
+
+  return value
+}
+
 function getCtr(banner: BannerItem) {
   if (banner.impressions <= 0) return 0
   return banner.clickCount / banner.impressions
@@ -2489,7 +2778,8 @@ function moduleTone(module: ModuleKey) {
     Marketplace: "border-sky-200 bg-sky-50 text-sky-700",
     TradeXpo: "border-violet-200 bg-violet-50 text-violet-700",
     RFQ: "border-amber-200 bg-amber-50 text-amber-700",
-    BFM: "border-emerald-200 bg-emerald-50 text-emerald-700"
+    BFM: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    "Mini-site": "border-rose-200 bg-rose-50 text-rose-700"
   }
 
   return tones[module]

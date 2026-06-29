@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { CharacterCount } from "@/components/ui/character-count"
 import {
   Dialog,
   DialogContent,
@@ -523,9 +524,10 @@ export function GoLIVEManager({
               {errors.title && (
                 <p className="text-destructive text-xs">{errors.title}</p>
               )}
-              <p className="text-right text-muted-foreground text-xs">
-                {form.title.length}/256
-              </p>
+              <CharacterCount
+                currentLength={form.title.length}
+                maxLength={256}
+              />
             </div>
 
             <div className="space-y-1.5">

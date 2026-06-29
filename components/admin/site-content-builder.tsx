@@ -37,6 +37,7 @@ import type {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { CharacterCount } from "@/components/ui/character-count"
 import {
   Dialog,
   DialogContent,
@@ -78,6 +79,7 @@ type ExternalManagement = {
   tag: string
   label: string
   note: string
+  ctaLabel?: string
   href?: string
 }
 
@@ -98,7 +100,7 @@ type SiteConfig = {
   id: string
   name: string
   route: string
-  type: "Core Marketplace" | "Tenant Site"
+  type: "Core Marketplace" | "Mini-site"
   owner: string
   status: "Prototype" | "Draft"
   description: string
@@ -112,6 +114,18 @@ type FieldGroup = {
   label: string
   description?: string
   fields: ContentField[]
+}
+
+type TenantSiteSample = {
+  key: string
+  code: string
+  siteName: string
+  route: string
+  displayName: string
+  brandColor: string
+  tagline: string
+  heroTitle: string
+  heroCopy: string
 }
 
 const configurableSites: SiteConfig[] = [
@@ -152,7 +166,8 @@ const configurableSites: SiteConfig[] = [
             appearsIn: "Header search input",
             source: "Manual",
             validation: "Maximum 120 characters.",
-            example: "Watch for men, industrial parts, solar systems..."
+            example: "Watch for men, industrial parts, solar systems...",
+            maxLength: 120
           }
         ]
       },
@@ -335,7 +350,8 @@ const configurableSites: SiteConfig[] = [
             appearsIn: "Pill above hero title",
             source: "Manual",
             validation: "Maximum 60 characters.",
-            example: "Arobid Marketplace"
+            example: "Arobid Marketplace",
+            maxLength: 60
           },
           {
             id: "headline",
@@ -344,7 +360,8 @@ const configurableSites: SiteConfig[] = [
             appearsIn: "Main H1 in hero",
             source: "Manual",
             validation: "Maximum 90 characters.",
-            example: "Welcome to Arobid.com"
+            example: "Welcome to Arobid.com",
+            maxLength: 90
           }
         ]
       },
@@ -391,9 +408,10 @@ const configurableSites: SiteConfig[] = [
         previewLabel: "Desktop/mobile banner inventory",
         externalManagement: {
           tag: "Banner Ads",
-          href: "/admin/settings/banner-ads",
-          label: "Banner Ads Management",
-          note: "Banner media, schedule, and placement rules for this section are managed in Banner Ads."
+          href: "/admin/settings/banner-ads?module=Marketplace&page=Homepage&placementId=b2b-homepage-hero-01",
+          label: "Banner Ads",
+          ctaLabel: "Go to Banner Ads",
+          note: "Banner media, schedule, display rule, and placement order for this slot are managed in Banner Ads. This shortcut opens the Marketplace Homepage placements."
         },
         fields: []
       },
@@ -430,7 +448,8 @@ const configurableSites: SiteConfig[] = [
             appearsIn: "TradeXpo section heading",
             source: "Manual",
             validation: "Maximum 100 characters.",
-            example: "Arobid TradeXpo"
+            example: "Arobid TradeXpo",
+            maxLength: 100
           },
           {
             id: "description",
@@ -440,7 +459,8 @@ const configurableSites: SiteConfig[] = [
             source: "Manual",
             validation: "Maximum 220 characters.",
             example:
-              "Activate global trade flow through digital exhibition infrastructure."
+              "Activate global trade flow through digital exhibition infrastructure.",
+            maxLength: 220
           }
         ]
       },
@@ -463,7 +483,8 @@ const configurableSites: SiteConfig[] = [
             source: "Manual",
             validation: "Maximum 220 characters.",
             example:
-              "Instantly connecting standardized supplier data with verified buyer intent for absolute precision in global sourcing."
+              "Instantly connecting standardized supplier data with verified buyer intent for absolute precision in global sourcing.",
+            maxLength: 220
           },
           {
             id: "cta-label",
@@ -472,7 +493,8 @@ const configurableSites: SiteConfig[] = [
             appearsIn: "BFM primary button",
             source: "Manual",
             validation: "Maximum 40 characters.",
-            example: "Get Matches Now"
+            example: "Get Matches Now",
+            maxLength: 40
           },
           {
             id: "media",
@@ -495,9 +517,10 @@ const configurableSites: SiteConfig[] = [
         previewLabel: "Inline banner placement",
         externalManagement: {
           tag: "Banner Ads",
-          href: "/admin/settings/banner-ads",
-          label: "Banner Ads Management",
-          note: "Banner media, schedule, and placement rules for this section are managed in Banner Ads."
+          href: "/admin/settings/banner-ads?module=Marketplace&page=Homepage&placementId=b2b-product-detail-collapse-inline-01",
+          label: "Banner Ads",
+          ctaLabel: "Go to Banner Ads",
+          note: "Banner media, schedule, display rule, and placement order for this slot are managed in Banner Ads. This shortcut opens the Marketplace Homepage placements."
         },
         fields: []
       },
@@ -550,7 +573,8 @@ const configurableSites: SiteConfig[] = [
             appearsIn: "RFQ Hub section heading",
             source: "Manual",
             validation: "Maximum 110 characters.",
-            example: "Turn RFQs into\nDeals with AI"
+            example: "Turn RFQs into\nDeals with AI",
+            maxLength: 110
           },
           {
             id: "rfq-description",
@@ -560,7 +584,8 @@ const configurableSites: SiteConfig[] = [
             source: "Manual",
             validation: "Maximum 240 characters.",
             example:
-              "Converting buyer intent into structured RFQs with intelligent precision and consistency at scale."
+              "Converting buyer intent into structured RFQs with intelligent precision and consistency at scale.",
+            maxLength: 240
           },
           {
             id: "rfq-cta",
@@ -569,7 +594,8 @@ const configurableSites: SiteConfig[] = [
             appearsIn: "RFQ Hub primary button",
             source: "Manual",
             validation: "Maximum 40 characters.",
-            example: "Access to RFQ Hub"
+            example: "Access to RFQ Hub",
+            maxLength: 40
           }
         ]
       },
@@ -590,7 +616,8 @@ const configurableSites: SiteConfig[] = [
             appearsIn: "Strategic Partners section heading",
             source: "Manual",
             validation: "Maximum 110 characters.",
-            example: "Infrastructure Support for Seamless Digital Trade"
+            example: "Infrastructure Support for Seamless Digital Trade",
+            maxLength: 110
           },
           {
             id: "description",
@@ -600,7 +627,8 @@ const configurableSites: SiteConfig[] = [
             source: "Manual",
             validation: "Maximum 240 characters.",
             example:
-              "We unite industry leaders in finance, logistics, and law to safeguard your trade flow - from 3D virtual sourcing to secure global delivery."
+              "We unite industry leaders in finance, logistics, and law to safeguard your trade flow - from 3D virtual sourcing to secure global delivery.",
+            maxLength: 240
           }
         ]
       },
@@ -621,7 +649,8 @@ const configurableSites: SiteConfig[] = [
             appearsIn: "Footer subscription area",
             source: "Manual",
             validation: "Maximum 220 characters.",
-            example: "Market Insights & B2B Trends from Arobid"
+            example: "Market Insights & B2B Trends from Arobid",
+            maxLength: 220
           }
         ]
       }
@@ -631,7 +660,7 @@ const configurableSites: SiteConfig[] = [
     id: "tbsg-tenant",
     name: "TBSG / Taybacsaigon",
     route: "/partner/hdn-taybacsaigon",
-    type: "Tenant Site",
+    type: "Mini-site",
     owner: "Arobid Admin + Partner Owner",
     status: "Draft",
     description:
@@ -656,7 +685,8 @@ const configurableSites: SiteConfig[] = [
             appearsIn: "Header, hero, footer, SEO title",
             source: "Manual",
             validation: "Required. Maximum 80 characters.",
-            example: "Tay Bac Sai Gon"
+            example: "Tay Bac Sai Gon",
+            maxLength: 80
           },
           {
             id: "tagline",
@@ -665,7 +695,8 @@ const configurableSites: SiteConfig[] = [
             appearsIn: "Hero and CTA sections",
             source: "Manual",
             validation: "Maximum 180 characters.",
-            example: "Your trusted gateway to digital trade exhibitions."
+            example: "Your trusted gateway to digital trade exhibitions.",
+            maxLength: 180
           },
           {
             id: "logo",
@@ -956,56 +987,18 @@ const configurableSites: SiteConfig[] = [
         name: "Banner Ads #1",
         area: "Body",
         description:
-          "Client-specific banner placement configured directly inside the TBSG site builder.",
+          "Client-specific homepage banner placement for the TBSG mini-site.",
         required: false,
-        dataMode: "Manual",
-        previewLabel: "4 localized asset slots",
-        fields: [
-          {
-            id: "desktop-vi",
-            label: "Desktop VN asset",
-            type: "Image",
-            appearsIn: "Desktop Vietnamese banner slot",
-            source: "Manual",
-            validation:
-              "Recommended 2568 x 680 or 1284 x 340. Keep key text and logos inside the center-safe area.",
-            example:
-              "https://images.unsplash.com/photo-1520607162513-77705c0f0d4a?auto=format&fit=crop&w=1440&q=80"
-          },
-          {
-            id: "desktop-en",
-            label: "Desktop EN asset",
-            type: "Image",
-            appearsIn: "Desktop English banner slot",
-            source: "Manual",
-            validation:
-              "Recommended 2568 x 680 or 1284 x 340. Keep key text and logos inside the center-safe area.",
-            example:
-              "https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=1440&q=80"
-          },
-          {
-            id: "mobile-vi",
-            label: "Mobile VN asset",
-            type: "Image",
-            appearsIn: "Mobile Vietnamese banner slot",
-            source: "Manual",
-            validation:
-              "Recommended 600 x 1200 or 300 x 600. Use a vertical composition and keep text centered.",
-            example:
-              "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=768&q=80"
-          },
-          {
-            id: "mobile-en",
-            label: "Mobile EN asset",
-            type: "Image",
-            appearsIn: "Mobile English banner slot",
-            source: "Manual",
-            validation:
-              "Recommended 600 x 1200 or 300 x 600. Use a vertical composition and keep text centered.",
-            example:
-              "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=768&q=80"
-          }
-        ]
+        dataMode: "Hybrid",
+        previewLabel: "Managed in Banner Ads",
+        externalManagement: {
+          tag: "Banner Ads",
+          href: "/admin/settings/banner-ads?module=Mini-site&page=TBSG%20Homepage&placementId=tenant-tbsg-homepage-01",
+          label: "Banner Ads",
+          ctaLabel: "Go to Banner Ads",
+          note: "Banner media, localized desktop/mobile assets, schedule, display rule, and placement order for this slot are managed in Banner Ads. This shortcut opens Mini-site / TBSG Homepage placements."
+        },
+        fields: []
       },
       {
         id: "tbsg-suppliers",
@@ -1064,7 +1057,8 @@ const configurableSites: SiteConfig[] = [
             appearsIn: "Hot Products section",
             source: "Manual",
             validation: "Maximum 80 characters.",
-            example: "Hot Products"
+            example: "Hot Products",
+            maxLength: 80
           },
           {
             id: "new-products-title",
@@ -1073,7 +1067,8 @@ const configurableSites: SiteConfig[] = [
             appearsIn: "New Products section",
             source: "Manual",
             validation: "Maximum 80 characters.",
-            example: "New Products"
+            example: "New Products",
+            maxLength: 80
           },
           {
             id: "product-source",
@@ -1224,56 +1219,18 @@ const configurableSites: SiteConfig[] = [
         name: "Banner Ads #2",
         area: "Body",
         description:
-          "Second client-specific banner placement configured directly inside the TBSG site builder.",
+          "Second client-specific homepage banner placement for the TBSG mini-site.",
         required: false,
-        dataMode: "Manual",
-        previewLabel: "4 localized asset slots",
-        fields: [
-          {
-            id: "desktop-vi",
-            label: "Desktop VN asset",
-            type: "Image",
-            appearsIn: "Desktop Vietnamese banner slot",
-            source: "Manual",
-            validation:
-              "Recommended 2568 x 680 or 1284 x 340. Keep key text and logos inside the center-safe area.",
-            example:
-              "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1440&q=80"
-          },
-          {
-            id: "desktop-en",
-            label: "Desktop EN asset",
-            type: "Image",
-            appearsIn: "Desktop English banner slot",
-            source: "Manual",
-            validation:
-              "Recommended 2568 x 680 or 1284 x 340. Keep key text and logos inside the center-safe area.",
-            example:
-              "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1440&q=80"
-          },
-          {
-            id: "mobile-vi",
-            label: "Mobile VN asset",
-            type: "Image",
-            appearsIn: "Mobile Vietnamese banner slot",
-            source: "Manual",
-            validation:
-              "Recommended 600 x 1200 or 300 x 600. Use a vertical composition and keep text centered.",
-            example:
-              "https://images.unsplash.com/photo-1516321497487-e288fb19713f?auto=format&fit=crop&w=768&q=80"
-          },
-          {
-            id: "mobile-en",
-            label: "Mobile EN asset",
-            type: "Image",
-            appearsIn: "Mobile English banner slot",
-            source: "Manual",
-            validation:
-              "Recommended 600 x 1200 or 300 x 600. Use a vertical composition and keep text centered.",
-            example:
-              "https://images.unsplash.com/photo-1497366412874-3415097a27e7?auto=format&fit=crop&w=768&q=80"
-          }
-        ]
+        dataMode: "Hybrid",
+        previewLabel: "Managed in Banner Ads",
+        externalManagement: {
+          tag: "Banner Ads",
+          href: "/admin/settings/banner-ads?module=Mini-site&page=TBSG%20Homepage&placementId=tenant-tbsg-homepage-02",
+          label: "Banner Ads",
+          ctaLabel: "Go to Banner Ads",
+          note: "Banner media, localized desktop/mobile assets, schedule, display rule, and placement order for this slot are managed in Banner Ads. This shortcut opens Mini-site / TBSG Homepage placements."
+        },
+        fields: []
       },
       {
         id: "tbsg-news-video",
@@ -1485,7 +1442,8 @@ const configurableSites: SiteConfig[] = [
             appearsIn: "Footer contact block",
             source: "Manual",
             validation: "Maximum 220 characters.",
-            example: "Ho Chi Minh City, Vietnam"
+            example: "Ho Chi Minh City, Vietnam",
+            maxLength: 220
           },
           {
             id: "public-website",
@@ -1501,6 +1459,47 @@ const configurableSites: SiteConfig[] = [
     ]
   }
 ]
+
+const tenantSiteSamples: TenantSiteSample[] = [
+  {
+    key: "tnsg",
+    code: "TNSG",
+    siteName: "TNSG / Thanh Nam Saigon",
+    route: "/partner/hdn-thanhnam-saigon",
+    displayName: "Thanh Nam Sai Gon",
+    brandColor: "#0f766e",
+    tagline:
+      "A connected business network for sourcing growth, member visibility, and digital trade execution.",
+    heroTitle: "TNSG Trade Network",
+    heroCopy:
+      "Accelerate supplier discovery and trusted B2B growth through the TNSG ecosystem."
+  },
+  {
+    key: "vnsg",
+    code: "VNSG",
+    siteName: "VNSG / Vietnam Saigon Gateway",
+    route: "/partner/hdn-vietnam-saigon-gateway",
+    displayName: "Vietnam Saigon Gateway",
+    brandColor: "#2563eb",
+    tagline:
+      "Your gateway to supplier visibility, trade programs, and cross-border business connections.",
+    heroTitle: "VNSG Business Gateway",
+    heroCopy:
+      "Connect buyers, suppliers, and growth programs through the VNSG digital business gateway."
+  }
+]
+
+const baseTenantSite = configurableSites.find(
+  (site) => site.id === "tbsg-tenant"
+)
+
+if (baseTenantSite) {
+  configurableSites.push(
+    ...tenantSiteSamples.map((sample) =>
+      cloneTenantSiteConfig(baseTenantSite, sample)
+    )
+  )
+}
 
 const fieldTypeIcons: Record<FieldType, ReactNode> = {
   Text: <TypeIcon className="size-3.5" />,
@@ -1913,10 +1912,9 @@ function SitePreviewSurface({
     site.id === "arobid-marketplace"
       ? createMarketplacePreviewConfig(site, draftValues)
       : null
-  const tenantPreviewState =
-    site.id === "tbsg-tenant"
-      ? createTenantPreviewState(site, draftValues)
-      : null
+  const tenantPreviewState = isTenantSite(site)
+    ? createTenantPreviewState(site, draftValues)
+    : null
 
   if (tenantPreviewState) {
     return (
@@ -2042,6 +2040,10 @@ function SectionActionButtons({
 function ExternalManagementNotice({ section }: { section: SiteSection }) {
   if (!section.externalManagement) return null
 
+  const actionLabel =
+    section.externalManagement.ctaLabel ??
+    `Open ${section.externalManagement.label}`
+
   return (
     <div className="rounded-lg border border-dashed p-4">
       <div className="font-medium text-sm">
@@ -2055,7 +2057,7 @@ function ExternalManagementNotice({ section }: { section: SiteSection }) {
           className="mt-3 inline-flex items-center gap-1 font-medium text-legend text-sm hover:underline"
           href={section.externalManagement.href}
         >
-          Open {section.externalManagement.label}
+          {actionLabel}
           <ArrowUpRightIcon className="size-4" />
         </Link>
       ) : null}
@@ -2119,6 +2121,7 @@ function FieldEditor({
 }) {
   const fieldId = `field-${field.id}`
   const currentLength = value.length
+  const validationText = getFieldValidationText(field)
 
   return (
     <div className="space-y-2 rounded-lg border p-3">
@@ -2130,9 +2133,11 @@ function FieldEditor({
           </Label>
         </div>
         {typeof field.maxLength === "number" ? (
-          <div className="shrink-0 text-muted-foreground text-xs">
-            {currentLength} / {field.maxLength}
-          </div>
+          <CharacterCount
+            currentLength={currentLength}
+            maxLength={field.maxLength}
+            className="shrink-0"
+          />
         ) : null}
       </div>
 
@@ -2147,9 +2152,24 @@ function FieldEditor({
 
       {renderFieldInput(field, fieldId, value, onChange)}
 
-      <p className="text-muted-foreground text-xs">{field.validation}</p>
+      {validationText ? (
+        <p className="text-muted-foreground text-xs">{validationText}</p>
+      ) : null}
     </div>
   )
+}
+
+function getFieldValidationText(field: ContentField) {
+  if (typeof field.maxLength !== "number") {
+    return field.validation
+  }
+
+  const cleaned = field.validation
+    .replace(/(?:^|\s)Maximum \d+ characters\.\s*/g, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim()
+
+  return cleaned.length > 0 ? cleaned : null
 }
 
 function FieldGroupEditor({
@@ -2367,17 +2387,17 @@ function getSiteStats(
 }
 
 function getBuilderVisibleSections(site: SiteConfig) {
-  if (site.id === "tbsg-tenant") {
+  if (isTenantSite(site)) {
     const visibleSectionIds = [
-      "tbsg-hero",
-      "tbsg-bfm",
-      "tbsg-banner-1",
-      "tbsg-deals",
-      "tbsg-expo",
-      "tbsg-banner-2",
-      "tbsg-news-video",
-      "tbsg-cta"
-    ]
+      "hero",
+      "bfm",
+      "banner-1",
+      "deals",
+      "expo",
+      "banner-2",
+      "news-video",
+      "cta"
+    ].map((suffix) => getTenantSectionId(site, suffix))
 
     return visibleSectionIds
       .map((sectionId) =>
@@ -2424,20 +2444,22 @@ function getFieldGroups(section: SiteSection): FieldGroup[] {
     ].filter((group) => group.fields.length > 0)
   }
 
-  if (section.id === "tbsg-seo") {
+  if (section.id.endsWith("-seo")) {
+    const tenantCode = section.id.replace(/-seo$/, "").toUpperCase()
+    const enField = section.fields.find((field) => field.id.endsWith("-en"))
+    const viField = section.fields.find((field) => field.id.endsWith("-vi"))
+
     return [
       {
-        id: "tbsg-en",
-        label: "TBSG EN",
-        description:
-          "Metadata for https://arobid.com/partner/en/hdn-taybacsaigon",
+        id: `${section.id}-en`,
+        label: `${tenantCode} EN`,
+        description: enField?.appearsIn,
         fields: section.fields.filter((field) => field.id.endsWith("-en"))
       },
       {
-        id: "tbsg-vi",
-        label: "TBSG VI",
-        description:
-          "Metadata for https://arobid.com/partner/vi/hdn-taybacsaigon",
+        id: `${section.id}-vi`,
+        label: `${tenantCode} VI`,
+        description: viField?.appearsIn,
         fields: section.fields.filter((field) => field.id.endsWith("-vi"))
       }
     ].filter((group) => group.fields.length > 0)
@@ -2517,39 +2539,41 @@ function createTenantPreviewState(
 } {
   const read = (sectionId: string, fieldId: string, fallback = "") =>
     getBuilderFieldValue(site, draftValues, sectionId, fieldId, fallback)
+  const tenantCode = getTenantCode(site)
+  const sectionId = (suffix: string) => getTenantSectionId(site, suffix)
 
-  const tenantName = read("tbsg-branding", "tenant-name")
-  const tagline = read("tbsg-branding", "tagline")
-  const logoUrl = firstMediaReference(read("tbsg-branding", "logo"))
-  const brandColor = read("tbsg-branding", "brand-color")
-  const heroMedia = toMediaReferences(read("tbsg-hero", "hero-media"), 1)
-  const bfmMedia = toMediaReferences(read("tbsg-bfm", "media"), 1)
-  const bannerAds1Media = [
-    firstMediaReference(read("tbsg-banner-1", "desktop-vi")),
-    firstMediaReference(read("tbsg-banner-1", "desktop-en")),
-    firstMediaReference(read("tbsg-banner-1", "mobile-vi")),
-    firstMediaReference(read("tbsg-banner-1", "mobile-en"))
-  ]
+  const tenantName = read(sectionId("branding"), "tenant-name")
+  const tagline = read(sectionId("branding"), "tagline")
+  const logoUrl = firstMediaReference(read(sectionId("branding"), "logo"))
+  const brandColor = read(sectionId("branding"), "brand-color")
+  const heroMedia = toMediaReferences(read(sectionId("hero"), "hero-media"), 1)
+  const bfmMedia = toMediaReferences(read(sectionId("bfm"), "media"), 1)
+  const bannerAds1Media = initialSectionMedia.bannerAds1
   const dealMedia = [
-    firstMediaReference(read("tbsg-deals", "deal-slot-1")),
-    firstMediaReference(read("tbsg-deals", "deal-slot-2")),
-    firstMediaReference(read("tbsg-deals", "deal-slot-3")),
-    firstMediaReference(read("tbsg-deals", "deal-slot-4")),
-    firstMediaReference(read("tbsg-deals", "deal-slot-5"))
+    firstMediaReference(read(sectionId("deals"), "deal-slot-1")),
+    firstMediaReference(read(sectionId("deals"), "deal-slot-2")),
+    firstMediaReference(read(sectionId("deals"), "deal-slot-3")),
+    firstMediaReference(read(sectionId("deals"), "deal-slot-4")),
+    firstMediaReference(read(sectionId("deals"), "deal-slot-5"))
   ]
   const expoMedia = toMediaReferences(
-    read("tbsg-expo", "expo-media", getSectionPreviewImage(site, "tbsg-expo")),
+    read(
+      sectionId("expo"),
+      "expo-media",
+      getSectionPreviewImage(site, sectionId("expo"))
+    ),
     1
   )
-  const bannerAds2Media = [
-    firstMediaReference(read("tbsg-banner-2", "desktop-vi")),
-    firstMediaReference(read("tbsg-banner-2", "desktop-en")),
-    firstMediaReference(read("tbsg-banner-2", "mobile-vi")),
-    firstMediaReference(read("tbsg-banner-2", "mobile-en"))
-  ]
-  const whyJoinMedia = toMediaReferences(read("tbsg-news-video", "media"), 1)
-  const ctaMedia = toMediaReferences(read("tbsg-cta", "background-media"), 1)
-  const defaultTenantName = "TBSG / Taybacsaigon"
+  const bannerAds2Media = initialSectionMedia.bannerAds2
+  const whyJoinMedia = toMediaReferences(
+    read(sectionId("news-video"), "media"),
+    1
+  )
+  const ctaMedia = toMediaReferences(
+    read(sectionId("cta"), "background-media"),
+    1
+  )
+  const defaultTenantName = site.name
   const defaultTagline =
     "Connect members, suppliers, buyers, and trade opportunities through Arobid."
 
@@ -2561,63 +2585,75 @@ function createTenantPreviewState(
       logoUrl,
       bannerUrl: heroMedia[0] ?? "",
       primaryColor: isHexColor(brandColor) ? brandColor : "#f97316",
-      heroEyebrow: "TBSG / Taybacsaigon",
+      heroEyebrow: defaultTenantName,
       heroTitle: read(
-        "tbsg-hero",
+        sectionId("hero"),
         "hero-title",
         tenantName || defaultTenantName
       ),
-      heroCopy: read("tbsg-hero", "hero-copy", tagline || defaultTagline),
+      heroCopy: read(sectionId("hero"), "hero-copy", tagline || defaultTagline),
       searchPlaceholder: read(
-        "tbsg-hero",
+        sectionId("hero"),
         "search-placeholder",
         "Search suppliers, products, expos..."
       ),
-      headerCtaLabel: read("tbsg-header", "header-cta", "Join now"),
+      headerCtaLabel: read(sectionId("header"), "header-cta", "Join now"),
       navItems: toTextList(
         read(
-          "tbsg-header",
+          sectionId("header"),
           "nav-items",
-          "All Categories, TradeXpo, Suppliers, eVoucher Deals, For Members, About TBSG"
+          `All Categories, TradeXpo, Suppliers, eVoucher Deals, For Members, About ${tenantCode}`
         )
       ),
       bfmTitle: "Buyer Find & Match",
       bfmCopy: read(
-        "tbsg-bfm",
+        sectionId("bfm"),
         "description",
         "Instantly connecting standardized supplier data with verified buyer intent for absolute precision in global sourcing."
       ),
-      bfmCtaLabel: read("tbsg-bfm", "cta-label", "Get Matches Now"),
+      bfmCtaLabel: read(sectionId("bfm"), "cta-label", "Get Matches Now"),
       expoTitle: read(
-        "tbsg-expo",
+        sectionId("expo"),
         "expo-title",
         "Discover Upcoming Trade Events"
       ),
       expoDescription: read(
-        "tbsg-expo",
+        sectionId("expo"),
         "expo-description",
         "Explore trade expos, connect with global businesses, and discover new opportunities on TradeXpo."
       ),
-      expoCtaLabel: read("tbsg-expo", "expo-cta", "Explore TradeXpo"),
-      whyJoinTitle: read("tbsg-news-video", "title", "Why join TBSG?"),
+      expoCtaLabel: read(sectionId("expo"), "expo-cta", "Explore TradeXpo"),
+      whyJoinTitle: read(
+        sectionId("news-video"),
+        "title",
+        `Why join ${tenantCode}?`
+      ),
       whyJoinDescription: read(
-        "tbsg-news-video",
+        sectionId("news-video"),
         "description",
         "Connecting business partners.\nSupporting business transformation.\nExpanding global trade channels."
       ),
-      whyJoinCtaLabel: read("tbsg-news-video", "cta-label", "Join TBSG now"),
-      whyJoinNewsUrls: toTextList(read("tbsg-news-video", "news-urls")),
+      whyJoinCtaLabel: read(
+        sectionId("news-video"),
+        "cta-label",
+        `Join ${tenantCode} now`
+      ),
+      whyJoinNewsUrls: toTextList(read(sectionId("news-video"), "news-urls")),
       finalCtaTitle: read(
-        "tbsg-cta",
+        sectionId("cta"),
         "title",
         "Ready to grow your business globally?"
       ),
       finalCtaDescription: read(
-        "tbsg-cta",
+        sectionId("cta"),
         "description",
-        "Connect with thousands of businesses in the TBSG community to scale your reach and shape your future."
+        `Connect with thousands of businesses in the ${tenantCode} community to scale your reach and shape your future.`
       ),
-      finalCtaLabel: read("tbsg-cta", "cta-label", "Join TBSG now"),
+      finalCtaLabel: read(
+        sectionId("cta"),
+        "cta-label",
+        `Join ${tenantCode} now`
+      ),
       ctaOption: "contact_tenant",
       publicEmail: initialBranding.publicEmail,
       publicPhone: initialBranding.publicPhone,
@@ -2642,33 +2678,37 @@ function createTenantPreviewState(
       bannerAds1: isTenantBuilderSectionVisible(
         site,
         draftValues,
-        "tbsg-banner-1"
+        sectionId("banner-1")
       ),
       bannerAds2: isTenantBuilderSectionVisible(
         site,
         draftValues,
-        "tbsg-banner-2"
+        sectionId("banner-2")
       ),
       community: false,
       categories: false,
       featuredSuppliers: false,
-      deals: isTenantBuilderSectionVisible(site, draftValues, "tbsg-deals"),
+      deals: isTenantBuilderSectionVisible(
+        site,
+        draftValues,
+        sectionId("deals")
+      ),
       hotProducts: false,
       expoCarousel: isTenantBuilderSectionVisible(
         site,
         draftValues,
-        "tbsg-expo"
+        sectionId("expo")
       ),
       newProducts: false,
       recommendedSuppliers: false,
       promo: isTenantBuilderSectionVisible(
         site,
         draftValues,
-        "tbsg-news-video"
+        sectionId("news-video")
       ),
       featureCards: false,
       partners: false,
-      cta: isTenantBuilderSectionVisible(site, draftValues, "tbsg-cta")
+      cta: isTenantBuilderSectionVisible(site, draftValues, sectionId("cta"))
     }
   }
 }
@@ -2709,7 +2749,13 @@ function createTenantPreviewRelations(
 ): TenantRelation[] {
   const relationFieldId = "relation-list"
   const relationDraft =
-    draftValues[getDraftKey(site.id, "tbsg-partners", relationFieldId)]
+    draftValues[
+      getDraftKey(
+        site.id,
+        getTenantSectionId(site, "partners"),
+        relationFieldId
+      )
+    ]
   if (!relationDraft) return initialRelations
 
   return toTextList(relationDraft).map((name, index) => ({
@@ -2807,4 +2853,118 @@ function getSectionStatusKey(siteId: string, sectionId: string) {
 
 function isHexColor(value: string) {
   return /^#[0-9a-fA-F]{6}$/.test(value)
+}
+
+function isTenantSite(site: SiteConfig) {
+  return site.type === "Mini-site"
+}
+
+function getTenantKey(site: SiteConfig) {
+  return site.id.replace(/-tenant$/, "")
+}
+
+function getTenantCode(site: SiteConfig) {
+  return site.name.split("/")[0]?.trim() || getTenantKey(site).toUpperCase()
+}
+
+function getTenantSectionId(site: SiteConfig, suffix: string) {
+  return `${getTenantKey(site)}-${suffix}`
+}
+
+function cloneTenantSiteConfig(
+  baseSite: SiteConfig,
+  sample: TenantSiteSample
+): SiteConfig {
+  const clonedSite = mapStringValues(
+    JSON.parse(JSON.stringify(baseSite)) as SiteConfig,
+    (value) =>
+      value
+        .replaceAll(
+          "tenant-tbsg-homepage-01",
+          `tenant-${sample.key}-homepage-01`
+        )
+        .replaceAll(
+          "tenant-tbsg-homepage-02",
+          `tenant-${sample.key}-homepage-02`
+        )
+        .replaceAll("TBSG Homepage", `${sample.code} Homepage`)
+        .replaceAll("TBSG / Taybacsaigon", sample.siteName)
+        .replaceAll("hdn-taybacsaigon", sample.route.replace("/partner/", ""))
+        .replaceAll("tbsg-", `${sample.key}-`)
+        .replaceAll("Taybacsaigon", sample.displayName)
+        .replaceAll("TBSG", sample.code)
+  )
+
+  clonedSite.id = `${sample.key}-tenant`
+  clonedSite.name = sample.siteName
+  clonedSite.route = sample.route
+
+  setSiteFieldExample(
+    clonedSite,
+    `${sample.key}-branding`,
+    "tenant-name",
+    sample.displayName
+  )
+  setSiteFieldExample(
+    clonedSite,
+    `${sample.key}-branding`,
+    "tagline",
+    sample.tagline
+  )
+  setSiteFieldExample(
+    clonedSite,
+    `${sample.key}-branding`,
+    "brand-color",
+    sample.brandColor
+  )
+  setSiteFieldExample(
+    clonedSite,
+    `${sample.key}-hero`,
+    "hero-title",
+    sample.heroTitle
+  )
+  setSiteFieldExample(
+    clonedSite,
+    `${sample.key}-hero`,
+    "hero-copy",
+    sample.heroCopy
+  )
+
+  return clonedSite
+}
+
+function setSiteFieldExample(
+  site: SiteConfig,
+  sectionId: string,
+  fieldId: string,
+  value: string
+) {
+  const field = site.sections
+    .find((section) => section.id === sectionId)
+    ?.fields.find((item) => item.id === fieldId)
+
+  if (field) {
+    field.example = value
+  }
+}
+
+function mapStringValues<T>(value: T, replace: (value: string) => string): T {
+  if (typeof value === "string") {
+    return replace(value) as T
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => mapStringValues(item, replace)) as T
+  }
+
+  if (value && typeof value === "object") {
+    const entries = Object.entries(value).map(([key, item]) => [
+      key,
+      mapStringValues(item, replace)
+    ])
+
+    return Object.fromEntries(entries) as T
+  }
+
+  return value
 }
