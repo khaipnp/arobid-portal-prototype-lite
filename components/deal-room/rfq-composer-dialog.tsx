@@ -3,6 +3,7 @@
 import { CalendarIcon, PaperclipIcon, UploadIcon, XIcon } from "lucide-react"
 import { useRef, useState } from "react"
 import { Button } from "@/components/ui/button"
+import { CharacterCount } from "@/components/ui/character-count"
 import { Input } from "@/components/ui/input"
 import {
   Select,
@@ -167,9 +168,10 @@ export function RfqComposerDialog({ open, onClose, onSendRfq }: Props) {
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                   />
-                  <p className="text-muted-foreground text-xs">
-                    {description.length}/{MAX_DESCRIPTION_LENGTH}
-                  </p>
+                  <CharacterCount
+                    currentLength={description.length}
+                    maxLength={MAX_DESCRIPTION_LENGTH}
+                  />
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2">

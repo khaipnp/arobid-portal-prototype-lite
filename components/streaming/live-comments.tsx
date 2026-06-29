@@ -4,6 +4,7 @@ import { SendIcon, TrashIcon, UserIcon } from "lucide-react"
 import * as React from "react"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
+import { CharacterCount } from "@/components/ui/character-count"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -302,6 +303,7 @@ export function LiveComments({
                 maxLength={60}
                 className="h-8 text-sm"
               />
+              <CharacterCount currentLength={guestName.length} maxLength={60} />
               {guestNameError && (
                 <p className="text-[11px] text-destructive">{guestNameError}</p>
               )}
@@ -350,6 +352,7 @@ export function LiveComments({
             <Textarea
               placeholder="Join the conversation…"
               value={commentText}
+              maxLength={500}
               onChange={(e) => {
                 if (e.target.value.length <= 500) setCommentText(e.target.value)
               }}
@@ -377,9 +380,11 @@ export function LiveComments({
             <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
               <UserIcon className="h-3 w-3" /> Khai Pham
             </span>
-            <span className="text-[11px] text-muted-foreground">
-              {commentText.length}/500
-            </span>
+            <CharacterCount
+              currentLength={commentText.length}
+              maxLength={500}
+              className="text-[11px]"
+            />
           </div>
         )}
       </div>

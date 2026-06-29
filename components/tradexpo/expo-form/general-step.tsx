@@ -2,6 +2,7 @@ import { ImagePlusIcon, InfoIcon, SearchIcon, Trash2Icon } from "lucide-react"
 import Image from "next/image"
 import type * as React from "react"
 import { Button } from "@/components/ui/button"
+import { CharacterCount } from "@/components/ui/character-count"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import {
@@ -210,6 +211,7 @@ export function GeneralStep({
             required
             placeholder="Unique name"
           />
+          <CharacterCount currentLength={name.length} maxLength={255} />
         </div>
         {isSuper && isEdit ? (
           <div className="grid gap-2">

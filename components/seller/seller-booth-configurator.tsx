@@ -20,6 +20,7 @@ import Link from "next/link"
 import * as React from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { CharacterCount } from "@/components/ui/character-count"
 import {
   Dialog,
   DialogContent,
@@ -1431,6 +1432,7 @@ function ColorSlot({
           maxLength={7}
         />
       </div>
+      <CharacterCount currentLength={value.length} maxLength={7} />
     </div>
   )
 }

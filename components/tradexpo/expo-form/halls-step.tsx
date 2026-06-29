@@ -1,5 +1,6 @@
 import { PlusIcon, Trash2Icon } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { CharacterCount } from "@/components/ui/character-count"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -72,6 +73,10 @@ export function HallsStep({
                   }
                   maxLength={100}
                   required
+                />
+                <CharacterCount
+                  currentLength={hall.hallName.length}
+                  maxLength={100}
                 />
               </div>
               <div className="grid gap-2">
